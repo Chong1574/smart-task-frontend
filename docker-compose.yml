@@ -1,0 +1,46 @@
+services:
+  db:
+    image: postgres:15-alphine
+    container_name: task-db
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: smart_task_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - task-network
+
+  backend:
+    build: ./smart-task-backend
+    container_name: task-backend
+    restart: always
+    ports:
+      - "3000:3000"
+    env_file: ./smart-task-backend/.env
+    depends_on:
+      - db
+    networks:
+      - task-network
+
+  frontend:
+    build: ./smart-task-frontend
+    container_name: task-frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./smart-task-frontend:/app
+      - /app/node_modules
+    networks:
+      - task-network
+
+networks:
+  task-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
