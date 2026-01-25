@@ -5,6 +5,7 @@ import { Home, BarChart2, CreditCard } from 'lucide-vue-next'; // Iconos nuevos
 // Vistas
 import HomeView from './components/dashboard/HomeView.vue';
 import FinanceView from './components/finance/FinanceView.vue';
+import FinanceDashboard from './components/finance/FinanceDashboard.vue';
 // Aquí pondremos el Dashboard unificado más adelante
 // import AnalyticsView from './components/dashboard/AnalyticsView.vue'; 
 
@@ -52,14 +53,16 @@ const sidebarItems = [
           </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div v-if="analyticsMode === 'tasks'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 h-64 flex items-center justify-center">
-             <p class="text-slate-400 italic">Gráfica de {{ analyticsMode === 'tasks' ? 'Productividad' : 'Gastos Mensuales' }}</p>
+             <p class="text-slate-400 italic">Gráfica de Productividad</p>
            </div>
            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 h-64 flex items-center justify-center">
-             <p class="text-slate-400 italic">Tendencia de {{ analyticsMode === 'tasks' ? 'Retrasos' : 'Ahorro' }}</p>
+             <p class="text-slate-400 italic">Tendencia de Retrasos</p>
            </div>
         </div>
+
+        <FinanceDashboard v-else-if="analyticsMode === 'money'" />
       </div>
 
       <FinanceView v-else-if="currentView === 'wallet'" />

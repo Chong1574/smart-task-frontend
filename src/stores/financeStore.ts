@@ -29,6 +29,17 @@ export interface Transaction {
     date: string;
 }
 
+export interface Subscription {
+    id: number;
+    name: string;
+    amount: number;
+    currency: string;
+    frequency: 'MONTHLY' | 'YEARLY';
+    type: 'MEMBERSHIP' | 'SERVICE';
+    isVariable: boolean;
+    nextPaymentDate?: string;
+}
+
 const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
 const COLORS = [
@@ -45,6 +56,7 @@ export const useFinanceStore = defineStore('finance', {
         categories: ['Comida', 'Transporte', 'Servicios', 'Ocio', 'Salario', 'Renta', 'Inversión'] as string[],
         accounts: [] as Account[],
         transactions: [] as Transaction[],
+        subscriptions: [] as Subscription[],
         loading: false,
         error: null as string | null
     }),
@@ -58,6 +70,17 @@ export const useFinanceStore = defineStore('finance', {
             const income = state.transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + Number(t.amount), 0);
             const expenses = state.transactions.filter(t => t.type === 'expense' || t.type === 'loan_payment').reduce((sum, t) => sum + Number(t.amount), 0);
             return income - expenses;
+        },
+
+        totalFixedExpenses: (state) => {
+            return state.subscriptions.reduce((sum, sub) => {
+                // Normalize to Monthly for display? Or just sum basic amount?
+                // Let's assume amount is "per frequency". 
+                // If yearly, divide by 12?
+                let val = Number(sub.amount);
+                if (sub.frequency === 'YEARLY') val = val / 12;
+                return sum + val;
+            }, 0);
         }
     },
 
@@ -203,7 +226,45 @@ export const useFinanceStore = defineStore('finance', {
         },
 
         async initialize() {
-            await Promise.all([this.fetchAccounts(), this.fetchTransactions()]);
+            await Promise.all([this.fetchAccounts(), this.fetchTransactions(), this.fetchSubscriptions()]);
+        },
+
+        async fetchSubscriptions() {
+            try {
+                const res = await fetch(`${API_URL}/finance/subscriptions`);
+                const json = await res.json();
+                if (json.success) {
+                    this.subscriptions = json.data.map((s: any) => ({
+                        ...s,
+                        amount: Number(s.amount)
+                    }));
+                }
+            } catch (err) {
+                console.error("Error fetching subscriptions:", err);
+            }
+        },
+
+        async addSubscription(sub: Omit<Subscription, 'id'>) {
+            try {
+                const res = await fetch(`${API_URL}/finance/subscriptions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(sub)
+                });
+                const json = await res.json();
+                if (json.success) {
+                    await this.fetchSubscriptions();
+                }
+            } catch (err) {
+                console.error("Error creating subscription:", err);
+            }
+        },
+
+        async deleteSubscription(id: number) {
+            try {
+                await fetch(`${API_URL}/finance/subscriptions/${id}`, { method: 'DELETE' });
+                this.subscriptions = this.subscriptions.filter(s => s.id !== id);
+            } catch (err) { console.error(err); }
         }
     }
 });
