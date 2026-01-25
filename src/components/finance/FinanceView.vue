@@ -1,9 +1,36 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useFinanceStore } from '../../stores/financeStore';
-import { Wallet, TrendingUp, TrendingDown, CreditCard, Plus, ArrowUpRight, ArrowDownLeft } from 'lucide-vue-next';
+import { computed, onMounted, ref } from 'vue';
+import { useFinanceStore, type Account } from '../../stores/financeStore';
+import { Wallet, TrendingUp, TrendingDown, CreditCard, Plus, ArrowUpRight, ArrowDownLeft, X, Trash2, Pencil } from 'lucide-vue-next';
+import TransactionForm from './TransactionForm.vue';
+import AccountForm from './AccountForm.vue';
 
 const store = useFinanceStore();
+const isFormOpen = ref(false);
+const isAccountFormOpen = ref(false);
+const editingAccount = ref<Account | null>(null);
+
+onMounted(() => {
+  store.initialize();
+});
+
+const handleEditAccount = (acc: Account) => {
+    editingAccount.value = acc;
+    isAccountFormOpen.value = true;
+};
+
+const handleCloseForm = () => {
+    isAccountFormOpen.value = false;
+    editingAccount.value = null; // Clear edit state
+};
+
+const handleDeleteAccount = async (id: number) => {
+    if (confirm('¿Estás seguro de que quieres eliminar esta cuenta? Se eliminarán todas sus transacciones.')) {
+        await store.deleteAccount(id);
+    }
+};
+
+// ...
 
 // Formateador de moneda
 const formatMoney = (amount: number) => {
@@ -24,15 +51,30 @@ const formatDate = (isoStr: string) => {
         <p class="text-sm text-slate-400 font-medium uppercase tracking-wider">Balance Total</p>
         <h2 class="text-3xl font-bold text-slate-800">{{ formatMoney(store.totalBalance) }}</h2>
       </div>
-      <button class="bg-slate-900 text-white p-3 rounded-full shadow-lg shadow-slate-300 active:scale-95 transition-all">
-        <Plus :size="24" />
-      </button>
     </div>
+
+    <!-- Form Container with Transition -->
+    <div v-show="isFormOpen" class="transition-all duration-300 ease-in-out origin-top">
+        <TransactionForm />
+    </div>
+
+    <!-- Account Form Modal -->
+    <AccountForm v-if="isAccountFormOpen" :initialData="editingAccount" @close="handleCloseForm" />
 
     <div class="overflow-x-auto pb-4 -mx-4 px-4 custom-scrollbar flex gap-4 snap-x">
       <div v-for="acc in store.accounts" :key="acc.id" 
-           :class="['flex-shrink-0 w-72 h-44 rounded-2xl p-6 flex flex-col justify-between text-white shadow-lg snap-center bg-gradient-to-br', acc.color]">
+           :class="['group relative flex-shrink-0 w-72 h-44 rounded-2xl p-6 flex flex-col justify-between text-white shadow-lg snap-center bg-gradient-to-br transition-transform hover:scale-[1.02]', acc.color]">
         
+        <!-- Actions Overlay -->
+        <div class="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button @click="handleEditAccount(acc)" class="p-1.5 bg-white/20 rounded-lg hover:bg-white/30 backdrop-blur-sm" title="Editar">
+                <Pencil :size="14" class="text-white" />
+            </button>
+            <button @click="handleDeleteAccount(acc.id)" class="p-1.5 bg-white/20 rounded-lg hover:bg-red-500/80 backdrop-blur-sm transition-colors" title="Eliminar">
+                <Trash2 :size="14" class="text-white" />
+            </button>
+        </div>
+
         <div class="flex justify-between items-start">
           <div>
             <p class="text-xs font-medium opacity-80 uppercase">{{ acc.type }}</p>
@@ -47,13 +89,19 @@ const formatDate = (isoStr: string) => {
         </div>
       </div>
       
-      <div class="flex-shrink-0 w-16 h-44 rounded-2xl border-2 border-dashed border-slate-200 flex items-center justify-center text-slate-300 snap-center">
+      <button @click="isAccountFormOpen = true" class="cursor-pointer flex-shrink-0 w-16 h-44 rounded-2xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center gap-2 text-slate-400 snap-center hover:bg-slate-50 hover:text-slate-600 hover:border-slate-400 transition-all">
         <Plus :size="24" />
-      </div>
+        <span class="text-[10px] font-bold uppercase">Add</span>
+      </button>
     </div>
 
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-      <h3 class="font-bold text-slate-800 mb-4 text-lg">Últimos Movimientos</h3>
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="font-bold text-slate-800 text-lg">Últimos Movimientos</h3>
+        <button @click="isFormOpen = !isFormOpen" class="text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg hover:bg-slate-200 transition-colors">
+          {{ isFormOpen ? 'Cerrar' : '+ Registrar' }}
+        </button>
+      </div>
       
       <div class="space-y-4">
         <div v-for="tx in store.transactions" :key="tx.id" class="flex items-center justify-between group">

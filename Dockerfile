@@ -1,14 +1,14 @@
-FROM node:20-alpine
+FROM node:22-alpine
 
 WORKDIR /app
 
 COPY package*.json ./
+
 RUN npm install
 
 COPY . .
 
-# Exponemos el puerto de Vite
 EXPOSE 5173
 
-# Comando para desarrollo con hot-reload
+# Vite necesita escuchar en 0.0.0.0 dentro de Docker
 CMD ["npm", "run", "dev", "--", "--host"]
