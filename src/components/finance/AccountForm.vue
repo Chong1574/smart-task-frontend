@@ -19,6 +19,7 @@ const form = ref({
     cutoffDay: '' as string | number, // Día de corte
     paymentDay: '' as string | number, // Día de pago
     interestRate: '' as number | '', // Tasa de interés
+    monthlyPayment: '' as number | '', // Mensualidad fija
     currency: 'MXN'
 });
 
@@ -53,6 +54,7 @@ watchEffect(() => {
             cutoffDay: props.initialData.cutoff_day || '',
             paymentDay: props.initialData.payment_day || '',
             interestRate: props.initialData.interest_rate || '',
+            monthlyPayment: props.initialData.monthly_payment || '',
             currency: props.initialData.currency
         };
         // Check fixed credit logic
@@ -78,6 +80,7 @@ const submit = async () => {
         cutoff_day: Number(form.value.cutoffDay) || 0,
         payment_day: Number(form.value.paymentDay) || 0,
         interest_rate: isFixedCredit.value ? 0 : (Number(form.value.interestRate) || 0),
+        monthly_payment: Number(form.value.monthlyPayment) || 0,
         currency: form.value.currency
     };
 
@@ -181,25 +184,52 @@ const submit = async () => {
                             <input v-model="form.paymentDay" type="number" min="1" max="31" class="w-full p-3 bg-white rounded-xl outline-none font-medium text-slate-600 text-center border border-slate-200" placeholder="DD" />
                         </div>
                     </div>
+
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase">Mensualidad Fija (Opcional)</label>
+                        <div class="relative">
+                            <DollarSign :size="16" class="absolute left-3 top-3 text-slate-400" />
+                            <input v-model="form.monthlyPayment" type="number" step="0.01" class="w-full pl-9 p-2.5 bg-white rounded-xl outline-none font-bold text-slate-700 border border-slate-200" placeholder="0.00" />
+                        </div>
+                    </div>
                 </div>
 
-                <!-- DETALLES DE PRÉSTAMO (INTERÉS) -->
-                <div v-if="form.type === 'loan'" class="space-y-4 p-4 bg-slate-50 rounded-xl border border-dashed border-slate-200 animate-fade-in">
-                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Detalles del Préstamo</h4>
+                <!-- DETALLES DE PRÉSTAMO / INVERSIÓN (INTERÉS) -->
+                <div v-if="form.type === 'loan' || form.type === 'investment'" class="space-y-4 p-4 bg-slate-50 rounded-xl border border-dashed border-slate-200 animate-fade-in">
+                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        {{ form.type === 'loan' ? 'Detalles del Préstamo' : 'Detalles de Inversión' }}
+                    </h4>
                     
-                    <!-- Checkbox de Crédito Fijo -->
-                    <div class="flex items-center gap-2 mb-2">
+                    <!-- Checkbox de Crédito Fijo (Solo Préstamo) -->
+                    <div v-if="form.type === 'loan'" class="flex items-center gap-2 mb-2">
                         <input type="checkbox" id="fixedCredit" v-model="isFixedCredit" class="w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900" />
                         <label for="fixedCredit" class="text-xs font-bold text-slate-600 select-none">Crédito Fijo (Sin Interés Variable)</label>
                     </div>
 
-                    <div v-if="!isFixedCredit">
+                    <div v-if="!isFixedCredit || form.type === 'investment'">
                         <label class="text-[10px] font-bold text-slate-400 uppercase">Tasa de Interés Anual (%)</label>
                         <div class="relative">
                             <TrendingUp :size="18" class="absolute left-3 top-3.5 text-slate-400" />
-                            <input v-model="form.interestRate" type="number" step="0.01" class="w-full pl-9 p-3 bg-white rounded-xl outline-none font-bold text-lg text-slate-700 placeholder-slate-300 border border-slate-200" placeholder="Ej: 15.5" />
+                            <input v-model="form.interestRate" type="number" step="0.01" class="w-full pl-9 p-3 bg-white rounded-xl outline-none font-bold text-lg text-slate-700 placeholder-slate-300 border border-slate-200" placeholder="Ej: 11.5" />
                         </div>
-                        <p class="text-[10px] text-slate-400 mt-1">Se usará para calcular la evolución de la deuda.</p>
+                        <p class="text-[10px] text-slate-400 mt-1">
+                            {{ form.type === 'investment' ? 'Se usará para generar ganancias diarias automáticamente.' : 'Se usará para calcular la evolución de la deuda.' }}
+                        </p>
+                    </div>
+
+                    <!-- Mensualidad para Préstamos -->
+                    <div v-if="form.type === 'loan'" class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-400 uppercase">Día de Pago</label>
+                            <input v-model="form.paymentDay" type="number" min="1" max="31" class="w-full p-2.5 bg-white rounded-xl outline-none font-bold text-slate-600 text-center border border-slate-200" placeholder="DD" />
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-400 uppercase">Mensualidad (Fija)</label>
+                            <div class="relative">
+                                <DollarSign :size="16" class="absolute left-3 top-3 text-slate-400" />
+                                <input v-model="form.monthlyPayment" type="number" step="0.01" class="w-full pl-9 p-2.5 bg-white rounded-xl outline-none font-bold text-slate-700 border border-slate-200" placeholder="0.00" />
+                            </div>
+                        </div>
                     </div>
                 </div>
 

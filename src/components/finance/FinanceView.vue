@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useFinanceStore, type Account } from '../../stores/financeStore';
-import { Wallet, TrendingUp, TrendingDown, CreditCard, Plus, ArrowUpRight, ArrowDownLeft, X, Trash2, Pencil, Zap, CreditCard as CardIcon, List } from 'lucide-vue-next';
+import { Wallet, TrendingUp, TrendingDown, CreditCard, Plus, Trash2, Pencil, Zap, CreditCard as CardIcon, List, Calendar, CheckCircle } from 'lucide-vue-next';
 import TransactionForm from './TransactionForm.vue';
 import AccountForm from './AccountForm.vue';
 import SubscriptionsSection from './SubscriptionsSection.vue';
@@ -38,6 +38,50 @@ const formatMoney = (amount: number) => {
 
 const formatDate = (isoStr: string) => {
   return new Date(isoStr).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
+};
+
+// --- Helpers for Account Grouping ---
+const groupedAccounts = computed(() => {
+    const groups: Record<string, { accounts: Account[], total: number }> = {};
+    const sorted = [...store.accounts].sort((a, b) => b.balance - a.balance);
+    
+    sorted.forEach(acc => {
+        let key = acc.type as string;
+        if (acc.type === 'card') {
+            key = acc.sub_type === 'credit' ? 'card_credit' : 'card_debit';
+        }
+        
+        if (!groups[key]) {
+            groups[key] = { accounts: [], total: 0 };
+        }
+        groups[key]!.accounts.push(acc);
+        groups[key]!.total += Number(acc.balance);
+    });
+    return groups;
+});
+
+const getTypeName = (type: string) => {
+    const names: Record<string, string> = {
+        'card_credit': 'Tarjetas de Crédito',
+        'card_debit': 'Tarjetas de Débito',
+        'loan': 'Préstamos y Deudas',
+        'investment': 'Inversiones',
+        'cash': 'Efectivo',
+        'savings': 'Ahorros'
+    };
+    return names[type] || type;
+};
+
+const getTypeColor = (type: string) => {
+    const colors: Record<string, string> = {
+        'card_credit': 'bg-pink-500',
+        'card_debit': 'bg-blue-400',
+        'loan': 'bg-red-500',
+        'investment': 'bg-emerald-500',
+        'cash': 'bg-orange-500',
+        'savings': 'bg-blue-600'
+    };
+    return colors[type] || 'bg-slate-500';
 };
 </script>
 
@@ -81,43 +125,112 @@ const formatDate = (isoStr: string) => {
 
     <!-- TAB: CUENTAS -->
     <div v-if="activeTab === 'accounts'" class="animate-fade-in space-y-8">
-        <!-- Accounts List -->
-        <div>
-            <div class="flex justify-between items-center mb-4 px-2">
-                <h3 class="font-bold text-slate-800 text-lg">Mis Cuentas</h3>
+        <!-- Header with Add Button -->
+        <div class="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mx-2">
+            <div>
+                <h3 class="font-bold text-slate-800 text-lg">Mis Finanzas</h3>
+                <p class="text-xs text-slate-400">Administra tus tarjetas, cuentas y deudas</p>
             </div>
-            <div class="overflow-x-auto pb-4 -mx-4 px-4 custom-scrollbar flex gap-4 snap-x text-left">
-              <div v-for="acc in store.accounts" :key="acc.id" 
-                   :class="['group relative flex-shrink-0 w-72 h-44 rounded-2xl p-6 flex flex-col justify-between text-white shadow-lg snap-center bg-gradient-to-br transition-transform hover:scale-[1.02]', acc.color]">
-                
-                <div class="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button @click="handleEditAccount(acc)" class="p-1.5 bg-white/20 rounded-lg hover:bg-white/30 backdrop-blur-sm" title="Editar">
-                        <Pencil :size="14" class="text-white" />
-                    </button>
-                    <button @click="handleDeleteAccount(acc.id)" class="p-1.5 bg-white/20 rounded-lg hover:bg-red-500/80 backdrop-blur-sm transition-colors" title="Eliminar">
-                        <Trash2 :size="14" class="text-white" />
-                    </button>
-                </div>
+            <button @click="isAccountFormOpen = true" class="px-4 py-2 bg-slate-900 text-white rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-slate-800 transition-all shadow-md active:scale-95">
+                <Plus :size="18" />
+                Nueva Cuenta
+            </button>
+        </div>
 
-                <div class="flex justify-between items-start">
-                  <div>
-                    <p class="text-xs font-medium opacity-80 uppercase">{{ acc.type }}</p>
-                    <p class="font-bold text-lg tracking-wide">{{ acc.name }}</p>
-                  </div>
-                  <CreditCard :size="24" class="opacity-60" />
+        <!-- Grouped Accounts -->
+        <div v-for="(group, type) in groupedAccounts" :key="type" class="space-y-4">
+            <div class="flex items-center justify-between px-2">
+                <div class="flex items-center gap-2">
+                    <div class="h-1 w-8 rounded-full" :class="getTypeColor(type)"></div>
+                    <h4 class="font-bold text-slate-600 text-xs uppercase tracking-widest">{{ getTypeName(type) }}</h4>
+                    <span class="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full font-bold">{{ group.accounts.length }}</span>
                 </div>
-
-                <div>
-                   <p class="text-xs opacity-70 mb-1">Saldo Disponible</p>
-                   <p class="text-2xl font-mono font-bold">{{ formatMoney(acc.balance) }}</p>
+                <div class="text-right">
+                    <span class="text-[10px] text-slate-400 font-bold uppercase mr-2">Subtotal:</span>
+                    <span class="text-sm font-black text-slate-700">{{ formatMoney(group.total) }}</span>
                 </div>
-              </div>
-              
-              <button @click="isAccountFormOpen = true" class="cursor-pointer flex-shrink-0 w-16 h-44 rounded-2xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center gap-2 text-slate-400 snap-center hover:bg-slate-50 hover:text-slate-600 hover:border-slate-400 transition-all">
-                <Plus :size="24" />
-                <span class="text-[10px] font-bold uppercase">Add</span>
-              </button>
             </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 px-2">
+                <div v-for="acc in group.accounts" :key="acc.id" 
+                     :class="['group relative h-44 rounded-2xl p-6 flex flex-col justify-between text-white shadow-lg bg-gradient-to-br transition-all hover:translate-y-[-4px] hover:shadow-xl', acc.color]">
+                    
+                    <div class="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button @click="handleEditAccount(acc)" class="p-1.5 bg-white/20 rounded-lg hover:bg-white/30 backdrop-blur-sm" title="Editar">
+                            <Pencil :size="14" class="text-white" />
+                        </button>
+                        <button @click="handleDeleteAccount(acc.id)" class="p-1.5 bg-white/20 rounded-lg hover:bg-red-500/80 backdrop-blur-sm transition-colors" title="Eliminar">
+                            <Trash2 :size="14" class="text-white" />
+                        </button>
+                    </div>
+
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="flex items-center gap-1.5 opacity-80 mb-0.5">
+                                <p class="text-[10px] font-bold uppercase tracking-tighter">{{ acc.sub_type !== 'n/a' ? acc.sub_type : acc.type }}</p>
+                                <span v-if="acc.interest_rate > 0" class="text-[8px] bg-white/20 px-1 rounded">
+                                    {{ acc.interest_rate }}% {{ acc.type === 'investment' ? 'GAT' : '' }}
+                                </span>
+                            </div>
+                            <p class="font-bold text-lg leading-tight">{{ acc.name }}</p>
+                        </div>
+                        <CreditCard v-if="acc.type === 'card'" :size="24" class="opacity-60" />
+                        <Wallet v-else-if="acc.type === 'cash' || acc.type === 'savings'" :size="24" class="opacity-60" />
+                        <TrendingDown v-else-if="acc.type === 'loan'" :size="24" class="opacity-60" />
+                        <TrendingUp v-else :size="24" class="opacity-60" />
+                    </div>
+
+                    <div>
+                        <p class="text-[10px] opacity-70 mb-0.5 uppercase font-medium">
+                            {{ acc.type === 'card' && acc.sub_type === 'credit' ? 'Crédito Disponible' : 'Saldo Disponible' }}
+                        </p>
+                        <div class="flex items-baseline gap-1">
+                            <p class="text-2xl font-mono font-black tracking-tighter">
+                                {{ 
+                                    acc.type === 'card' && acc.sub_type === 'credit' 
+                                    ? formatMoney(Number(acc.credit_limit) + Number(acc.balance)).split('.')[0]
+                                    : formatMoney(acc.balance).split('.')[0] 
+                                }}
+                            </p>
+                            <p class="text-sm font-mono opacity-80">
+                                {{ 
+                                    acc.type === 'card' && acc.sub_type === 'credit'
+                                    ? (formatMoney(Number(acc.credit_limit) + Number(acc.balance)).split('.')[1] ? '.' + formatMoney(Number(acc.credit_limit) + Number(acc.balance)).split('.')[1] : '')
+                                    : (formatMoney(acc.balance).split('.')[1] ? '.' + formatMoney(acc.balance).split('.')[1] : '')
+                                }}
+                            </p>
+                        </div>
+                        <!-- Extra info for credit cards -->
+                        <div v-if="acc.type === 'card' && acc.sub_type === 'credit'" class="mt-1 space-y-1">
+                            <div class="flex justify-between items-center opacity-60 text-[9px] font-bold uppercase">
+                                <span>Deuda: {{ formatMoney(acc.balance) }}</span>
+                                <span>Límite: {{ formatMoney(acc.credit_limit) }}</span>
+                            </div>
+                            <div v-if="acc.monthly_payment > 0 || acc.payment_day > 0" class="flex justify-between items-center opacity-90 text-[10px] bg-white/10 px-2 py-1 rounded-lg font-black uppercase">
+                                <span class="flex items-center gap-1"><Calendar :size="10" /> {{ acc.payment_day ? 'Día ' + acc.payment_day : 'S/F' }}</span>
+                                <span>{{ acc.monthly_payment > 0 ? formatMoney(acc.monthly_payment) : 'Pago Var.' }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Extra info for loans -->
+                        <div v-if="acc.type === 'loan'" class="mt-1 space-y-1">
+                            <div v-if="acc.monthly_payment > 0 || acc.payment_day > 0" class="flex justify-between items-center opacity-90 text-[10px] bg-white/10 px-2 py-1 rounded-lg font-black uppercase">
+                                <span class="flex items-center gap-1"><Calendar :size="10" /> {{ acc.payment_day ? 'Día ' + acc.payment_day : 'S/F' }}</span>
+                                <span>{{ formatMoney(acc.monthly_payment) }} (Mes)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div v-if="store.accounts.length === 0" class="flex flex-col items-center justify-center py-20 text-slate-400">
+            <Wallet :size="48" class="mb-4 opacity-20" />
+            <p class="font-medium">No tienes cuentas registradas</p>
+            <button @click="isAccountFormOpen = true" class="mt-4 text-blue-600 font-bold text-sm hover:underline">
+                Comienza agregando tu primera cuenta
+            </button>
         </div>
     </div>
 

@@ -13,6 +13,7 @@ export interface Account {
     balance: number;
     credit_limit: number;
     interest_rate: number;
+    monthly_payment: number;
     cutoff_day: number;
     payment_day: number;
     currency: string;
@@ -27,6 +28,7 @@ export interface Transaction {
     category: string;
     description: string;
     date: string;
+    subscriptionId?: number;
 }
 
 export interface Subscription {
@@ -38,6 +40,8 @@ export interface Subscription {
     type: 'MEMBERSHIP' | 'SERVICE';
     isVariable: boolean;
     nextPaymentDate?: string;
+    lastPaymentDate?: string;
+    accountId?: number | null;
 }
 
 const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
@@ -100,6 +104,7 @@ export const useFinanceStore = defineStore('finance', {
                         balance: Number(acc.balance),
                         credit_limit: Number(acc.creditLimit),
                         interest_rate: Number(acc.interestRate || 0),
+                        monthly_payment: Number(acc.monthlyPayment || 0),
                         cutoff_day: Number(acc.cutoffDay || 0),
                         payment_day: Number(acc.paymentDay || 0),
                         currency: acc.currency,
@@ -163,7 +168,8 @@ export const useFinanceStore = defineStore('finance', {
                     creditLimit: account.credit_limit,
                     cutoffDay: account.cutoff_day,
                     paymentDay: account.payment_day,
-                    interestRate: account.interest_rate
+                    interestRate: account.interest_rate,
+                    monthlyPayment: account.monthly_payment
                 };
 
                 const res = await fetch(`${API_URL}/finance/accounts`, {
@@ -190,6 +196,7 @@ export const useFinanceStore = defineStore('finance', {
                 if (changes.cutoff_day !== undefined) payload.cutoffDay = changes.cutoff_day;
                 if (changes.payment_day !== undefined) payload.paymentDay = changes.payment_day;
                 if (changes.interest_rate !== undefined) payload.interestRate = changes.interest_rate;
+                if (changes.monthly_payment !== undefined) payload.monthlyPayment = changes.monthly_payment;
 
                 const res = await fetch(`${API_URL}/finance/accounts/${id}`, {
                     method: 'PUT',
@@ -236,7 +243,8 @@ export const useFinanceStore = defineStore('finance', {
                 if (json.success) {
                     this.subscriptions = json.data.map((s: any) => ({
                         ...s,
-                        amount: Number(s.amount)
+                        amount: Number(s.amount),
+                        lastPaymentDate: s.lastPaymentDate
                     }));
                 }
             } catch (err) {
@@ -265,6 +273,22 @@ export const useFinanceStore = defineStore('finance', {
                 await fetch(`${API_URL}/finance/subscriptions/${id}`, { method: 'DELETE' });
                 this.subscriptions = this.subscriptions.filter(s => s.id !== id);
             } catch (err) { console.error(err); }
+        },
+
+        async updateSubscription(id: number, sub: Partial<Subscription>) {
+            try {
+                const res = await fetch(`${API_URL}/finance/subscriptions/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(sub)
+                });
+                const json = await res.json();
+                if (json.success) {
+                    await this.fetchSubscriptions();
+                }
+            } catch (err) {
+                console.error("Error updating subscription:", err);
+            }
         }
     }
 });

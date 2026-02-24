@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue';
-import SubscriptionsSection from './SubscriptionsSection.vue';
 import { useFinanceStore } from '../../stores/financeStore';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, LineElement, PointElement, CategoryScale, LinearScale, Title, Filler } from 'chart.js';
 import { Doughnut, Line } from 'vue-chartjs';
@@ -11,6 +10,37 @@ const store = useFinanceStore();
 
 onMounted(() => {
     store.initialize();
+});
+
+const formatMoney = (amount: number) => {
+    return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(amount);
+};
+
+const fixedCostPercentage = computed(() => {
+    if (store.totalBalance === 0) return 0;
+    const percentage = (store.totalFixedExpenses / store.totalBalance) * 100;
+    return Math.abs(Math.round(percentage));
+});
+
+const impactText = computed(() => {
+    const p = fixedCostPercentage.value;
+    if (p < 15) return 'Bajo';
+    if (p < 30) return 'Moderado';
+    return 'Crítico';
+});
+
+const impactColor = computed(() => {
+    const p = fixedCostPercentage.value;
+    if (p < 15) return 'bg-emerald-100 text-emerald-600';
+    if (p < 30) return 'bg-orange-100 text-orange-600';
+    return 'bg-red-100 text-red-600';
+});
+
+const percentageColor = computed(() => {
+    const p = fixedCostPercentage.value;
+    if (p < 15) return 'bg-emerald-500';
+    if (p < 30) return 'bg-orange-500';
+    return 'bg-red-500';
 });
 
 const colors = [
@@ -51,17 +81,11 @@ const expenseData = computed(() => {
 });
 
 const budgetData = computed(() => {
-    // Calculate last 6 months trend
     const months = [];
     const actuals = [];
     const budgets = [];
     
-    // Fixed monthly budget (Subscriptions)
-    const monthlyFixed = store.subscriptions.reduce((sum, sub) => {
-        let val = Number(sub.amount);
-        if (sub.frequency === 'YEARLY') val = val / 12;
-        return sum + val;
-    }, 0);
+    const monthlyFixed = store.totalFixedExpenses;
 
     for (let i = 5; i >= 0; i--) {
         const d = new Date();
@@ -69,7 +93,6 @@ const budgetData = computed(() => {
         const monthLabel = d.toLocaleDateString('es-MX', { month: 'short' });
         months.push(monthLabel);
 
-        // Actual Spending for this month
         const monthlyTotal = store.transactions
             .filter(t => {
                 const td = new Date(t.date);
@@ -117,31 +140,71 @@ const chartOptions = {
 </script>
 
 <template>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 animate-fade-in">
-        
-        <!-- Income Chart -->
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center">
-            <h3 class="text-slate-500 font-bold uppercase text-xs mb-4">Distribución de Ingresos</h3>
-            <div class="w-full h-48 relative">
-                <Doughnut :data="incomeData" :options="chartOptions" />
+    <div class="space-y-6 mb-8 animate-fade-in text-left">
+        <!-- Relationship Summary Card -->
+        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div class="space-y-1">
+                    <h3 class="text-slate-800 font-bold text-lg">Resumen de Salud Financiera</h3>
+                    <p class="text-slate-400 text-sm">Relación entre tus gastos fijos y tu capital disponible.</p>
+                </div>
+                <div class="flex items-center gap-4 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">
+                    <div class="text-right">
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Costo Fijo Mensual</p>
+                        <p class="text-lg font-black text-slate-800">{{ formatMoney(store.totalFixedExpenses) }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Bar / Relation -->
+            <div class="mt-8 space-y-4">
+                <div class="flex justify-between items-end">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-slate-500 uppercase">Impacto en Balance Total</span>
+                        <span :class="['text-[10px] font-bold px-2 py-0.5 rounded-full', impactColor]">
+                            {{ impactText }}
+                        </span>
+                    </div>
+                    <p class="text-sm font-black text-slate-800">{{ fixedCostPercentage }}%</p>
+                </div>
+                <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+                    <div 
+                        class="h-full transition-all duration-1000 ease-out rounded-full"
+                        :class="percentageColor"
+                        :style="{ width: `${Math.min(fixedCostPercentage, 100)}%` }"
+                    ></div>
+                </div>
+                <p class="text-[11px] text-slate-400 leading-relaxed italic">
+                    *Tus compromisos mensuales (suscripciones y servicios) representan el <strong>{{ fixedCostPercentage }}%</strong> de tu balance total actual. 
+                    {{ fixedCostPercentage > 30 ? 'Considera reducir gastos fijos para mejorar tu liquidez.' : 'Tienes una excelente relación de gastos fijos.' }}
+                </p>
             </div>
         </div>
 
-        <!-- Expense Chart -->
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center">
-            <h3 class="text-slate-500 font-bold uppercase text-xs mb-4">Distribución de Egresos</h3>
-            <div class="w-full h-48 relative">
-                <Doughnut :data="expenseData" :options="chartOptions" />
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Income Chart -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center">
+                <h3 class="text-slate-500 font-bold uppercase text-xs mb-4">Distribución de Ingresos</h3>
+                <div class="w-full h-48 relative">
+                    <Doughnut :data="incomeData" :options="chartOptions" />
+                </div>
+            </div>
+
+            <!-- Expense Chart -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center">
+                <h3 class="text-slate-500 font-bold uppercase text-xs mb-4">Distribución de Egresos</h3>
+                <div class="w-full h-48 relative">
+                    <Doughnut :data="expenseData" :options="chartOptions" />
+                </div>
+            </div>
+
+            <!-- Budget vs Actual Trend -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center md:col-span-2 lg:col-span-1">
+                <h3 class="text-slate-500 font-bold uppercase text-xs mb-4">Tendencia (Últimos 6 meses)</h3>
+                <div class="w-full h-48 relative">
+                    <Line :data="budgetData" :options="chartOptions" />
+                </div>
             </div>
         </div>
-
-        <!-- Budget vs Actual Trend -->
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center md:col-span-2 lg:col-span-1">
-            <h3 class="text-slate-500 font-bold uppercase text-xs mb-4">Tendencia (Últimos 6 meses)</h3>
-            <div class="w-full h-48 relative">
-                <Line :data="budgetData" :options="chartOptions" />
-            </div>
-        </div>
-
     </div>
 </template>
