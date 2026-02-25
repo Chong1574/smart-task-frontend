@@ -82,46 +82,51 @@ const expenseData = computed(() => {
 
 const budgetData = computed(() => {
     const months = [];
-    const actuals = [];
-    const budgets = [];
+    const actualExpenses = [];
+    const actualIncomes = [];
     
-    const monthlyFixed = store.totalFixedExpenses;
-
     for (let i = 5; i >= 0; i--) {
         const d = new Date();
         d.setMonth(d.getMonth() - i);
         const monthLabel = d.toLocaleDateString('es-MX', { month: 'short' });
         months.push(monthLabel);
 
-        const monthlyTotal = store.transactions
+        const monthlyExpenses = store.transactions
             .filter(t => {
                 const td = new Date(t.date);
-                return td.getMonth() === d.getMonth() && td.getFullYear() === d.getFullYear() && (t.type === 'expense' || t.type === 'loan_payment');
+                return td.getMonth() === d.getMonth() && td.getFullYear() === d.getFullYear() && 
+                       (t.type === 'expense' || t.type === 'loan_payment' || t.type === 'credit_payment');
             })
             .reduce((sum, t) => sum + Number(t.amount), 0);
         
-        actuals.push(monthlyTotal);
-        budgets.push(monthlyFixed); 
+        const monthlyIncomes = store.transactions
+            .filter(t => {
+                const td = new Date(t.date);
+                return td.getMonth() === d.getMonth() && td.getFullYear() === d.getFullYear() && t.type === 'income';
+            })
+            .reduce((sum, t) => sum + Number(t.amount), 0);
+        
+        actualExpenses.push(monthlyExpenses);
+        actualIncomes.push(monthlyIncomes); 
     }
 
     return {
         labels: months,
         datasets: [
             {
-                label: 'Presupuesto (Fijo)',
-                borderColor: '#6366f1',
-                backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                data: budgets,
+                label: 'Ingresos del Mes',
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                data: actualIncomes,
                 tension: 0.4,
-                borderDash: [5, 5],
-                fill: false,
-                pointRadius: 0
+                fill: true,
+                pointBackgroundColor: '#10b981'
             },
             {
-                label: 'Gasto Real',
+                label: 'Gastos Globales',
                 borderColor: '#ef4444',
                 backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                data: actuals,
+                data: actualExpenses,
                 tension: 0.4,
                 fill: true,
                 pointBackgroundColor: '#ef4444'

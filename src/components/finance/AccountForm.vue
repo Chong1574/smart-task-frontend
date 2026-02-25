@@ -20,6 +20,7 @@ const form = ref({
     paymentDay: '' as string | number, // Día de pago
     interestRate: '' as number | '', // Tasa de interés
     monthlyPayment: '' as number | '', // Mensualidad fija
+    paymentFrequency: 'MONTHLY' as 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY',
     currency: 'MXN'
 });
 
@@ -55,6 +56,7 @@ watchEffect(() => {
             paymentDay: props.initialData.payment_day || '',
             interestRate: props.initialData.interest_rate || '',
             monthlyPayment: props.initialData.monthly_payment || '',
+            paymentFrequency: props.initialData.payment_frequency || 'MONTHLY',
             currency: props.initialData.currency
         };
         // Check fixed credit logic
@@ -81,6 +83,7 @@ const submit = async () => {
         payment_day: Number(form.value.paymentDay) || 0,
         interest_rate: isFixedCredit.value ? 0 : (Number(form.value.interestRate) || 0),
         monthly_payment: Number(form.value.monthlyPayment) || 0,
+        payment_frequency: form.value.paymentFrequency,
         currency: form.value.currency
     };
 
@@ -185,11 +188,21 @@ const submit = async () => {
                         </div>
                     </div>
 
-                    <div>
-                        <label class="text-[10px] font-bold text-slate-400 uppercase">Mensualidad Fija (Opcional)</label>
-                        <div class="relative">
-                            <DollarSign :size="16" class="absolute left-3 top-3 text-slate-400" />
-                            <input v-model="form.monthlyPayment" type="number" step="0.01" class="w-full pl-9 p-2.5 bg-white rounded-xl outline-none font-bold text-slate-700 border border-slate-200" placeholder="0.00" />
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="col-span-1">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase">Frecuencia Pago</label>
+                            <select v-model="form.paymentFrequency" class="w-full p-2.5 bg-white rounded-xl outline-none text-xs font-bold text-slate-600 appearance-none border border-slate-200 h-[46px]">
+                                <option value="WEEKLY">Semanal</option>
+                                <option value="BIWEEKLY">Quincenal</option>
+                                <option value="MONTHLY">Mensual</option>
+                            </select>
+                        </div>
+                        <div class="col-span-1">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase">Monto Pago</label>
+                            <div class="relative">
+                                <DollarSign :size="16" class="absolute left-3 top-3 text-slate-400" />
+                                <input v-model="form.monthlyPayment" type="number" step="0.01" class="w-full pl-9 p-2.5 bg-white rounded-xl outline-none font-bold text-slate-700 border border-slate-200" placeholder="0.00" />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -218,13 +231,23 @@ const submit = async () => {
                     </div>
 
                     <!-- Mensualidad para Préstamos -->
-                    <div v-if="form.type === 'loan'" class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="text-[10px] font-bold text-slate-400 uppercase">Día de Pago</label>
-                            <input v-model="form.paymentDay" type="number" min="1" max="31" class="w-full p-2.5 bg-white rounded-xl outline-none font-bold text-slate-600 text-center border border-slate-200" placeholder="DD" />
+                    <div v-if="form.type === 'loan'" class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-400 uppercase">Día de Pago</label>
+                                <input v-model="form.paymentDay" type="number" min="1" max="31" class="w-full p-2.5 bg-white rounded-xl outline-none font-bold text-slate-600 text-center border border-slate-200" placeholder="DD" />
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-400 uppercase">Frecuencia</label>
+                                <select v-model="form.paymentFrequency" class="w-full p-2.5 bg-white rounded-xl outline-none text-xs font-bold text-slate-600 appearance-none border border-slate-200 h-[46px]">
+                                    <option value="WEEKLY">Semanal</option>
+                                    <option value="BIWEEKLY">Quincenal</option>
+                                    <option value="MONTHLY">Mensual</option>
+                                </select>
+                            </div>
                         </div>
                         <div>
-                            <label class="text-[10px] font-bold text-slate-400 uppercase">Mensualidad (Fija)</label>
+                            <label class="text-[10px] font-bold text-slate-400 uppercase">Monto de Pago</label>
                             <div class="relative">
                                 <DollarSign :size="16" class="absolute left-3 top-3 text-slate-400" />
                                 <input v-model="form.monthlyPayment" type="number" step="0.01" class="w-full pl-9 p-2.5 bg-white rounded-xl outline-none font-bold text-slate-700 border border-slate-200" placeholder="0.00" />

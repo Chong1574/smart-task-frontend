@@ -18,6 +18,7 @@ const task = ref({
   duration_minutes: 60,
   deadline: getLocalISOString(),
   auto_distribute: false,
+  priority: 'medium' as 'high' | 'medium' | 'low',
   budget: 0,
   description: ''
 });
@@ -102,6 +103,22 @@ const submit = () => {
               type="datetime-local" 
               class="w-full pl-10 p-3 bg-slate-50 border-none rounded-xl outline-none text-xs font-medium text-slate-600" 
             />
+          </div>
+        </div>
+
+        <div class="col-span-2">
+          <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Prioridad (Impacto en Agenda)</label>
+          <div class="flex gap-2">
+            <button 
+              v-for="p in [{id:'high', label:'Alta', colorClass:'bg-red-50 border-red-500 text-red-700'}, {id:'medium', label:'Media', colorClass:'bg-amber-50 border-amber-500 text-amber-700'}, {id:'low', label:'Baja', colorClass:'bg-emerald-50 border-emerald-500 text-emerald-700'}]" 
+              :key="p.id"
+              type="button"
+              @click="task.priority = p.id"
+              class="flex-1 p-2 rounded-xl text-xs font-bold transition-all border-2"
+              :class="[task.priority === p.id ? p.colorClass : 'bg-slate-50 border-transparent text-slate-400']"
+            >
+              {{ p.label }}
+            </button>
           </div>
         </div>
       </div>

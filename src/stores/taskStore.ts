@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import api from '../api'
 
 // Interfaz alineada con tu SQL y el motor de Node.js
 export interface Task {
@@ -16,26 +17,38 @@ export interface Task {
 export const useTaskStore = defineStore('tasks', {
     state: () => ({
         tasks: [] as Task[],
-        loading: false
+        loading: false,
+        error: null as string | null
     }),
     actions: {
-        addTask(newTask: Task) {
-            // Creamos el objeto final con ID temporal y status default
-            const taskToSave: Task = {
-                ...newTask,
-                id: Date.now(),
-                status: 'pending'
+        async fetchTasks() {
+            this.loading = true;
+            try {
+                const res = await api.get('/tasks');
+                if (res.data.success) {
+                    this.tasks = res.data.data;
+                }
+            } catch (err) {
+                console.error("Error fetching tasks:", err);
+            } finally {
+                this.loading = false;
             }
+        },
 
-            this.tasks.push(taskToSave)
-
-            // Simulación de logs para depuración del flujo
-            if (newTask.auto_distribute) {
-                console.log('⚡ [Auto-Scheduler] Activado para:', taskToSave.title)
-                console.log(`   - Dividir ${taskToSave.duration_minutes} min en bloques`)
-                console.log(`   - Fecha límite: ${taskToSave.deadline}`)
-            } else {
-                console.log('📅 [Standard] Tarea agendada como bloque fijo único')
+        async addTask(newTask: Task) {
+            this.loading = true;
+            try {
+                const res = await api.post('/tasks', newTask);
+                if (res.data.success) {
+                    await this.fetchTasks();
+                    return true;
+                }
+                return false;
+            } catch (err) {
+                console.error("Error adding task:", err);
+                return false;
+            } finally {
+                this.loading = false;
             }
         }
     }

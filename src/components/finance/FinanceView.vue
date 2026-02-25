@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useFinanceStore, type Account } from '../../stores/financeStore';
-import { Wallet, TrendingUp, TrendingDown, CreditCard, Plus, Trash2, Pencil, Zap, CreditCard as CardIcon, List, Calendar, CheckCircle } from 'lucide-vue-next';
+import { Wallet, TrendingUp, TrendingDown, CreditCard, Plus, Trash2, Pencil, Zap, CreditCard as CardIcon, List, Calendar } from 'lucide-vue-next';
 import TransactionForm from './TransactionForm.vue';
 import AccountForm from './AccountForm.vue';
 import SubscriptionsSection from './SubscriptionsSection.vue';
@@ -82,6 +82,15 @@ const getTypeColor = (type: string) => {
         'savings': 'bg-blue-600'
     };
     return colors[type] || 'bg-slate-500';
+};
+
+const getFrequencyLabel = (freq: string) => {
+    const labels: Record<string, string> = {
+        'WEEKLY': 'Semanal',
+        'BIWEEKLY': 'Quincenal',
+        'MONTHLY': 'Mensual'
+    };
+    return labels[freq] || 'Fijo';
 };
 </script>
 
@@ -208,7 +217,7 @@ const getTypeColor = (type: string) => {
                             </div>
                             <div v-if="acc.monthly_payment > 0 || acc.payment_day > 0" class="flex justify-between items-center opacity-90 text-[10px] bg-white/10 px-2 py-1 rounded-lg font-black uppercase">
                                 <span class="flex items-center gap-1"><Calendar :size="10" /> {{ acc.payment_day ? 'Día ' + acc.payment_day : 'S/F' }}</span>
-                                <span>{{ acc.monthly_payment > 0 ? formatMoney(acc.monthly_payment) : 'Pago Var.' }}</span>
+                                <span>{{ acc.monthly_payment > 0 ? formatMoney(acc.monthly_payment) + ' (' + getFrequencyLabel(acc.payment_frequency) + ')' : 'Pago Var.' }}</span>
                             </div>
                         </div>
 
@@ -216,7 +225,7 @@ const getTypeColor = (type: string) => {
                         <div v-if="acc.type === 'loan'" class="mt-1 space-y-1">
                             <div v-if="acc.monthly_payment > 0 || acc.payment_day > 0" class="flex justify-between items-center opacity-90 text-[10px] bg-white/10 px-2 py-1 rounded-lg font-black uppercase">
                                 <span class="flex items-center gap-1"><Calendar :size="10" /> {{ acc.payment_day ? 'Día ' + acc.payment_day : 'S/F' }}</span>
-                                <span>{{ formatMoney(acc.monthly_payment) }} (Mes)</span>
+                                <span>{{ formatMoney(acc.monthly_payment) }} ({{ getFrequencyLabel(acc.payment_frequency) }})</span>
                             </div>
                         </div>
                     </div>
@@ -260,7 +269,10 @@ const getTypeColor = (type: string) => {
                   <TrendingDown v-else :size="18" />
                 </div>
                 <div>
-                  <p class="font-bold text-slate-800 text-sm">{{ tx.category }}</p>
+                  <div class="flex items-center gap-2">
+                    <p class="font-bold text-slate-800 text-sm">{{ tx.category }}</p>
+                    <span v-if="tx.account" class="text-[9px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-bold uppercase">{{ tx.account.name }}</span>
+                  </div>
                   <p class="text-xs text-slate-400">{{ tx.description }} • {{ formatDate(tx.date) }}</p>
                 </div>
               </div>

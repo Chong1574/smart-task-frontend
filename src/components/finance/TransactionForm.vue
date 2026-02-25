@@ -1,24 +1,48 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useFinanceStore, type TransactionType } from '../../stores/financeStore';
-import { DollarSign, Tag, FileText, CreditCard, PlusCircle, Wallet, ArrowUpRight, ArrowDownLeft, RefreshCw, ArrowRight, TrendingUp } from 'lucide-vue-next';
+import { DollarSign, Tag, FileText, CreditCard, PlusCircle, ArrowUpRight, ArrowDownLeft, RefreshCw, ArrowRight } from 'lucide-vue-next';
 
 const store = useFinanceStore();
 
 // Estado del formulario
 // Allow 'interest' as a temporary UI type
 const form = ref({
-  type: 'expense' as TransactionType | 'interest',
+  type: 'expense' as TransactionType | 'subscription_payment',
   amount: 0 as number | '',
   accountId: store.accounts[0]?.id || 0,
   destinationAccountId: 0,
+  subscriptionId: 0,
   category: 'Comida',
   description: ''
 });
 
+// Watch para inicializar cuentas cuando carguen
+import { watch } from 'vue';
+watch(() => store.accounts, (newAccs) => {
+    if (newAccs && newAccs.length > 0) {
+        if (!form.value.accountId && newAccs[0]) {
+            form.value.accountId = newAccs[0].id;
+        }
+    }
+}, { immediate: true });
+
+// Watch para seleccionar destino automáticamente en transferencias
+watch(() => form.value.type, (newType) => {
+    if (['transfer', 'credit_payment', 'loan_payment'].includes(newType)) {
+        setTimeout(() => {
+            const dests = destinationAccounts.value;
+            if (dests && dests.length > 0 && !form.value.destinationAccountId) {
+                const first = dests[0];
+                if (first) form.value.destinationAccountId = first.id;
+            }
+        }, 50);
+    }
+});
+
 // Lógica de Transferencia
 const isTransferType = computed(() => {
-  return ['credit_payment', 'loan_payment', 'transfer'].includes(form.value.type);
+  return ['credit_payment', 'loan_payment', 'transfer', 'subscription_payment'].includes(form.value.type);
 });
 
 // Cuentas de Origen
@@ -41,6 +65,10 @@ const destinationAccounts = computed(() => {
     return store.accounts.filter(a => a.id !== form.value.accountId);
   }
   return [];
+});
+
+const availableSubscriptions = computed(() => {
+    return store.subscriptions;
 });
 
 // Lógica para Nueva Categoría
@@ -72,9 +100,9 @@ const transactionTypes = [
   { id: 'expense', label: 'Gasto / Compra', icon: ArrowDownLeft, color: 'text-red-500 bg-red-50' },
   { id: 'income', label: 'Ingreso', icon: ArrowUpRight, color: 'text-green-600 bg-green-50' },
   { id: 'transfer', label: 'Transferencia', icon: ArrowRight, color: 'text-slate-600 bg-slate-50' },
+  { id: 'subscription_payment', label: 'Pagar Servicio', icon: RefreshCw, color: 'text-indigo-600 bg-indigo-50' },
   { id: 'credit_payment', label: 'Pagar Tarjeta', icon: CreditCard, color: 'text-blue-600 bg-blue-50' },
   { id: 'loan_payment', label: 'Pagar Crédito', icon: RefreshCw, color: 'text-orange-600 bg-orange-50' },
-  { id: 'interest', label: 'Cargar Interés', icon: TrendingUp, color: 'text-yellow-600 bg-yellow-50' },
 ];
 
 const submit = () => {
@@ -83,21 +111,26 @@ const submit = () => {
   let finalType = form.value.type;
   let finalCategory = form.value.category;
 
-  // Map 'interest' to expense + category
-  if (form.value.type === 'interest') {
-      finalType = 'expense';
-      finalCategory = 'Intereses';
+  // Map 'subscription_payment' to expense for backend if needed, or keep if backend handles it
+  if (form.value.type === 'subscription_payment') {
+      finalType = 'expense'; // Subscriptions are expenses
+      const sub = store.subscriptions.find(s => s.id === form.value.subscriptionId);
+      finalCategory = sub ? sub.name : 'Servicios';
   }
 
   // Payload
   const payload: any = {
     type: finalType,
     amount: Number(form.value.amount),
-    accountId: form.value.accountId,
+    accountId: Number(form.value.accountId),
     category: finalCategory,
     description: form.value.description,
     date: new Date().toISOString()
   };
+
+  if (form.value.type === 'subscription_payment' && form.value.subscriptionId) {
+      payload.subscriptionId = Number(form.value.subscriptionId);
+  }
 
   // Adjuntar cuenta destino si es transferencia
   if (isTransferType.value && form.value.destinationAccountId) {
@@ -109,6 +142,9 @@ const submit = () => {
   // Reset fields (but keep type/category potentially or reset? usually keep type)
   form.value.amount = '';
   form.value.description = '';
+};
+const formatMoney = (amount: number) => {
+  return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(amount);
 };
 </script>
 
@@ -154,22 +190,32 @@ const submit = () => {
            <!-- FROM (Origen) -->
            <div>
              <label class="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
-                De (Origen) <ArrowRight :size="12"/>
+                Desde (Origen) <ArrowRight :size="12"/>
              </label>
              <select v-model="form.accountId" class="w-full p-2 bg-white rounded-lg border border-slate-200 text-sm font-medium text-slate-600 mt-1">
-               <option v-for="acc in sourceAccounts" :key="acc.id" :value="acc.id">{{ acc.name }}</option>
+               <option v-for="acc in sourceAccounts" :key="acc.id" :value="acc.id">{{ acc.name }} ({{ formatMoney(acc.balance) }})</option>
              </select>
            </div>
 
-           <!-- TO (Destino) -->
-           <div>
-             <label class="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
-                Para (Pagando a)
-             </label>
-             <select v-model="form.destinationAccountId" class="w-full p-2 bg-white rounded-lg border border-slate-200 text-sm font-medium text-slate-600 mt-1">
-               <option v-for="acc in destinationAccounts" :key="acc.id" :value="acc.id">{{ acc.name }}</option>
-             </select>
-           </div>
+            <!-- TO (Destino) -->
+            <div v-if="form.type !== 'subscription_payment'">
+              <label class="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
+                 Para (Pagando a)
+              </label>
+              <select v-model="form.destinationAccountId" class="w-full p-2 bg-white rounded-lg border border-slate-200 text-sm font-medium text-slate-600 mt-1">
+                <option v-for="acc in destinationAccounts" :key="acc.id" :value="acc.id">{{ acc.name }}</option>
+              </select>
+            </div>
+
+            <!-- TO (Subscription) -->
+            <div v-else>
+              <label class="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
+                 Servicio / Membresía
+              </label>
+              <select v-model="form.subscriptionId" class="w-full p-2 bg-white rounded-lg border border-slate-200 text-sm font-medium text-slate-600 mt-1">
+                <option v-for="sub in availableSubscriptions" :key="sub.id" :value="sub.id">{{ sub.name }} ({{ formatMoney(sub.amount) }})</option>
+              </select>
+            </div>
         </div>
 
         <div>

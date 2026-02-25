@@ -1,10 +1,12 @@
 import { createApp } from 'vue'
-import { createPinia } from 'pinia' // Importar Pinia
+import { createPinia } from 'pinia'
+import router from './router'
 import './style.css'
 import App from './App.vue'
 
 const app = createApp(App)
-const pinia = createPinia() // Crear la instancia
+const pinia = createPinia()
 
-app.use(pinia) // ¡IMPORTANTE! Instalar Pinia antes de montar la app
+app.use(pinia)
+app.use(router)
 app.mount('#app')
