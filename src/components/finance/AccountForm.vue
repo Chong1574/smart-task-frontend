@@ -182,9 +182,21 @@ const submit = async () => {
                             <label class="text-[10px] font-bold text-slate-400 uppercase">Día Corte</label>
                             <input v-model="form.cutoffDay" type="number" min="1" max="31" class="w-full p-3 bg-white rounded-xl outline-none font-medium text-slate-600 text-center border border-slate-200" placeholder="DD" />
                         </div>
-                        <div>
-                            <label class="text-[10px] font-bold text-slate-400 uppercase">Día Pago</label>
-                            <input v-model="form.paymentDay" type="number" min="1" max="31" class="w-full p-3 bg-white rounded-xl outline-none font-medium text-slate-600 text-center border border-slate-200" placeholder="DD" />
+                        <div class="col-span-1">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase">
+                                {{ form.paymentFrequency === 'WEEKLY' ? 'Día de la semana' : 'Día de Pago' }}
+                            </label>
+                            
+                            <select v-if="form.paymentFrequency === 'WEEKLY'" v-model="form.paymentDay" class="w-full p-2.5 bg-white rounded-xl outline-none text-xs font-bold text-slate-600 appearance-none border border-slate-200 h-[46px]">
+                                <option :value="1">Lunes</option>
+                                <option :value="2">Martes</option>
+                                <option :value="3">Miércoles</option>
+                                <option :value="4">Jueves</option>
+                                <option :value="5">Viernes</option>
+                                <option :value="6">Sábado</option>
+                                <option :value="0">Domingo</option>
+                            </select>
+                            <input v-else v-model="form.paymentDay" type="number" min="1" max="31" class="w-full p-2.5 bg-white rounded-xl outline-none font-bold text-slate-600 text-center border border-slate-200" placeholder="DD" />
                         </div>
                     </div>
 
@@ -234,8 +246,19 @@ const submit = async () => {
                     <div v-if="form.type === 'loan'" class="space-y-4">
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="text-[10px] font-bold text-slate-400 uppercase">Día de Pago</label>
-                                <input v-model="form.paymentDay" type="number" min="1" max="31" class="w-full p-2.5 bg-white rounded-xl outline-none font-bold text-slate-600 text-center border border-slate-200" placeholder="DD" />
+                                <label class="text-[10px] font-bold text-slate-400 uppercase">
+                                    {{ form.paymentFrequency === 'WEEKLY' ? 'Día de la semana' : 'Día de Pago' }}
+                                </label>
+                                <select v-if="form.paymentFrequency === 'WEEKLY'" v-model="form.paymentDay" class="w-full p-2.5 bg-white rounded-xl outline-none text-xs font-bold text-slate-600 appearance-none border border-slate-200 h-[46px]">
+                                    <option :value="1">Lunes</option>
+                                    <option :value="2">Martes</option>
+                                    <option :value="3">Miércoles</option>
+                                    <option :value="4">Jueves</option>
+                                    <option :value="5">Viernes</option>
+                                    <option :value="6">Sábado</option>
+                                    <option :value="0">Domingo</option>
+                                </select>
+                                <input v-else v-model="form.paymentDay" type="number" min="1" max="31" class="w-full p-2.5 bg-white rounded-xl outline-none font-bold text-slate-600 text-center border border-slate-200" placeholder="DD" />
                             </div>
                             <div>
                                 <label class="text-[10px] font-bold text-slate-400 uppercase">Frecuencia</label>

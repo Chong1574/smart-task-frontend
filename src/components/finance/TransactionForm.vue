@@ -47,10 +47,17 @@ const isTransferType = computed(() => {
 
 // Cuentas de Origen
 const sourceAccounts = computed(() => {
+  const allAccounts = store.accounts;
   if (isTransferType.value) {
-    return store.accounts.filter(a => ['card', 'cash', 'savings'].includes(a.type) && a.sub_type !== 'credit');
+    return allAccounts.filter(a => {
+      // Siempre permitir ahorros, efectivo e inversiones
+      if (['cash', 'savings', 'investment'].includes(a.type)) return true;
+      // Permitir tarjetas si NO son de crédito (ej: débito, nómina)
+      if (a.type === 'card' && a.sub_type !== 'credit') return true;
+      return false;
+    });
   }
-  return store.accounts;
+  return allAccounts;
 });
 
 // Cuentas de Destino
@@ -106,14 +113,34 @@ const transactionTypes = [
 ];
 
 const submit = () => {
-  if (!form.value.amount || form.value.amount <= 0) return;
+  if (!form.value.amount || form.value.amount <= 0) {
+      alert("Por favor, ingresa un monto válido.");
+      return;
+  }
+
+  // Validaciones especiales para transferencias y pagos de cuentas
+  if (['transfer', 'credit_payment', 'loan_payment'].includes(form.value.type)) {
+      if (!form.value.destinationAccountId) {
+          alert("Por favor, selecciona una cuenta de destino para la operación.");
+          return;
+      }
+      if (form.value.accountId === form.value.destinationAccountId) {
+          alert("La cuenta origen y destino no pueden ser la misma.");
+          return;
+      }
+  }
+
+  if (form.value.type === 'subscription_payment' && !form.value.subscriptionId) {
+      alert("Por favor, selecciona el servicio a pagar.");
+      return;
+  }
   
   let finalType = form.value.type;
   let finalCategory = form.value.category;
 
-  // Map 'subscription_payment' to expense for backend if needed, or keep if backend handles it
+  // Map logical types to backend types
   if (form.value.type === 'subscription_payment') {
-      finalType = 'expense'; // Subscriptions are expenses
+      finalType = 'expense';
       const sub = store.subscriptions.find(s => s.id === form.value.subscriptionId);
       finalCategory = sub ? sub.name : 'Servicios';
   }

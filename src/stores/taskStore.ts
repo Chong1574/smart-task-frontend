@@ -12,6 +12,8 @@ export interface Task {
     description: string
     status: 'pending' | 'in_progress' | 'completed' | 'cancelled'
     budget: number
+    priority?: 'high' | 'medium' | 'low'
+    blocks?: any[]
 }
 
 export const useTaskStore = defineStore('tasks', {
@@ -49,6 +51,28 @@ export const useTaskStore = defineStore('tasks', {
                 return false;
             } finally {
                 this.loading = false;
+            }
+        },
+
+        async deleteTask(id: number) {
+            try {
+                const res = await api.delete(`/tasks/${id}`);
+                if (res.data.success) {
+                    this.tasks = this.tasks.filter(t => t.id !== id);
+                }
+            } catch (err) {
+                console.error("Error deleting task:", err);
+            }
+        },
+
+        async updateTask(id: number, updates: Partial<Task>) {
+            try {
+                const res = await api.put(`/tasks/${id}`, updates);
+                if (res.data.success) {
+                    await this.fetchTasks();
+                }
+            } catch (err) {
+                console.error("Error updating task:", err);
             }
         }
     }

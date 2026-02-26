@@ -23,13 +23,19 @@ const task = ref({
   description: ''
 });
 
-const submit = () => {
+const submitting = ref(false);
+
+const submit = async () => {
   if (!task.value.title.trim()) return;
-
-  store.addTask({ ...task.value, status: 'pending' });
-
-  // Opcional: Reiniciar título para agregar otra rápidamente
-  // task.value.title = '';
+  submitting.value = true;
+  try {
+    const success = await store.addTask({ ...task.value, status: 'pending' });
+    if (success) {
+      task.value.title = ''; // Limpiar solo el título tras éxito
+    }
+  } finally {
+    submitting.value = false;
+  }
 };
 </script>
 
@@ -110,7 +116,7 @@ const submit = () => {
           <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Prioridad (Impacto en Agenda)</label>
           <div class="flex gap-2">
             <button 
-              v-for="p in [{id:'high', label:'Alta', colorClass:'bg-red-50 border-red-500 text-red-700'}, {id:'medium', label:'Media', colorClass:'bg-amber-50 border-amber-500 text-amber-700'}, {id:'low', label:'Baja', colorClass:'bg-emerald-50 border-emerald-500 text-emerald-700'}]" 
+              v-for="p in ([{id:'high', label:'Alta', colorClass:'bg-red-50 border-red-500 text-red-700'}, {id:'medium', label:'Media', colorClass:'bg-amber-50 border-amber-500 text-amber-700'}, {id:'low', label:'Baja', colorClass:'bg-emerald-50 border-emerald-500 text-emerald-700'}] as const)" 
               :key="p.id"
               type="button"
               @click="task.priority = p.id"
@@ -146,9 +152,12 @@ const submit = () => {
 
       <button 
         type="submit" 
-        class="w-full py-4 bg-slate-900 hover:bg-black text-white rounded-xl font-bold transition-all active:scale-95 shadow-lg flex justify-center items-center gap-2"
+        :disabled="submitting"
+        class="w-full py-4 bg-slate-900 hover:bg-black text-white rounded-xl font-bold transition-all active:scale-95 shadow-lg flex justify-center items-center gap-2 disabled:bg-slate-500 disabled:cursor-not-allowed"
       >
-        <span v-if="task.auto_distribute">Procesar Auto-Scheduling</span>
+        <div v-if="submitting" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+        <span v-if="submitting">Organizando tu agenda...</span>
+        <span v-else-if="task.auto_distribute">Procesar Auto-Scheduling</span>
         <span v-else>Agendar Tarea</span>
       </button>
 

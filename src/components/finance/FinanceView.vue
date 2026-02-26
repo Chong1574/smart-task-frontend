@@ -88,9 +88,20 @@ const getFrequencyLabel = (freq: string) => {
     const labels: Record<string, string> = {
         'WEEKLY': 'Semanal',
         'BIWEEKLY': 'Quincenal',
-        'MONTHLY': 'Mensual'
+        'MONTHLY': 'Mensual',
+        'BIMONTHLY': 'Bimestral'
     };
     return labels[freq] || 'Fijo';
+};
+
+const formatPaymentDay = (acc: Account) => {
+    if (!acc.payment_day) return 'S/F';
+    if (acc.payment_frequency === 'WEEKLY') {
+        const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+        // Note: JS Date.getDay() uses 0=Sunday. My select uses 0=Dom, 1=Lun...
+        return days[acc.payment_day] || 'Semanal';
+    }
+    return 'Día ' + acc.payment_day;
 };
 </script>
 
@@ -216,7 +227,7 @@ const getFrequencyLabel = (freq: string) => {
                                 <span>Límite: {{ formatMoney(acc.credit_limit) }}</span>
                             </div>
                             <div v-if="acc.monthly_payment > 0 || acc.payment_day > 0" class="flex justify-between items-center opacity-90 text-[10px] bg-white/10 px-2 py-1 rounded-lg font-black uppercase">
-                                <span class="flex items-center gap-1"><Calendar :size="10" /> {{ acc.payment_day ? 'Día ' + acc.payment_day : 'S/F' }}</span>
+                                <span class="flex items-center gap-1"><Calendar :size="10" /> {{ formatPaymentDay(acc) }}</span>
                                 <span>{{ acc.monthly_payment > 0 ? formatMoney(acc.monthly_payment) + ' (' + getFrequencyLabel(acc.payment_frequency) + ')' : 'Pago Var.' }}</span>
                             </div>
                         </div>
@@ -224,7 +235,7 @@ const getFrequencyLabel = (freq: string) => {
                         <!-- Extra info for loans -->
                         <div v-if="acc.type === 'loan'" class="mt-1 space-y-1">
                             <div v-if="acc.monthly_payment > 0 || acc.payment_day > 0" class="flex justify-between items-center opacity-90 text-[10px] bg-white/10 px-2 py-1 rounded-lg font-black uppercase">
-                                <span class="flex items-center gap-1"><Calendar :size="10" /> {{ acc.payment_day ? 'Día ' + acc.payment_day : 'S/F' }}</span>
+                                <span class="flex items-center gap-1"><Calendar :size="10" /> {{ formatPaymentDay(acc) }}</span>
                                 <span>{{ formatMoney(acc.monthly_payment) }} ({{ getFrequencyLabel(acc.payment_frequency) }})</span>
                             </div>
                         </div>

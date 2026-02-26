@@ -10,7 +10,7 @@ const editingId = ref<number | null>(null);
 const form = ref({
     name: '',
     amount: '' as number | '',
-    frequency: 'MONTHLY' as 'MONTHLY' | 'YEARLY',
+    frequency: 'MONTHLY' as 'MONTHLY' | 'YEARLY' | 'BIMONTHLY',
     type: 'SERVICE' as 'SERVICE' | 'MEMBERSHIP',
     isVariable: false,
     nextPaymentDate: '',
@@ -25,7 +25,7 @@ const handleEdit = (sub: Subscription) => {
         frequency: sub.frequency,
         type: sub.type,
         isVariable: sub.isVariable,
-        nextPaymentDate: sub.nextPaymentDate ? sub.nextPaymentDate.split('T')[0] : '',
+        nextPaymentDate: sub.nextPaymentDate ? (sub.nextPaymentDate.split('T')[0] || '') : '',
         accountId: sub.accountId || ''
     };
     isFormOpen.value = true;
@@ -85,10 +85,11 @@ const submit = async () => {
 const formatSubscriptionDate = (sub: Subscription) => {
     if (!sub.nextPaymentDate) return '';
     const date = new Date(sub.nextPaymentDate);
-    if (sub.frequency === 'MONTHLY') {
+    if (sub.frequency === 'MONTHLY' || sub.frequency === 'BIMONTHLY') {
         const day = date.getUTCDate();
         return `Día ${day}`;
     } else {
+        // Para Anual: Día y Mes (ej: 15 de Ene)
         return `Renueva ${date.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}`;
     }
 };
@@ -97,9 +98,13 @@ const isPaidThisPeriod = (sub: Subscription) => {
     if (!sub.lastPaymentDate) return false;
     const lastPaid = new Date(sub.lastPaymentDate);
     const now = new Date();
+    const monthsDiff = (now.getFullYear() - lastPaid.getFullYear()) * 12 + now.getMonth() - lastPaid.getMonth();
     
     if (sub.frequency === 'MONTHLY') {
-        return lastPaid.getMonth() === now.getMonth() && lastPaid.getFullYear() === now.getFullYear();
+        return monthsDiff === 0;
+    } else if (sub.frequency === 'BIMONTHLY') {
+        // Pagado si fue en este mes o el pasado
+        return monthsDiff < 2;
     } else {
         return lastPaid.getFullYear() === now.getFullYear();
     }
@@ -141,11 +146,14 @@ const formatMoney = (amount: number) => {
                     <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Frecuencia</label>
                     <select v-model="form.frequency" class="w-full p-2.5 rounded-xl border border-slate-200 text-sm font-medium focus:ring-2 focus:ring-slate-900 outline-none transition-all">
                         <option value="MONTHLY">Mensual</option>
+                        <option value="BIMONTHLY">Bimestral (Luz, etc)</option>
                         <option value="YEARLY">Anual</option>
                     </select>
                 </div>
                 <div class="space-y-1">
-                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">{{ form.frequency === 'MONTHLY' ? 'Día de Pago' : 'Fecha de Renovación' }}</label>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">
+                        {{ form.frequency === 'YEARLY' ? 'Fecha de Renovación' : 'Día de Pago' }}
+                    </label>
                     <input v-model="form.nextPaymentDate" type="date" class="w-full p-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-slate-900 outline-none transition-all" />
                 </div>
                 <div class="space-y-1">
@@ -186,7 +194,7 @@ const formatMoney = (amount: number) => {
                     <div class="space-y-0.5">
                         <p class="font-bold text-slate-800 text-sm leading-tight">{{ sub.name }}</p>
                         <p class="text-[10px] text-slate-400 font-bold uppercase tracking-tight">
-                            {{ sub.frequency === 'MONTHLY' ? 'MENSUAL' : 'ANUAL' }} • {{ sub.isVariable ? 'VAR.' : 'FIJO' }}
+                            {{ sub.frequency === 'MONTHLY' ? 'MENSUAL' : sub.frequency === 'BIMONTHLY' ? 'BIMESTRAL' : 'ANUAL' }} • {{ sub.isVariable ? 'VAR.' : 'FIJO' }}
                         </p>
                         <div class="flex items-center gap-2 mt-0.5">
                             <p :class="['text-[10px] font-black uppercase tracking-tighter', isPaidThisPeriod(sub) ? 'text-emerald-500 flex items-center gap-1' : 'text-blue-500']">

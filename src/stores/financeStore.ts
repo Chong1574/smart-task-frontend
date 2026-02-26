@@ -4,7 +4,7 @@ import api from '../api';
 // --- Tipos alineados con tu Lógica de Negocio ---
 export type AccountType = 'card' | 'loan' | 'investment' | 'cash' | 'savings';
 export type AccountSubType = 'debit' | 'credit' | 'payroll' | 'n/a';
-export type TransactionType = 'income' | 'expense' | 'investment' | 'credit_payment' | 'loan_payment' | 'transfer';
+export type TransactionType = 'income' | 'expense' | 'investment' | 'credit_payment' | 'loan_payment' | 'transfer' | 'withdrawal';
 
 export interface Account {
     id: number;
@@ -39,7 +39,7 @@ export interface Subscription {
     name: string;
     amount: number;
     currency: string;
-    frequency: 'MONTHLY' | 'YEARLY';
+    frequency: 'MONTHLY' | 'YEARLY' | 'BIMONTHLY';
     type: 'MEMBERSHIP' | 'SERVICE';
     isVariable: boolean;
     nextPaymentDate?: string;
