@@ -9,7 +9,7 @@ export default defineConfig({
     host: true, // Esto le permite escuchar fuera del contenedor
     port: 5173,
     allowedHosts: [
-      'alot-menus-november-invention.trycloudflare.com' // <-- ¡Aquí está el Pase VIP!
+      'shongyi.com' // <-- ¡Aquí está el Pase VIP!
     ]
   }
 })
