@@ -93,11 +93,16 @@ const handleLogin = async () => {
     }
 };
 
+const baseEnvUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
+const API_URL = baseEnvUrl
+    ? (baseEnvUrl.endsWith('/api') ? baseEnvUrl : `${baseEnvUrl}/api`)
+    : 'http://localhost:3000/api';
+
 const loginWithGoogle = () => {
-    window.location.href = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'}/auth/google`;
+    window.location.href = `${API_URL}/auth/google`;
 };
 
 const loginWithMicrosoft = () => {
-    window.location.href = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'}/auth/microsoft`;
+    window.location.href = `${API_URL}/auth/microsoft`;
 };
 </script>

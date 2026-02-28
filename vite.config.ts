@@ -4,13 +4,12 @@ import vue from '@vitejs/plugin-vue'
 export default defineConfig({
   plugins: [vue()],
   server: {
-    proxy: {
-      // Cualquier petición que empiece con /api se irá a tu contenedor de Docker
-      '/api': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '')
-      }
-    }
+    host: true, // Esto le permite escuchar fuera del contenedor
+    port: 5173,
+    allowedHosts: [
+      'alot-menus-november-invention.trycloudflare.com' // <-- ¡Aquí está el Pase VIP!
+    ]
   }
 })
+
+

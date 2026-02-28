@@ -2,7 +2,7 @@
 import { ref, computed, onMounted } from 'vue';
 import TaskForm from './TaskForm.vue';
 import TransactionForm from '../finance/TransactionForm.vue';
-import { ListTodo, Wallet, Clock, ArrowRight, TrendingUp, TrendingDown } from 'lucide-vue-next';
+import { ListTodo, Wallet, Clock, TrendingUp } from 'lucide-vue-next';
 import { useFinanceStore } from '../../stores/financeStore';
 
 const store = useFinanceStore();
