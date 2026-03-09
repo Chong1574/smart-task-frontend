@@ -20,14 +20,19 @@ api.interceptors.request.use((config) => {
     return Promise.reject(error);
 });
 
-// Interceptor para manejar errores 401 (token expirado)
+// Interceptor para manejar errores 401 (token expirado o inválido)
 api.interceptors.response.use((response) => response, (error) => {
     if (error.response?.status === 401) {
-        // Redirigir al login si el token no es válido o expiró
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        if (window.location.pathname !== '/login') {
-            window.location.href = '/login';
+        // Solo redirigir al login si realmente hay un token guardado
+        // (evitar redirección en llamadas que no requieren auth)
+        const hasToken = !!localStorage.getItem('token');
+        if (hasToken) {
+            console.warn('[API] Token inválido o expirado, cerrando sesión...');
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            if (window.location.pathname !== '/login') {
+                window.location.href = '/login';
+            }
         }
     }
     return Promise.reject(error);
