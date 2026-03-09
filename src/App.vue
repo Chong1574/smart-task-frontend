@@ -10,6 +10,20 @@ const route = useRoute();
 
 const isAuthenticated = computed(() => !!authStore.token);
 
+// No mostrar sidebar en rutas de autenticación
+const isAuthRoute = computed(() => !!route.meta.guest || route.name === 'auth-callback');
+const showSidebar = computed(() => isAuthenticated.value && !isAuthRoute.value);
+
+// Manejo global de errores de navegación (ej: lazy import falla)
+router.onError((error) => {
+  if (error.message.includes('Failed to fetch dynamically imported module') ||
+      error.message.includes('Loading chunk') ||
+      error.message.includes('Loading CSS chunk')) {
+    console.error('[Router] Error cargando módulo, recargando página...', error);
+    window.location.reload();
+  }
+});
+
 const sidebarItems = [
   { id: 'home', label: 'Inicio', icon: Home, path: '/' },
   { id: 'analytics', label: 'Dashboard', icon: BarChart2, path: '/dashboard' },
@@ -28,7 +42,7 @@ const handleLogout = () => {
   <div class="min-h-screen bg-slate-50 flex flex-col md:flex-row font-inter">
     
     <!-- Sidebar only if authenticated -->
-    <nav v-if="isAuthenticated" class="bg-white border-t md:border-r border-gray-200 w-full md:w-64 p-2 md:p-4 flex md:flex-col justify-around md:justify-start gap-1 fixed bottom-0 md:relative z-50 shadow-lg md:shadow-none pb-safe">
+    <nav v-if="showSidebar" class="bg-white border-t md:border-r border-gray-200 w-full md:w-64 p-2 md:p-4 flex md:flex-col justify-around md:justify-start gap-1 fixed bottom-0 md:relative z-50 shadow-lg md:shadow-none pb-safe">
       <div class="hidden md:flex items-center gap-2 mb-8 px-2">
         <span class="text-xl font-bold text-slate-800">TaskMan Pro</span>
       </div>
@@ -56,7 +70,7 @@ const handleLogout = () => {
     </nav>
 
     <!-- Main Content -->
-    <main class="flex-1 overflow-y-auto" :class="[isAuthenticated ? 'p-4 md:p-8 mb-20 md:mb-0' : '']">
+    <main class="flex-1 overflow-y-auto" :class="[showSidebar ? 'p-4 md:p-8 mb-20 md:mb-0' : '']">
       <router-view v-slot="{ Component }">
         <transition name="fade" mode="out-in">
           <component :is="Component" />
