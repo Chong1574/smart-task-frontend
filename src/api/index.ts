@@ -23,16 +23,20 @@ api.interceptors.request.use((config) => {
 // Interceptor para manejar errores 401 (token expirado o inválido)
 api.interceptors.response.use((response) => response, (error) => {
     if (error.response?.status === 401) {
-        // Solo redirigir al login si realmente hay un token guardado
-        // (evitar redirección en llamadas que no requieren auth)
+        const url = error.config?.url || '';
+        const isOAuthEndpoint = url.includes('/oauth/');
         const hasToken = !!localStorage.getItem('token');
-        if (hasToken) {
-            console.warn('[API] Token inválido o expirado, cerrando sesión...');
+
+        // LOG DE DEBUG - nos ayuda a identificar el problema
+        console.error(`[API 401] URL: "${url}" | isOAuth: ${isOAuthEndpoint} | hasToken: ${hasToken}`);
+
+        if (hasToken && !isOAuthEndpoint) {
+            console.warn('[API] Sesión inválida, redirigiendo al login...');
             localStorage.removeItem('token');
             localStorage.removeItem('user');
-            if (window.location.pathname !== '/login') {
-                window.location.href = '/login';
-            }
+            // Usamos un evento en lugar de window.location.href para no limpiar la consola
+            // y poder usar Vue Router para la navegación
+            window.dispatchEvent(new CustomEvent('auth:logout'));
         }
     }
     return Promise.reject(error);

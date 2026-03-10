@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted, onUnmounted } from 'vue';
 import { Home, BarChart2, CreditCard, Calendar, LogOut, Car } from 'lucide-vue-next';
 import { useAuthStore } from './stores/authStore';
 import { useRouter, useRoute } from 'vue-router';
@@ -13,6 +13,22 @@ const isAuthenticated = computed(() => !!authStore.token);
 // No mostrar sidebar en rutas de autenticación
 const isAuthRoute = computed(() => !!route.meta.guest || route.name === 'auth-callback');
 const showSidebar = computed(() => isAuthenticated.value && !isAuthRoute.value);
+
+// Escucha el evento de logout del interceptor de API
+// Usamos un evento personalizado para NO hacer window.location.href (que limpia la consola)
+const handleAuthLogout = () => {
+    console.warn('[App] Evento auth:logout recibido → redirigiendo al login');
+    authStore.logout();
+    router.push('/login');
+};
+
+onMounted(() => {
+    window.addEventListener('auth:logout', handleAuthLogout);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('auth:logout', handleAuthLogout);
+});
 
 // Manejo global de errores de navegación (ej: lazy import falla)
 router.onError((error) => {

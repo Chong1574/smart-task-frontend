@@ -54,6 +54,9 @@ export const useAuthStore = defineStore('auth', {
             this.user = user;
             localStorage.setItem('token', token);
             localStorage.setItem('user', JSON.stringify(user));
+            // Login normal: aseguramos que NO quede el flag de OAuth ni el sync de Google
+            localStorage.removeItem('oauth_login');
+            localStorage.removeItem('google_sync_enabled');
             axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         },
 
@@ -62,16 +65,19 @@ export const useAuthStore = defineStore('auth', {
             this.user = null;
             localStorage.removeItem('token');
             localStorage.removeItem('user');
+            localStorage.removeItem('oauth_login');
+            localStorage.removeItem('google_sync_enabled');
             delete axios.defaults.headers.common['Authorization'];
         },
 
-        // Useful for OAuth callbacks
+        // Usado por OAuth callbacks (Google, Microsoft)
         handleAuthCallback(token: string) {
-            // Decode token to get user info or fetch from backend
             this.token = token;
             localStorage.setItem('token', token);
+            // Marcamos que este usuario entró por OAuth
+            // Esto permite que CalendarView active la sincronización con Google
+            localStorage.setItem('oauth_login', 'true');
             axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-            // Optional: fetch user data from /api/auth/me if implemented
         }
     }
 });

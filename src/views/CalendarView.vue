@@ -2,7 +2,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { 
   ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, 
-  CheckCircle2, Trash2 
+  CheckCircle2, Trash2, Zap
 } from 'lucide-vue-next';
 import { useTaskStore } from '../stores/taskStore';
 import api from '../api';
@@ -18,7 +18,10 @@ const isFirstSync = ref(true);
 
 onMounted(async () => {
     store.fetchTasks();
-    if (localStorage.getItem('google_sync_enabled')) {
+    // Solo sincronizar con Google si el usuario entró por OAuth
+    // Los usuarios de login normal (email/password) no tienen Google token
+    const isOAuthUser = !!localStorage.getItem('oauth_login');
+    if (isOAuthUser && localStorage.getItem('google_sync_enabled')) {
         handleSync();
         isFirstSync.value = false;
     }
@@ -46,7 +49,16 @@ const handleSync = async () => {
         }
     } catch (err: any) {
         console.error("Sync error:", err);
-        syncStatus.value = 'error';
+        // Si falla por autenticación de Google (401/403), limpiar el flag
+        // para no disparar el interceptor global que bota al login
+        if (err.response?.status === 401 || err.response?.status === 403) {
+            console.warn('[Calendar] Google sync sin token válido. Desactivando sync automático.');
+            localStorage.removeItem('google_sync_enabled');
+            isFirstSync.value = true;
+            syncStatus.value = '';
+        } else {
+            syncStatus.value = 'error';
+        }
     } finally {
         syncLoading.value = false;
     }
