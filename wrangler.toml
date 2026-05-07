@@ -1,8 +1,8 @@
-name = "brandy-3d-landing"
+name = "smart-task-frontend"
 compatibility_date = "2024-04-03"
-pages_build_output_dir = ".output/public"
+pages_build_output_dir = "dist"
 
 [[d1_databases]]
 binding = "DB"
 database_name = "brandy-3d-db"
-database_id = "your-database-id-here" # User will need to fill this or I'll help create it
+database_id = "efc3cd4d-86b6-4101-ab5a-7b3466446dbb"
