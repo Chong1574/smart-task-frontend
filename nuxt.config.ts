@@ -10,5 +10,8 @@ export default defineNuxtConfig({
   devServer: {
     port: 5173,
     host: '0.0.0.0'
+  },
+  nitro: {
+    preset: 'cloudflare-pages'
   }
 })
