@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { Toaster } from '@/components/ui/toast'
 </script>
 
 <template>
@@ -7,7 +6,6 @@ import { Toaster } from '@/components/ui/toast'
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>
-    <Toaster />
   </div>
 </template>
 
