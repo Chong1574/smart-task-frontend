@@ -6,5 +6,9 @@ export default defineNuxtConfig({
   shadcn: {
     prefix: '',
     componentDir: './components/ui'
+  },
+  devServer: {
+    port: 5173,
+    host: '0.0.0.0'
   }
 })

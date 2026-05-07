@@ -40,6 +40,12 @@ const { data: models, pending } = await useFetch('/api/models')
               :alt="model.title" 
               class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
             />
+            <div class="absolute top-3 left-3" v-if="model.trend_score > 5">
+              <Badge class="bg-orange-500 hover:bg-orange-600 text-white border-none gap-1">
+                <Sparkles class="h-3 w-3" />
+                Tendencia
+              </Badge>
+            </div>
             <div class="absolute top-3 right-3">
               <Badge variant="secondary" class="bg-background/90 backdrop-blur-sm shadow-sm">{{ new URL(model.source_url).hostname.replace('www.', '') }}</Badge>
             </div>

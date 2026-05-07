@@ -6,11 +6,11 @@ import { Rocket, Box, Sparkles, LayoutDashboard } from 'lucide-vue-next'
 <template>
   <header class="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
     <div class="container flex h-16 items-center justify-between">
-      <div class="flex items-center gap-2">
-        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-          <Box class="h-5 w-5" />
+      <div class="flex items-center gap-3">
+        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 overflow-hidden">
+          <img src="/logo.png" alt="Logo" class="h-8 w-8 object-contain" />
         </div>
-        <span class="text-xl font-bold tracking-tight">El Rincón de Brandy</span>
+        <span class="text-xl font-bold tracking-tighter text-primary">El Rincón de Brandy</span>
       </div>
 
       <nav class="hidden md:flex items-center gap-6">
