@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import Navbar from '@/components/Navbar.vue'
 import Hero from '@/components/Hero.vue'
-import InspirationWall from '@/components/InspirationWall.vue'
-import QuoteTool from '@/components/QuoteTool.vue'
+// InspirationWall y QuoteTool ahora están en sus propias páginas
 import { Button } from '@/components/ui/button'
 import { Mail, Github, Instagram, Printer } from 'lucide-vue-next'
 
@@ -20,10 +19,7 @@ useHead({
     
     <main>
       <Hero />
-      <InspirationWall />
-      <QuoteTool />
-
-      <!-- Footer-like CTA / Process -->
+      <!-- El proceso se queda en el Home para explicar el servicio -->
       <section id="proceso" class="py-24 border-t">
         <div class="container text-center">
           <h2 class="text-3xl font-bold mb-12">Cómo funciona tu Digital Kinko's</h2>
