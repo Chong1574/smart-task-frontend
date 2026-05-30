@@ -14,23 +14,23 @@ import { Rocket, Box, Sparkles, LayoutDashboard } from 'lucide-vue-next'
       </NuxtLink>
 
       <nav class="hidden md:flex items-center gap-6">
-        <NuxtLink to="/muro" class="text-sm font-medium hover:text-primary transition-colors">Muro de Inspiración</NuxtLink>
-        <NuxtLink to="/cotizador" class="text-sm font-medium hover:text-primary transition-colors">Cotizador</NuxtLink>
-        <NuxtLink to="/#proceso" class="text-sm font-medium hover:text-primary transition-colors">Cómo funciona</NuxtLink>
+        <NuxtLink to="/tienda" class="text-sm font-medium hover:text-primary transition-colors">Tienda</NuxtLink>
+        <NuxtLink to="/muro" class="text-sm font-medium hover:text-primary transition-colors">Impresión 3D</NuxtLink>
+        <NuxtLink to="https://arveck.com/" target="_blank" external class="text-sm font-medium hover:text-primary transition-colors">Seguros Arveck</NuxtLink>
+        <NuxtLink to="/#servicios" class="text-sm font-medium hover:text-primary transition-colors">Servicios</NuxtLink>
       </nav>
 
       <div class="flex items-center gap-4">
-        <!-- Legacy Link -->
-        <Button variant="ghost" size="sm" as-child class="hidden sm:flex gap-2">
-          <a href="/taskman/dashboard">
+        <Button variant="ghost" size="sm" as-child class="flex gap-2">
+          <NuxtLink to="/taskman/dashboard">
             <LayoutDashboard class="h-4 w-4" />
-            <span>Task Manager</span>
-          </a>
+            <span class="hidden sm:inline">Task Manager</span>
+          </NuxtLink>
         </Button>
         <Button size="sm" class="gap-2" as-child>
-          <NuxtLink to="/cotizador">
-            <Rocket class="h-4 w-4" />
-            <span>Cotizar STL</span>
+          <NuxtLink to="/tienda">
+            <Sparkles class="h-4 w-4" />
+            <span class="hidden sm:inline">Explorar Tienda</span>
           </NuxtLink>
         </Button>
       </div>

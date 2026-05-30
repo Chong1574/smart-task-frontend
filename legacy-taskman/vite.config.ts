@@ -4,6 +4,7 @@ import vue from '@vitejs/plugin-vue'
 import { cloudflare } from "@cloudflare/vite-plugin";
 
 export default defineConfig({
+  base: '/taskman/',
   plugins: [vue(), cloudflare()],
   server: {
     host: true, // Esto le permite escuchar fuera del contenedor

@@ -2,10 +2,17 @@
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ExternalLink, ShoppingCart, Search } from 'lucide-vue-next'
+import { ExternalLink, ShoppingCart, Search, Sparkles, ArrowRight } from 'lucide-vue-next'
 
 const { data: models, pending } = await useFetch('/api/models')
 
+const getHostname = (url: string) => {
+  try {
+    return new URL(url).hostname.replace('www.', '')
+  } catch (e) {
+    return url
+  }
+}
 </script>
 
 <template>
@@ -47,7 +54,7 @@ const { data: models, pending } = await useFetch('/api/models')
               </Badge>
             </div>
             <div class="absolute top-3 right-3">
-              <Badge variant="secondary" class="bg-background/90 backdrop-blur-sm shadow-sm">{{ new URL(model.source_url).hostname.replace('www.', '') }}</Badge>
+              <Badge variant="secondary" class="bg-background/90 backdrop-blur-sm shadow-sm">{{ getHostname(model.source_url) }}</Badge>
             </div>
           </div>
 

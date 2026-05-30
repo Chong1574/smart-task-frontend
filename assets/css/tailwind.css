@@ -4,65 +4,64 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Fondo Base: Beige crema muy claro */
+    --background: 36 33% 97%; /* #FBF9F6 approx */
+    
+    /* Texto Principal: Marrón café oscuro */
+    --foreground: 22 25% 18%; /* #3B2C23 approx */
 
+    /* Tarjetas y superficies secundarias: Blanco suave / crema */
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 22 25% 18%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 22 25% 18%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Acentos y CTA: Terracota/Naranja oscuro */
+    --primary: 13 65% 62%; /* Terracota #E07A5F */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Colores de apoyo (Soporte Técnico) */
+    --secondary: 33 22% 89%; /* Gris claro suave / Beige oscuro #EAE3DB */
+    --secondary-foreground: 22 25% 18%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 33 22% 89%;
+    --muted-foreground: 22 15% 45%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 25 70% 70%; /* Naranja claro para hovers */
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 33 22% 89%; /* Gris claro muy suave para divisores */
+    --input: 33 22% 89%;
+    --ring: 13 65% 62%; /* Terracota */
 
     --radius: 0.5rem;
   }
 
+  /* Eliminamos el .dark mode forzado para mantener la estética light-mode como base y eliminar el estilo oscuro de laboratorio */
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
+    --background: 36 33% 97%; 
+    --foreground: 22 25% 18%;
+    --card: 0 0% 100%;
+    --card-foreground: 22 25% 18%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 22 25% 18%;
+    --primary: 13 65% 62%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 33 22% 89%;
+    --secondary-foreground: 22 25% 18%;
+    --muted: 33 22% 89%;
+    --muted-foreground: 22 15% 45%;
+    --accent: 25 70% 70%;
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 33 22% 89%;
+    --input: 33 22% 89%;
+    --ring: 13 65% 62%;
   }
 }
 
@@ -71,6 +70,29 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
   }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif;
+  }
+}
+
+/* Page and Layout Transitions */
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+.page-enter-from,
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.layout-enter-active,
+.layout-leave-active {
+  transition: opacity 0.5s ease-out;
+}
+.layout-enter-from,
+.layout-leave-to {
+  opacity: 0;
 }
