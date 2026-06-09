@@ -12,6 +12,16 @@
         </button>
       </div>
 
+      <!-- Navigation Tabs -->
+      <div class="flex space-x-1 border-b border-border/40 pb-px">
+        <NuxtLink to="/taskman/wallet" class="px-4 py-2 border-b-2 border-primary text-primary font-medium transition-colors">
+          Billetera
+        </NuxtLink>
+        <NuxtLink to="/taskman/budget" class="px-4 py-2 border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors">
+          Presupuesto & Proyecciones
+        </NuxtLink>
+      </div>
+
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- Tarjeta Balance -->
         <div class="bg-gradient-to-br from-green-500 to-emerald-700 p-6 rounded-3xl text-white shadow-xl shadow-green-500/20 relative overflow-hidden md:col-span-1">

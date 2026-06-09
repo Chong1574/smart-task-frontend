@@ -40,7 +40,7 @@ export interface Subscription {
     amount: number;
     currency: string;
     frequency: 'MONTHLY' | 'YEARLY' | 'BIMONTHLY';
-    type: 'MEMBERSHIP' | 'SERVICE';
+    type: 'MEMBERSHIP' | 'SERVICE' | 'INCOME';
     isVariable: boolean;
     nextPaymentDate?: string;
     lastPaymentDate?: string;
@@ -103,11 +103,57 @@ export const useFinanceStore = defineStore('finance', {
         },
 
         totalFixedExpenses: (state) => {
-            return state.subscriptions.reduce((sum, sub) => {
-                let val = Number(sub.amount);
-                if (sub.frequency === 'YEARLY') val = val / 12;
-                return sum + val;
+            return state.subscriptions
+                .filter(sub => sub.type !== 'INCOME')
+                .reduce((sum, sub) => {
+                    let val = Number(sub.amount);
+                    if (sub.frequency === 'YEARLY') val = val / 12;
+                    else if (sub.frequency === 'BIMONTHLY') val = val / 2;
+                    return sum + val;
+                }, 0);
+        },
+
+        totalFixedIncome: (state) => {
+            return state.subscriptions
+                .filter(sub => sub.type === 'INCOME')
+                .reduce((sum, sub) => {
+                    let val = Number(sub.amount);
+                    if (sub.frequency === 'YEARLY') val = val / 12;
+                    else if (sub.frequency === 'BIMONTHLY') val = val / 2;
+                    return sum + val;
+                }, 0);
+        },
+
+        // Devuelve el balance proyectado sumando ingresos y restando gastos fijos según su frecuencia.
+        // Asume un modelo simplificado donde si es mensual, se resta una vez en 30 dias.
+        // Si es quincenal (BIMONTHLY) se resta/suma 2 veces en 30 días.
+        cashFlowProjections: (state): { d7: number; d15: number; d30: number } => {
+            const currentBalance = state.accounts.reduce((sum, acc) => sum + Number(acc.balance), 0);
+            
+            // Calculamos el impacto diario de los ingresos y gastos fijos
+            const dailyBurnRate = state.subscriptions.filter(s => s.type !== 'INCOME').reduce((sum, sub) => {
+                let daily = Number(sub.amount);
+                if (sub.frequency === 'MONTHLY') daily = daily / 30;
+                else if (sub.frequency === 'BIMONTHLY') daily = daily / 15;
+                else if (sub.frequency === 'YEARLY') daily = daily / 365;
+                return sum + daily;
             }, 0);
+
+            const dailyIncomeRate = state.subscriptions.filter(s => s.type === 'INCOME').reduce((sum, sub) => {
+                let daily = Number(sub.amount);
+                if (sub.frequency === 'MONTHLY') daily = daily / 30;
+                else if (sub.frequency === 'BIMONTHLY') daily = daily / 15;
+                else if (sub.frequency === 'YEARLY') daily = daily / 365;
+                return sum + daily;
+            }, 0);
+
+            const netDaily = dailyIncomeRate - dailyBurnRate;
+
+            return {
+                d7: currentBalance + (netDaily * 7),
+                d15: currentBalance + (netDaily * 15),
+                d30: currentBalance + (netDaily * 30)
+            };
         }
     },
 
