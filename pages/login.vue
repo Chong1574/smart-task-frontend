@@ -19,6 +19,7 @@
           <label class="block text-sm font-medium mb-2">Contraseña</label>
           <input 
             type="password" 
+            autocomplete="current-password"
             class="w-full px-4 py-3 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
             placeholder="••••••••"
           />

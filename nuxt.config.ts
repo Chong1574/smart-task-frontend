@@ -24,7 +24,5 @@ export default defineNuxtConfig({
     pageTransition: { name: 'page', mode: 'out-in' },
     layoutTransition: { name: 'layout', mode: 'out-in' }
   },
-  routeRules: {
-    '/taskman/**': { proxy: 'http://task_legacy_frontend:5173/taskman/**' }
-  }
+
 })

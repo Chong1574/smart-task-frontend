@@ -1,0 +1,127 @@
+<template>
+  <NuxtLayout name="taskman">
+    <div class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-6xl mx-auto">
+      
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 class="text-3xl font-serif font-bold">Actividades</h1>
+          <p class="text-muted-foreground">Gestiona tus tareas o deja que la Ruleta decida por ti.</p>
+        </div>
+        <div class="flex gap-2">
+          <button @click="showRoulette = true" class="bg-orange-500 text-white px-4 py-2 rounded-xl font-medium shadow-lg shadow-orange-500/20 hover:scale-105 transition-transform flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+            Jugar Ruleta
+          </button>
+          <button class="bg-primary text-primary-foreground px-4 py-2 rounded-xl font-medium shadow-lg shadow-primary/20 hover:scale-105 transition-transform flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+            Añadir Tarea
+          </button>
+        </div>
+      </div>
+
+      <!-- Ruleta Modal -->
+      <div v-if="showRoulette" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
+        <div class="bg-card w-full max-w-lg rounded-3xl p-8 border border-border/50 shadow-2xl relative overflow-hidden">
+          <button @click="showRoulette = false" class="absolute top-4 right-4 text-muted-foreground hover:text-foreground">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+          
+          <div class="text-center mb-6">
+            <h2 class="text-2xl font-serif font-bold">Ruleta del Destino</h2>
+            <p class="text-muted-foreground text-sm">Selecciona los proyectos en los que te gustaría trabajar ahora mismo.</p>
+          </div>
+
+          <!-- Selección de Proyectos -->
+          <div class="space-y-3 mb-8 max-h-48 overflow-y-auto pr-2">
+            <label class="flex items-center gap-3 p-3 rounded-xl border border-border/50 hover:bg-secondary/50 cursor-pointer transition-colors">
+              <input type="checkbox" checked class="w-5 h-5 rounded text-primary focus:ring-primary/50">
+              <span class="font-medium">Renovación del Jardín</span>
+            </label>
+            <label class="flex items-center gap-3 p-3 rounded-xl border border-border/50 hover:bg-secondary/50 cursor-pointer transition-colors">
+              <input type="checkbox" checked class="w-5 h-5 rounded text-primary focus:ring-primary/50">
+              <span class="font-medium">Proyecto 3D</span>
+            </label>
+            <label class="flex items-center gap-3 p-3 rounded-xl border border-border/50 hover:bg-secondary/50 cursor-pointer transition-colors">
+              <input type="checkbox" class="w-5 h-5 rounded text-primary focus:ring-primary/50">
+              <span class="font-medium">Aprender Alemán</span>
+            </label>
+          </div>
+
+          <!-- Animación Ruleta y Botón -->
+          <div class="flex flex-col items-center gap-6">
+            <div :class="['w-32 h-32 rounded-full border-4 flex items-center justify-center transition-all', isSpinning ? 'border-orange-500 border-dashed animate-spin' : 'border-primary shadow-[0_0_30px_rgba(224,122,95,0.3)]']">
+              <svg v-if="!isSpinning && !selectedTask" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+              <div v-else-if="selectedTask" class="text-4xl">🎉</div>
+            </div>
+
+            <button v-if="!selectedTask" @click="spin" :disabled="isSpinning" class="bg-gradient-to-r from-primary to-orange-500 text-white w-full py-4 rounded-xl font-bold text-lg hover:opacity-90 transition-opacity disabled:opacity-50">
+              {{ isSpinning ? 'Girando...' : '¡Girar la Ruleta!' }}
+            </button>
+
+            <div v-if="selectedTask && !isSpinning" class="w-full text-center animate-in fade-in slide-in-from-bottom-2">
+              <p class="text-muted-foreground text-sm mb-1">¡El destino ha hablado!</p>
+              <h3 class="text-xl font-bold text-primary">{{ selectedTask.title }}</h3>
+              <p class="text-sm mt-2">{{ selectedTask.project }}</p>
+              
+              <button @click="showRoulette = false; selectedTask = null" class="mt-6 bg-secondary text-secondary-foreground px-6 py-2 rounded-full text-sm hover:bg-secondary/80">
+                Aceptar mi destino
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lista de Tareas Normal -->
+      <div class="bg-card border border-border/40 rounded-3xl overflow-hidden shadow-sm">
+        <div class="p-4 bg-secondary/30 border-b border-border/40 font-medium grid grid-cols-12 gap-4 text-sm text-muted-foreground">
+          <div class="col-span-1 text-center">Auto</div>
+          <div class="col-span-5">Tarea</div>
+          <div class="col-span-3">Proyecto</div>
+          <div class="col-span-2">Prioridad</div>
+          <div class="col-span-1 text-right">Acciones</div>
+        </div>
+
+        <!-- Mock Tarea 1 -->
+        <div class="p-4 border-b border-border/40 grid grid-cols-12 gap-4 items-center hover:bg-secondary/10 transition-colors group">
+          <div class="col-span-1 flex justify-center">
+             <div class="w-6 h-6 rounded bg-primary/20 text-primary flex items-center justify-center cursor-help" title="Smart Scheduled">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+             </div>
+          </div>
+          <div class="col-span-5 font-medium">Modelar personaje en Blender</div>
+          <div class="col-span-3 text-sm text-muted-foreground">Proyecto 3D</div>
+          <div class="col-span-2">
+            <span class="px-2 py-1 rounded-full text-xs font-bold bg-red-500/10 text-red-500">Alta</span>
+          </div>
+          <div class="col-span-1 text-right flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button class="text-muted-foreground hover:text-primary"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </NuxtLayout>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+
+const showRoulette = ref(false)
+const isSpinning = ref(false)
+const selectedTask = ref(null)
+
+const spin = () => {
+  isSpinning.value = true
+  selectedTask.value = null
+  
+  // Simulación de delay y selección
+  setTimeout(() => {
+    isSpinning.value = false
+    selectedTask.value = {
+      title: 'Modelar personaje en Blender',
+      project: 'Proyecto 3D'
+    }
+  }, 2000)
+}
+</script>
