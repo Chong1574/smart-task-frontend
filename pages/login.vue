@@ -65,7 +65,11 @@ const handleLogin = () => {
 
 // Login con Google usando el backend
 const handleGoogleLogin = () => {
-  // Asumiendo que el backend corre en el puerto de la variable de entorno o 3000 por defecto
-  window.location.href = 'http://localhost:3000/api/auth/google'
+  const baseEnvUrl = import.meta.env.VITE_API_BASE_URL;
+  const API_URL = baseEnvUrl 
+    ? (baseEnvUrl.endsWith('/api') ? baseEnvUrl : `${baseEnvUrl}/api`) 
+    : (window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : 'https://taskapi.shongyi.com/api');
+    
+  window.location.href = `${API_URL}/auth/google`;
 }
 </script>
