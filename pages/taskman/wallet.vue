@@ -122,6 +122,67 @@
                 <input v-model.number="accountForm.balance" type="number" step="0.01" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
               </div>
             </div>
+
+            <!-- Subtipo si es Tarjeta -->
+            <div v-if="accountForm.type === 'card'" class="grid grid-cols-1 gap-4">
+              <div>
+                <label class="block text-sm font-medium mb-1">Subtipo</label>
+                <select v-model="accountForm.sub_type" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+                  <option value="debit">Débito</option>
+                  <option value="credit">Crédito</option>
+                  <option value="payroll">Nómina</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Campos para Tarjeta de Crédito -->
+            <div v-if="accountForm.type === 'card' && accountForm.sub_type === 'credit'" class="grid grid-cols-2 gap-4 bg-secondary/20 p-4 rounded-xl border border-border/30">
+              <div class="col-span-2">
+                <label class="block text-sm font-medium mb-1">Límite de Crédito</label>
+                <input v-model.number="accountForm.credit_limit" type="number" step="0.01" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">Día de Corte</label>
+                <input v-model.number="accountForm.cutoff_day" type="number" min="1" max="31" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">Día de Pago</label>
+                <input v-model.number="accountForm.payment_day" type="number" min="1" max="31" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+              </div>
+            </div>
+
+            <!-- Campos para Ahorro o Inversión -->
+            <div v-if="accountForm.type === 'savings' || accountForm.type === 'investment'" class="grid grid-cols-1 gap-4">
+              <div>
+                <label class="block text-sm font-medium mb-1">Tasa de Interés Anual (%)</label>
+                <input v-model.number="accountForm.interest_rate" type="number" step="0.01" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+              </div>
+            </div>
+
+            <!-- Campos para Préstamo -->
+            <div v-if="accountForm.type === 'loan'" class="grid grid-cols-2 gap-4 bg-secondary/20 p-4 rounded-xl border border-border/30">
+              <div>
+                <label class="block text-sm font-medium mb-1">Pago Fijo</label>
+                <input v-model.number="accountForm.monthly_payment" type="number" step="0.01" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">Tasa Interés (%)</label>
+                <input v-model.number="accountForm.interest_rate" type="number" step="0.01" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">Frecuencia</label>
+                <select v-model="accountForm.payment_frequency" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+                  <option value="MONTHLY">Mensual</option>
+                  <option value="BIWEEKLY">Quincenal</option>
+                  <option value="WEEKLY">Semanal</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">Día de Pago</label>
+                <input v-model.number="accountForm.payment_day" type="number" min="1" max="31" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+              </div>
+            </div>
+
             <div class="flex justify-end gap-3 mt-8">
               <button type="button" @click="showAccountModal = false" class="px-4 py-2 text-muted-foreground hover:bg-secondary rounded-xl transition-colors">Cancelar</button>
               <button type="submit" class="bg-primary text-primary-foreground px-6 py-2 rounded-xl font-bold shadow-lg hover:opacity-90 transition-opacity">Guardar</button>
@@ -248,7 +309,13 @@ const accountForm = reactive({
   type: 'card' as AccountType,
   sub_type: 'debit',
   balance: 0,
-  currency: 'MXN'
+  currency: 'MXN',
+  credit_limit: 0,
+  interest_rate: 0,
+  monthly_payment: 0,
+  payment_frequency: 'MONTHLY',
+  cutoff_day: 1,
+  payment_day: 1
 })
 
 const subForm = reactive({
@@ -283,20 +350,23 @@ const submitAccount = async () => {
   await financeStore.addAccount({
     name: accountForm.name,
     type: accountForm.type,
-    sub_type: accountForm.sub_type as any,
+    sub_type: accountForm.type === 'card' ? accountForm.sub_type as any : 'n/a',
     balance: accountForm.balance,
-    credit_limit: 0,
-    interest_rate: 0,
-    monthly_payment: 0,
-    payment_frequency: 'MONTHLY',
-    cutoff_day: 1,
-    payment_day: 1,
+    credit_limit: accountForm.credit_limit,
+    interest_rate: accountForm.interest_rate,
+    monthly_payment: accountForm.monthly_payment,
+    payment_frequency: accountForm.payment_frequency as any,
+    cutoff_day: accountForm.cutoff_day,
+    payment_day: accountForm.payment_day,
     currency: accountForm.currency
   })
   showAccountModal.value = false
   // reset
   accountForm.name = ''
   accountForm.balance = 0
+  accountForm.credit_limit = 0
+  accountForm.interest_rate = 0
+  accountForm.monthly_payment = 0
 }
 
 const submitSubscription = async () => {
