@@ -1,0 +1,227 @@
+import { defineStore } from 'pinia';
+import api from '../utils/api';
+
+export interface Task {
+    id?: number;
+    title: string;
+    category?: string;
+    duration_minutes: number;
+    deadline?: string;
+    auto_distribute?: boolean;
+    description?: string;
+    status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
+    budget?: number;
+    priority?: 'high' | 'medium' | 'low';
+    projectId?: number;
+    goalId?: number;
+    blocks?: any[];
+}
+
+export interface Project {
+    id?: number;
+    name: string;
+    description?: string;
+    status: 'active' | 'completed' | 'archived';
+    tasks?: Task[];
+}
+
+export interface Goal {
+    id?: number;
+    title: string;
+    description?: string;
+    targetDate?: string;
+    status: 'active' | 'completed' | 'abandoned';
+    projects?: Project[];
+    tasks?: Task[];
+}
+
+export interface Habit {
+    id?: number;
+    name: string;
+    description?: string;
+    frequency: 'daily' | 'weekly' | 'custom';
+    status: 'active' | 'archived';
+    logs?: HabitLog[];
+}
+
+export interface HabitLog {
+    id?: number;
+    habitId: number;
+    completedAt: string;
+}
+
+export const useTaskStore = defineStore('tasks', {
+    state: () => ({
+        tasks: [] as Task[],
+        projects: [] as Project[],
+        goals: [] as Goal[],
+        habits: [] as Habit[],
+        loading: false,
+        error: null as string | null
+    }),
+    actions: {
+        async fetchTasks() {
+            this.loading = true;
+            try {
+                const res = await api.get('/tasks');
+                if (res.data.success) {
+                    this.tasks = res.data.data;
+                }
+            } catch (err) {
+                console.error("Error fetching tasks:", err);
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async addTask(newTask: Task) {
+            this.loading = true;
+            try {
+                const res = await api.post('/tasks', newTask);
+                if (res.data.success) {
+                    await this.fetchTasks();
+                    return true;
+                }
+                return false;
+            } catch (err) {
+                console.error("Error adding task:", err);
+                return false;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async updateTask(id: number, updates: Partial<Task>) {
+            try {
+                const res = await api.put(`/tasks/${id}`, updates);
+                if (res.data.success) {
+                    await this.fetchTasks();
+                }
+            } catch (err) {
+                console.error("Error updating task:", err);
+            }
+        },
+
+        async deleteTask(id: number) {
+            try {
+                const res = await api.delete(`/tasks/${id}`);
+                if (res.data.success) {
+                    this.tasks = this.tasks.filter(t => t.id !== id);
+                }
+            } catch (err) {
+                console.error("Error deleting task:", err);
+            }
+        },
+
+        // --- Projects ---
+        async fetchProjects() {
+            this.loading = true;
+            try {
+                const res = await api.get('/projects');
+                if (res.data.success) {
+                    this.projects = res.data.data;
+                }
+            } catch (err) {
+                console.error("Error fetching projects:", err);
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async addProject(newProject: Project) {
+            try {
+                const res = await api.post('/projects', newProject);
+                if (res.data.success) {
+                    await this.fetchProjects();
+                    return true;
+                }
+                return false;
+            } catch (err) {
+                console.error("Error adding project:", err);
+                return false;
+            }
+        },
+
+        async updateProject(id: number, updates: Partial<Project>) {
+            try {
+                const res = await api.put(`/projects/${id}`, updates);
+                if (res.data.success) {
+                    await this.fetchProjects();
+                }
+            } catch (err) {
+                console.error("Error updating project:", err);
+            }
+        },
+
+        async deleteProject(id: number) {
+            try {
+                const res = await api.delete(`/projects/${id}`);
+                if (res.data.success) {
+                    this.projects = this.projects.filter(p => p.id !== id);
+                }
+            } catch (err) {
+                console.error("Error deleting project:", err);
+            }
+        },
+
+        // --- Habits ---
+        async fetchHabits() {
+            this.loading = true;
+            try {
+                const res = await api.get('/habits');
+                if (res.data.success) {
+                    this.habits = res.data.data;
+                }
+            } catch (err) {
+                console.error("Error fetching habits:", err);
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async addHabit(newHabit: Habit) {
+            try {
+                const res = await api.post('/habits', newHabit);
+                if (res.data.success) {
+                    await this.fetchHabits();
+                    return true;
+                }
+                return false;
+            } catch (err) {
+                console.error("Error adding habit:", err);
+                return false;
+            }
+        },
+
+        async logHabit(habitId: number) {
+            try {
+                const res = await api.post(`/habits/${habitId}/log`);
+                if (res.data.success) {
+                    await this.fetchHabits();
+                    return true;
+                }
+                return false;
+            } catch (err) {
+                console.error("Error logging habit:", err);
+                return false;
+            }
+        },
+
+        // --- Roulette ---
+        async spinRoulette(projectIds?: number[]) {
+            this.loading = true;
+            try {
+                const res = await api.post('/roulette/spin', { projectIds });
+                if (res.data.success) {
+                    return res.data.data.task; // Retorna la tarea seleccionada
+                }
+                return null;
+            } catch (err) {
+                console.error("Error spinning roulette:", err);
+                return null;
+            } finally {
+                this.loading = false;
+            }
+        }
+    }
+});

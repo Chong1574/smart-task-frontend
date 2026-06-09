@@ -51,24 +51,57 @@
   </div>
 </template>
 
-<script setup>
-import { LayoutDashboard, CheckSquare, RefreshCcw, Wallet, Car, Settings, Target } from 'lucide-vue-next'
+<script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import {
+  LayoutDashboard,
+  CheckSquare,
+  TrendingUp,
+  Car,
+  Target,
+  Activity,
+  LogOut,
+  Bell,
+  Search,
+  Menu,
+  X
+} from 'lucide-vue-next'
+import { useAuthStore } from '~/stores/auth'
 
+const authStore = useAuthStore()
 const router = useRouter()
+
+const isSidebarOpen = ref(true)
 
 const nav = [
   { name: 'Dashboard', path: '/taskman', icon: LayoutDashboard },
-  { name: 'Proyectos & Metas', path: '/taskman/projects', icon: Target },
   { name: 'Actividades', path: '/taskman/activities', icon: CheckSquare },
-  { name: 'Hábitos Diarios', path: '/taskman/habits', icon: RefreshCcw },
-  { name: 'Wallet', path: '/taskman/wallet', icon: Wallet },
+  { name: 'Proyectos', path: '/taskman/projects', icon: Target },
+  { name: 'Hábitos', path: '/taskman/habits', icon: Activity },
+  { name: 'Wallet', path: '/taskman/wallet', icon: TrendingUp },
   { name: 'Garage', path: '/taskman/garage', icon: Car },
-  { name: 'Configuración', path: '/taskman/settings', icon: Settings },
 ]
 
+const handleLogoutEvent = () => {
+  router.push('/taskman/login')
+}
+
+onMounted(() => {
+  authStore.init()
+  if (typeof window !== 'undefined') {
+    window.addEventListener('auth:logout', handleLogoutEvent)
+  }
+})
+
+onUnmounted(() => {
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('auth:logout', handleLogoutEvent)
+  }
+})
+
 const logout = () => {
-  localStorage.removeItem('taskman_token')
-  router.push('/login')
+  authStore.logout()
+  router.push('/taskman/login')
 }
 </script>

@@ -7,7 +7,7 @@
         <div class="relative z-10">
           <h1 class="text-4xl font-serif font-bold mb-2">¡Hola, Creador! 👋</h1>
           <p class="text-muted-foreground text-lg max-w-xl">
-            Tus proyectos y hábitos te están esperando. Tienes <span class="font-bold text-primary">3 tareas prioritarias</span> para hoy y un hábito por cumplir.
+            Tus proyectos y hábitos te están esperando. Tienes <span class="font-bold text-primary">{{ pendingTasksCount }} tareas prioritarias</span> para hoy y {{ activeHabitsCount }} hábitos por cumplir.
           </p>
         </div>
         <!-- Decoración de fondo abstracto -->
@@ -25,7 +25,7 @@
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
             </div>
           </div>
-          <p class="text-3xl font-bold">4</p>
+          <p class="text-3xl font-bold">{{ activeProjectsCount }}</p>
           <div class="mt-2 text-sm text-green-500 flex items-center gap-1">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
             <span>Progreso estable</span>
@@ -40,7 +40,7 @@
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c-2.28 0-3-2.12-3-4a1 1 0 0 1 .5-1.1c1-.6 2.3-1.6 3.5-3.9 1 2 2.5 3.3 4 3.9a1 1 0 0 1 .5 1.1c0 1.9-.72 4-3 4a2.5 2.5 0 0 0 2.5 2.5c2 0 3-1.5 3-3a1 1 0 0 1 2 0c0 3.3-2.7 6-6 6a6 6 0 0 1-6-6c0-1.5 1-3 3-3Z"/></svg>
             </div>
           </div>
-          <p class="text-3xl font-bold">12 <span class="text-lg text-muted-foreground font-normal">días</span></p>
+          <p class="text-3xl font-bold">{{ activeHabitsCount }} <span class="text-lg text-muted-foreground font-normal">hábitos</span></p>
           <div class="mt-2 text-sm text-green-500 flex items-center gap-1">
             <span>¡Sigue así!</span>
           </div>
@@ -54,7 +54,7 @@
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
             </div>
           </div>
-          <p class="text-3xl font-bold">24</p>
+          <p class="text-3xl font-bold">{{ pendingTasksCount }}</p>
           <div class="mt-2 text-sm text-green-500 flex items-center gap-1">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
             <span>+15% vs pasada</span>
@@ -78,7 +78,24 @@
   </NuxtLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { useRouter } from 'vue-router'
+import { useTaskStore } from '~/stores/tasks'
+import { onMounted, computed } from 'vue'
+
 const router = useRouter()
+const taskStore = useTaskStore()
+
+onMounted(async () => {
+  await Promise.all([
+    taskStore.fetchTasks(),
+    taskStore.fetchProjects(),
+    taskStore.fetchHabits()
+  ])
+})
+
+const activeProjectsCount = computed(() => taskStore.projects.filter(p => p.status === 'active').length)
+const pendingTasksCount = computed(() => taskStore.tasks.filter(t => t.status === 'pending').length)
+// Assuming habits are fetched, we can show active habits length or hardcoded streak for now since streak logic is complex
+const activeHabitsCount = computed(() => taskStore.habits.length)
 </script>

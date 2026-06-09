@@ -13,32 +13,35 @@
         </button>
       </div>
 
+      <div v-if="taskStore.projects.length === 0" class="p-8 text-center text-muted-foreground">
+        No tienes proyectos creados aún. ¡Empieza uno nuevo!
+      </div>
+
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <!-- Card Proyecto Mock -->
-        <div class="bg-card border border-border/40 rounded-3xl p-6 shadow-sm hover:shadow-md transition-shadow group relative overflow-hidden">
-          <div class="absolute top-0 left-0 w-full h-2 bg-blue-500"></div>
+        <div v-for="(project, index) in taskStore.projects" :key="project.id" class="bg-card border border-border/40 rounded-3xl p-6 shadow-sm hover:shadow-md transition-shadow group relative overflow-hidden">
+          <div :class="['absolute top-0 left-0 w-full h-2', getProjectColor(index)]"></div>
           <div class="flex justify-between items-start mb-4">
-            <h3 class="font-bold text-xl">Renovación del Jardín</h3>
-            <span class="px-2 py-1 bg-green-500/10 text-green-500 text-xs font-bold rounded-full">Activo</span>
+            <h3 class="font-bold text-xl">{{ project.name }}</h3>
+            <span :class="['px-2 py-1 text-xs font-bold rounded-full', project.status === 'active' ? 'bg-green-500/10 text-green-500' : 'bg-gray-500/10 text-gray-500']">
+              {{ project.status === 'active' ? 'Activo' : project.status === 'completed' ? 'Completado' : 'Archivado' }}
+            </span>
           </div>
-          <p class="text-muted-foreground text-sm mb-6 line-clamp-2">Plantar nuevos árboles, arreglar el césped y construir el sistema de riego automático.</p>
+          <p class="text-muted-foreground text-sm mb-6 line-clamp-2">{{ project.description || 'Sin descripción' }}</p>
           
           <div class="space-y-2">
             <div class="flex justify-between text-sm font-medium">
               <span>Progreso</span>
-              <span>45%</span>
+              <span>{{ getProgress(project.id!) }}%</span>
             </div>
             <div class="w-full h-2 bg-secondary rounded-full overflow-hidden">
-              <div class="h-full bg-blue-500 rounded-full" style="width: 45%"></div>
+              <div :class="['h-full rounded-full', getProjectColor(index)]" :style="{ width: getProgress(project.id!) + '%' }"></div>
             </div>
           </div>
           
           <div class="mt-6 pt-4 border-t border-border/40 flex justify-between items-center text-sm text-muted-foreground">
-            <span>12 Tareas Totales</span>
+            <span>{{ getTotalTasks(project.id!) }} Tareas Totales</span>
             <span class="flex -space-x-2">
-              <!-- Avatares o iconos de tareas (mocks) -->
               <div class="w-6 h-6 rounded-full border-2 border-card bg-primary/20 flex items-center justify-center text-[10px] text-primary">T</div>
-              <div class="w-6 h-6 rounded-full border-2 border-card bg-orange-500/20 flex items-center justify-center text-[10px] text-orange-500">T</div>
             </span>
           </div>
         </div>
@@ -49,5 +52,37 @@
   </NuxtLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { onMounted } from 'vue'
+import { useTaskStore } from '~/stores/tasks'
+
+const taskStore = useTaskStore()
+
+onMounted(() => {
+  taskStore.fetchProjects()
+  taskStore.fetchTasks() // Para calcular el progreso
+})
+
+const getProjectColor = (index: number) => {
+  const colors = [
+    'bg-blue-500',
+    'bg-purple-500',
+    'bg-emerald-500',
+    'bg-orange-500',
+    'bg-pink-500',
+    'bg-cyan-500'
+  ]
+  return colors[index % colors.length]
+}
+
+const getTotalTasks = (projectId: number) => {
+  return taskStore.tasks.filter(t => t.projectId === projectId).length
+}
+
+const getProgress = (projectId: number) => {
+  const tasks = taskStore.tasks.filter(t => t.projectId === projectId)
+  if (tasks.length === 0) return 0
+  const completed = tasks.filter(t => t.status === 'completed').length
+  return Math.round((completed / tasks.length) * 100)
+}
 </script>
