@@ -220,10 +220,13 @@ export const useFinanceStore = defineStore('finance', {
                 const res = await api.post('/finance/transactions', tx);
                 if (res.data.success) {
                     await this.fetchTransactions();
-                    await this.fetchAccounts();
+                    await this.fetchAccounts(); // Update balances
+                } else {
+                    alert("Error al registrar transacción: " + (res.data.message || "Error desconocido"));
                 }
-            } catch (err) {
-                console.error("Error submitting transaction:", err);
+            } catch (err: any) {
+                console.error("Error creating transaction:", err);
+                alert("Error de conexión al registrar transacción: " + (err.response?.data?.message || err.message || "Error desconocido"));
             }
         },
 
@@ -242,9 +245,12 @@ export const useFinanceStore = defineStore('finance', {
                 const res = await api.post('/finance/accounts', payload);
                 if (res.data.success) {
                     await this.fetchAccounts();
+                } else {
+                    alert("Error al agregar cuenta: " + (res.data.message || "Error desconocido"));
                 }
-            } catch (err) {
+            } catch (err: any) {
                 console.error("Error creating account:", err);
+                alert("Error de conexión al agregar cuenta: " + (err.response?.data?.message || err.message || "Error desconocido"));
             }
         },
 
@@ -315,9 +321,12 @@ export const useFinanceStore = defineStore('finance', {
                 const res = await api.post('/finance/subscriptions', sub);
                 if (res.data.success) {
                     await this.fetchSubscriptions();
+                } else {
+                    alert("Error al agregar suscripción: " + (res.data.message || "Error desconocido"));
                 }
-            } catch (err) {
-                console.error("Error creating subscription:", err);
+            } catch (err: any) {
+                console.error("Error adding subscription:", err);
+                alert("Error de conexión al agregar suscripción: " + (err.response?.data?.message || err.message || "Error desconocido"));
             }
         },
 
