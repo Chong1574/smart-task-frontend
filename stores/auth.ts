@@ -99,8 +99,24 @@ export const useAuthStore = defineStore('auth', {
             this.token = token;
             const tokenCookie = useCookie('token');
             tokenCookie.value = token;
+            
+            // Extract user info from JWT payload
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                this.user = {
+                    id: payload.userId,
+                    email: payload.email,
+                    name: payload.email.split('@')[0]
+                };
+            } catch (e) {
+                console.error("Failed to decode token", e);
+            }
+
             if (typeof window !== 'undefined') {
                 localStorage.setItem('token', token);
+                if (this.user) {
+                    localStorage.setItem('user', JSON.stringify(this.user));
+                }
                 localStorage.setItem('oauth_login', 'true');
             }
         }

@@ -4,7 +4,7 @@
       <!-- Encabezado con efecto WOW -->
       <div class="relative bg-gradient-to-r from-primary/20 via-orange-400/10 to-transparent p-8 rounded-3xl overflow-hidden border border-border/50">
         <div class="relative z-10">
-          <h1 class="text-4xl font-serif font-bold mb-2">¡Hola, Creador! 👋</h1>
+          <h1 class="text-4xl font-serif font-bold mb-2">¡Hola, {{ userName }}! 👋</h1>
           <p class="text-muted-foreground text-lg max-w-xl">
             Tus proyectos y hábitos te están esperando. Tienes <span class="font-bold text-primary">{{ pendingTasksCount }} tareas prioritarias</span> para hoy y {{ activeHabitsCount }} hábitos por cumplir.
           </p>
@@ -81,10 +81,19 @@ definePageMeta({ layout: 'taskman' })
 
 import { useRouter } from 'vue-router'
 import { useTaskStore } from '~/stores/tasks'
+import { useAuthStore } from '~/stores/auth'
 import { onMounted, computed } from 'vue'
 
 const router = useRouter()
 const taskStore = useTaskStore()
+const authStore = useAuthStore()
+
+// Calcular el nombre de usuario
+const userName = computed(() => {
+  const name = authStore.user?.name || authStore.user?.email?.split('@')[0] || 'Creador'
+  // Capitalize first letter
+  return name.charAt(0).toUpperCase() + name.slice(1)
+})
 
 onMounted(async () => {
   await Promise.all([
