@@ -21,14 +21,18 @@ export const useAuthStore = defineStore('auth', {
 
     actions: {
         init() {
-            if (typeof window !== 'undefined' && !this.isInitialized) {
-                this.token = localStorage.getItem('token') || null;
-                const userStr = localStorage.getItem('user');
-                if (userStr && userStr !== 'undefined') {
-                    try {
-                        this.user = JSON.parse(userStr);
-                    } catch (e) {
-                        this.user = null;
+            if (!this.isInitialized) {
+                const tokenCookie = useCookie('token');
+                this.token = tokenCookie.value || null;
+                
+                if (typeof window !== 'undefined') {
+                    const userStr = localStorage.getItem('user');
+                    if (userStr && userStr !== 'undefined') {
+                        try {
+                            this.user = JSON.parse(userStr);
+                        } catch (e) {
+                            this.user = null;
+                        }
                     }
                 }
                 this.isInitialized = true;
@@ -68,6 +72,8 @@ export const useAuthStore = defineStore('auth', {
         setSession(token: string, user: any) {
             this.token = token;
             this.user = user;
+            const tokenCookie = useCookie('token');
+            tokenCookie.value = token;
             if (typeof window !== 'undefined') {
                 localStorage.setItem('token', token);
                 localStorage.setItem('user', JSON.stringify(user));
@@ -79,6 +85,8 @@ export const useAuthStore = defineStore('auth', {
         logout() {
             this.token = null;
             this.user = null;
+            const tokenCookie = useCookie('token');
+            tokenCookie.value = null;
             if (typeof window !== 'undefined') {
                 localStorage.removeItem('token');
                 localStorage.removeItem('user');
@@ -89,6 +97,8 @@ export const useAuthStore = defineStore('auth', {
 
         handleAuthCallback(token: string) {
             this.token = token;
+            const tokenCookie = useCookie('token');
+            tokenCookie.value = token;
             if (typeof window !== 'undefined') {
                 localStorage.setItem('token', token);
                 localStorage.setItem('oauth_login', 'true');
