@@ -1,4 +1,12 @@
 <script setup lang="ts">
+useHead({
+  titleTemplate: (titleChunk) => {
+    return titleChunk ? `${titleChunk} - Taskman` : 'Taskman';
+  },
+  link: [
+    { rel: 'icon', type: 'image/png', href: '/logo.png' }
+  ]
+})
 </script>
 
 <template>
