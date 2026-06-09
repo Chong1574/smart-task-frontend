@@ -1,6 +1,5 @@
 <template>
-  <NuxtLayout name="taskman">
-    <div class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-6xl mx-auto">
+  <div class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-6xl mx-auto">
       
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -49,10 +48,11 @@
       </div>
 
     </div>
-  </NuxtLayout>
 </template>
 
 <script setup lang="ts">
+definePageMeta({ layout: 'taskman' })
+
 import { onMounted } from 'vue'
 import { useTaskStore } from '~/stores/tasks'
 
@@ -86,3 +86,4 @@ const getProgress = (projectId: number) => {
   return Math.round((completed / tasks.length) * 100)
 }
 </script>
+

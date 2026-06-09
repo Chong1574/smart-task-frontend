@@ -1,6 +1,5 @@
 <template>
-  <NuxtLayout name="taskman">
-    <div class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+  <div class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       
       <!-- Encabezado con efecto WOW -->
       <div class="relative bg-gradient-to-r from-primary/20 via-orange-400/10 to-transparent p-8 rounded-3xl overflow-hidden border border-border/50">
@@ -75,10 +74,11 @@
       </div>
 
     </div>
-  </NuxtLayout>
 </template>
 
 <script setup lang="ts">
+definePageMeta({ layout: 'taskman' })
+
 import { useRouter } from 'vue-router'
 import { useTaskStore } from '~/stores/tasks'
 import { onMounted, computed } from 'vue'
@@ -99,3 +99,4 @@ const pendingTasksCount = computed(() => taskStore.tasks.filter(t => t.status ==
 // Assuming habits are fetched, we can show active habits length or hardcoded streak for now since streak logic is complex
 const activeHabitsCount = computed(() => taskStore.habits.length)
 </script>
+
