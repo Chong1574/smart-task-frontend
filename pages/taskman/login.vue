@@ -18,6 +18,7 @@
             v-model="email"
             type="email" 
             required
+            autocomplete="username"
             class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
             placeholder="tu@email.com"
           >
