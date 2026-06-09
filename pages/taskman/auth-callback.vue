@@ -29,7 +29,7 @@ onMounted(() => {
     router.push('/taskman');
   } else {
     // Si no hay token en la URL, redirigir al login
-    router.push('/taskman/login');
+    router.push('/login');
   }
 });
 </script>

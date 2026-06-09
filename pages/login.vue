@@ -1,76 +1,119 @@
 <template>
-  <div class="min-h-[80vh] flex flex-col items-center justify-center p-4">
-    <div class="w-full max-w-md bg-card p-8 rounded-3xl border border-border/50 shadow-xl">
-      <div class="text-center mb-8">
-        <h1 class="text-3xl font-serif font-bold mb-2">Acceso a Task-man</h1>
-        <p class="text-muted-foreground text-sm">Ingresa a tu panel de control y seguimiento botánico.</p>
+  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#1C232B] via-[#2A313C] to-[#1A1F26] p-4 font-sans">
+    <div class="max-w-md w-full bg-white/5 backdrop-blur-xl rounded-[2rem] p-8 border border-white/10 shadow-[0_0_30px_rgba(255,255,255,0.05)]">
+      <div class="text-center mb-10">
+        <div class="w-16 h-16 bg-gradient-to-br from-primary to-orange-500 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-lg shadow-primary/20">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        </div>
+        <h1 class="text-3xl font-bold text-white mb-2 font-serif">Bienvenido de nuevo</h1>
+        <p class="text-gray-400">Ingresa a tu ecosistema de Taskman</p>
       </div>
 
       <form @submit.prevent="handleLogin" class="space-y-6">
         <div>
-          <label class="block text-sm font-medium mb-2">Correo electrónico</label>
+          <label class="block text-sm font-medium text-gray-300 mb-2">Email</label>
           <input 
+            v-model="email"
             type="email" 
-            class="w-full px-4 py-3 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-            placeholder="tu@correo.com"
-          />
+            required
+            autocomplete="username"
+            class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+            placeholder="tu@email.com"
+          >
         </div>
+
         <div>
-          <label class="block text-sm font-medium mb-2">Contraseña</label>
+          <label class="block text-sm font-medium text-gray-300 mb-2">Contraseña</label>
           <input 
+            v-model="password"
             type="password" 
             autocomplete="current-password"
-            class="w-full px-4 py-3 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+            required
+            class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
             placeholder="••••••••"
-          />
+          >
         </div>
-        
+
+        <div v-if="authStore.error" class="text-red-400 text-sm text-center bg-red-500/10 py-2 rounded-lg border border-red-500/20">
+          {{ authStore.error }}
+        </div>
+
         <button 
           type="submit" 
-          class="w-full py-4 bg-primary text-primary-foreground rounded-xl font-medium hover:opacity-90 transition-opacity flex justify-center items-center gap-2"
+          :disabled="authStore.loading"
+          class="w-full bg-gradient-to-r from-primary to-orange-500 hover:opacity-90 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-primary/25 flex items-center justify-center gap-2"
         >
-          Iniciar Sesión
-        </button>
-
-        <div class="relative flex items-center py-2">
-          <div class="flex-grow border-t border-border"></div>
-          <span class="flex-shrink-0 mx-4 text-muted-foreground text-sm">o continuar con</span>
-          <div class="flex-grow border-t border-border"></div>
-        </div>
-
-        <button 
-          type="button"
-          @click="handleGoogleLogin"
-          class="w-full py-3.5 bg-background border border-border text-foreground rounded-xl font-medium hover:bg-secondary/50 transition-colors flex justify-center items-center gap-3 shadow-sm"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20">
-            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+          <svg v-if="authStore.loading" class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-          Google
+          <span>{{ authStore.loading ? 'Entrando...' : 'Iniciar Sesión' }}</span>
         </button>
       </form>
+
+      <div class="mt-8">
+        <div class="relative flex items-center justify-center mb-6">
+          <div class="border-t border-white/10 w-full"></div>
+          <span class="bg-[#2A313C] px-4 text-xs text-gray-400 font-medium uppercase tracking-wider absolute">O continúa con</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <button 
+            @click="loginWithGoogle"
+            class="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 py-3 rounded-xl text-white transition-all hover:-translate-y-1"
+          >
+            <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5" alt="Google">
+            <span>Google</span>
+          </button>
+          <button 
+            @click="loginWithMicrosoft"
+            class="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 py-3 rounded-xl text-white transition-all hover:-translate-y-1"
+          >
+            <img src="https://www.svgrepo.com/show/475662/microsoft-color.svg" class="w-5 h-5" alt="Microsoft">
+            <span>Microsoft</span>
+          </button>
+        </div>
+      </div>
+
     </div>
   </div>
 </template>
 
-<script setup>
-const router = useRouter()
+<script setup lang="ts">
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '~/stores/auth';
 
-// Por ahora es un mock de login clásico para llevarlos al dashboard original
-const handleLogin = () => {
-  window.location.href = '/taskman/'
-}
+definePageMeta({
+  layout: false // Do not use the taskman sidebar layout for login
+})
 
-// Login con Google usando el backend
-const handleGoogleLogin = () => {
-  const baseEnvUrl = import.meta.env.VITE_API_BASE_URL;
-  const API_URL = baseEnvUrl 
-    ? (baseEnvUrl.endsWith('/api') ? baseEnvUrl : `${baseEnvUrl}/api`) 
-    : (window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : 'https://taskapi.shongyi.com/api');
-    
-  window.location.href = `${API_URL}/auth/google`;
-}
+const authStore = useAuthStore();
+const router = useRouter();
+
+const email = ref('');
+const password = ref('');
+
+const handleLogin = async () => {
+    const success = await authStore.login(email.value, password.value);
+    if (success) {
+        router.push('/taskman');
+    }
+};
+
+const baseEnvUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
+const API_URL = baseEnvUrl
+    ? (baseEnvUrl.endsWith('/api') ? baseEnvUrl : `${baseEnvUrl}/api`)
+    : 'http://localhost:3000/api';
+
+const loginWithGoogle = () => {
+    // In legacy, the backend expects a query param or origin logic to redirect back, but if we don't have it, it defaults
+    window.location.href = `${API_URL}/auth/google`;
+};
+
+const loginWithMicrosoft = () => {
+    window.location.href = `${API_URL}/auth/microsoft`;
+};
 </script>

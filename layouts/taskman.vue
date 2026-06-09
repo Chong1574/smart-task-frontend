@@ -84,7 +84,7 @@ const nav = [
 ]
 
 const handleLogoutEvent = () => {
-  router.push('/taskman/login')
+  router.push('/login')
 }
 
 onMounted(() => {
@@ -100,8 +100,8 @@ onUnmounted(() => {
   }
 })
 
-const logout = () => {
+const handleLogout = () => {
   authStore.logout()
-  router.push('/taskman/login')
+  router.push('/login')
 }
 </script>
