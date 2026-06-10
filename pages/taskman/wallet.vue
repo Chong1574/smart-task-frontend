@@ -24,7 +24,7 @@
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- Tarjeta Balance -->
-        <div class="bg-gradient-to-br from-green-500 to-emerald-700 p-6 rounded-3xl text-white shadow-xl shadow-green-500/20 relative overflow-hidden md:col-span-1">
+        <div :class="['p-6 rounded-3xl text-white shadow-xl relative overflow-hidden md:col-span-1 transition-all', financeStore.totalBalance < 0 ? 'bg-gradient-to-br from-red-500 to-rose-700 shadow-red-500/20' : 'bg-gradient-to-br from-green-500 to-emerald-700 shadow-green-500/20']">
           <div class="relative z-10">
             <h3 class="font-medium opacity-90 mb-1">Balance Total</h3>
             <p class="text-4xl font-bold font-mono">{{ formatCurrency(financeStore.totalBalance) }}</p>
@@ -49,11 +49,11 @@
                 <p class="text-muted-foreground text-sm">{{ account.name }}</p>
                 <p class="text-xl font-bold font-mono">{{ formatCurrency(account.balance) }}</p>
               </div>
-              <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button @click="openEditAccount(account)" class="text-muted-foreground hover:text-primary p-1" title="Editar Cuenta">
+              <div class="absolute top-2 right-2 flex gap-1 md:opacity-0 opacity-100 md:group-hover:opacity-100 transition-opacity">
+                <button @click="openEditAccount(account)" class="text-muted-foreground hover:text-primary p-1 bg-background/50 rounded-md" title="Editar Cuenta">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
                 </button>
-                <button @click="deleteAccountWithConfirm(account.id)" class="text-muted-foreground hover:text-destructive p-1" title="Eliminar Cuenta">
+                <button @click="deleteAccountWithConfirm(account.id)" class="text-muted-foreground hover:text-destructive p-1 bg-background/50 rounded-md" title="Eliminar Cuenta">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                 </button>
               </div>
@@ -100,7 +100,7 @@
                No hay membresías registradas.
             </div>
             
-            <div v-for="sub in financeStore.subscriptions" :key="sub.id" class="flex justify-between items-center p-4 bg-secondary/30 rounded-2xl border border-border/20">
+            <div v-for="sub in financeStore.subscriptions" :key="sub.id" class="flex justify-between items-center p-4 bg-secondary/30 rounded-2xl border border-border/20 relative group">
               <div>
                 <p class="font-bold">{{ sub.name }}</p>
                 <div class="flex gap-2 text-xs text-muted-foreground mt-1">
@@ -108,8 +108,16 @@
                   <span v-if="sub.accountId">Domiciliado</span>
                 </div>
               </div>
-              <div class="text-right">
-                <p class="font-mono font-bold text-red-400">{{ formatCurrency(sub.amount) }} <span class="text-xs text-muted-foreground font-sans">/ {{ sub.frequency === 'MONTHLY' ? 'mes' : sub.frequency === 'YEARLY' ? 'año' : 'bimestre' }}</span></p>
+              <div class="text-right group-hover:opacity-0 md:opacity-100 transition-opacity">
+                <p class="font-mono font-bold text-red-400">{{ formatCurrency(sub.amount) }} <span class="text-xs text-muted-foreground font-sans">/ {{ sub.frequency === 'MONTHLY' ? 'mes' : sub.frequency === 'YEARLY' ? 'año' : sub.frequency === 'WEEKLY' ? 'sem' : 'bimestre' }}</span></p>
+              </div>
+              <div class="absolute top-0 right-0 h-full flex items-center pr-4 gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                <button @click="openEditSubscription(sub)" class="bg-secondary text-primary p-2 rounded-full hover:bg-primary/20" title="Editar">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                </button>
+                <button @click="deleteSubscriptionWithConfirm(sub.id)" class="bg-secondary text-destructive p-2 rounded-full hover:bg-destructive/20" title="Eliminar">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                </button>
               </div>
             </div>
           </div>
@@ -162,12 +170,16 @@
                 <input v-model.number="accountForm.credit_limit" type="number" step="0.01" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
               </div>
               <div>
-                <label class="block text-sm font-medium mb-1">Día de Corte</label>
-                <input v-model.number="accountForm.cutoff_day" type="number" min="1" max="31" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+                <label class="block text-sm font-medium mb-1">
+                  Día de Corte {{ accountForm.payment_frequency === 'WEEKLY' ? '(1=Lun, 7=Dom)' : '' }}
+                </label>
+                <input v-model.number="accountForm.cutoff_day" type="number" min="1" :max="accountForm.payment_frequency === 'WEEKLY' ? 7 : 31" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
               </div>
               <div>
-                <label class="block text-sm font-medium mb-1">Día de Pago</label>
-                <input v-model.number="accountForm.payment_day" type="number" min="1" max="31" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+                <label class="block text-sm font-medium mb-1">
+                  Día de Pago {{ accountForm.payment_frequency === 'WEEKLY' ? '(1=Lun, 7=Dom)' : '' }}
+                </label>
+                <input v-model.number="accountForm.payment_day" type="number" min="1" :max="accountForm.payment_frequency === 'WEEKLY' ? 7 : 31" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
               </div>
             </div>
 
@@ -198,9 +210,11 @@
                   <option value="ONCE">Un solo pago (Dinero rápido)</option>
                 </select>
               </div>
-              <div>
-                <label class="block text-sm font-medium mb-1">Día de Pago</label>
-                <input v-model.number="accountForm.payment_day" type="number" min="1" max="31" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+              <div v-if="accountForm.payment_frequency !== 'ONCE'">
+                <label class="block text-sm font-medium mb-1">
+                  Día de Pago {{ accountForm.payment_frequency === 'WEEKLY' ? '(1=Lun, 7=Dom)' : '' }}
+                </label>
+                <input v-model.number="accountForm.payment_day" type="number" min="1" :max="accountForm.payment_frequency === 'WEEKLY' ? 7 : 31" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
               </div>
             </div>
 
@@ -256,12 +270,16 @@
                 <input v-model.number="editAccountForm.credit_limit" type="number" step="0.01" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
               </div>
               <div>
-                <label class="block text-sm font-medium mb-1">Día de Corte</label>
-                <input v-model.number="editAccountForm.cutoff_day" type="number" min="1" max="31" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+                <label class="block text-sm font-medium mb-1">
+                  Día de Corte {{ editAccountForm.payment_frequency === 'WEEKLY' ? '(1=Lun, 7=Dom)' : '' }}
+                </label>
+                <input v-model.number="editAccountForm.cutoff_day" type="number" min="1" :max="editAccountForm.payment_frequency === 'WEEKLY' ? 7 : 31" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
               </div>
               <div>
-                <label class="block text-sm font-medium mb-1">Día de Pago</label>
-                <input v-model.number="editAccountForm.payment_day" type="number" min="1" max="31" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+                <label class="block text-sm font-medium mb-1">
+                  Día de Pago {{ editAccountForm.payment_frequency === 'WEEKLY' ? '(1=Lun, 7=Dom)' : '' }}
+                </label>
+                <input v-model.number="editAccountForm.payment_day" type="number" min="1" :max="editAccountForm.payment_frequency === 'WEEKLY' ? 7 : 31" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
               </div>
             </div>
 
@@ -292,9 +310,11 @@
                   <option value="ONCE">Un solo pago (Dinero rápido)</option>
                 </select>
               </div>
-              <div>
-                <label class="block text-sm font-medium mb-1">Día de Pago</label>
-                <input v-model.number="editAccountForm.payment_day" type="number" min="1" max="31" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+              <div v-if="editAccountForm.payment_frequency !== 'ONCE'">
+                <label class="block text-sm font-medium mb-1">
+                  Día de Pago {{ editAccountForm.payment_frequency === 'WEEKLY' ? '(1=Lun, 7=Dom)' : '' }}
+                </label>
+                <input v-model.number="editAccountForm.payment_day" type="number" min="1" :max="editAccountForm.payment_frequency === 'WEEKLY' ? 7 : 31" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
               </div>
             </div>
 
@@ -326,6 +346,7 @@
               <div>
                 <label class="block text-sm font-medium mb-1">Frecuencia</label>
                 <select v-model="subForm.frequency" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+                  <option value="WEEKLY">Semanal</option>
                   <option value="MONTHLY">Mensual</option>
                   <option value="BIMONTHLY">Bimestral</option>
                   <option value="YEARLY">Anual</option>
@@ -335,6 +356,12 @@
             <div>
               <label class="block text-sm font-medium mb-1">Monto Estimado</label>
               <input v-model.number="subForm.amount" required type="number" step="0.01" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+            </div>
+            <div v-if="subForm.frequency === 'WEEKLY' || subForm.frequency === 'MONTHLY'">
+              <label class="block text-sm font-medium mb-1">
+                Día de Pago {{ subForm.frequency === 'WEEKLY' ? '(1=Lun, 7=Dom)' : '' }}
+              </label>
+              <input v-model.number="subForm.paymentDay" type="number" min="1" :max="subForm.frequency === 'WEEKLY' ? 7 : 31" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
             </div>
             <div>
               <label class="block text-sm font-medium mb-1">Domiciliar a Cuenta (Opcional)</label>
@@ -386,9 +413,14 @@
             <div v-if="txForm.type !== 'transfer'">
               <div class="flex justify-between items-center mb-1">
                 <label class="text-sm font-medium">Categoría</label>
-                <button type="button" @click="showAddCategory = !showAddCategory" class="text-xs text-primary hover:underline">
-                  {{ showAddCategory ? 'Cancelar' : '+ Nueva' }}
-                </button>
+                <div class="flex gap-2">
+                  <button type="button" @click="showAddCategory = !showAddCategory" class="text-xs text-primary hover:underline">
+                    {{ showAddCategory ? 'Cancelar' : '+ Nueva' }}
+                  </button>
+                  <button type="button" @click="showManageCategoriesModal = true" class="text-xs text-muted-foreground hover:underline">
+                    Gestionar
+                  </button>
+                </div>
               </div>
               
               <!-- Selector normal -->
@@ -416,6 +448,24 @@
         </div>
       </div>
 
+      <!-- Modal: Gestionar Categorías -->
+      <div v-if="showManageCategoriesModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" @click.self="showManageCategoriesModal = false">
+        <div class="bg-card border border-primary/20 rounded-3xl p-6 w-full max-w-md shadow-2xl">
+          <h2 class="text-2xl font-bold mb-6">Gestionar Categorías</h2>
+          <div class="space-y-2 max-h-64 overflow-y-auto pr-2">
+            <div v-for="cat in financeStore.categories" :key="cat" class="flex justify-between items-center p-3 bg-secondary/30 rounded-xl border border-border/20">
+              <span class="font-medium">{{ cat }}</span>
+              <button @click="deleteCategoryWithConfirm(cat)" class="text-destructive hover:bg-destructive/10 p-1.5 rounded-md transition-colors" title="Eliminar Categoría">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="flex justify-end gap-3 mt-6">
+            <button type="button" @click="showManageCategoriesModal = false" class="bg-primary text-primary-foreground px-6 py-2 rounded-xl font-bold shadow-lg hover:opacity-90 transition-opacity">Cerrar</button>
+          </div>
+        </div>
+      </div>
+
     </div>
 </template>
 
@@ -433,6 +483,7 @@ const showAccountModal = ref(false)
 const showEditAccountModal = ref(false)
 const showSubscriptionModal = ref(false)
 const showTransactionModal = ref(false)
+const showManageCategoriesModal = ref(false)
 
 // Forms
 const accountForm = reactive({
@@ -465,13 +516,15 @@ const editAccountForm = reactive({
 })
 
 const subForm = reactive({
+  id: null as number | null,
   name: '',
   type: 'MEMBERSHIP',
   frequency: 'MONTHLY',
   amount: 0,
   currency: 'MXN',
   isVariable: false,
-  accountId: null as number | null
+  accountId: null as number | null,
+  paymentDay: 1 as number | null
 })
 
 const txForm = reactive({
@@ -494,6 +547,12 @@ const addNewCategory = () => {
     txForm.category = cleanCat
     newCategory.value = ''
     showAddCategory.value = false
+  }
+}
+
+const deleteCategoryWithConfirm = async (cat: string) => {
+  if (confirm(`¿Estás seguro de eliminar la categoría "${cat}"?`)) {
+    await financeStore.removeCategory(cat)
   }
 }
 
@@ -569,19 +628,46 @@ const deleteAccountWithConfirm = async (id: number) => {
   }
 }
 
+const openEditSubscription = (sub: any) => {
+  subForm.id = sub.id
+  subForm.name = sub.name
+  subForm.type = sub.type
+  subForm.frequency = sub.frequency
+  subForm.amount = sub.amount
+  subForm.currency = sub.currency || 'MXN'
+  subForm.isVariable = sub.isVariable
+  subForm.accountId = sub.accountId
+  subForm.paymentDay = sub.paymentDay || 1
+  showSubscriptionModal.value = true
+}
+
+const deleteSubscriptionWithConfirm = async (id: number) => {
+  if (confirm('¿Estás seguro de que deseas eliminar esta suscripción o membresía?')) {
+    await financeStore.deleteSubscription(id)
+  }
+}
+
 const submitSubscription = async () => {
-  await financeStore.addSubscription({
+  const data = {
     name: subForm.name,
     type: subForm.type as any,
     frequency: subForm.frequency as any,
     amount: subForm.amount,
     currency: subForm.currency,
     isVariable: subForm.isVariable,
-    accountId: subForm.accountId
-  })
+    accountId: subForm.accountId,
+    paymentDay: subForm.paymentDay
+  }
+  if (subForm.id) {
+    await financeStore.updateSubscription(subForm.id, data)
+  } else {
+    await financeStore.addSubscription(data)
+  }
   showSubscriptionModal.value = false
+  subForm.id = null
   subForm.name = ''
   subForm.amount = 0
+  subForm.paymentDay = 1
 }
 
 const submitTransaction = async () => {
