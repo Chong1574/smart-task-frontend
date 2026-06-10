@@ -84,6 +84,21 @@
             </div>
           </div>
 
+          <!-- Taskman -->
+          <div class="group relative overflow-hidden rounded-3xl bg-card border border-border/50 p-8 transition-all hover:shadow-xl hover:-translate-y-1">
+            <div class="relative z-10 flex flex-col h-full justify-between">
+              <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check-square"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="m9 12 2 2 4-4"/></svg>
+              </div>
+              <div>
+                <h4 class="font-serif text-xl font-bold mb-2">Taskman</h4>
+                <p class="text-muted-foreground text-sm">
+                  Gestión inteligente de tareas sincronizada con tu Calendario, Tareas y Recordatorios de Google para un control unificado y seguro de tu tiempo.
+                </p>
+              </div>
+            </div>
+          </div>
+
           <!-- Electrónica -->
           <div class="group relative overflow-hidden rounded-3xl bg-card border border-border/50 p-8 transition-all hover:shadow-xl hover:-translate-y-1">
             <div class="relative z-10 flex flex-col h-full justify-between">

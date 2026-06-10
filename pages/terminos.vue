@@ -9,7 +9,7 @@
       <p>Al acceder o utilizar Taskman ("el Servicio"), aceptas estar sujeto a estos Términos de Servicio. Si no estás de acuerdo con alguna parte de los términos, no podrás acceder al Servicio.</p>
 
       <h2 class="text-2xl font-serif font-bold text-[#8E5E44] mt-8">2. Descripción del Servicio</h2>
-      <p>Taskman es una herramienta de gestión personal diseñada para organizar tareas, finanzas, proyectos y hábitos. Nos reservamos el derecho de modificar, suspender o discontinuar el Servicio en cualquier momento sin previo aviso.</p>
+      <p>Taskman es una herramienta de gestión personal diseñada para organizar tareas, finanzas, proyectos, hábitos y agendas. Permite la integración y sincronización opcional con servicios de terceros como el calendario, las tareas y los recordatorios de Google. Nos reservamos el derecho de modificar, suspender o discontinuar el Servicio en cualquier momento sin previo aviso.</p>
 
       <h2 class="text-2xl font-serif font-bold text-[#8E5E44] mt-8">3. Cuentas de Usuario</h2>
       <p>Eres responsable de salvaguardar la contraseña o credenciales (incluyendo inicio de sesión mediante terceros como Google o Microsoft) que utilizas para acceder al Servicio y de cualquier actividad o acción bajo tu cuenta.</p>

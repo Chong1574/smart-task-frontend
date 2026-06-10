@@ -62,8 +62,8 @@
       <div class="container flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
         <p>© 2026 El Rincón de Brandy. La semilla de tu idea.</p>
         <div class="flex gap-6">
-          <NuxtLink to="/estudio" class="hover:text-primary transition-colors">Aviso de Privacidad</NuxtLink>
-          <NuxtLink to="/proteccion" class="hover:text-primary transition-colors">Términos y Condiciones</NuxtLink>
+          <NuxtLink to="/privacidad" class="hover:text-primary transition-colors">Aviso de Privacidad</NuxtLink>
+          <NuxtLink to="/terminos" class="hover:text-primary transition-colors">Términos y Condiciones</NuxtLink>
         </div>
       </div>
     </footer>
