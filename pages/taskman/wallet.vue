@@ -100,7 +100,7 @@
                No hay membresías registradas.
             </div>
             
-            <div v-for="sub in financeStore.subscriptions" :key="sub.id" class="flex justify-between items-center p-4 bg-secondary/30 rounded-2xl border border-border/20 relative group">
+            <div v-for="sub in financeStore.subscriptions.filter(s => s.type !== 'INCOME')" :key="sub.id" class="flex justify-between items-center p-4 bg-secondary/30 rounded-2xl border border-border/20 relative group">
               <div>
                 <p class="font-bold">{{ sub.name }}</p>
                 <div class="flex gap-2 text-xs text-muted-foreground mt-1">
