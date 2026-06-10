@@ -107,11 +107,19 @@ export const useFinanceStore = defineStore('finance', {
     getters: {
         totalIncome: (state) => state.transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + Number(t.amount), 0),
         totalExpense: (state) => state.transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + Number(t.amount), 0),
-        totalBalance: (state) => state.accounts.reduce((sum, acc) => sum + Number(acc.balance), 0),
+        totalBalance: (state) => state.accounts.reduce((sum, acc) => {
+            const isDebt = acc.type === 'loan' || (acc.type === 'card' && acc.sub_type === 'credit');
+            const balanceVal = Number(acc.balance);
+            return sum + (isDebt ? -Math.abs(balanceVal) : balanceVal);
+        }, 0),
 
         netBudget: (state) => {
             const income = state.transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + Number(t.amount), 0);
-            const expenses = state.transactions.filter(t => t.type === 'expense' || t.type === 'loan_payment').reduce((sum, t) => sum + Number(t.amount), 0);
+            const expenses = state.transactions.filter(t => 
+                t.type === 'expense' || 
+                t.type === 'loan_payment' || 
+                t.type === 'credit_payment'
+            ).reduce((sum, t) => sum + Number(t.amount), 0);
             return income - expenses;
         },
 
