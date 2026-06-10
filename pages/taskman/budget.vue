@@ -33,7 +33,7 @@
           <div class="mt-4 space-y-2 relative z-10">
             <div v-for="inc in incomes" :key="inc.id" class="flex justify-between items-center text-sm border-t border-border/40 pt-2 mt-2 group/item relative">
               <div>
-                <span>{{ inc.name }} ({{ inc.frequency === 'MONTHLY' ? 'Mensual' : inc.frequency === 'BIMONTHLY' ? 'Quincenal' : inc.frequency === 'WEEKLY' ? 'Semanal' : 'Anual' }})</span>
+                <span>{{ inc.name }} ({{ inc.frequency === 'MONTHLY' ? 'Mensual' : inc.frequency === 'BIWEEKLY' ? 'Quincenal' : inc.frequency === 'WEEKLY' ? 'Semanal' : 'Anual' }})</span>
               </div>
               <div class="flex items-center gap-3">
                 <span class="font-mono text-green-600 group-hover/item:opacity-0 md:opacity-100 transition-opacity">{{ formatCurrency(inc.amount) }}</span>
@@ -105,14 +105,17 @@
                 <label class="block text-sm font-medium mb-1">Frecuencia</label>
                 <select v-model="incomeForm.frequency" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
                   <option value="WEEKLY">Semanal</option>
+                  <option value="BIWEEKLY">Quincenal</option>
                   <option value="MONTHLY">Mensual</option>
-                  <option value="BIMONTHLY">Quincenal</option>
                   <option value="YEARLY">Anual</option>
                 </select>
               </div>
               <div>
                 <label class="block text-sm font-medium mb-1">Monto por periodo</label>
-                <input v-model.number="incomeForm.amount" required type="number" step="0.01" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+                <input v-model.number="incomeForm.amount" required type="number" step="0.01" min="0.01" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+                <p v-if="incomeForm.amount > 0" class="text-xs text-green-600 mt-2 font-medium bg-green-500/10 p-2 rounded-lg">
+                  💡 En tus proyecciones esto equivale a sumar {{ formatCurrency(incomeForm.frequency === 'WEEKLY' ? incomeForm.amount / 7 : incomeForm.frequency === 'BIWEEKLY' ? incomeForm.amount / 15 : incomeForm.frequency === 'MONTHLY' ? incomeForm.amount / 30 : incomeForm.amount / 365) }} diarios.
+                </p>
               </div>
             </div>
             <div v-if="incomeForm.frequency === 'WEEKLY' || incomeForm.frequency === 'MONTHLY'">
@@ -151,7 +154,7 @@ const showIncomeModal = ref(false)
 const incomeForm = reactive({
   id: null as number | null,
   name: 'Nómina',
-  frequency: 'BIMONTHLY',
+  frequency: 'BIWEEKLY',
   amount: 0,
   currency: 'MXN',
   paymentDay: 1 as number | null
@@ -160,7 +163,7 @@ const incomeForm = reactive({
 const openIncomeModal = () => {
   incomeForm.id = null
   incomeForm.name = 'Nómina'
-  incomeForm.frequency = 'BIMONTHLY'
+  incomeForm.frequency = 'BIWEEKLY'
   incomeForm.amount = 0
   incomeForm.paymentDay = 1
   showIncomeModal.value = true

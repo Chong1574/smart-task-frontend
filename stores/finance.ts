@@ -39,7 +39,7 @@ export interface Subscription {
     name: string;
     amount: number;
     currency: string;
-    frequency: 'WEEKLY' | 'MONTHLY' | 'YEARLY' | 'BIMONTHLY';
+    frequency: 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY' | 'BIMONTHLY' | 'YEARLY';
     type: 'MEMBERSHIP' | 'SERVICE' | 'INCOME';
     isVariable: boolean;
     paymentDay?: number | null;
@@ -131,6 +131,7 @@ export const useFinanceStore = defineStore('finance', {
                     let val = Number(sub.amount);
                     if (sub.frequency === 'YEARLY') val = val / 12;
                     else if (sub.frequency === 'BIMONTHLY') val = val / 2;
+                    else if (sub.frequency === 'BIWEEKLY') val = val * 2;
                     else if (sub.frequency === 'WEEKLY') val = val * 4.33; // aprox semanas por mes
                     return sum + val;
                 }, 0);
@@ -143,6 +144,7 @@ export const useFinanceStore = defineStore('finance', {
                     let val = Number(sub.amount);
                     if (sub.frequency === 'YEARLY') val = val / 12;
                     else if (sub.frequency === 'BIMONTHLY') val = val / 2;
+                    else if (sub.frequency === 'BIWEEKLY') val = val * 2;
                     else if (sub.frequency === 'WEEKLY') val = val * 4.33;
                     return sum + val;
                 }, 0);
@@ -162,7 +164,8 @@ export const useFinanceStore = defineStore('finance', {
             const dailyBurnRate = state.subscriptions.filter(s => s.type !== 'INCOME').reduce((sum, sub) => {
                 let daily = Number(sub.amount);
                 if (sub.frequency === 'MONTHLY') daily = daily / 30;
-                else if (sub.frequency === 'BIMONTHLY') daily = daily / 15;
+                else if (sub.frequency === 'BIMONTHLY') daily = daily / 60;
+                else if (sub.frequency === 'BIWEEKLY') daily = daily / 15;
                 else if (sub.frequency === 'WEEKLY') daily = daily / 7;
                 else if (sub.frequency === 'YEARLY') daily = daily / 365;
                 return sum + daily;
@@ -171,7 +174,8 @@ export const useFinanceStore = defineStore('finance', {
             const dailyIncomeRate = state.subscriptions.filter(s => s.type === 'INCOME').reduce((sum, sub) => {
                 let daily = Number(sub.amount);
                 if (sub.frequency === 'MONTHLY') daily = daily / 30;
-                else if (sub.frequency === 'BIMONTHLY') daily = daily / 15;
+                else if (sub.frequency === 'BIMONTHLY') daily = daily / 60;
+                else if (sub.frequency === 'BIWEEKLY') daily = daily / 15;
                 else if (sub.frequency === 'WEEKLY') daily = daily / 7;
                 else if (sub.frequency === 'YEARLY') daily = daily / 365;
                 return sum + daily;
