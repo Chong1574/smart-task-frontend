@@ -11,7 +11,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
             Jugar Ruleta
           </button>
-          <button class="bg-primary text-primary-foreground px-4 py-2 rounded-xl font-medium shadow-lg shadow-primary/20 hover:scale-105 transition-transform flex items-center gap-2">
+          <button @click="showTaskModal = true" class="bg-primary text-primary-foreground px-4 py-2 rounded-xl font-medium shadow-lg shadow-primary/20 hover:scale-105 transition-transform flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
             Añadir Tarea
           </button>
@@ -102,6 +102,63 @@
       </div>
 
     </div>
+
+    <!-- Modal Añadir Tarea -->
+    <div v-if="showTaskModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-300">
+      <div class="bg-card w-full max-w-lg rounded-3xl p-6 md:p-8 border border-border/50 shadow-2xl relative shadow-primary/10">
+        <button @click="showTaskModal = false" class="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+        <h2 class="text-2xl font-serif font-bold mb-6">Nueva Tarea</h2>
+        
+        <form @submit.prevent="submitTask" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium mb-1">Título de la Tarea</label>
+            <input v-model="newTask.title" required type="text" class="w-full rounded-xl border border-border bg-background px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none transition-shadow" placeholder="Ej: Revisar reporte final..." />
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium mb-1">Proyecto</label>
+              <select v-model="newTask.projectId" class="w-full rounded-xl border border-border bg-background px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none transition-shadow">
+                <option :value="undefined">Sin proyecto</option>
+                <option v-for="p in activeProjects" :key="p.id" :value="p.id">{{ p.name }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">Prioridad</label>
+              <select v-model="newTask.priority" class="w-full rounded-xl border border-border bg-background px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none transition-shadow">
+                <option value="high">Alta</option>
+                <option value="medium">Media</option>
+                <option value="low">Baja</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium mb-1">Duración estimada (min)</label>
+              <input v-model="newTask.duration_minutes" type="number" step="15" min="15" class="w-full rounded-xl border border-border bg-background px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none transition-shadow" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">Categoría (opcional)</label>
+              <input v-model="newTask.category" type="text" class="w-full rounded-xl border border-border bg-background px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none transition-shadow" placeholder="Trabajo, Hogar..." />
+            </div>
+          </div>
+
+          <label class="flex items-center gap-3 p-3 border border-border/50 rounded-xl cursor-pointer hover:bg-secondary/20 transition-colors mt-2">
+            <input v-model="newTask.auto_distribute" type="checkbox" class="w-5 h-5 rounded text-primary focus:ring-primary" />
+            <div class="flex flex-col">
+              <span class="font-medium text-sm">Distribución Inteligente</span>
+              <span class="text-xs text-muted-foreground">Dejar que TaskMan asigne esta tarea según mi calendario.</span>
+            </div>
+          </label>
+
+          <button type="submit" class="w-full bg-primary text-primary-foreground rounded-xl py-3 font-bold mt-6 hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20">
+            Añadir Tarea
+          </button>
+        </form>
+      </div>
+    </div>
+
 </template>
 
 <script setup lang="ts">
@@ -130,6 +187,30 @@ onMounted(() => {
     selectedProjectIds.value = activeProjects.value.map(p => p.id!)
   }
 })
+
+const showTaskModal = ref(false)
+
+const newTask = ref<Partial<Task>>({
+  title: '',
+  category: '',
+  duration_minutes: 30,
+  priority: 'medium',
+  auto_distribute: true,
+  status: 'pending'
+})
+
+const submitTask = async () => {
+  await taskStore.addTask({ ...newTask.value } as Task)
+  showTaskModal.value = false
+  newTask.value = {
+    title: '',
+    category: '',
+    duration_minutes: 30,
+    priority: 'medium',
+    auto_distribute: true,
+    status: 'pending'
+  }
+}
 
 const spin = async () => {
   selectedTask.value = null

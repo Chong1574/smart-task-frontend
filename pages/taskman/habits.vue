@@ -7,7 +7,7 @@
           <h1 class="text-3xl font-serif font-bold">Mis Hábitos Diarios</h1>
           <p class="text-muted-foreground">Construye la mejor versión de ti, un día a la vez.</p>
         </div>
-        <button class="bg-primary text-primary-foreground px-4 py-2 rounded-xl font-medium shadow-lg shadow-primary/20 hover:scale-105 transition-transform flex items-center gap-2">
+        <button @click="showHabitModal = true" class="bg-primary text-primary-foreground px-4 py-2 rounded-xl font-medium shadow-lg shadow-primary/20 hover:scale-105 transition-transform flex items-center gap-2">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
           Añadir Hábito
         </button>
@@ -54,15 +54,64 @@
       </div>
 
     </div>
+
+    <!-- Modal Añadir Hábito -->
+    <div v-if="showHabitModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-300">
+      <div class="bg-card w-full max-w-md rounded-3xl p-6 md:p-8 border border-border/50 shadow-2xl relative shadow-primary/10">
+        <button @click="showHabitModal = false" class="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+        <h2 class="text-2xl font-serif font-bold mb-6">Nuevo Hábito</h2>
+        
+        <form @submit.prevent="submitHabit" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium mb-1">Nombre del Hábito</label>
+            <input v-model="newHabit.name" required type="text" class="w-full rounded-xl border border-border bg-background px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none transition-shadow" placeholder="Ej: Leer 30 minutos..." />
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Descripción</label>
+            <textarea v-model="newHabit.description" rows="3" class="w-full rounded-xl border border-border bg-background px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none transition-shadow" placeholder="Pequeña motivación..."></textarea>
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Frecuencia</label>
+            <select v-model="newHabit.frequency" required class="w-full rounded-xl border border-border bg-background px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none transition-shadow">
+              <option value="daily">Diaria</option>
+              <option value="weekly">Semanal</option>
+              <option value="custom">Personalizada</option>
+            </select>
+          </div>
+
+          <button type="submit" class="w-full bg-primary text-primary-foreground rounded-xl py-3 font-bold mt-6 hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20">
+            Crear Hábito
+          </button>
+        </form>
+      </div>
+    </div>
+
 </template>
 
 <script setup lang="ts">
 definePageMeta({ layout: 'taskman' })
 
-import { onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useTaskStore, type Habit } from '~/stores/tasks'
 
 const taskStore = useTaskStore()
+
+const showHabitModal = ref(false)
+
+const newHabit = ref({
+  name: '',
+  description: '',
+  frequency: 'daily' as 'daily' | 'weekly' | 'custom',
+  status: 'active' as 'active' | 'archived'
+})
+
+const submitHabit = async () => {
+  await taskStore.addHabit({ ...newHabit.value })
+  showHabitModal.value = false
+  newHabit.value = { name: '', description: '', frequency: 'daily', status: 'active' }
+}
 
 onMounted(() => {
   taskStore.fetchHabits()
