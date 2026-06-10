@@ -6,10 +6,16 @@
           <h1 class="text-3xl font-serif font-bold">Wallet & Finanzas</h1>
           <p class="text-muted-foreground">Mantén el control de tus ingresos, gastos y suscripciones.</p>
         </div>
-        <button @click="showTransactionModal = true" class="bg-primary text-primary-foreground px-4 py-2 rounded-xl font-medium shadow-lg shadow-primary/20 hover:scale-105 transition-transform flex items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-          Nueva Transacción
-        </button>
+        <div class="flex items-center gap-3">
+          <button @click="showManageCategoriesModal = true" class="bg-secondary text-secondary-foreground hover:bg-secondary/80 px-4 py-2 rounded-xl font-medium transition-transform flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3H3v18h18V3zM9 13H5v-2h4v2zm4 0h-4v-2h4v2zm4 0h-4v-2h4v2z"/></svg>
+            Categorías
+          </button>
+          <button @click="showTransactionModal = true" class="bg-primary text-primary-foreground px-4 py-2 rounded-xl font-medium shadow-lg shadow-primary/20 hover:scale-105 transition-transform flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+            Nueva Transacción
+          </button>
+        </div>
       </div>
 
       <!-- Navigation Tabs -->
@@ -451,14 +457,32 @@
       <!-- Modal: Gestionar Categorías -->
       <div v-if="showManageCategoriesModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" @click.self="showManageCategoriesModal = false">
         <div class="bg-card border border-primary/20 rounded-3xl p-6 w-full max-w-md shadow-2xl">
-          <h2 class="text-2xl font-bold mb-6">Gestionar Categorías</h2>
+          <h2 class="text-2xl font-bold mb-4">Gestionar Categorías</h2>
+          
+          <div class="flex gap-2 mb-4">
+            <input v-model="newCategoryName" type="text" placeholder="Nueva categoría..." class="flex-1 bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none" @keyup.enter="handleAddCategoryBtn">
+            <button @click="handleAddCategoryBtn" class="bg-primary text-primary-foreground px-4 py-2 rounded-xl font-bold hover:opacity-90 transition-opacity whitespace-nowrap">
+              Añadir
+            </button>
+          </div>
+
           <div class="space-y-2 max-h-64 overflow-y-auto pr-2">
             <div v-for="cat in financeStore.categories" :key="cat" class="flex justify-between items-center p-3 bg-secondary/30 rounded-xl border border-border/20">
-              <span class="font-medium">{{ cat }}</span>
-              <button @click="deleteCategoryWithConfirm(cat)" class="text-destructive hover:bg-destructive/10 p-1.5 rounded-md transition-colors" title="Eliminar Categoría">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-              </button>
+              <input v-if="editingCategory === cat" v-model="editingCategoryValue" @keyup.enter="saveEditCategory(cat)" @blur="saveEditCategory(cat)" class="flex-1 bg-background border border-border rounded px-2 py-1 mr-2 focus:outline-none" autofocus />
+              <span v-else class="font-medium flex-1 cursor-pointer" @click="startEditCategory(cat)">{{ cat }}</span>
+              <div class="flex gap-1">
+                <button v-if="editingCategory === cat" @click="saveEditCategory(cat)" class="text-green-500 hover:bg-green-500/10 p-1.5 rounded-md transition-colors" title="Guardar">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                </button>
+                <button v-else @click="startEditCategory(cat)" class="text-primary hover:bg-primary/10 p-1.5 rounded-md transition-colors" title="Editar Categoría">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                </button>
+                <button @click="deleteCategoryWithConfirm(cat)" class="text-destructive hover:bg-destructive/10 p-1.5 rounded-md transition-colors" title="Eliminar Categoría">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                </button>
+              </div>
             </div>
+            <div v-if="financeStore.categories.length === 0" class="text-sm text-muted-foreground text-center py-4">No hay categorías.</div>
           </div>
           <div class="flex justify-end gap-3 mt-6">
             <button type="button" @click="showManageCategoriesModal = false" class="bg-primary text-primary-foreground px-6 py-2 rounded-xl font-bold shadow-lg hover:opacity-90 transition-opacity">Cerrar</button>
@@ -539,6 +563,31 @@ const txForm = reactive({
 
 const showAddCategory = ref(false)
 const newCategory = ref('')
+
+const newCategoryName = ref('')
+const editingCategory = ref<string | null>(null)
+const editingCategoryValue = ref('')
+
+const handleAddCategoryBtn = () => {
+  const cleanCat = newCategoryName.value.trim()
+  if (cleanCat && !financeStore.categories.includes(cleanCat)) {
+    financeStore.addCategory(cleanCat)
+    newCategoryName.value = ''
+  }
+}
+
+const startEditCategory = (cat: string) => {
+  editingCategory.value = cat
+  editingCategoryValue.value = cat
+}
+
+const saveEditCategory = async (oldCat: string) => {
+  const newCat = editingCategoryValue.value.trim()
+  if (newCat && newCat !== oldCat && !financeStore.categories.includes(newCat)) {
+    await financeStore.updateCategory(oldCat, newCat)
+  }
+  editingCategory.value = null
+}
 
 const addNewCategory = () => {
   const cleanCat = newCategory.value.trim()
