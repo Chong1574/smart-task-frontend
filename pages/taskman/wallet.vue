@@ -44,9 +44,19 @@
              No hay cuentas registradas.
           </div>
           <div class="flex gap-4 overflow-x-auto pb-2">
-            <div v-for="account in financeStore.accounts" :key="account.id" class="bg-secondary/50 p-4 rounded-2xl min-w-[200px] border border-border/30 relative group">
-              <p class="text-muted-foreground text-sm">{{ account.name }}</p>
-              <p class="text-xl font-bold font-mono">{{ formatCurrency(account.balance) }}</p>
+            <div v-for="account in financeStore.accounts" :key="account.id" class="bg-secondary/50 p-4 rounded-2xl min-w-[200px] border border-border/30 relative group flex flex-col justify-between">
+              <div>
+                <p class="text-muted-foreground text-sm">{{ account.name }}</p>
+                <p class="text-xl font-bold font-mono">{{ formatCurrency(account.balance) }}</p>
+              </div>
+              <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button @click="openEditAccount(account)" class="text-muted-foreground hover:text-primary p-1" title="Editar Cuenta">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                </button>
+                <button @click="deleteAccountWithConfirm(account.id)" class="text-muted-foreground hover:text-destructive p-1" title="Eliminar Cuenta">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -185,6 +195,7 @@
                   <option value="MONTHLY">Mensual</option>
                   <option value="BIWEEKLY">Quincenal</option>
                   <option value="WEEKLY">Semanal</option>
+                  <option value="ONCE">Un solo pago (Dinero rápido)</option>
                 </select>
               </div>
               <div>
@@ -196,6 +207,100 @@
             <div class="flex justify-end gap-3 mt-8">
               <button type="button" @click="showAccountModal = false" class="px-4 py-2 text-muted-foreground hover:bg-secondary rounded-xl transition-colors">Cancelar</button>
               <button type="submit" class="bg-primary text-primary-foreground px-6 py-2 rounded-xl font-bold shadow-lg hover:opacity-90 transition-opacity">Guardar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Modal: Editar Cuenta -->
+      <div v-if="showEditAccountModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" @click.self="showEditAccountModal = false">
+        <div class="bg-card border border-primary/20 rounded-3xl p-6 w-full max-w-md shadow-2xl">
+          <h2 class="text-2xl font-bold mb-6">Editar Cuenta</h2>
+          <form @submit.prevent="submitEditAccount" class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium mb-1">Nombre de la cuenta</label>
+              <input v-model="editAccountForm.name" required type="text" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none" placeholder="Ej. Banamex Débito">
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium mb-1">Tipo</label>
+                <select v-model="editAccountForm.type" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+                  <option value="card">Tarjeta</option>
+                  <option value="cash">Efectivo</option>
+                  <option value="savings">Ahorro</option>
+                  <option value="loan">Préstamo</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">Balance</label>
+                <input v-model.number="editAccountForm.balance" type="number" step="0.01" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+              </div>
+            </div>
+
+            <!-- Subtipo si es Tarjeta -->
+            <div v-if="editAccountForm.type === 'card'" class="grid grid-cols-1 gap-4">
+              <div>
+                <label class="block text-sm font-medium mb-1">Subtipo</label>
+                <select v-model="editAccountForm.sub_type" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+                  <option value="debit">Débito</option>
+                  <option value="credit">Crédito</option>
+                  <option value="payroll">Nómina</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Campos para Tarjeta de Crédito -->
+            <div v-if="editAccountForm.type === 'card' && editAccountForm.sub_type === 'credit'" class="grid grid-cols-2 gap-4 bg-secondary/20 p-4 rounded-xl border border-border/30">
+              <div class="col-span-2">
+                <label class="block text-sm font-medium mb-1">Límite de Crédito</label>
+                <input v-model.number="editAccountForm.credit_limit" type="number" step="0.01" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">Día de Corte</label>
+                <input v-model.number="editAccountForm.cutoff_day" type="number" min="1" max="31" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">Día de Pago</label>
+                <input v-model.number="editAccountForm.payment_day" type="number" min="1" max="31" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+              </div>
+            </div>
+
+            <!-- Campos para Ahorro o Inversión -->
+            <div v-if="editAccountForm.type === 'savings' || editAccountForm.type === 'investment'" class="grid grid-cols-1 gap-4">
+              <div>
+                <label class="block text-sm font-medium mb-1">Tasa de Interés Anual (%)</label>
+                <input v-model.number="editAccountForm.interest_rate" type="number" step="0.01" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+              </div>
+            </div>
+
+            <!-- Campos para Préstamo -->
+            <div v-if="editAccountForm.type === 'loan'" class="grid grid-cols-2 gap-4 bg-secondary/20 p-4 rounded-xl border border-border/30">
+              <div>
+                <label class="block text-sm font-medium mb-1">Pago Fijo</label>
+                <input v-model.number="editAccountForm.monthly_payment" type="number" step="0.01" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">Tasa Interés (%)</label>
+                <input v-model.number="editAccountForm.interest_rate" type="number" step="0.01" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">Frecuencia</label>
+                <select v-model="editAccountForm.payment_frequency" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+                  <option value="MONTHLY">Mensual</option>
+                  <option value="BIWEEKLY">Quincenal</option>
+                  <option value="WEEKLY">Semanal</option>
+                  <option value="ONCE">Un solo pago (Dinero rápido)</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">Día de Pago</label>
+                <input v-model.number="editAccountForm.payment_day" type="number" min="1" max="31" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+              </div>
+            </div>
+
+            <div class="flex justify-end gap-3 mt-8">
+              <button type="button" @click="showEditAccountModal = false" class="px-4 py-2 text-muted-foreground hover:bg-secondary rounded-xl transition-colors">Cancelar</button>
+              <button type="submit" class="bg-primary text-primary-foreground px-6 py-2 rounded-xl font-bold shadow-lg hover:opacity-90 transition-opacity">Guardar Cambios</button>
             </div>
           </form>
         </div>
@@ -279,10 +384,25 @@
               </select>
             </div>
             <div v-if="txForm.type !== 'transfer'">
-              <label class="block text-sm font-medium mb-1">Categoría</label>
-              <select v-model="txForm.category" required class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+              <div class="flex justify-between items-center mb-1">
+                <label class="text-sm font-medium">Categoría</label>
+                <button type="button" @click="showAddCategory = !showAddCategory" class="text-xs text-primary hover:underline">
+                  {{ showAddCategory ? 'Cancelar' : '+ Nueva' }}
+                </button>
+              </div>
+              
+              <!-- Selector normal -->
+              <select v-if="!showAddCategory" v-model="txForm.category" required class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
                 <option v-for="cat in financeStore.categories" :key="cat" :value="cat">{{ cat }}</option>
               </select>
+
+              <!-- Entrada para nueva categoría -->
+              <div v-else class="flex gap-2">
+                <input v-model="newCategory" type="text" placeholder="Ej. Regalos, Salud" class="flex-1 bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none" @keyup.enter.prevent="addNewCategory">
+                <button type="button" @click="addNewCategory" class="bg-primary text-primary-foreground px-4 rounded-xl font-medium hover:opacity-90 transition-opacity">
+                  Agregar
+                </button>
+              </div>
             </div>
             <div>
               <label class="block text-sm font-medium mb-1">Descripción</label>
@@ -310,6 +430,7 @@ const financeStore = useFinanceStore()
 
 // Modal States
 const showAccountModal = ref(false)
+const showEditAccountModal = ref(false)
 const showSubscriptionModal = ref(false)
 const showTransactionModal = ref(false)
 
@@ -324,6 +445,21 @@ const accountForm = reactive({
   interest_rate: 0,
   monthly_payment: 0,
   payment_frequency: 'MONTHLY',
+  cutoff_day: 1,
+  payment_day: 1
+})
+
+const editingAccountId = ref<number | null>(null)
+const editAccountForm = reactive({
+  name: '',
+  type: 'card' as AccountType,
+  sub_type: 'debit',
+  balance: 0,
+  currency: 'MXN',
+  credit_limit: 0,
+  interest_rate: 0,
+  monthly_payment: 0,
+  payment_frequency: 'MONTHLY' as any,
   cutoff_day: 1,
   payment_day: 1
 })
@@ -347,6 +483,19 @@ const txForm = reactive({
   description: '',
   date: new Date().toISOString()
 })
+
+const showAddCategory = ref(false)
+const newCategory = ref('')
+
+const addNewCategory = () => {
+  const cleanCat = newCategory.value.trim()
+  if (cleanCat) {
+    financeStore.addCategory(cleanCat)
+    txForm.category = cleanCat
+    newCategory.value = ''
+    showAddCategory.value = false
+  }
+}
 
 onMounted(() => {
   financeStore.initialize().then(() => {
@@ -377,6 +526,47 @@ const submitAccount = async () => {
   accountForm.credit_limit = 0
   accountForm.interest_rate = 0
   accountForm.monthly_payment = 0
+}
+
+const openEditAccount = (account: any) => {
+  editingAccountId.value = account.id
+  editAccountForm.name = account.name
+  editAccountForm.type = account.type
+  editAccountForm.sub_type = account.sub_type
+  editAccountForm.balance = account.balance
+  editAccountForm.currency = account.currency || 'MXN'
+  editAccountForm.credit_limit = account.credit_limit || 0
+  editAccountForm.interest_rate = account.interest_rate || 0
+  editAccountForm.monthly_payment = account.monthly_payment || 0
+  editAccountForm.payment_frequency = account.payment_frequency || 'MONTHLY'
+  editAccountForm.cutoff_day = account.cutoff_day || 1
+  editAccountForm.payment_day = account.payment_day || 1
+  showEditAccountModal.value = true
+}
+
+const submitEditAccount = async () => {
+  if (editingAccountId.value === null) return
+  await financeStore.updateAccount(editingAccountId.value, {
+    name: editAccountForm.name,
+    type: editAccountForm.type,
+    sub_type: editAccountForm.type === 'card' ? editAccountForm.sub_type as any : 'n/a',
+    balance: editAccountForm.balance,
+    credit_limit: editAccountForm.credit_limit,
+    interest_rate: editAccountForm.interest_rate,
+    monthly_payment: editAccountForm.monthly_payment,
+    payment_frequency: editAccountForm.payment_frequency as any,
+    cutoff_day: editAccountForm.cutoff_day,
+    payment_day: editAccountForm.payment_day,
+    currency: editAccountForm.currency
+  })
+  showEditAccountModal.value = false
+  editingAccountId.value = null
+}
+
+const deleteAccountWithConfirm = async (id: number) => {
+  if (confirm('¿Estás seguro de que deseas eliminar esta cuenta? Se eliminarán también las transacciones asociadas.')) {
+    await financeStore.deleteAccount(id)
+  }
 }
 
 const submitSubscription = async () => {

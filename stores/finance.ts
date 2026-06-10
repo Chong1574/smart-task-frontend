@@ -15,7 +15,7 @@ export interface Account {
     credit_limit: number;
     interest_rate: number;
     monthly_payment: number;
-    payment_frequency: 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY';
+    payment_frequency: 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY' | 'ONCE';
     cutoff_day: number;
     payment_day: number;
     currency: string;
@@ -80,16 +80,29 @@ const COLORS = [
 ];
 
 export const useFinanceStore = defineStore('finance', {
-    state: () => ({
-        categories: ['Comida', 'Transporte', 'Servicios', 'Ocio', 'Salario', 'Renta', 'Inversión'] as string[],
-        accounts: [] as Account[],
-        transactions: [] as Transaction[],
-        subscriptions: [] as Subscription[],
-        vehicles: [] as Vehicle[],
-        tasks: [] as any[],
-        loading: false,
-        error: null as string | null
-    }),
+    state: () => {
+        let savedCategories = ['Comida', 'Transporte', 'Servicios', 'Ocio', 'Salario', 'Renta', 'Inversión'];
+        if (typeof window !== 'undefined' && window.localStorage) {
+            const stored = window.localStorage.getItem('taskman_categories');
+            if (stored) {
+                try {
+                    savedCategories = JSON.parse(stored);
+                } catch (e) {
+                    console.error("Error parsing stored categories", e);
+                }
+            }
+        }
+        return {
+            categories: savedCategories as string[],
+            accounts: [] as Account[],
+            transactions: [] as Transaction[],
+            subscriptions: [] as Subscription[],
+            vehicles: [] as Vehicle[],
+            tasks: [] as any[],
+            loading: false,
+            error: null as string | null
+        };
+    },
 
     getters: {
         totalIncome: (state) => state.transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + Number(t.amount), 0),
@@ -286,8 +299,18 @@ export const useFinanceStore = defineStore('finance', {
         },
 
         async addCategory(newCat: string) {
-            if (!this.categories.includes(newCat)) {
+            if (newCat && !this.categories.includes(newCat)) {
                 this.categories.push(newCat);
+                if (typeof window !== 'undefined' && window.localStorage) {
+                    window.localStorage.setItem('taskman_categories', JSON.stringify(this.categories));
+                }
+            }
+        },
+
+        async removeCategory(cat: string) {
+            this.categories = this.categories.filter(c => c !== cat);
+            if (typeof window !== 'undefined' && window.localStorage) {
+                window.localStorage.setItem('taskman_categories', JSON.stringify(this.categories));
             }
         },
 
