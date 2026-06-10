@@ -1,17 +1,17 @@
 <template>
-  <div class="min-h-screen bg-background text-foreground font-sans flex overflow-hidden selection:bg-primary/30">
-    <!-- Sidebar / Nav Lado izquierdo -->
-    <aside class="w-20 lg:w-64 border-r border-border/40 bg-card/50 backdrop-blur-xl flex flex-col justify-between transition-all duration-300">
+  <div class="min-h-screen bg-background text-foreground font-sans flex overflow-hidden selection:bg-primary/30 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
+    <!-- Sidebar / Nav Lado izquierdo (Oculto en móvil, visible en md/lg) -->
+    <aside class="hidden md:flex w-20 lg:w-64 border-r border-border/40 bg-card/50 backdrop-blur-xl flex-col justify-between transition-all duration-300">
       <div class="p-4 lg:p-6 flex flex-col gap-8">
         <!-- Logo -->
         <NuxtLink to="/taskman" class="flex items-center gap-3 group">
           <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary to-orange-400 flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-105 transition-transform">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1-1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
           </div>
           <span class="hidden lg:block font-serif text-xl font-bold tracking-tight">TaskMan</span>
         </NuxtLink>
 
-        <!-- Navegación -->
+        <!-- Navegación Desktop -->
         <nav class="flex flex-col gap-2">
           <NuxtLink v-for="item in nav" :key="item.path" :to="item.path"
             class="flex items-center gap-3 p-3 rounded-xl text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all relative group"
@@ -19,7 +19,6 @@
           >
             <component :is="item.icon" class="w-5 h-5" />
             <span class="hidden lg:block">{{ item.name }}</span>
-            <!-- Tooltip para mobile -->
             <div class="lg:hidden absolute left-14 bg-popover text-popover-foreground px-2 py-1 rounded-md text-xs opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">
               {{ item.name }}
             </div>
@@ -29,7 +28,7 @@
 
       <!-- User / Logout -->
       <div class="p-4 lg:p-6">
-        <button @click="logout" class="w-full flex items-center gap-3 p-3 rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all">
+        <button @click="handleLogout" class="w-full flex items-center justify-center lg:justify-start gap-3 p-3 rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
           <span class="hidden lg:block font-medium">Salir</span>
         </button>
@@ -37,17 +36,38 @@
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
-      <!-- Topbar movil (Opcional) -->
-      <header class="lg:hidden h-16 border-b border-border/40 flex items-center justify-between px-4 bg-background/80 backdrop-blur-md z-10">
-        <span class="font-serif text-lg font-bold">TaskMan</span>
+    <main class="flex-1 flex flex-col h-full overflow-hidden relative mb-16 md:mb-0">
+      <!-- Topbar movil -->
+      <header class="md:hidden h-14 border-b border-border/40 flex items-center justify-between px-4 bg-background/80 backdrop-blur-md z-10 sticky top-0">
+        <span class="font-serif text-lg font-bold flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-primary to-orange-400 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+          </div>
+          TaskMan
+        </span>
+        <button @click="handleLogout" class="text-muted-foreground hover:text-destructive p-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+        </button>
       </header>
 
       <!-- Page Content -->
-      <div class="flex-1 overflow-y-auto p-4 lg:p-8 scroll-smooth">
+      <div class="flex-1 overflow-y-auto p-4 lg:p-8 scroll-smooth pb-24 md:pb-8">
         <slot />
       </div>
     </main>
+
+    <!-- Bottom Navigation Bar for Mobile -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-card/90 backdrop-blur-xl border-t border-border/40 flex items-center justify-around z-50 pb-[env(safe-area-inset-bottom)] px-2 shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
+      <NuxtLink v-for="item in nav" :key="item.path" :to="item.path"
+        class="flex flex-col items-center justify-center w-full h-full text-muted-foreground transition-colors"
+        active-class="text-primary font-medium"
+      >
+        <div class="p-1.5 rounded-full transition-all" :class="{'bg-primary/10 text-primary': $route.path === item.path || ($route.path.startsWith(item.path) && item.path !== '/taskman')}">
+          <component :is="item.icon" class="w-5 h-5" />
+        </div>
+        <span class="text-[10px] mt-1 truncate max-w-full px-1" :class="{'text-primary': $route.path === item.path || ($route.path.startsWith(item.path) && item.path !== '/taskman')}">{{ item.name }}</span>
+      </NuxtLink>
+    </nav>
   </div>
 </template>
 
