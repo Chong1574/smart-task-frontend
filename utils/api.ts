@@ -5,7 +5,7 @@ import axios from 'axios';
 const baseEnvUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
 const API_URL = baseEnvUrl
     ? (baseEnvUrl.endsWith('/api') ? baseEnvUrl : `${baseEnvUrl}/api`)
-    : 'http://localhost:3000/api';
+    : (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? 'https://taskapi.shongyi.com/api' : 'http://localhost:3000/api');
 
 const api = axios.create({
     baseURL: API_URL,
