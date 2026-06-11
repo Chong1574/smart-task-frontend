@@ -75,19 +75,23 @@ export const useTaskStore = defineStore('tasks', {
         },
 
         async addTask(newTask: Task) {
-            this.loading = true;
+            // Optimistic update
+            const tempId = Date.now();
+            this.tasks.push({ ...newTask, id: tempId });
+            
             try {
                 const res = await api.post('/tasks', newTask);
                 if (res.data.success) {
                     await this.fetchTasks();
                     return true;
+                } else {
+                    this.tasks = this.tasks.filter(t => t.id !== tempId);
+                    return false;
                 }
-                return false;
             } catch (err) {
                 console.error("Error adding task:", err);
+                this.tasks = this.tasks.filter(t => t.id !== tempId);
                 return false;
-            } finally {
-                this.loading = false;
             }
         },
 
@@ -129,15 +133,22 @@ export const useTaskStore = defineStore('tasks', {
         },
 
         async addProject(newProject: Project) {
+            // Optimistic update
+            const tempId = Date.now();
+            this.projects.push({ ...newProject, id: tempId, tasks: [] });
+
             try {
                 const res = await api.post('/projects', newProject);
                 if (res.data.success) {
                     await this.fetchProjects();
                     return true;
+                } else {
+                    this.projects = this.projects.filter(p => p.id !== tempId);
+                    return false;
                 }
-                return false;
             } catch (err) {
                 console.error("Error adding project:", err);
+                this.projects = this.projects.filter(p => p.id !== tempId);
                 return false;
             }
         },

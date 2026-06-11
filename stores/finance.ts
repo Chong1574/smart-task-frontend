@@ -431,6 +431,17 @@ export const useFinanceStore = defineStore('finance', {
             } catch (err) { console.error(err); }
         },
 
+        async updateVehicle(id: number, changes: Partial<Vehicle>) {
+            try {
+                const res = await api.put(`/vehicles/${id}`, changes);
+                if (res.data.success) {
+                    await this.fetchVehicles();
+                }
+            } catch (err) {
+                console.error("Error updating vehicle:", err);
+            }
+        },
+
         async addFuelLog(log: any) {
             try {
                 const res = await api.post('/vehicles/logs', log);

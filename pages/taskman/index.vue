@@ -27,7 +27,8 @@
           <p class="text-3xl font-bold">{{ activeProjectsCount }}</p>
           <div class="mt-2 text-sm text-green-500 flex items-center gap-1">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
-            <span>Progreso estable</span>
+            <span v-if="completedProjectsCount > 0">{{ completedProjectsCount }} completados en total</span>
+            <span v-else>Listo para iniciar</span>
           </div>
         </div>
 
@@ -41,7 +42,7 @@
           </div>
           <p class="text-3xl font-bold">{{ activeHabitsCount }} <span class="text-lg text-muted-foreground font-normal">hábitos</span></p>
           <div class="mt-2 text-sm text-green-500 flex items-center gap-1">
-            <span>¡Sigue así!</span>
+            <span>{{ activeHabitsCount > 0 ? '¡Sigue construyendo tu mejor versión!' : 'Agrega tu primer hábito' }}</span>
           </div>
         </div>
 
@@ -53,10 +54,10 @@
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
             </div>
           </div>
-          <p class="text-3xl font-bold">{{ pendingTasksCount }}</p>
+          <p class="text-3xl font-bold">{{ pendingTasksCount }} <span class="text-lg text-muted-foreground font-normal">pendientes</span></p>
           <div class="mt-2 text-sm text-green-500 flex items-center gap-1">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
-            <span>+15% vs pasada</span>
+            <span>{{ completedTasksCount }} completadas globalmente</span>
           </div>
         </div>
 
@@ -104,8 +105,11 @@ onMounted(async () => {
 })
 
 const activeProjectsCount = computed(() => taskStore.projects.filter(p => p.status === 'active').length)
+const completedProjectsCount = computed(() => taskStore.projects.filter(p => p.status === 'completed').length)
+
 const pendingTasksCount = computed(() => taskStore.tasks.filter(t => t.status === 'pending').length)
-// Assuming habits are fetched, we can show active habits length or hardcoded streak for now since streak logic is complex
+const completedTasksCount = computed(() => taskStore.tasks.filter(t => t.status === 'completed').length)
+
 const activeHabitsCount = computed(() => taskStore.habits.length)
 </script>
 

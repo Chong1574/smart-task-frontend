@@ -7,7 +7,7 @@
           <p class="text-muted-foreground">Control de combustible y mantenimiento de tus vehículos.</p>
         </div>
         <div class="flex gap-2">
-          <button @click="showVehicleModal = true" class="bg-blue-500 text-white px-4 py-2 rounded-xl font-medium shadow-lg shadow-blue-500/20 hover:scale-105 transition-transform flex items-center gap-2">
+          <button @click="openNewVehicle" class="bg-blue-500 text-white px-4 py-2 rounded-xl font-medium shadow-lg shadow-blue-500/20 hover:scale-105 transition-transform flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z"/><path d="m3 9 2.45-4.9A2 2 0 0 1 7.24 3h9.52a2 2 0 0 1 1.8 1.1L21 9"/><path d="M12 3v6"/></svg>
             Nuevo Vehículo
           </button>
@@ -29,8 +29,13 @@
               <h3 class="font-bold text-xl">{{ vehicle.name }}</h3>
               <p class="text-muted-foreground text-sm">{{ vehicle.plate || 'Sin placa' }} - {{ vehicle.model || '' }}</p>
             </div>
-            <div class="w-12 h-12 bg-blue-500/10 text-blue-500 rounded-full flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>
+            <div class="flex gap-2 items-center">
+              <button @click="openEditVehicle(vehicle)" class="w-8 h-8 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+              </button>
+              <div class="w-12 h-12 bg-blue-500/10 text-blue-500 rounded-full flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>
+              </div>
             </div>
           </div>
           
@@ -55,7 +60,7 @@
         <button @click="showVehicleModal = false" class="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
         </button>
-        <h2 class="text-2xl font-serif font-bold mb-6">Nuevo Vehículo</h2>
+        <h2 class="text-2xl font-serif font-bold mb-6">{{ isEditingVehicle ? 'Editar Vehículo' : 'Nuevo Vehículo' }}</h2>
         <form @submit.prevent="submitVehicle" class="space-y-4">
           <div>
             <label class="block text-sm font-medium mb-1">Nombre (ej. Mi Coche)</label>
@@ -82,7 +87,7 @@
             </div>
           </div>
           <button type="submit" class="w-full bg-blue-500 text-white rounded-xl py-3 font-bold mt-6 hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/20">
-            Guardar Vehículo
+            {{ isEditingVehicle ? 'Guardar Cambios' : 'Guardar Vehículo' }}
           </button>
         </form>
       </div>
@@ -153,6 +158,8 @@ const financeStore = useFinanceStore()
 
 const showVehicleModal = ref(false)
 const showLogModal = ref(false)
+const isEditingVehicle = ref(false)
+const editingVehicleId = ref<number | null>(null)
 
 const newVehicle = ref({
   name: '',
@@ -161,6 +168,26 @@ const newVehicle = ref({
   year: new Date().getFullYear(),
   plate: ''
 })
+
+const openNewVehicle = () => {
+  isEditingVehicle.value = false
+  editingVehicleId.value = null
+  newVehicle.value = { name: '', make: '', model: '', year: new Date().getFullYear(), plate: '' }
+  showVehicleModal.value = true
+}
+
+const openEditVehicle = (vehicle: any) => {
+  isEditingVehicle.value = true
+  editingVehicleId.value = vehicle.id
+  newVehicle.value = {
+    name: vehicle.name,
+    make: vehicle.make || '',
+    model: vehicle.model || '',
+    year: vehicle.year || new Date().getFullYear(),
+    plate: vehicle.plate || ''
+  }
+  showVehicleModal.value = true
+}
 
 const newLog = ref({
   vehicleId: '',
@@ -173,7 +200,11 @@ const newLog = ref({
 })
 
 const submitVehicle = async () => {
-  await financeStore.addVehicle({ ...newVehicle.value })
+  if (isEditingVehicle.value && editingVehicleId.value) {
+    await financeStore.updateVehicle(editingVehicleId.value, { ...newVehicle.value })
+  } else {
+    await financeStore.addVehicle({ ...newVehicle.value })
+  }
   showVehicleModal.value = false
   newVehicle.value = { name: '', make: '', model: '', year: new Date().getFullYear(), plate: '' }
 }
