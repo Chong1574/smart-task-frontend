@@ -400,6 +400,8 @@
                   <option value="expense">Gasto</option>
                   <option value="income">Ingreso</option>
                   <option value="transfer">Transferencia</option>
+                  <option value="credit_payment">Pago de Tarjeta de Crédito</option>
+                  <option value="loan_payment">Pago de Préstamo</option>
                 </select>
               </div>
               <div>
@@ -408,18 +410,18 @@
               </div>
             </div>
             <div>
-              <label class="block text-sm font-medium mb-1">Cuenta {{ txForm.type === 'transfer' ? 'Origen' : '' }}</label>
+              <label class="block text-sm font-medium mb-1">Cuenta {{ ['transfer', 'credit_payment', 'loan_payment'].includes(txForm.type) ? 'Origen' : '' }}</label>
               <select v-model.number="txForm.accountId" required class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
                 <option v-for="acc in financeStore.accounts" :key="acc.id" :value="acc.id">{{ acc.name }}</option>
               </select>
             </div>
-            <div v-if="txForm.type === 'transfer'">
-              <label class="block text-sm font-medium mb-1">Cuenta Destino</label>
+            <div v-if="['transfer', 'credit_payment', 'loan_payment'].includes(txForm.type)">
+              <label class="block text-sm font-medium mb-1">{{ txForm.type === 'transfer' ? 'Cuenta Destino' : 'Cuenta a Pagar' }}</label>
               <select v-model.number="txForm.destinationAccountId" required class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
                 <option v-for="acc in financeStore.accounts" :key="acc.id" :value="acc.id">{{ acc.name }}</option>
               </select>
             </div>
-            <div v-if="txForm.type !== 'transfer'">
+            <div v-if="!['transfer', 'credit_payment', 'loan_payment'].includes(txForm.type)">
               <div class="flex justify-between items-center mb-1">
                 <label class="text-sm font-medium">Categoría</label>
                 <div class="flex gap-2">
@@ -725,14 +727,16 @@ const submitSubscription = async () => {
 const submitTransaction = async () => {
   if (!txForm.accountId) return
 
+  const isTransferOrPayment = ['transfer', 'credit_payment', 'loan_payment'].includes(txForm.type);
+
   await financeStore.addTransaction({
     accountId: txForm.accountId,
     type: txForm.type,
     amount: txForm.amount,
-    category: txForm.type === 'transfer' ? 'Transferencia' : txForm.category,
+    category: txForm.type === 'transfer' ? 'Transferencia' : (txForm.type === 'credit_payment' ? 'Pago de Tarjeta' : (txForm.type === 'loan_payment' ? 'Pago de Préstamo' : txForm.category)),
     description: txForm.description,
     date: new Date().toISOString(),
-    ...(txForm.type === 'transfer' && txForm.destinationAccountId ? { destinationAccountId: txForm.destinationAccountId } : {} )
+    ...(isTransferOrPayment && txForm.destinationAccountId ? { destinationAccountId: txForm.destinationAccountId } : {} )
   } as any)
   
   showTransactionModal.value = false
@@ -749,11 +753,11 @@ const formatDate = (dateString: string) => {
 }
 
 const isNegative = (tx: any) => {
-  if (['expense', 'investment', 'loan_payment'].includes(tx.type)) return true;
-  if (tx.type === 'transfer') {
-    // Si es un ingreso por transferencia (generado por el backend con este texto exacto)
-    if (tx.description && tx.description.startsWith('Pago recibido')) return false;
-    // Cualquier otra transferencia o retiro
+  if (['expense', 'investment'].includes(tx.type)) return true;
+  if (['transfer', 'credit_payment', 'loan_payment'].includes(tx.type)) {
+    // Si es un ingreso por transferencia/pago (generado por el backend con este texto exacto)
+    if (tx.description && (tx.description.startsWith('Pago recibido') || tx.description.startsWith('Transferencia recibida'))) return false;
+    // Cualquier otra transferencia, pago de tarjeta o retiro
     return true;
   }
   return false;
