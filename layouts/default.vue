@@ -76,7 +76,7 @@ const navItems = [
   { name: 'El Bazar', path: '/bazar' },
   { name: 'El Estudio', path: '/estudio' },
   { name: 'Protección', path: 'https://arveck.com', external: true },
-  { name: 'Task-man', path: '/login' },
+  { name: 'Task-man', path: '/taskman' },
 ];
 </script>
 
