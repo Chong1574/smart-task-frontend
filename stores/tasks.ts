@@ -205,16 +205,52 @@ export const useTaskStore = defineStore('tasks', {
         },
 
         async logHabit(habitId: number) {
+            // Optimistic update
+            const habit = this.habits.find(h => h.id === habitId);
+            let tempLog: HabitLog | null = null;
+            if (habit) {
+                if (!habit.logs) habit.logs = [];
+                tempLog = { id: Date.now(), habitId, completedAt: new Date().toISOString() };
+                habit.logs.push(tempLog);
+            }
             try {
-                const res = await api.post(`/habits/${habitId}/log`);
+                const res = await api.post(`/habits/${habitId}/log`, {
+                    date: new Date().toISOString(),
+                    status: 'completed'
+                });
                 if (res.data.success) {
                     await this.fetchHabits();
                     return true;
+                } else {
+                    if (habit && tempLog) habit.logs = habit.logs.filter(l => l.id !== tempLog!.id);
+                    return false;
                 }
-                return false;
             } catch (err) {
                 console.error("Error logging habit:", err);
+                if (habit && tempLog) habit.logs = habit.logs.filter(l => l.id !== tempLog!.id);
                 return false;
+            }
+        },
+
+        async updateHabit(id: number, updates: Partial<Habit>) {
+            try {
+                const res = await api.put(`/habits/${id}`, updates);
+                if (res.data.success) {
+                    await this.fetchHabits();
+                }
+            } catch (err) {
+                console.error("Error updating habit:", err);
+            }
+        },
+
+        async deleteHabit(id: number) {
+            try {
+                const res = await api.delete(`/habits/${id}`);
+                if (res.data.success) {
+                    this.habits = this.habits.filter(h => h.id !== id);
+                }
+            } catch (err) {
+                console.error("Error deleting habit:", err);
             }
         },
 

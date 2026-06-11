@@ -125,7 +125,7 @@
             <div>
               <label class="block text-sm font-medium mb-1">Proyecto</label>
               <select v-model="newTask.projectId" class="w-full rounded-xl border border-border bg-background px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none transition-shadow">
-                <option :value="undefined">Sin proyecto</option>
+                <option :value="null">Sin proyecto</option>
                 <option v-for="p in activeProjects" :key="p.id" :value="p.id">{{ p.name }}</option>
               </select>
             </div>

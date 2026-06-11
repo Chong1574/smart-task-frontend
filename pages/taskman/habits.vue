@@ -43,12 +43,23 @@
               </div>
             </div>
 
-            <div v-if="isHabitCompletedToday(habit)" class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white shadow-md shadow-primary/40">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            <div class="flex items-center gap-2">
+              <div v-if="isHabitCompletedToday(habit)" class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white shadow-md shadow-primary/40 group-hover:hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <button v-else @click="logHabit(habit.id!)" class="w-10 h-10 rounded-full border-2 border-border flex items-center justify-center hover:border-primary hover:bg-primary/10 transition-colors text-transparent hover:text-primary group-hover:hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </button>
+
+              <div class="hidden group-hover:flex items-center gap-2">
+                <button @click="openEditHabit(habit)" class="w-10 h-10 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center hover:bg-primary/20 hover:text-primary transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                </button>
+                <button @click="taskStore.deleteHabit(habit.id!)" class="w-10 h-10 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center hover:bg-destructive/20 hover:text-destructive transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                </button>
+              </div>
             </div>
-            <button v-else @click="logHabit(habit.id!)" class="w-10 h-10 rounded-full border-2 border-border flex items-center justify-center hover:border-primary hover:bg-primary/10 transition-colors text-transparent hover:text-primary">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-            </button>
           </div>
         </div>
       </div>
@@ -61,7 +72,7 @@
         <button @click="showHabitModal = false" class="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
         </button>
-        <h2 class="text-2xl font-serif font-bold mb-6">Nuevo Hábito</h2>
+        <h2 class="text-2xl font-serif font-bold mb-6">{{ isEditingHabit ? 'Editar Hábito' : 'Nuevo Hábito' }}</h2>
         
         <form @submit.prevent="submitHabit" class="space-y-4">
           <div>
@@ -82,7 +93,7 @@
           </div>
 
           <button type="submit" class="w-full bg-primary text-primary-foreground rounded-xl py-3 font-bold mt-6 hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20">
-            Crear Hábito
+            {{ isEditingHabit ? 'Guardar Cambios' : 'Crear Hábito' }}
           </button>
         </form>
       </div>
@@ -99,6 +110,8 @@ import { useTaskStore, type Habit } from '~/stores/tasks'
 const taskStore = useTaskStore()
 
 const showHabitModal = ref(false)
+const isEditingHabit = ref(false)
+const editingHabitId = ref<number | null>(null)
 
 const newHabit = ref({
   name: '',
@@ -107,9 +120,27 @@ const newHabit = ref({
   status: 'active' as 'active' | 'archived'
 })
 
+const openEditHabit = (habit: Habit) => {
+  isEditingHabit.value = true
+  editingHabitId.value = habit.id!
+  newHabit.value = {
+    name: habit.name,
+    description: habit.description || '',
+    frequency: habit.frequency as 'daily' | 'weekly' | 'custom',
+    status: habit.status
+  }
+  showHabitModal.value = true
+}
+
 const submitHabit = async () => {
-  await taskStore.addHabit({ ...newHabit.value })
+  if (isEditingHabit.value && editingHabitId.value) {
+    await taskStore.updateHabit(editingHabitId.value, { ...newHabit.value })
+  } else {
+    await taskStore.addHabit({ ...newHabit.value })
+  }
   showHabitModal.value = false
+  isEditingHabit.value = false
+  editingHabitId.value = null
   newHabit.value = { name: '', description: '', frequency: 'daily', status: 'active' }
 }
 
