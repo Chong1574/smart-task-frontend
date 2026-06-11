@@ -256,7 +256,7 @@ export const useFinanceStore = defineStore('finance', {
         async fetchAccounts() {
             this.loading = true;
             try {
-                const res = await api.get('/finance/accounts');
+                const res = await api.get(`/finance/accounts?t=${new Date().getTime()}`);
                 if (res.data.success) {
                     this.accounts = res.data.data.map((acc: any, index: number) => ({
                         id: acc.id,
@@ -285,7 +285,7 @@ export const useFinanceStore = defineStore('finance', {
         async fetchTransactions() {
             this.loading = true;
             try {
-                const res = await api.get('/finance/transactions');
+                const res = await api.get(`/finance/transactions?t=${new Date().getTime()}`);
                 if (res.data.success) {
                     this.transactions = res.data.data.map((tx: any) => ({
                         ...tx,
