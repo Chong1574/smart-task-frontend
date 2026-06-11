@@ -183,32 +183,44 @@ onMounted(() => {
   taskStore.fetchHabits()
 })
 
+const getLogDateStr = (log: any) => {
+  if (log.completedAt) return log.completedAt.split('T')[0];
+  if (log.date) return log.date.split('T')[0];
+  return '';
+}
+
+const getLocalTodayStr = () => {
+  const today = new Date();
+  return new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+}
+
 const isHabitCompletedToday = (habit: Habit) => {
   if (!habit.logs || habit.logs.length === 0) return false;
-  const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-  return habit.logs.some(log => log.completedAt.startsWith(today));
+  const todayStr = getLocalTodayStr();
+  return habit.logs.some(log => getLogDateStr(log) === todayStr);
 }
 
 const getStreak = (habit: Habit) => {
   if (!habit.logs || habit.logs.length === 0) return 0;
   
-  const dates = habit.logs.map(log => log.completedAt.split('T')[0]).sort((a, b) => b.localeCompare(a));
+  const dates = habit.logs.map(log => getLogDateStr(log)).filter(d => d).sort((a, b) => b.localeCompare(a));
   const uniqueDates = [...new Set(dates)];
+  if (uniqueDates.length === 0) return 0;
   
   let streak = 0;
-  const today = new Date();
-  today.setHours(0,0,0,0);
+  const todayStr = getLocalTodayStr();
   
-  let currentDate = new Date(today);
+  let currentDate = new Date(todayStr + 'T00:00:00');
   
-  if (uniqueDates[0] === today.toISOString().split('T')[0]) {
+  if (uniqueDates[0] === todayStr) {
     streak++;
     currentDate.setDate(currentDate.getDate() - 1);
     uniqueDates.shift();
   } else {
-    const yesterday = new Date(today);
+    const yesterday = new Date(currentDate);
     yesterday.setDate(yesterday.getDate() - 1);
-    if (uniqueDates[0] === yesterday.toISOString().split('T')[0]) {
+    const yesterdayStr = new Date(yesterday.getTime() - yesterday.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+    if (uniqueDates[0] === yesterdayStr) {
       // alive
     } else {
       return 0;
@@ -216,9 +228,7 @@ const getStreak = (habit: Habit) => {
   }
 
   for (const d of uniqueDates) {
-    const logDate = new Date(d);
-    logDate.setHours(0,0,0,0);
-    
+    const logDate = new Date(d + 'T00:00:00');
     if (logDate.getTime() === currentDate.getTime()) {
       streak++;
       currentDate.setDate(currentDate.getDate() - 1);

@@ -246,10 +246,18 @@ const getProjectName = (id?: number | null) => {
 
 // Hábitos
 const activeHabitsCount = computed(() => taskStore.habits.length)
+const getLocalTodayStr = () => {
+  const today = new Date();
+  return new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+}
+
 const habitsCompletedToday = computed(() => {
-  const today = new Date().toISOString().split('T')[0]
+  const today = getLocalTodayStr()
   return taskStore.habits.filter(h => 
-    h.logs?.some((log: any) => log.date.startsWith(today) && log.status === 'completed')
+    h.logs?.some((log: any) => {
+      const dateStr = log.date || log.completedAt || ''
+      return dateStr.startsWith(today) && (log.status === 'completed' || !log.status)
+    })
   ).length
 })
 const habitsRemaining = computed(() => Math.max(0, activeHabitsCount.value - habitsCompletedToday.value))
