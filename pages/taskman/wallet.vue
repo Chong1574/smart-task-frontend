@@ -619,11 +619,17 @@ onMounted(() => {
 })
 
 const submitAccount = async () => {
+  let initialBalance = accountForm.balance;
+  // Auto-convert positive balances to negative for debts
+  if ((accountForm.type === 'loan' || (accountForm.type === 'card' && accountForm.sub_type === 'credit')) && initialBalance > 0) {
+    initialBalance = -initialBalance;
+  }
+
   await financeStore.addAccount({
     name: accountForm.name,
     type: accountForm.type,
     sub_type: accountForm.type === 'card' ? accountForm.sub_type as any : 'n/a',
-    balance: accountForm.balance,
+    balance: initialBalance,
     credit_limit: accountForm.credit_limit,
     interest_rate: accountForm.interest_rate,
     monthly_payment: accountForm.monthly_payment,
@@ -643,6 +649,7 @@ const submitAccount = async () => {
 
 const openEditAccount = (account: any) => {
   editingAccountId.value = account.id
+  editAccountForm.id = account.id
   editAccountForm.name = account.name
   editAccountForm.type = account.type
   editAccountForm.sub_type = account.sub_type
@@ -658,12 +665,19 @@ const openEditAccount = (account: any) => {
 }
 
 const submitEditAccount = async () => {
-  if (editingAccountId.value === null) return
-  await financeStore.updateAccount(editingAccountId.value, {
+  if (editAccountForm.id === null) return
+
+  let editedBalance = editAccountForm.balance;
+  // Auto-convert positive balances to negative for debts
+  if ((editAccountForm.type === 'loan' || (editAccountForm.type === 'card' && editAccountForm.sub_type === 'credit')) && editedBalance > 0) {
+    editedBalance = -editedBalance;
+  }
+
+  await financeStore.updateAccount(editAccountForm.id, {
     name: editAccountForm.name,
     type: editAccountForm.type,
     sub_type: editAccountForm.type === 'card' ? editAccountForm.sub_type as any : 'n/a',
-    balance: editAccountForm.balance,
+    balance: editedBalance,
     credit_limit: editAccountForm.credit_limit,
     interest_rate: editAccountForm.interest_rate,
     monthly_payment: editAccountForm.monthly_payment,
