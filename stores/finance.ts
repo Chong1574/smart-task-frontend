@@ -325,6 +325,21 @@ export const useFinanceStore = defineStore('finance', {
             }
         },
 
+        async deleteTransaction(id: number) {
+            try {
+                const res = await api.delete(`/finance/transactions/${id}`);
+                if (res.data.success) {
+                    await this.fetchTransactions();
+                    await this.fetchAccounts();
+                } else {
+                    alert("Error al eliminar transacción: " + (res.data.message || "Error desconocido"));
+                }
+            } catch (err: any) {
+                console.error("Error deleting transaction:", err);
+                alert("Error de conexión al eliminar transacción: " + (err.response?.data?.message || err.message || "Error desconocido"));
+            }
+        },
+
         async addAccount(account: Omit<Account, 'id' | 'color'>) {
             try {
                 const payload = {

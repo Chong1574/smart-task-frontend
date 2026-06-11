@@ -87,11 +87,16 @@
              No hay transacciones registradas.
           </div>
 
-          <div v-for="tx in financeStore.transactions.slice(0, 8)" :key="tx.id" class="p-4 grid grid-cols-12 gap-4 items-center border-b border-border/40 text-sm hover:bg-secondary/10 transition-colors">
+          <div v-for="tx in financeStore.transactions.slice(0, 8)" :key="tx.id" class="p-4 grid grid-cols-12 gap-4 items-center border-b border-border/40 text-sm hover:bg-secondary/10 transition-colors group">
             <div class="col-span-3 text-muted-foreground">{{ formatDate(tx.date) }}</div>
             <div class="col-span-6 font-medium truncate" :title="tx.description">{{ tx.description }}</div>
-            <div :class="['col-span-3 text-right font-mono font-bold', isNegative(tx) ? 'text-red-500' : 'text-green-500']">
-              {{ isNegative(tx) ? '-' : '+' }}{{ formatCurrency(tx.amount) }}
+            <div class="col-span-3 text-right font-mono font-bold flex items-center justify-end gap-3">
+              <span :class="isNegative(tx) ? 'text-red-500' : 'text-green-500'">
+                {{ isNegative(tx) ? '-' : '+' }}{{ formatCurrency(tx.amount) }}
+              </span>
+              <button @click="handleDeleteTransaction(tx)" class="text-muted-foreground hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity" title="Eliminar transacción">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+              </button>
             </div>
           </div>
         </div>
@@ -756,6 +761,12 @@ const submitTransaction = async () => {
   showTransactionModal.value = false
   txForm.amount = 0
   txForm.description = ''
+}
+
+const handleDeleteTransaction = async (tx: any) => {
+  if (confirm(`¿Estás seguro de eliminar esta transacción por ${formatCurrency(tx.amount)}? Si es una transferencia, deberás eliminar también la transacción correspondiente en la otra cuenta.`)) {
+    await financeStore.deleteTransaction(tx.id)
+  }
 }
 
 const filteredDestinationAccounts = computed(() => {
