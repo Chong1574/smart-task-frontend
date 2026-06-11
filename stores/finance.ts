@@ -188,6 +188,67 @@ export const useFinanceStore = defineStore('finance', {
                 d15: currentBalance + (netDaily * 15),
                 d30: currentBalance + (netDaily * 30)
             };
+        },
+
+        totalDebt: (state) => {
+            return state.accounts.reduce((sum, acc) => {
+                if (acc.type === 'loan') return sum + Math.abs(Number(acc.balance));
+                if (acc.type === 'card' && acc.sub_type === 'credit' && Number(acc.balance) < 0) return sum + Math.abs(Number(acc.balance));
+                return sum;
+            }, 0);
+        },
+
+        totalSavings: (state) => {
+            return state.accounts.reduce((sum, acc) => {
+                if (['savings', 'investment'].includes(acc.type)) return sum + Math.max(0, Number(acc.balance));
+                return sum;
+            }, 0);
+        },
+
+        expensesByCategoryThisMonth: (state) => {
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+            
+            const expenses = state.transactions.filter(t => {
+                const d = new Date(t.date);
+                return t.type === 'expense' && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+            });
+
+            const byCategory: Record<string, number> = {};
+            expenses.forEach(t => {
+                const cat = t.category || 'Otros';
+                if (!byCategory[cat]) byCategory[cat] = 0;
+                byCategory[cat] += Number(t.amount);
+            });
+
+            return byCategory;
+        },
+
+        recentIncomeVsExpense: (state) => {
+            // Get last 6 months (based on available data in state.transactions)
+            const result: Record<string, { income: number, expense: number }> = {};
+            
+            state.transactions.forEach(t => {
+                const d = new Date(t.date);
+                const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                
+                if (!result[monthKey]) {
+                    result[monthKey] = { income: 0, expense: 0 };
+                }
+                
+                if (t.type === 'income') {
+                    result[monthKey].income += Number(t.amount);
+                } else if (['expense', 'loan_payment', 'credit_payment'].includes(t.type)) {
+                    result[monthKey].expense += Number(t.amount);
+                }
+            });
+
+            // Convert to array and sort chronologically
+            return Object.keys(result).sort().map(key => ({
+                month: key,
+                ...result[key]
+            })).slice(-6); // last 6 available months
         }
     },
 
