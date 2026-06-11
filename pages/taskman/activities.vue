@@ -68,6 +68,12 @@
 
       <!-- Lista de Tareas Normal -->
       <div class="bg-card border border-border/40 rounded-3xl overflow-hidden shadow-sm">
+        
+        <div class="flex gap-4 border-b border-border/40 px-6 pt-4">
+          <button @click="activeTab = 'programadas'" :class="['pb-3 px-2 font-bold border-b-2 transition-colors text-sm', activeTab === 'programadas' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground']">Programadas</button>
+          <button @click="activeTab = 'pendientes'" :class="['pb-3 px-2 font-bold border-b-2 transition-colors text-sm', activeTab === 'pendientes' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground']">Pendientes Rápidas</button>
+        </div>
+
         <div class="p-4 bg-secondary/30 border-b border-border/40 font-medium grid grid-cols-12 gap-4 text-sm text-muted-foreground">
           <div class="col-span-1 text-center">Auto</div>
           <div class="col-span-5">Tarea</div>
@@ -76,15 +82,18 @@
           <div class="col-span-1 text-right">Acciones</div>
         </div>
 
-        <div v-if="pendingTasks.length === 0" class="p-8 text-center text-muted-foreground">
-          No hay tareas pendientes. ¡Disfruta tu tiempo libre!
+        <div v-if="displayedTasks.length === 0" class="p-8 text-center text-muted-foreground">
+          No hay tareas en esta categoría. ¡Disfruta tu tiempo libre o agrega una nueva!
         </div>
 
         <!-- Tareas dinámicas -->
-        <div v-for="task in pendingTasks" :key="task.id" class="p-4 border-b border-border/40 grid grid-cols-12 gap-4 items-center hover:bg-secondary/10 transition-colors group">
+        <div v-for="task in displayedTasks" :key="task.id" class="p-4 border-b border-border/40 grid grid-cols-12 gap-4 items-center hover:bg-secondary/10 transition-colors group">
           <div class="col-span-1 flex justify-center">
              <div v-if="task.auto_distribute" class="w-6 h-6 rounded bg-primary/20 text-primary flex items-center justify-center cursor-help" title="Smart Scheduled">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+             </div>
+             <div v-else class="w-6 h-6 rounded bg-muted/20 text-muted-foreground flex items-center justify-center cursor-help" title="Pendiente Rápida">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
              </div>
           </div>
           <div class="col-span-5 font-medium">{{ task.title }}</div>
@@ -144,12 +153,12 @@
                 <option value="low">Baja</option>
               </select>
             </div>
-            <div>
+            <div v-if="newTask.auto_distribute">
               <label class="block text-sm font-medium mb-1">Fecha Límite (Opcional)</label>
               <input v-model="newTask.deadline" type="date" class="w-full rounded-xl border border-border bg-background px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none transition-shadow" />
             </div>
           </div>
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-2 gap-4" v-if="newTask.auto_distribute">
             <div>
               <label class="block text-sm font-medium mb-1">Duración estimada (min)</label>
               <input v-model="newTask.duration_minutes" type="number" step="15" min="15" class="w-full rounded-xl border border-border bg-background px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none transition-shadow" />
@@ -159,8 +168,8 @@
           <label class="flex items-center gap-3 p-3 border border-border/50 rounded-xl cursor-pointer hover:bg-secondary/20 transition-colors mt-2">
             <input v-model="newTask.auto_distribute" type="checkbox" class="w-5 h-5 rounded text-primary focus:ring-primary" />
             <div class="flex flex-col">
-              <span class="font-medium text-sm">Distribución Inteligente</span>
-              <span class="text-xs text-muted-foreground">Dejar que TaskMan asigne esta tarea según mi calendario.</span>
+              <span class="font-medium text-sm">Distribución Inteligente en Calendario</span>
+              <span class="text-xs text-muted-foreground">Si desactivas esto, la tarea irá a Pendientes Rápidas sin bloque de tiempo.</span>
             </div>
           </label>
 
@@ -186,7 +195,12 @@ onMounted(() => {
   taskStore.fetchProjects()
 })
 
-const pendingTasks = computed(() => taskStore.tasks.filter(t => t.status === 'pending'))
+const activeTab = ref('programadas')
+
+const programmedTasks = computed(() => taskStore.tasks.filter(t => t.status === 'pending' && t.auto_distribute))
+const pendingQuickTasks = computed(() => taskStore.tasks.filter(t => t.status === 'pending' && !t.auto_distribute))
+const displayedTasks = computed(() => activeTab.value === 'programadas' ? programmedTasks.value : pendingQuickTasks.value)
+
 const activeProjects = computed(() => taskStore.projects.filter(p => p.status === 'active'))
 
 const showRoulette = ref(false)
