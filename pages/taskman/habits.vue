@@ -1,5 +1,6 @@
 <template>
-  <div class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-4xl mx-auto">
+  <div>
+    <div class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-4xl mx-auto">
       
       <!-- Header -->
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -99,6 +100,8 @@
       </div>
     </div>
 
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
