@@ -87,9 +87,14 @@
             </select>
           </div>
 
-          <button type="submit" class="w-full bg-primary text-primary-foreground rounded-xl py-3 font-bold mt-6 hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20">
-            {{ isEditingProject ? 'Guardar Cambios' : 'Crear Proyecto' }}
-          </button>
+          <div class="grid grid-cols-2 gap-4 mt-6">
+            <button v-if="isEditingProject" @click.prevent="deleteProject(editingProjectId!)" type="button" class="w-full bg-destructive/10 text-destructive rounded-xl py-3 font-bold hover:bg-destructive hover:text-destructive-foreground transition-colors shadow-sm">
+              Eliminar
+            </button>
+            <button type="submit" :class="[isEditingProject ? 'col-span-1' : 'col-span-2', 'w-full bg-primary text-primary-foreground rounded-xl py-3 font-bold transition-colors shadow-lg shadow-primary/20 hover:bg-primary/90']">
+              {{ isEditingProject ? 'Guardar' : 'Crear Proyecto' }}
+            </button>
+          </div>
         </form>
       </div>
     </div>    <!-- Modal Añadir Tarea Rápida -->
@@ -182,6 +187,13 @@ const submitProject = async () => {
   }
   showProjectModal.value = false
   newProject.value = { name: '', description: '', status: 'active' }
+}
+
+const deleteProject = async (id: number) => {
+  if (confirm('¿Estás seguro de que deseas eliminar este proyecto? Las tareas asociadas no se borrarán, solo quedarán sueltas.')) {
+    await taskStore.deleteProject(id)
+    showProjectModal.value = false
+  }
 }
 
 const showTaskModal = ref(false)
