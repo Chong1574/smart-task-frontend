@@ -418,7 +418,7 @@
             <div v-if="['transfer', 'credit_payment', 'loan_payment'].includes(txForm.type)">
               <label class="block text-sm font-medium mb-1">{{ txForm.type === 'transfer' ? 'Cuenta Destino' : 'Cuenta a Pagar' }}</label>
               <select v-model.number="txForm.destinationAccountId" required class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
-                <option v-for="acc in financeStore.accounts" :key="acc.id" :value="acc.id">{{ acc.name }}</option>
+                <option v-for="acc in filteredDestinationAccounts" :key="acc.id" :value="acc.id">{{ acc.name }}</option>
               </select>
             </div>
             <div v-if="!['transfer', 'credit_payment', 'loan_payment'].includes(txForm.type)">
@@ -743,6 +743,22 @@ const submitTransaction = async () => {
   txForm.amount = 0
   txForm.description = ''
 }
+
+const filteredDestinationAccounts = computed(() => {
+  return financeStore.accounts.filter(acc => {
+    // No permitir transferencia a la misma cuenta de origen
+    if (acc.id === txForm.accountId) return false;
+    
+    if (txForm.type === 'credit_payment') {
+      return acc.type === 'card' && acc.sub_type === 'credit';
+    }
+    if (txForm.type === 'loan_payment') {
+      return acc.type === 'loan';
+    }
+    // Para 'transfer', mostrar todas las demás
+    return true;
+  })
+})
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(value)
