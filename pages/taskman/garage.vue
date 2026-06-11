@@ -218,16 +218,18 @@ const updateTotal = () => {
 }
 
 const submitFuelLog = async () => {
-  await financeStore.addFuelLog({ ...newLog.value })
-  showLogModal.value = false
-  newLog.value = {
-    vehicleId: '',
-    date: new Date().toISOString().split('T')[0],
-    odometer: 0,
-    liters: 0,
-    pricePerLiter: 0,
-    totalCost: 0,
-    isFullTank: true
+  const success = await financeStore.addFuelLog({ ...newLog.value })
+  if (success) {
+    showLogModal.value = false
+    newLog.value = {
+      vehicleId: '',
+      date: new Date().toISOString().split('T')[0],
+      odometer: 0,
+      liters: 0,
+      pricePerLiter: 0,
+      totalCost: 0,
+      isFullTank: true
+    }
   }
 }
 

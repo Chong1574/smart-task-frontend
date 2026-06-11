@@ -449,8 +449,16 @@ export const useFinanceStore = defineStore('finance', {
                     await this.fetchVehicles();
                     await this.fetchAccounts();
                     await this.fetchTransactions();
+                    return true;
+                } else {
+                    alert("Error al guardar: " + (res.data.message || "Desconocido"));
+                    return false;
                 }
-            } catch (err) { console.error(err); }
+            } catch (err: any) { 
+                console.error(err); 
+                alert("Error de red o servidor: " + (err.response?.data?.message || err.message));
+                return false;
+            }
         }
     }
 });
