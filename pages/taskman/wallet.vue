@@ -94,6 +94,9 @@
               <span :class="isNegative(tx) ? 'text-red-500' : 'text-green-500'">
                 {{ isNegative(tx) ? '-' : '+' }}{{ formatCurrency(tx.amount) }}
               </span>
+              <button v-if="tx.type === 'expense' || tx.type === 'income' || tx.type === 'investment'" @click="openEditTransaction(tx)" class="text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity" title="Editar transacción">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+              </button>
               <button @click="handleDeleteTransaction(tx)" class="text-muted-foreground hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity" title="Eliminar transacción">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
               </button>
@@ -393,10 +396,10 @@
         </div>
       </div>
 
-      <!-- Modal: Nueva Transacción -->
-      <div v-if="showTransactionModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" @click.self="showTransactionModal = false">
+      <!-- Modal: Nueva / Editar Transacción -->
+      <div v-if="showTransactionModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" @click.self="closeTransactionModal">
         <div class="bg-card border border-primary/20 rounded-3xl p-6 w-full max-w-md shadow-2xl">
-          <h2 class="text-2xl font-bold mb-6">Nueva Transacción</h2>
+          <h2 class="text-2xl font-bold mb-6">{{ editingTransactionId ? 'Editar Transacción' : 'Registrar Transacción' }}</h2>
           <form @submit.prevent="submitTransaction" class="space-y-4">
             <div class="grid grid-cols-2 gap-4">
               <div>
@@ -457,8 +460,8 @@
               <input v-model="txForm.description" required type="text" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
             </div>
             <div class="flex justify-end gap-3 mt-8">
-              <button type="button" @click="showTransactionModal = false" class="px-4 py-2 text-muted-foreground hover:bg-secondary rounded-xl transition-colors">Cancelar</button>
-              <button type="submit" class="bg-primary text-primary-foreground px-6 py-2 rounded-xl font-bold shadow-lg hover:opacity-90 transition-opacity">Registrar</button>
+              <button type="button" @click="closeTransactionModal" class="px-4 py-2 text-muted-foreground hover:bg-secondary rounded-xl transition-colors">Cancelar</button>
+              <button type="submit" class="bg-primary text-primary-foreground px-6 py-2 rounded-xl font-bold shadow-lg hover:opacity-90 transition-opacity">Guardar</button>
             </div>
           </form>
         </div>
@@ -506,7 +509,7 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'taskman' })
 
-import { ref, onMounted, reactive } from 'vue'
+import { ref, onMounted, reactive, computed } from 'vue'
 import { useFinanceStore } from '~/stores/finance'
 import type { AccountType, TransactionType } from '~/stores/finance'
 
@@ -517,6 +520,7 @@ const showAccountModal = ref(false)
 const showEditAccountModal = ref(false)
 const showSubscriptionModal = ref(false)
 const showTransactionModal = ref(false)
+const editingTransactionId = ref<number | null>(null)
 const showManageCategoriesModal = ref(false)
 
 // Forms
@@ -747,18 +751,45 @@ const submitTransaction = async () => {
   if (!txForm.accountId) return
 
   const isTransferOrPayment = ['transfer', 'credit_payment', 'loan_payment'].includes(txForm.type);
+  const category = txForm.type === 'transfer' ? 'Transferencia' : (txForm.type === 'credit_payment' ? 'Pago de Tarjeta' : (txForm.type === 'loan_payment' ? 'Pago de Préstamo' : txForm.category));
 
-  await financeStore.addTransaction({
-    accountId: txForm.accountId,
-    type: txForm.type,
-    amount: txForm.amount,
-    category: txForm.type === 'transfer' ? 'Transferencia' : (txForm.type === 'credit_payment' ? 'Pago de Tarjeta' : (txForm.type === 'loan_payment' ? 'Pago de Préstamo' : txForm.category)),
-    description: txForm.description,
-    date: new Date().toISOString(),
-    ...(isTransferOrPayment && txForm.destinationAccountId ? { destinationAccountId: txForm.destinationAccountId } : {} )
-  } as any)
+  if (editingTransactionId.value) {
+    await financeStore.updateTransaction(editingTransactionId.value, {
+      amount: txForm.amount,
+      category: category,
+      type: txForm.type,
+      description: txForm.description,
+      date: txForm.date || new Date().toISOString()
+    } as any)
+  } else {
+    await financeStore.addTransaction({
+      accountId: txForm.accountId,
+      type: txForm.type,
+      amount: txForm.amount,
+      category: category,
+      description: txForm.description,
+      date: txForm.date || new Date().toISOString(),
+      ...(isTransferOrPayment && txForm.destinationAccountId ? { destinationAccountId: txForm.destinationAccountId } : {} )
+    } as any)
+  }
   
+  closeTransactionModal()
+}
+
+const openEditTransaction = (tx: any) => {
+  editingTransactionId.value = tx.id
+  txForm.accountId = tx.accountId
+  txForm.amount = tx.amount
+  txForm.category = tx.category
+  txForm.type = tx.type
+  txForm.description = tx.description
+  txForm.date = tx.date ? new Date(tx.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
+  showTransactionModal.value = true
+}
+
+const closeTransactionModal = () => {
   showTransactionModal.value = false
+  editingTransactionId.value = null
   txForm.amount = 0
   txForm.description = ''
 }

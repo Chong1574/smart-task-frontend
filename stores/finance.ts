@@ -340,6 +340,21 @@ export const useFinanceStore = defineStore('finance', {
             }
         },
 
+        async updateTransaction(id: number, tx: Partial<Transaction>) {
+            try {
+                const res = await api.put(`/finance/transactions/${id}`, tx);
+                if (res.data.success) {
+                    await this.fetchTransactions();
+                    await this.fetchAccounts();
+                } else {
+                    alert("Error al actualizar transacción: " + (res.data.message || "Error desconocido"));
+                }
+            } catch (err: any) {
+                console.error("Error updating transaction:", err);
+                alert("Error de conexión al actualizar transacción: " + (err.response?.data?.message || err.message || "Error desconocido"));
+            }
+        },
+
         async addAccount(account: Omit<Account, 'id' | 'color'>) {
             try {
                 const payload = {
