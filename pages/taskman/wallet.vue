@@ -87,8 +87,8 @@
           <div v-for="tx in financeStore.transactions.slice(0, 8)" :key="tx.id" class="p-4 grid grid-cols-12 gap-4 items-center border-b border-border/40 text-sm hover:bg-secondary/10 transition-colors">
             <div class="col-span-3 text-muted-foreground">{{ formatDate(tx.date) }}</div>
             <div class="col-span-6 font-medium truncate" :title="tx.description">{{ tx.description }}</div>
-            <div :class="['col-span-3 text-right font-mono font-bold', tx.type === 'expense' ? 'text-red-500' : 'text-green-500']">
-              {{ tx.type === 'expense' ? '-' : '+' }}{{ formatCurrency(tx.amount) }}
+            <div :class="['col-span-3 text-right font-mono font-bold', isNegative(tx) ? 'text-red-500' : 'text-green-500']">
+              {{ isNegative(tx) ? '-' : '+' }}{{ formatCurrency(tx.amount) }}
             </div>
           </div>
         </div>
@@ -743,5 +743,16 @@ const formatCurrency = (value: number) => {
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric' })
+}
+
+const isNegative = (tx: any) => {
+  if (['expense', 'investment', 'loan_payment'].includes(tx.type)) return true;
+  if (tx.type === 'transfer') {
+    // Si es un ingreso por transferencia (generado por el backend con este texto exacto)
+    if (tx.description && tx.description.startsWith('Pago recibido')) return false;
+    // Cualquier otra transferencia o retiro
+    return true;
+  }
+  return false;
 }
 </script>
