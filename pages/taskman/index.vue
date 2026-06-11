@@ -67,7 +67,7 @@
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
             </div>
           </div>
-          <p class="text-3xl font-bold font-mono text-emerald-500">${{ formatCurrency(financeStore.totalBalance) }}</p>
+          <p class="text-3xl font-bold font-mono" :class="financeStore.totalBalance >= 0 ? 'text-emerald-500' : 'text-red-500'">{{ formatCurrency(financeStore.totalBalance) }}</p>
           <div class="mt-2 text-sm text-muted-foreground flex items-center gap-1">
             <span>{{ financeStore.accounts.length }} cuentas activas</span>
           </div>
@@ -166,7 +166,7 @@
                   </div>
                 </div>
                 <span class="font-mono text-sm font-bold" :class="getAccountBalanceColor(acc)">
-                  ${{ formatCurrency(acc.balance) }}
+                  {{ formatCurrency(acc.type === 'loan' || (acc.type === 'card' && acc.sub_type === 'credit') ? -Math.abs(acc.balance) : acc.balance) }}
                 </span>
               </div>
             </div>
@@ -256,7 +256,9 @@ const habitsRemaining = computed(() => Math.max(0, activeHabitsCount.value - hab
 
 // Finanzas y Garage
 const formatCurrency = (val: number) => {
-  return Math.abs(val).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  const absVal = Math.abs(val)
+  const formatted = absVal.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  return val < 0 ? `-$${formatted}` : `$${formatted}`
 }
 
 const getAccountBalanceColor = (acc: any) => {
