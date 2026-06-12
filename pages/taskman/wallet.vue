@@ -515,6 +515,7 @@
 definePageMeta({ layout: 'taskman' })
 
 import { ref, onMounted, reactive, computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { useFinanceStore } from '~/stores/finance'
 import type { AccountType, TransactionType } from '~/stores/finance'
 
@@ -599,6 +600,15 @@ const startEditCategory = (cat: string) => {
   editingCategory.value = cat
   editingCategoryValue.value = cat
 }
+
+const route = useRoute()
+
+onMounted(async () => {
+  await financeStore.initialize()
+  if (route.query.action === 'new_transaction') {
+    showTransactionModal.value = true
+  }
+})
 
 const saveEditCategory = async (oldCat: string) => {
   const newCat = editingCategoryValue.value.trim()

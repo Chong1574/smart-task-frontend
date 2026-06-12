@@ -161,6 +161,7 @@
 definePageMeta({ layout: 'taskman' })
 
 import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { useFinanceStore } from '~/stores/finance'
 
 const financeStore = useFinanceStore()
@@ -242,8 +243,13 @@ const submitFuelLog = async () => {
   }
 }
 
-onMounted(() => {
-  financeStore.initialize()
+const route = useRoute()
+
+onMounted(async () => {
+  await financeStore.initialize()
+  if (route.query.action === 'new_fuel') {
+    showLogModal.value = true
+  }
 })
 
 const getLastOdometer = (vehicle: any) => {
