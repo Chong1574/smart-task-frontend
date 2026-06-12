@@ -1,9 +1,13 @@
-import type { CapacitorConfig } from '@capacitor/cli';
+import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.smarttask.app',
-  appName: 'Smart Task',
-  webDir: '.output/public'
+  appId: 'com.shongyi.taskman',
+  appName: 'TaskMan',
+  webDir: 'dist',
+  bundledWebRuntime: false,
+  server: {
+    androidScheme: 'https'
+  }
 };
 
 export default config;

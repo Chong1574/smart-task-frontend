@@ -77,7 +77,7 @@
           <div class="p-6 border-b border-border/40 flex justify-between items-center">
             <h3 class="font-bold text-lg">Transacciones Recientes</h3>
           </div>
-          <div class="p-4 grid grid-cols-12 gap-4 text-sm font-medium text-muted-foreground bg-secondary/20">
+          <div class="hidden md:grid p-4 grid-cols-12 gap-4 text-sm font-medium text-muted-foreground bg-secondary/20">
             <div class="col-span-3">Fecha</div>
             <div class="col-span-6">Descripción</div>
             <div class="col-span-3 text-right">Monto</div>
@@ -87,17 +87,22 @@
              No hay transacciones registradas.
           </div>
 
-          <div v-for="tx in financeStore.transactions.slice(0, 8)" :key="tx.id" class="p-4 grid grid-cols-12 gap-4 items-center border-b border-border/40 text-sm hover:bg-secondary/10 transition-colors group">
-            <div class="col-span-3 text-muted-foreground">{{ formatDate(tx.date) }}</div>
-            <div class="col-span-6 font-medium truncate" :title="tx.description">{{ tx.description }}</div>
-            <div class="col-span-3 text-right font-mono font-bold flex items-center justify-end gap-3">
-              <span :class="isNegative(tx) ? 'text-red-500' : 'text-green-500'">
+          <div v-for="tx in financeStore.transactions.slice(0, 8)" :key="tx.id" class="p-4 flex flex-col md:grid md:grid-cols-12 gap-2 md:gap-4 items-start md:items-center border-b border-border/40 text-sm hover:bg-secondary/10 transition-colors group">
+            <div class="md:col-span-3 text-muted-foreground flex justify-between w-full md:block">
+              <span>{{ formatDate(tx.date) }}</span>
+              <span class="md:hidden font-mono font-bold" :class="isNegative(tx) ? 'text-red-500' : 'text-green-500'">
                 {{ isNegative(tx) ? '-' : '+' }}{{ formatCurrency(tx.amount) }}
               </span>
-              <button v-if="tx.type === 'expense' || tx.type === 'income' || tx.type === 'investment'" @click="openEditTransaction(tx)" class="text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity" title="Editar transacción">
+            </div>
+            <div class="md:col-span-6 font-medium truncate w-full" :title="tx.description">{{ tx.description }}</div>
+            <div class="md:col-span-3 w-full text-right font-mono font-bold flex items-center justify-end gap-3 mt-2 md:mt-0">
+              <span class="hidden md:inline" :class="isNegative(tx) ? 'text-red-500' : 'text-green-500'">
+                {{ isNegative(tx) ? '-' : '+' }}{{ formatCurrency(tx.amount) }}
+              </span>
+              <button v-if="tx.type === 'expense' || tx.type === 'income' || tx.type === 'investment'" @click="openEditTransaction(tx)" class="text-muted-foreground hover:text-primary md:opacity-0 md:group-hover:opacity-100 transition-opacity p-2 md:p-0 bg-secondary/50 md:bg-transparent rounded-md md:rounded-none" title="Editar transacción">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
               </button>
-              <button @click="handleDeleteTransaction(tx)" class="text-muted-foreground hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity" title="Eliminar transacción">
+              <button @click="handleDeleteTransaction(tx)" class="text-muted-foreground hover:text-red-500 md:opacity-0 md:group-hover:opacity-100 transition-opacity p-2 md:p-0 bg-secondary/50 md:bg-transparent rounded-md md:rounded-none" title="Eliminar transacción">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
               </button>
             </div>

@@ -7,10 +7,14 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "build:mobile": "nuxt generate && cap sync",
+    "android": "npm run build:mobile && cap open android",
+    "ios": "npm run build:mobile && cap open ios"
   },
   "dependencies": {
     "@capacitor/core": "^8.4.0",
+    "@capacitor/ios": "^8.4.0",
     "@nuxtjs/color-mode": "^4.0.0",
     "@nuxtjs/tailwindcss": "^6.14.0",
     "@pinia/nuxt": "^0.9.0",
