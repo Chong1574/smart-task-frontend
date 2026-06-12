@@ -439,6 +439,16 @@ export const useFinanceStore = defineStore('finance', {
         },
 
         async initialize() {
+            if (typeof window !== 'undefined' && window.localStorage) {
+                const stored = window.localStorage.getItem('taskman_categories');
+                if (stored) {
+                    try {
+                        this.categories = JSON.parse(stored);
+                    } catch (e) {
+                        console.error("Error parsing stored categories", e);
+                    }
+                }
+            }
             await Promise.all([
                 this.fetchAccounts(),
                 this.fetchTransactions(),
