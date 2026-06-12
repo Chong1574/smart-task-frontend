@@ -1,36 +1,53 @@
 <template>
   <div class="min-h-screen bg-background text-foreground font-sans flex overflow-hidden selection:bg-primary/30 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
     <!-- Sidebar / Nav Lado izquierdo (Oculto en móvil, visible en md/lg) -->
-    <aside class="hidden md:flex w-20 lg:w-64 border-r border-border/40 bg-card/50 backdrop-blur-xl flex-col justify-between transition-all duration-300">
+    <aside class="hidden md:flex border-r border-border/40 bg-card/50 backdrop-blur-xl flex-col justify-between transition-all duration-300"
+      :class="isSidebarOpen ? 'w-64' : 'w-20'"
+    >
       <div class="p-4 lg:p-6 flex flex-col gap-8">
-        <!-- Logo -->
-        <NuxtLink to="/taskman" class="flex items-center gap-3 group">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary to-orange-400 flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-105 transition-transform">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1-1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
-          </div>
-          <span class="hidden lg:block font-serif text-xl font-bold tracking-tight">TaskMan</span>
-        </NuxtLink>
+        <!-- Logo y Toggle -->
+        <div class="flex items-center justify-between">
+          <NuxtLink to="/taskman" class="flex items-center gap-3 group">
+            <div class="w-10 h-10 shrink-0 rounded-xl bg-gradient-to-tr from-primary to-orange-400 flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-105 transition-transform">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1-1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+            </div>
+            <span v-show="isSidebarOpen" class="font-serif text-xl font-bold tracking-tight whitespace-nowrap transition-opacity">TaskMan</span>
+          </NuxtLink>
+          <button @click="isSidebarOpen = !isSidebarOpen" v-show="isSidebarOpen" class="text-muted-foreground hover:text-primary transition-colors p-1">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+        </div>
+
+        <button @click="isSidebarOpen = !isSidebarOpen" v-show="!isSidebarOpen" class="mx-auto text-muted-foreground hover:text-primary transition-colors p-1">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
 
         <!-- Navegación Desktop -->
         <nav class="flex flex-col gap-2">
           <NuxtLink v-for="item in nav" :key="item.path" :to="item.path"
             class="flex items-center gap-3 p-3 rounded-xl text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all relative group"
+            :class="!isSidebarOpen ? 'justify-center' : ''"
             active-class="bg-primary/15 text-primary font-medium"
           >
-            <component :is="item.icon" class="w-5 h-5" />
-            <span class="hidden lg:block">{{ item.name }}</span>
-            <div class="lg:hidden absolute left-14 bg-popover text-popover-foreground px-2 py-1 rounded-md text-xs opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">
+            <component :is="item.icon" class="w-5 h-5 shrink-0" />
+            <span v-show="isSidebarOpen" class="whitespace-nowrap">{{ item.name }}</span>
+            <div v-if="!isSidebarOpen" class="absolute left-14 bg-popover text-popover-foreground px-2 py-1 rounded-md text-xs opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 shadow-md border border-border">
               {{ item.name }}
             </div>
           </NuxtLink>
         </nav>
       </div>
 
-      <!-- User / Logout -->
-      <div class="p-4 lg:p-6">
-        <button @click="handleLogout" class="w-full flex items-center justify-center lg:justify-start gap-3 p-3 rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
-          <span class="hidden lg:block font-medium">Salir</span>
+      <!-- User / Actions -->
+      <div class="p-4 lg:p-6 flex flex-col gap-2">
+        <button @click="toggleTheme" class="w-full flex items-center justify-center md:justify-start gap-3 p-3 rounded-xl text-muted-foreground hover:bg-secondary transition-all" :class="!isSidebarOpen ? 'md:justify-center' : ''">
+          <Moon v-if="colorMode.preference === 'dark'" class="w-5 h-5 shrink-0" />
+          <Sun v-else class="w-5 h-5 shrink-0" />
+          <span v-show="isSidebarOpen" class="font-medium whitespace-nowrap">Tema</span>
+        </button>
+        <button @click="handleLogout" class="w-full flex items-center justify-center md:justify-start gap-3 p-3 rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all" :class="!isSidebarOpen ? 'md:justify-center' : ''">
+          <svg xmlns="http://www.w3.org/2000/svg" class="shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+          <span v-show="isSidebarOpen" class="font-medium whitespace-nowrap">Salir</span>
         </button>
       </div>
     </aside>
@@ -85,14 +102,21 @@ import {
   Bell,
   Search,
   Menu,
-  X
+  X,
+  Sun,
+  Moon
 } from 'lucide-vue-next'
 import { useAuthStore } from '~/stores/auth'
 
 const authStore = useAuthStore()
 const router = useRouter()
+const colorMode = useColorMode()
 
 const isSidebarOpen = ref(true)
+
+const toggleTheme = () => {
+  colorMode.preference = colorMode.preference === 'dark' ? 'light' : 'dark'
+}
 
 const nav = [
   { name: 'Dashboard', path: '/taskman', icon: LayoutDashboard },
