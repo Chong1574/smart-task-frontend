@@ -132,7 +132,6 @@ const handleLogoutEvent = () => {
 }
 
 onMounted(() => {
-  authStore.init()
   if (typeof window !== 'undefined') {
     window.addEventListener('auth:logout', handleLogoutEvent)
   }

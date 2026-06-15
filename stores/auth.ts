@@ -107,13 +107,12 @@ export const useAuthStore = defineStore('auth', {
             const tokenCookie = useCookie('token', TOKEN_COOKIE_OPTS);
             tokenCookie.value = token;
             
-            // Extract user info from JWT payload
             try {
                 const payload = JSON.parse(atob(token.split('.')[1]));
                 this.user = {
                     id: payload.userId,
                     email: payload.email,
-                    name: payload.email.split('@')[0]
+                    name: null
                 };
             } catch (e) {
                 console.error("Failed to decode token", e);

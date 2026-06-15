@@ -9,27 +9,35 @@
       <form @submit.prevent="handleLogin" class="space-y-6">
         <div>
           <label class="block text-sm font-medium mb-2">Correo electrónico</label>
-          <input 
-            type="email" 
+          <input
+            v-model="email"
+            type="email"
+            required
+            autocomplete="email"
             class="w-full px-4 py-3 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
             placeholder="tu@correo.com"
           />
         </div>
         <div>
           <label class="block text-sm font-medium mb-2">Contraseña</label>
-          <input 
-            type="password" 
+          <input
+            v-model="password"
+            type="password"
+            required
             autocomplete="current-password"
             class="w-full px-4 py-3 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
             placeholder="••••••••"
           />
         </div>
-        
-        <button 
-          type="submit" 
-          class="w-full py-4 bg-primary text-primary-foreground rounded-xl font-medium hover:opacity-90 transition-opacity flex justify-center items-center gap-2"
+
+        <p v-if="authStore.error" class="text-sm text-destructive">{{ authStore.error }}</p>
+
+        <button
+          type="submit"
+          :disabled="authStore.loading"
+          class="w-full py-4 bg-primary text-primary-foreground rounded-xl font-medium hover:opacity-90 transition-opacity flex justify-center items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          Iniciar Sesión
+          {{ authStore.loading ? 'Ingresando...' : 'Iniciar Sesión' }}
         </button>
 
         <div class="relative flex items-center py-2">
@@ -39,7 +47,7 @@
         </div>
 
         <div class="grid grid-cols-2 gap-4">
-          <button 
+          <button
             type="button"
             @click="handleGoogleLogin"
             class="w-full py-3.5 bg-background border border-border text-foreground rounded-xl font-medium hover:bg-secondary/50 transition-colors flex justify-center items-center gap-3 shadow-sm"
@@ -53,7 +61,7 @@
             Google
           </button>
 
-          <button 
+          <button
             type="button"
             @click="handleMicrosoftLogin"
             class="w-full py-3.5 bg-background border border-border text-foreground rounded-xl font-medium hover:bg-secondary/50 transition-colors flex justify-center items-center gap-3 shadow-sm"
@@ -68,30 +76,42 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '~/stores/auth'
+
 const router = useRouter()
+const authStore = useAuthStore()
 
-// Por ahora es un mock de login clásico para llevarlos al dashboard original
-const handleLogin = () => {
-  window.location.href = '/taskman/'
+const email = ref('')
+const password = ref('')
+
+onMounted(() => {
+  authStore.init()
+  if (authStore.isAuthenticated) {
+    router.replace('/taskman')
+  }
+})
+
+const handleLogin = async () => {
+  authStore.error = null
+  const ok = await authStore.login(email.value, password.value)
+  if (ok) {
+    router.replace('/taskman')
+  }
 }
 
-// Login con Google usando el backend
+const resolveApiUrl = () => {
+  const baseEnvUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL
+  if (baseEnvUrl) return baseEnvUrl.endsWith('/api') ? baseEnvUrl : `${baseEnvUrl}/api`
+  return window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : 'https://taskapi.shongyi.com/api'
+}
+
 const handleGoogleLogin = () => {
-  const baseEnvUrl = import.meta.env.VITE_API_BASE_URL;
-  const API_URL = baseEnvUrl 
-    ? (baseEnvUrl.endsWith('/api') ? baseEnvUrl : `${baseEnvUrl}/api`) 
-    : (window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : 'https://taskapi.shongyi.com/api');
-    
-  window.location.href = `${API_URL}/auth/google`;
+  window.location.href = `${resolveApiUrl()}/auth/google`
 }
 
-// Login con Microsoft usando el backend
 const handleMicrosoftLogin = () => {
-  const baseEnvUrl = import.meta.env.VITE_API_BASE_URL;
-  const API_URL = baseEnvUrl 
-    ? (baseEnvUrl.endsWith('/api') ? baseEnvUrl : `${baseEnvUrl}/api`) 
-    : (window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : 'https://taskapi.shongyi.com/api');
-    
-  window.location.href = `${API_URL}/auth/microsoft`;
+  window.location.href = `${resolveApiUrl()}/auth/microsoft`
 }
 </script>

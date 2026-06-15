@@ -1,7 +1,5 @@
 import axios from 'axios';
 
-// Since we are in Nuxt, we can use useRuntimeConfig or environment variables.
-// The backend is on the same domain usually, or we can fallback to localhost for dev.
 const baseEnvUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
 const API_URL = baseEnvUrl
     ? (baseEnvUrl.endsWith('/api') ? baseEnvUrl : `${baseEnvUrl}/api`)
@@ -11,39 +9,46 @@ const api = axios.create({
     baseURL: API_URL,
 });
 
-// Interceptor para añadir el token a todas las peticiones
-api.interceptors.request.use((config) => {
-    // Only access localStorage in client side
+const readToken = (): string | null => {
+    if (typeof document !== 'undefined') {
+        const match = document.cookie.match(/(?:^|;\s*)token=([^;]+)/);
+        if (match) return decodeURIComponent(match[1]);
+    }
     if (typeof window !== 'undefined') {
-        const token = localStorage.getItem('token');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
+        return localStorage.getItem('token');
+    }
+    return null;
+};
+
+const clearAuthArtifacts = () => {
+    if (typeof window === 'undefined') return;
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('oauth_login');
+    localStorage.removeItem('google_sync_enabled');
+    document.cookie = 'token=; Path=/; Max-Age=0; SameSite=Lax';
+};
+
+api.interceptors.request.use((config) => {
+    const token = readToken();
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
-}, (error) => {
-    return Promise.reject(error);
-});
+}, (error) => Promise.reject(error));
 
-// Interceptor para manejar errores 401 (token expirado o inválido)
 api.interceptors.response.use((response) => response, (error) => {
     if (error.response?.status === 401) {
         const url = error.config?.url || '';
         const isOAuthEndpoint = url.includes('/oauth/');
-        let hasToken = false;
-        
-        if (typeof window !== 'undefined') {
-            hasToken = !!localStorage.getItem('token');
-        }
+        const hasToken = !!readToken();
 
         console.error(`[API 401] URL: "${url}" | isOAuth: ${isOAuthEndpoint} | hasToken: ${hasToken}`);
 
         if (hasToken && !isOAuthEndpoint) {
             console.warn('[API] Sesión inválida, redirigiendo al login...');
+            clearAuthArtifacts();
             if (typeof window !== 'undefined') {
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
-                // Dispara el evento para que Nuxt haga la redirección (manejado en app.vue o layouts)
                 window.dispatchEvent(new CustomEvent('auth:logout'));
             }
         }

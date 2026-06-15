@@ -77,15 +77,6 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
-import { useAuthStore } from '~/stores/auth'
-
-const authStore = useAuthStore()
-
-onMounted(() => {
-  authStore.init()
-})
-
 const navItems = [
   { name: 'Hogar', path: '/' },
   { name: 'El Bazar', path: '/bazar' },
