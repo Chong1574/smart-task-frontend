@@ -6,6 +6,8 @@ const API_URL = baseEnvUrl
     ? (baseEnvUrl.endsWith('/api') ? baseEnvUrl : `${baseEnvUrl}/api`)
     : (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? 'https://taskapi.shongyi.com/api' : 'http://localhost:3000/api');
 
+const TOKEN_COOKIE_OPTS = { maxAge: 60 * 60 * 24 * 7, path: '/', sameSite: 'lax' as const };
+
 export const useAuthStore = defineStore('auth', {
     state: () => ({
         token: null as string | null,
@@ -22,10 +24,14 @@ export const useAuthStore = defineStore('auth', {
     actions: {
         init() {
             if (!this.isInitialized) {
-                const tokenCookie = useCookie('token');
-                this.token = tokenCookie.value || null;
-                
+                const tokenCookie = useCookie('token', TOKEN_COOKIE_OPTS);
+                let token = tokenCookie.value || null;
+
                 if (typeof window !== 'undefined') {
+                    if (!token) {
+                        token = localStorage.getItem('token');
+                        if (token) tokenCookie.value = token;
+                    }
                     const userStr = localStorage.getItem('user');
                     if (userStr && userStr !== 'undefined') {
                         try {
@@ -35,6 +41,7 @@ export const useAuthStore = defineStore('auth', {
                         }
                     }
                 }
+                this.token = token;
                 this.isInitialized = true;
             }
         },
@@ -72,7 +79,7 @@ export const useAuthStore = defineStore('auth', {
         setSession(token: string, user: any) {
             this.token = token;
             this.user = user;
-            const tokenCookie = useCookie('token');
+            const tokenCookie = useCookie('token', TOKEN_COOKIE_OPTS);
             tokenCookie.value = token;
             if (typeof window !== 'undefined') {
                 localStorage.setItem('token', token);
@@ -85,7 +92,7 @@ export const useAuthStore = defineStore('auth', {
         logout() {
             this.token = null;
             this.user = null;
-            const tokenCookie = useCookie('token');
+            const tokenCookie = useCookie('token', TOKEN_COOKIE_OPTS);
             tokenCookie.value = null;
             if (typeof window !== 'undefined') {
                 localStorage.removeItem('token');
@@ -97,7 +104,7 @@ export const useAuthStore = defineStore('auth', {
 
         handleAuthCallback(token: string) {
             this.token = token;
-            const tokenCookie = useCookie('token');
+            const tokenCookie = useCookie('token', TOKEN_COOKIE_OPTS);
             tokenCookie.value = token;
             
             // Extract user info from JWT payload
