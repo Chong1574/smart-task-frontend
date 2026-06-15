@@ -56,6 +56,18 @@
   </div>
 </template>
 
+<script setup>
+useSeoMeta({
+  title: 'Arveck — Respaldo patrimonial y seguros',
+  description: 'Arveck es la división de respaldo patrimonial de El Rincón de Brandy. Seguros y protección para que tus ideas y bienes se mantengan firmes.',
+  ogTitle: 'Arveck — Protección patrimonial',
+  ogDescription: 'Las raíces invisibles que sostienen tu patrimonio.',
+  ogType: 'website',
+  ogUrl: 'https://shongyi.com/proteccion',
+  twitterCard: 'summary_large_image'
+})
+</script>
+
 <style scoped>
 .fade-in-up {
   animation: fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;

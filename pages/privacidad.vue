@@ -36,4 +36,10 @@
 definePageMeta({
   auth: false
 })
+
+useSeoMeta({
+  title: 'Política de Privacidad — Taskman',
+  description: 'Política de privacidad de Taskman: cómo se recopila, usa y protege tu información, incluyendo el acceso a las APIs de Google Calendar y Tasks.',
+  robots: 'index, follow'
+})
 </script>

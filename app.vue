@@ -1,7 +1,11 @@
 <script setup lang="ts">
+const route = useRoute()
 useHead({
   titleTemplate: (titleChunk) => {
-    return titleChunk ? `${titleChunk} - Taskman` : 'Taskman';
+    if (route.path.startsWith('/taskman')) {
+      return titleChunk ? `${titleChunk} - Taskman` : 'Taskman'
+    }
+    return titleChunk || 'El Rincón de Brandy'
   }
 })
 </script>

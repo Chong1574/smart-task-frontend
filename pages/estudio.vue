@@ -73,3 +73,38 @@
     </div>
   </div>
 </template>
+
+<script setup>
+useSeoMeta({
+  title: 'El Estudio — Desarrollo web, automatización e ingeniería de control',
+  description: 'Desarrollo de software a medida con Nuxt, Vue y Node.js. Automatización industrial, ingeniería de control y diseño paramétrico CAD 3D.',
+  ogTitle: 'El Estudio — Ingeniería de software y automatización',
+  ogDescription: 'Plataformas SaaS, APIs, automatización industrial y diseño paramétrico.',
+  ogType: 'website',
+  ogUrl: 'https://shongyi.com/estudio',
+  twitterCard: 'summary_large_image'
+})
+
+useHead({
+  script: [{
+    type: 'application/ld+json',
+    innerHTML: JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'ProfessionalService',
+      name: 'El Estudio — El Rincón de Brandy',
+      url: 'https://shongyi.com/estudio',
+      description: 'Servicios de desarrollo de software, automatización industrial e ingeniería de control.',
+      areaServed: 'MX',
+      serviceType: [
+        'Desarrollo web',
+        'Aplicaciones SaaS',
+        'APIs REST y GraphQL',
+        'Automatización industrial',
+        'Ingeniería de control',
+        'Diseño paramétrico CAD 3D'
+      ],
+      parentOrganization: { '@type': 'Organization', name: 'El Rincón de Brandy', url: 'https://shongyi.com' }
+    })
+  }]
+})
+</script>

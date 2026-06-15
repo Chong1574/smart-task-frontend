@@ -180,3 +180,64 @@
   100% { transform: translateY(0) translateX(0); }
 }
 </style>
+
+<script setup>
+useSeoMeta({
+  title: 'El Rincón de Brandy — Manufactura 3D, software y respaldo patrimonial',
+  description: 'Ecosistema multidisciplinario: manufactura de alta precisión, ingeniería de software a medida, productos físicos en 3D y respaldo patrimonial Arveck.',
+  ogTitle: 'El Rincón de Brandy — La semilla de tu idea',
+  ogDescription: 'Manufactura, software, productos 3D y protección patrimonial bajo un mismo techo.',
+  ogType: 'website',
+  ogUrl: 'https://shongyi.com/',
+  twitterCard: 'summary_large_image'
+})
+
+useHead({
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'Organization',
+        name: 'El Rincón de Brandy',
+        alternateName: ['Rincón de Brandy', 'Shongyi'],
+        url: 'https://shongyi.com',
+        logo: 'https://shongyi.com/logo.png',
+        description: 'Ecosistema multidisciplinario: manufactura de alta precisión, desarrollo de software, productos físicos en impresión 3D y respaldo patrimonial.',
+        knowsAbout: [
+          'Impresión 3D',
+          'Manufactura de precisión',
+          'Desarrollo de software',
+          'Automatización industrial',
+          'Ingeniería de control',
+          'Seguros patrimoniales'
+        ]
+      })
+    },
+    {
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: 'El Rincón de Brandy',
+        url: 'https://shongyi.com',
+        inLanguage: 'es-MX'
+      })
+    },
+    {
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'SoftwareApplication',
+        name: 'Taskman',
+        applicationCategory: 'ProductivityApplication',
+        operatingSystem: 'Web, Android, iOS',
+        url: 'https://shongyi.com/taskman',
+        description: 'Gestor personal que auto-agenda tareas en Google Calendar según prioridad, con módulos de finanzas, hábitos, metas, vehículos y suscripciones.',
+        offers: { '@type': 'Offer', price: '0', priceCurrency: 'MXN' },
+        publisher: { '@type': 'Organization', name: 'El Rincón de Brandy', url: 'https://shongyi.com' }
+      })
+    }
+  ]
+})
+</script>

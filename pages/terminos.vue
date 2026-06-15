@@ -31,4 +31,10 @@
 definePageMeta({
   auth: false
 })
+
+useSeoMeta({
+  title: 'Términos de Servicio — Taskman',
+  description: 'Términos y condiciones de uso del servicio Taskman: gestión personal de tareas, finanzas, hábitos y sincronización con Google y Microsoft.',
+  robots: 'index, follow'
+})
 </script>

@@ -96,6 +96,30 @@
 </template>
 
 <script setup>
+useSeoMeta({
+  title: 'El Bazar — Productos en impresión 3D y accesorios',
+  description: 'Galería de creaciones físicas: piezas en impresión 3D, accesorios de estilo de vida y electrónica diseñada con detalle.',
+  ogTitle: 'El Bazar — Crafted in 3D',
+  ogDescription: 'Productos físicos diseñados y fabricados a medida.',
+  ogType: 'website',
+  ogUrl: 'https://shongyi.com/bazar',
+  twitterCard: 'summary_large_image'
+})
+
+useHead({
+  script: [{
+    type: 'application/ld+json',
+    innerHTML: JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'Store',
+      name: 'El Bazar — El Rincón de Brandy',
+      url: 'https://shongyi.com/bazar',
+      description: 'Tienda de productos físicos en impresión 3D, accesorios de estilo de vida y electrónica.',
+      parentOrganization: { '@type': 'Organization', name: 'El Rincón de Brandy', url: 'https://shongyi.com' }
+    })
+  }]
+})
+
 const categorias = [
   'Todos',
   'Impresión 3D',
