@@ -79,6 +79,45 @@
         </div>
       </div>
       
+      <!-- Próximos Pagos -->
+      <div class="bg-card border border-border/40 p-6 rounded-3xl shadow-sm mb-8">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="font-bold text-lg flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></svg>
+            Próximos Pagos (30 Días)
+          </h3>
+        </div>
+        
+        <div v-if="financeStore.upcomingPayments.length === 0" class="text-sm text-muted-foreground">
+          No hay pagos próximos registrados.
+        </div>
+        <div v-else class="space-y-4">
+          <div class="flex flex-col md:flex-row justify-between text-sm mb-2 p-3 rounded-xl border border-border/40" :class="totalUpcoming > financeStore.totalBalance ? 'bg-red-500/10 text-red-600 border-red-500/20' : 'bg-green-500/10 text-green-700 border-green-500/20'">
+            <span class="font-medium">Total a Pagar Próximamente: {{ formatCurrency(totalUpcoming) }}</span>
+            <span class="font-medium" v-if="totalUpcoming > financeStore.totalBalance">⚠️ Liquidez Insuficiente en Balance Total</span>
+            <span class="font-medium" v-else>✅ Presupuesto Suficiente en Balance Total</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div v-for="(payment, idx) in financeStore.upcomingPayments" :key="idx" class="flex justify-between items-center p-4 bg-secondary/30 rounded-2xl border border-border/20">
+              <div>
+                <p class="font-bold">{{ payment.name }}</p>
+                <div class="flex gap-2 text-xs text-muted-foreground mt-1">
+                  <span class="bg-primary/10 text-primary px-2 py-0.5 rounded">{{ payment.type }}</span>
+                  <span :class="payment.daysRemaining <= 3 ? 'text-red-500 font-bold' : ''">
+                    {{ payment.daysRemaining === 0 ? 'Hoy' : payment.daysRemaining === 1 ? 'Mañana' : `En ${payment.daysRemaining} días` }}
+                  </span>
+                </div>
+              </div>
+              <div class="text-right">
+                <p class="font-mono font-bold text-red-500">{{ formatCurrency(payment.amount) }}</p>
+                <p class="text-xs text-muted-foreground">{{ new Date(payment.date).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }) }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
       <!-- Proyección a 1 Año -->
       <div class="bg-card border border-border/40 p-6 rounded-3xl shadow-sm mb-8">
         <h3 class="font-bold text-lg mb-1">Proyección de Patrimonio a 1 Año</h3>
@@ -126,6 +165,10 @@ onMounted(() => {
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(value)
 }
+
+const totalUpcoming = computed(() => {
+  return financeStore.upcomingPayments.reduce((sum, p) => sum + p.amount, 0)
+})
 
 // -- EDU/SALUD LOGIC --
 

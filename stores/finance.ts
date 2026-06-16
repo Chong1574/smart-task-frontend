@@ -249,6 +249,65 @@ export const useFinanceStore = defineStore('finance', {
                 month: key,
                 ...result[key]
             })).slice(-6); // last 6 available months
+        },
+
+        upcomingPayments: (state) => {
+            const payments: Array<{name: string, amount: number, date: Date, type: string, daysRemaining: number}> = [];
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+            // 1. Suscripciones y Servicios
+            state.subscriptions.forEach(sub => {
+                if (sub.type === 'INCOME' || !sub.paymentDay) return;
+                
+                let nextDate = new Date(today.getFullYear(), today.getMonth(), sub.paymentDay);
+                // Si ya pasó el día en este mes, el próximo es el mes siguiente
+                if (nextDate < today) {
+                    nextDate.setMonth(nextDate.getMonth() + 1);
+                }
+                
+                const daysRemaining = Math.ceil((nextDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
+                
+                payments.push({
+                    name: sub.name,
+                    amount: Number(sub.amount),
+                    date: nextDate,
+                    type: sub.type === 'MEMBERSHIP' ? 'Membresía' : 'Servicio',
+                    daysRemaining
+                });
+            });
+
+            // 2. Deudas (Tarjetas de crédito y Préstamos)
+            state.accounts.forEach(acc => {
+                const isDebt = acc.type === 'loan' || (acc.type === 'card' && acc.sub_type === 'credit');
+                if (!isDebt || Number(acc.balance) >= 0 || !acc.payment_day) return;
+                
+                let nextDate = new Date(today.getFullYear(), today.getMonth(), acc.payment_day);
+                if (nextDate < today) {
+                    nextDate.setMonth(nextDate.getMonth() + 1);
+                }
+                
+                const daysRemaining = Math.ceil((nextDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
+                
+                // Determinar el monto a pagar (monthly_payment si lo hay, o un estimado del saldo)
+                let amountToPay = Number(acc.monthly_payment);
+                if (!amountToPay || amountToPay === 0) {
+                    // Si no hay pago mensual definido, sugerir un 5% del saldo o el total si es menor a 500
+                    const balance = Math.abs(Number(acc.balance));
+                    amountToPay = balance < 500 ? balance : balance * 0.05; 
+                }
+
+                payments.push({
+                    name: `Pago ${acc.name}`,
+                    amount: amountToPay,
+                    date: nextDate,
+                    type: acc.type === 'loan' ? 'Préstamo' : 'Tarjeta de Crédito',
+                    daysRemaining
+                });
+            });
+
+            // Ordenar por días restantes y retornar solo próximos 31 días
+            return payments.filter(p => p.daysRemaining <= 31).sort((a, b) => a.daysRemaining - b.daysRemaining);
         }
     },
 

@@ -72,6 +72,7 @@
         <div class="flex gap-4 border-b border-border/40 px-6 pt-4">
           <button @click="activeTab = 'programadas'" :class="['pb-3 px-2 font-bold border-b-2 transition-colors text-sm', activeTab === 'programadas' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground']">Programadas</button>
           <button @click="activeTab = 'pendientes'" :class="['pb-3 px-2 font-bold border-b-2 transition-colors text-sm', activeTab === 'pendientes' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground']">Pendientes Rápidas</button>
+          <button @click="activeTab = 'terminadas'" :class="['pb-3 px-2 font-bold border-b-2 transition-colors text-sm', activeTab === 'terminadas' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground']">Terminadas</button>
         </div>
 
         <div class="p-4 bg-secondary/30 border-b border-border/40 font-medium grid grid-cols-12 gap-4 text-sm text-muted-foreground">
@@ -103,10 +104,14 @@
               {{ task.priority === 'high' ? 'Alta' : task.priority === 'medium' ? 'Media' : 'Baja' }}
             </span>
           </div>
-          <div class="col-span-1 text-right flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button @click="markComplete(task)" class="text-green-500 hover:text-green-400"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></button>
-            <button @click="openEditTask(task)" class="text-muted-foreground hover:text-primary"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>
-            <button @click="taskStore.deleteTask(task.id!)" class="text-muted-foreground hover:text-destructive"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></button>
+          <div class="col-span-1 text-right flex justify-end gap-1 items-center">
+            <button v-if="task.status === 'pending'" @click="markComplete(task)" class="bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white p-2 rounded-full transition-colors flex-shrink-0" title="Completar Tarea">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </button>
+            <div class="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+              <button @click="openEditTask(task)" class="text-muted-foreground hover:text-primary p-2" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>
+              <button @click="taskStore.deleteTask(task.id!)" class="text-muted-foreground hover:text-destructive p-2" title="Eliminar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></button>
+            </div>
           </div>
         </div>
 
@@ -197,9 +202,15 @@ onMounted(() => {
 
 const activeTab = ref('programadas')
 
-const programmedTasks = computed(() => taskStore.tasks.filter(t => t.status === 'pending' && t.auto_distribute))
-const pendingQuickTasks = computed(() => taskStore.tasks.filter(t => t.status === 'pending' && !t.auto_distribute))
-const displayedTasks = computed(() => activeTab.value === 'programadas' ? programmedTasks.value : pendingQuickTasks.value)
+const programmedTasks = computed(() => taskStore.tasks.filter(t => t.status === 'pending' && (t.auto_distribute || t.deadline)))
+const pendingQuickTasks = computed(() => taskStore.tasks.filter(t => t.status === 'pending' && !t.auto_distribute && !t.deadline))
+const completedTasks = computed(() => taskStore.tasks.filter(t => t.status === 'completed'))
+
+const displayedTasks = computed(() => {
+  if (activeTab.value === 'programadas') return programmedTasks.value;
+  if (activeTab.value === 'terminadas') return completedTasks.value;
+  return pendingQuickTasks.value;
+})
 
 const activeProjects = computed(() => taskStore.projects.filter(p => p.status === 'active'))
 
