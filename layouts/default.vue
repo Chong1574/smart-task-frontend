@@ -77,6 +77,10 @@
 </template>
 
 <script setup>
+import { useAuthStore } from '~/stores/auth'
+
+const authStore = useAuthStore()
+
 const navItems = [
   { name: 'Hogar', path: '/' },
   { name: 'El Bazar', path: '/bazar' },
