@@ -30,6 +30,9 @@ export default defineNuxtConfig({
       'Inter': [300, 400, 500, 600]
     }
   },
+  colorMode: {
+    classSuffix: ''
+  },
   shadcn: {
     prefix: '',
     componentDir: './components/ui'

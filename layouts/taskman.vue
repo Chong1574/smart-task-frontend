@@ -41,7 +41,7 @@
       <!-- User / Actions -->
       <div class="p-4 lg:p-6 flex flex-col gap-2">
         <button @click="toggleTheme" class="w-full flex items-center justify-center md:justify-start gap-3 p-3 rounded-xl text-muted-foreground hover:bg-secondary transition-all" :class="!isSidebarOpen ? 'md:justify-center' : ''">
-          <Moon v-if="colorMode.preference === 'dark'" class="w-5 h-5 shrink-0" />
+          <Moon v-if="colorMode.value === 'dark'" class="w-5 h-5 shrink-0" />
           <Sun v-else class="w-5 h-5 shrink-0" />
           <span v-show="isSidebarOpen" class="font-medium whitespace-nowrap">Tema</span>
         </button>
@@ -115,7 +115,7 @@ const colorMode = useColorMode()
 const isSidebarOpen = ref(true)
 
 const toggleTheme = () => {
-  colorMode.preference = colorMode.preference === 'dark' ? 'light' : 'dark'
+  colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'
 }
 
 const nav = [
