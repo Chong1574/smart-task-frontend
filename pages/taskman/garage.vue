@@ -49,6 +49,10 @@
               <span class="text-sm text-muted-foreground">Rendimiento (km/L)</span>
               <span class="font-mono font-bold text-green-500">{{ calculateEfficiency(vehicle) }}</span>
             </div>
+            <div v-if="vehicle.tankCapacity" class="bg-secondary/40 p-3 rounded-xl flex justify-between items-center">
+              <span class="text-sm text-muted-foreground">Capacidad Tanque</span>
+              <span class="font-mono font-bold">{{ vehicle.tankCapacity }} L</span>
+            </div>
           </div>
         </div>
       </div>
@@ -85,6 +89,9 @@
             <div>
               <label class="block text-sm font-medium mb-1">Placas</label>
               <input v-model="newVehicle.plate" type="text" class="w-full rounded-xl border border-border bg-background px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-shadow" placeholder="ABC-123" />
+            <div>
+              <label class="block text-sm font-medium mb-1">Capacidad de Tanque (L) (Opcional)</label>
+              <input v-model="newVehicle.tankCapacity" type="number" step="0.1" class="w-full rounded-xl border border-border bg-background px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-shadow" placeholder="45.0" />
             </div>
           </div>
           <button type="submit" class="w-full bg-blue-500 text-white rounded-xl py-3 font-bold mt-6 hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/20">
@@ -176,13 +183,14 @@ const newVehicle = ref({
   make: '',
   model: '',
   year: new Date().getFullYear(),
-  plate: ''
+  plate: '',
+  tankCapacity: null as number | null
 })
 
 const openNewVehicle = () => {
   isEditingVehicle.value = false
   editingVehicleId.value = null
-  newVehicle.value = { name: '', make: '', model: '', year: new Date().getFullYear(), plate: '' }
+  newVehicle.value = { name: '', make: '', model: '', year: new Date().getFullYear(), plate: '', tankCapacity: null }
   showVehicleModal.value = true
 }
 
@@ -194,7 +202,8 @@ const openEditVehicle = (vehicle: any) => {
     make: vehicle.make || '',
     model: vehicle.model || '',
     year: vehicle.year || new Date().getFullYear(),
-    plate: vehicle.plate || ''
+    plate: vehicle.plate || '',
+    tankCapacity: vehicle.tankCapacity || null
   }
   showVehicleModal.value = true
 }
@@ -217,7 +226,7 @@ const submitVehicle = async () => {
     await financeStore.addVehicle({ ...newVehicle.value })
   }
   showVehicleModal.value = false
-  newVehicle.value = { name: '', make: '', model: '', year: new Date().getFullYear(), plate: '' }
+  newVehicle.value = { name: '', make: '', model: '', year: new Date().getFullYear(), plate: '', tankCapacity: null }
 }
 
 const updateTotal = () => {
@@ -227,6 +236,13 @@ const updateTotal = () => {
 }
 
 const submitFuelLog = async () => {
+  const selectedVehicle = financeStore.vehicles.find(v => v.id === newLog.value.vehicleId)
+  if (selectedVehicle && selectedVehicle.tankCapacity && newLog.value.liters > selectedVehicle.tankCapacity) {
+    if (!confirm(`Cuidado: Has registrado ${newLog.value.liters}L, pero la capacidad del tanque es de solo ${selectedVehicle.tankCapacity}L. ¿Deseas continuar de todos modos?`)) {
+      return
+    }
+  }
+
   const success = await financeStore.addFuelLog({ ...newLog.value })
   if (success) {
     showLogModal.value = false

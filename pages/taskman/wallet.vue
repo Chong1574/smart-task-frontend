@@ -179,6 +179,7 @@
               <div class="text-right">
                 <p class="font-mono font-bold text-red-500">{{ formatCurrency(payment.amount) }}</p>
                 <p class="text-xs text-muted-foreground">{{ new Date(payment.date).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }) }}</p>
+                <button @click="markAsPaid(payment)" class="mt-2 text-xs bg-primary/10 text-primary hover:bg-primary/20 px-2 py-1 rounded font-medium transition-colors">Registrar Pago</button>
               </div>
             </div>
           </div>
@@ -458,7 +459,7 @@
               </div>
               <div>
                 <label class="block text-sm font-medium mb-1">Monto</label>
-                <input v-model.number="txForm.amount" required type="number" step="0.01" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+                <input v-model.number="txForm.amount" required type="number" step="0.01" min="0.01" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
               </div>
             </div>
             <div>
@@ -617,7 +618,8 @@ const txForm = reactive({
   destinationAccountId: null as number | null,
   category: 'Ocio',
   description: '',
-  date: new Date().toISOString()
+  date: new Date().toISOString(),
+  subscriptionId: null as number | null
 })
 
 const showAddCategory = ref(false)
@@ -651,6 +653,9 @@ onMounted(async () => {
   if (route.query.action === 'new_transaction') {
     showTransactionModal.value = true
   }
+  if (financeStore.accounts.length > 0) {
+    txForm.accountId = financeStore.accounts[0].id
+  }
 })
 
 const saveEditCategory = async (oldCat: string) => {
@@ -677,13 +682,6 @@ const deleteCategoryWithConfirm = async (cat: string) => {
   }
 }
 
-onMounted(() => {
-  financeStore.initialize().then(() => {
-    if (financeStore.accounts.length > 0) {
-      txForm.accountId = financeStore.accounts[0].id
-    }
-  })
-})
 
 const submitAccount = async () => {
   let initialBalance = accountForm.balance;
@@ -827,7 +825,8 @@ const submitTransaction = async () => {
       category: category,
       description: txForm.description,
       date: txForm.date || new Date().toISOString(),
-      ...(isTransferOrPayment && txForm.destinationAccountId ? { destinationAccountId: txForm.destinationAccountId } : {} )
+      ...(isTransferOrPayment && txForm.destinationAccountId ? { destinationAccountId: txForm.destinationAccountId } : {} ),
+      ...(txForm.subscriptionId ? { subscriptionId: txForm.subscriptionId } : {})
     } as any)
   }
   
@@ -850,6 +849,30 @@ const closeTransactionModal = () => {
   editingTransactionId.value = null
   txForm.amount = 0
   txForm.description = ''
+  txForm.subscriptionId = null
+}
+
+const markAsPaid = (payment: any) => {
+  txForm.amount = payment.amount
+  txForm.description = payment.name
+  txForm.category = payment.category || 'Servicios'
+  txForm.date = new Date().toISOString()
+  
+  if (payment.sourceType === 'account') {
+    txForm.type = payment.type === 'Préstamo' ? 'loan_payment' : 'credit_payment'
+    txForm.destinationAccountId = payment.accountId
+    txForm.accountId = financeStore.accounts.find(a => a.type === 'card' && a.sub_type === 'debit')?.id || financeStore.accounts[0]?.id
+  } else {
+    txForm.type = 'expense'
+    if (payment.accountId) {
+      txForm.accountId = payment.accountId
+    } else {
+      txForm.accountId = financeStore.accounts[0]?.id
+    }
+    txForm.subscriptionId = payment.sourceId
+  }
+  
+  showTransactionModal.value = true
 }
 
 const handleDeleteTransaction = async (tx: any) => {

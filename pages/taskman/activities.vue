@@ -69,10 +69,19 @@
       <!-- Lista de Tareas Normal -->
       <div class="bg-card border border-border/40 rounded-3xl overflow-hidden shadow-sm">
         
-        <div class="flex gap-4 border-b border-border/40 px-6 pt-4">
-          <button @click="activeTab = 'programadas'" :class="['pb-3 px-2 font-bold border-b-2 transition-colors text-sm', activeTab === 'programadas' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground']">Programadas</button>
-          <button @click="activeTab = 'pendientes'" :class="['pb-3 px-2 font-bold border-b-2 transition-colors text-sm', activeTab === 'pendientes' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground']">Pendientes Rápidas</button>
-          <button @click="activeTab = 'terminadas'" :class="['pb-3 px-2 font-bold border-b-2 transition-colors text-sm', activeTab === 'terminadas' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground']">Terminadas</button>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-border/40 px-6 pt-4 gap-4 pb-2">
+          <div class="flex gap-4 overflow-x-auto">
+            <button @click="activeTab = 'programadas'" :class="['pb-3 px-2 font-bold border-b-2 transition-colors text-sm whitespace-nowrap', activeTab === 'programadas' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground']">Programadas</button>
+            <button @click="activeTab = 'pendientes'" :class="['pb-3 px-2 font-bold border-b-2 transition-colors text-sm whitespace-nowrap', activeTab === 'pendientes' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground']">Pendientes Rápidas</button>
+            <button @click="activeTab = 'terminadas'" :class="['pb-3 px-2 font-bold border-b-2 transition-colors text-sm whitespace-nowrap', activeTab === 'terminadas' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground']">Terminadas</button>
+          </div>
+          <div class="flex items-center gap-2 mb-2 sm:mb-0">
+            <label class="text-sm font-medium text-muted-foreground">Proyecto:</label>
+            <select v-model="filterProjectId" class="text-sm rounded-lg border border-border bg-background px-3 py-1 focus:ring-1 focus:ring-primary focus:outline-none max-w-[150px]">
+              <option :value="null">Todos</option>
+              <option v-for="p in activeProjects" :key="p.id" :value="p.id">{{ p.name }}</option>
+            </select>
+          </div>
         </div>
 
         <div class="p-4 bg-secondary/30 border-b border-border/40 font-medium grid grid-cols-12 gap-4 text-sm text-muted-foreground">
@@ -165,8 +174,17 @@
           </div>
           <div class="grid grid-cols-2 gap-4" v-if="newTask.auto_distribute">
             <div>
-              <label class="block text-sm font-medium mb-1">Duración estimada (min)</label>
-              <input v-model="newTask.duration_minutes" type="number" step="15" min="15" class="w-full rounded-xl border border-border bg-background px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none transition-shadow" />
+              <label class="block text-sm font-medium mb-1">Duración (Horas)</label>
+              <input v-model="taskHours" type="number" min="0" class="w-full rounded-xl border border-border bg-background px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none transition-shadow" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">Duración (Minutos)</label>
+              <select v-model="taskMinutes" class="w-full rounded-xl border border-border bg-background px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none transition-shadow">
+                <option :value="0">0 min</option>
+                <option :value="15">15 min</option>
+                <option :value="30">30 min</option>
+                <option :value="45">45 min</option>
+              </select>
             </div>
           </div>
 
@@ -206,10 +224,19 @@ const programmedTasks = computed(() => taskStore.tasks.filter(t => t.status === 
 const pendingQuickTasks = computed(() => taskStore.tasks.filter(t => t.status === 'pending' && !t.auto_distribute && !t.deadline))
 const completedTasks = computed(() => taskStore.tasks.filter(t => t.status === 'completed'))
 
+const filterProjectId = ref<number | null>(null)
+
 const displayedTasks = computed(() => {
-  if (activeTab.value === 'programadas') return programmedTasks.value;
-  if (activeTab.value === 'terminadas') return completedTasks.value;
-  return pendingQuickTasks.value;
+  let list = [];
+  if (activeTab.value === 'programadas') list = programmedTasks.value;
+  else if (activeTab.value === 'terminadas') list = completedTasks.value;
+  else list = pendingQuickTasks.value;
+  
+  if (filterProjectId.value) {
+    list = list.filter(t => t.projectId === filterProjectId.value)
+  }
+  
+  return list;
 })
 
 const activeProjects = computed(() => taskStore.projects.filter(p => p.status === 'active'))
@@ -240,6 +267,9 @@ const newTask = ref<Partial<Task>>({
   status: 'pending'
 })
 
+const taskHours = ref(0)
+const taskMinutes = ref(30)
+
 const openNewTask = () => {
   isEditingTask.value = false
   editingTaskId.value = null
@@ -253,6 +283,8 @@ const openNewTask = () => {
     auto_distribute: true,
     status: 'pending'
   }
+  taskHours.value = 0
+  taskMinutes.value = 30
   showTaskModal.value = true
 }
 
@@ -270,10 +302,15 @@ const openEditTask = (task: Task) => {
     auto_distribute: task.auto_distribute ?? true,
     status: task.status
   }
+  taskHours.value = Math.floor((newTask.value.duration_minutes || 0) / 60)
+  taskMinutes.value = (newTask.value.duration_minutes || 0) % 60
   showTaskModal.value = true
 }
 
 const submitTask = async () => {
+  newTask.value.duration_minutes = (taskHours.value * 60) + taskMinutes.value;
+  if (newTask.value.duration_minutes === 0) newTask.value.duration_minutes = 15;
+
   if (isEditingTask.value && editingTaskId.value) {
     await taskStore.updateTask(editingTaskId.value, { ...newTask.value })
   } else {

@@ -252,7 +252,7 @@ export const useFinanceStore = defineStore('finance', {
         },
 
         upcomingPayments: (state) => {
-            const payments: Array<{name: string, amount: number, date: Date, type: string, daysRemaining: number}> = [];
+            const payments: Array<{name: string, amount: number, date: Date, type: string, daysRemaining: number, sourceType: 'subscription' | 'account', sourceId: number, accountId?: number | null, category?: string}> = [];
             const now = new Date();
             const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
@@ -273,7 +273,11 @@ export const useFinanceStore = defineStore('finance', {
                     amount: Number(sub.amount),
                     date: nextDate,
                     type: sub.type === 'MEMBERSHIP' ? 'Membresía' : 'Servicio',
-                    daysRemaining
+                    daysRemaining,
+                    sourceType: 'subscription',
+                    sourceId: sub.id,
+                    accountId: sub.accountId,
+                    category: 'Servicios' // Default category
                 });
             });
 
@@ -302,7 +306,11 @@ export const useFinanceStore = defineStore('finance', {
                     amount: amountToPay,
                     date: nextDate,
                     type: acc.type === 'loan' ? 'Préstamo' : 'Tarjeta de Crédito',
-                    daysRemaining
+                    daysRemaining,
+                    sourceType: 'account',
+                    sourceId: acc.id,
+                    accountId: acc.id,
+                    category: acc.type === 'loan' ? 'Pago Préstamo' : 'Pago Tarjeta'
                 });
             });
 

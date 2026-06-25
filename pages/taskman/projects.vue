@@ -26,7 +26,15 @@
               <span :class="['px-2 py-1 text-xs font-bold rounded-full', project.status === 'active' ? 'bg-green-500/10 text-green-500' : 'bg-gray-500/10 text-gray-500']">
                 {{ project.status === 'active' ? 'Activo' : project.status === 'completed' ? 'Completado' : 'Archivado' }}
               </span>
-              <button @click="openEditProject(project)" class="text-muted-foreground hover:text-primary transition-colors">
+              <div class="flex items-center gap-1 ml-1 border-l border-border/50 pl-2">
+                <button v-if="index > 0" @click="moveProject(index, -1)" class="w-6 h-6 flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors" title="Subir">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+                </button>
+                <button v-if="index < taskStore.projects.length - 1" @click="moveProject(index, 1)" class="w-6 h-6 flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors" title="Bajar">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+              </div>
+              <button @click="openEditProject(project)" class="text-muted-foreground hover:text-primary transition-colors ml-1">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
               </button>
             </div>
@@ -40,6 +48,16 @@
             </div>
             <div class="w-full h-2 bg-secondary rounded-full overflow-hidden">
               <div :class="['h-full rounded-full', getProjectColor(index)]" :style="{ width: getProgress(project.id!) + '%' }"></div>
+            </div>
+          </div>
+
+          <div class="mt-4 space-y-2">
+            <div v-for="task in getProjectTasks(project.id!).slice(0, 3)" :key="task.id" class="flex items-center gap-2 text-sm bg-secondary/30 px-3 py-1.5 rounded-lg border border-border/50">
+              <input type="checkbox" :checked="task.status === 'completed'" @change="toggleTaskStatus(task)" class="w-4 h-4 rounded border-border text-primary focus:ring-primary cursor-pointer">
+              <span :class="['truncate', task.status === 'completed' ? 'line-through text-muted-foreground' : '']">{{ task.title }}</span>
+            </div>
+            <div v-if="getProjectTasks(project.id!).length > 3" class="text-xs text-muted-foreground text-center bg-secondary/10 py-1 rounded-lg">
+              + {{ getProjectTasks(project.id!).length - 3 }} tareas más
             </div>
           </div>
           
@@ -130,8 +148,17 @@
           </div>
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium mb-1">Duración (min)</label>
-              <input v-model="newTask.duration_minutes" type="number" step="15" min="15" class="w-full rounded-xl border border-border bg-background px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none transition-shadow" />
+              <label class="block text-sm font-medium mb-1">Duración (Horas)</label>
+              <input v-model="taskHours" type="number" min="0" class="w-full rounded-xl border border-border bg-background px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none transition-shadow" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">Duración (Minutos)</label>
+              <select v-model="taskMinutes" class="w-full rounded-xl border border-border bg-background px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none transition-shadow">
+                <option :value="0">0 min</option>
+                <option :value="15">15 min</option>
+                <option :value="30">30 min</option>
+                <option :value="45">45 min</option>
+              </select>
             </div>
           </div>
           <button type="submit" class="w-full bg-primary text-primary-foreground rounded-xl py-3 font-bold mt-6 hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20">
@@ -208,6 +235,9 @@ const newTask = ref<Partial<Task>>({
   status: 'pending'
 })
 
+const taskHours = ref(0)
+const taskMinutes = ref(30)
+
 const openNewTaskForProject = (projectId: number) => {
   newTask.value = {
     title: '',
@@ -219,10 +249,15 @@ const openNewTaskForProject = (projectId: number) => {
     auto_distribute: true,
     status: 'pending'
   }
+  taskHours.value = 0
+  taskMinutes.value = 30
   showTaskModal.value = true
 }
 
 const submitTask = async () => {
+  newTask.value.duration_minutes = (taskHours.value * 60) + taskMinutes.value;
+  if (newTask.value.duration_minutes === 0) newTask.value.duration_minutes = 15;
+
   await taskStore.addTask({ ...newTask.value } as Task)
   showTaskModal.value = false
 }
@@ -253,6 +288,27 @@ const getProgress = (projectId: number) => {
   if (tasks.length === 0) return 0
   const completed = tasks.filter(t => t.status === 'completed').length
   return Math.round((completed / tasks.length) * 100)
+}
+
+const getProjectTasks = (projectId: number) => {
+  return taskStore.tasks.filter(t => t.projectId === projectId)
+}
+
+const toggleTaskStatus = async (task: Task) => {
+  const newStatus = task.status === 'completed' ? 'pending' : 'completed'
+  await taskStore.updateTask(task.id!, { status: newStatus })
+}
+
+const moveProject = async (index: number, direction: number) => {
+  const newIndex = index + direction
+  if (newIndex < 0 || newIndex >= taskStore.projects.length) return
+  
+  const temp = taskStore.projects[index]
+  taskStore.projects[index] = taskStore.projects[newIndex]
+  taskStore.projects[newIndex] = temp
+  
+  const ids = taskStore.projects.map(p => p.id!)
+  await taskStore.reorderProjects(ids)
 }
 </script>
 

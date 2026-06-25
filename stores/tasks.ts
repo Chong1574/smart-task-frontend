@@ -175,6 +175,17 @@ export const useTaskStore = defineStore('tasks', {
             }
         },
 
+        async reorderProjects(projectIds: number[]) {
+            try {
+                const res = await api.post('/projects/reorder', { projectIds });
+                if (res.data.success) {
+                    // Update successfully
+                }
+            } catch (err) {
+                console.error("Error reordering projects:", err);
+            }
+        },
+
         // --- Habits ---
         async fetchHabits() {
             this.loading = true;
