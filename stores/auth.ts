@@ -61,15 +61,57 @@ export const useAuthStore = defineStore('auth', {
             }
         },
 
-        async register(email: string, password: string) {
+        async register(email: string, password: string, turnstileToken?: string) {
             this.loading = true;
             this.error = null;
             try {
-                const res = await api.post(`${API_URL}/auth/register`, { email, password });
-                this.setSession(res.data.data.token, res.data.data.user);
+                await api.post(`${API_URL}/auth/register`, { email, password, turnstileToken });
                 return true;
             } catch (err: any) {
                 this.error = err.response?.data?.message || 'Registration failed';
+                return false;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async verifyEmail(token: string) {
+            this.loading = true;
+            this.error = null;
+            try {
+                const res = await api.post(`${API_URL}/auth/verify-email`, { token });
+                this.setSession(res.data.data.token, res.data.data.user);
+                return true;
+            } catch (err: any) {
+                this.error = err.response?.data?.message || 'Verification failed';
+                return false;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async forgotPassword(email: string) {
+            this.loading = true;
+            this.error = null;
+            try {
+                await api.post(`${API_URL}/auth/forgot-password`, { email });
+                return true;
+            } catch (err: any) {
+                this.error = err.response?.data?.message || 'Request failed';
+                return false;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async resetPassword(token: string, password: string) {
+            this.loading = true;
+            this.error = null;
+            try {
+                await api.post(`${API_URL}/auth/reset-password`, { token, password });
+                return true;
+            } catch (err: any) {
+                this.error = err.response?.data?.message || 'Reset failed';
                 return false;
             } finally {
                 this.loading = false;

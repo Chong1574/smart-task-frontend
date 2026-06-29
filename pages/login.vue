@@ -40,6 +40,11 @@
           {{ authStore.loading ? 'Ingresando...' : 'Iniciar Sesión' }}
         </button>
 
+        <div class="flex justify-between text-sm">
+          <NuxtLink to="/register" class="text-primary hover:underline">Crear cuenta</NuxtLink>
+          <NuxtLink to="/forgot-password" class="text-muted-foreground hover:text-primary">¿Olvidaste tu contraseña?</NuxtLink>
+        </div>
+
         <div class="relative flex items-center py-2">
           <div class="flex-grow border-t border-border"></div>
           <span class="flex-shrink-0 mx-4 text-muted-foreground text-sm">o continuar con</span>

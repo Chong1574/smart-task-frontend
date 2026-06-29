@@ -1,6 +1,11 @@
 export default defineNuxtRouteMiddleware((to) => {
     if (!to.path.startsWith('/taskman')) return;
-    if (to.path.includes('/login') || to.path.includes('/auth-callback')) return;
+    if (
+        to.path.includes('/login') ||
+        to.path.includes('/auth-callback') ||
+        to.path.includes('/verify-email') ||
+        to.path.includes('/reset-password')
+    ) return;
 
     const tokenCookie = useCookie('token', { maxAge: 60 * 60 * 24 * 7, path: '/', sameSite: 'lax' });
     let token = tokenCookie.value || null;

@@ -12,17 +12,23 @@ export default defineNuxtConfig({
     '@nuxtjs/color-mode',
     '@nuxtjs/google-fonts',
     '@nuxtjs/sitemap',
-    '@nuxtjs/robots'
+    '@nuxtjs/robots',
+    '@sentry/nuxt/module'
   ],
+  sentry: {
+    sourceMapsUploadOptions: {
+      enabled: false
+    }
+  },
   site: {
     url: SITE_URL,
     name: 'El Rincón de Brandy'
   },
   sitemap: {
-    exclude: ['/taskman/**', '/login', '/auth-callback']
+    exclude: ['/taskman/**', '/login', '/register', '/forgot-password', '/auth-callback']
   },
   robots: {
-    disallow: ['/taskman', '/login', '/auth-callback']
+    disallow: ['/taskman', '/login', '/register', '/forgot-password', '/auth-callback']
   },
   googleFonts: {
     families: {
