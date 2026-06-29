@@ -1,0 +1,143 @@
+{
+  "name": "Bazar - MakerWorld Scraper",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 3 * * *"
+            }
+          ]
+        }
+      },
+      "id": "cron-daily",
+      "name": "Cron 03:00 daily",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://makerworld.com/api/v1/design-service/designs",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "limit", "value": "40" },
+            { "name": "offset", "value": "0" },
+            { "name": "sort", "value": "hot" },
+            { "name": "license", "value": "CC-BY,CC-BY-SA,CC0,commercial" }
+          ]
+        },
+        "options": {
+          "timeout": 30000,
+          "response": { "response": { "responseFormat": "json" } }
+        }
+      },
+      "id": "http-list",
+      "name": "MakerWorld: list hot designs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300],
+      "notes": "Endpoint y nombres de query params se validan al primer run; ajustar si MakerWorld responde 400."
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "hits",
+        "options": {}
+      },
+      "id": "split",
+      "name": "Split designs",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 3,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normaliza un design de MakerWorld al shape que /api/products/sync espera.\n// Si MakerWorld cambia nombres de campos, ajustar aquí (un solo lugar).\nconst LICENSE_MAP = {\n  'CC BY': 'CC-BY',\n  'CC BY-SA': 'CC-BY-SA',\n  'CC BY-NC': 'CC-BY-NC',\n  'CC0': 'CC0',\n  'Standard Digital File License': 'commercial',\n};\n\nreturn items.map(({ json: d }) => {\n  const rawLicense = d.license || d.licenseType || '';\n  const licenseType = LICENSE_MAP[rawLicense] || 'unknown';\n  const author = d.designCreator?.name || d.author?.name || 'Unknown';\n  const externalId = String(d.id ?? d.designId ?? '');\n  const slug = d.slug || externalId;\n  return {\n    json: {\n      externalId,\n      source: 'MAKERWORLD',\n      sourceUrl: `https://makerworld.com/en/models/${slug}`,\n      title: d.title || d.name || 'Untitled',\n      description: (d.description || '').slice(0, 2000),\n      imageUrl: d.cover || d.coverImage || d.image,\n      licenseType,\n      licenseAttribution: `${author} — via MakerWorld`,\n      category: d.category || d.categoryName || null,\n      trendScore: d.hotScore ?? d.likeCount ?? 0,\n      price: null,\n      stock: null,\n      provider: 'LOCAL',\n    },\n  };\n});"
+      },
+      "id": "normalize",
+      "name": "Normalize to /sync shape",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+          "conditions": [
+            {
+              "id": "lic-known",
+              "leftValue": "={{ $json.licenseType }}",
+              "rightValue": "unknown",
+              "operator": { "type": "string", "operation": "notEquals" }
+            },
+            {
+              "id": "has-id",
+              "leftValue": "={{ $json.externalId }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "notEmpty" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "filter-license",
+      "name": "Drop unknown licenses",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "products",
+        "options": {}
+      },
+      "id": "aggregate",
+      "name": "Wrap as { products: [...] }",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 3,
+      "position": [1340, 300],
+      "notes": "Backend espera un POST con array completo, no un POST por item."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.TASKMAN_API_URL }}/api/products/sync",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.SYNC_SECRET }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ products: $json.products }) }}",
+        "options": {
+          "timeout": 60000,
+          "response": { "response": { "responseFormat": "json" } }
+        }
+      },
+      "id": "post-sync",
+      "name": "POST /api/products/sync",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1560, 300]
+    }
+  ],
+  "connections": {
+    "Cron 03:00 daily": { "main": [[{ "node": "MakerWorld: list hot designs", "type": "main", "index": 0 }]] },
+    "MakerWorld: list hot designs": { "main": [[{ "node": "Split designs", "type": "main", "index": 0 }]] },
+    "Split designs": { "main": [[{ "node": "Normalize to /sync shape", "type": "main", "index": 0 }]] },
+    "Normalize to /sync shape": { "main": [[{ "node": "Drop unknown licenses", "type": "main", "index": 0 }]] },
+    "Drop unknown licenses": { "main": [[{ "node": "Wrap as { products: [...] }", "type": "main", "index": 0 }]] },
+    "Wrap as { products: [...] }": { "main": [[{ "node": "POST /api/products/sync", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "active": false
+}
