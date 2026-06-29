@@ -89,10 +89,11 @@
             <div>
               <label class="block text-sm font-medium mb-1">Placas</label>
               <input v-model="newVehicle.plate" type="text" class="w-full rounded-xl border border-border bg-background px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-shadow" placeholder="ABC-123" />
-            <div>
-              <label class="block text-sm font-medium mb-1">Capacidad de Tanque (L) (Opcional)</label>
-              <input v-model="newVehicle.tankCapacity" type="number" step="0.1" class="w-full rounded-xl border border-border bg-background px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-shadow" placeholder="45.0" />
             </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Capacidad de Tanque (L) (Opcional)</label>
+            <input v-model="newVehicle.tankCapacity" type="number" step="0.1" class="w-full rounded-xl border border-border bg-background px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-shadow" placeholder="45.0" />
           </div>
           <button type="submit" class="w-full bg-blue-500 text-white rounded-xl py-3 font-bold mt-6 hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/20">
             {{ isEditingVehicle ? 'Guardar Cambios' : 'Guardar Vehículo' }}
