@@ -21,6 +21,22 @@
         </NuxtLink>
       </div>
 
+      <!-- Banner pagos urgentes (≤ 3 días) -->
+      <div v-if="urgentPayments.length > 0" class="bg-destructive/10 border border-destructive/30 text-destructive-foreground rounded-2xl p-4">
+        <div class="flex items-start gap-3">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-destructive shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <div class="flex-1">
+            <p class="font-bold text-foreground">{{ urgentPayments.length }} pago{{ urgentPayments.length > 1 ? 's' : '' }} próximamente</p>
+            <ul class="text-sm text-muted-foreground mt-1 space-y-0.5">
+              <li v-for="p in urgentPayments" :key="`${p.sourceType}-${p.sourceId}`">
+                <span class="font-medium text-foreground">{{ p.name }}</span> — {{ formatCurrency(p.amount) }}
+                <span class="text-destructive">({{ p.daysRemaining === 0 ? 'hoy' : p.daysRemaining === 1 ? 'mañana' : `en ${p.daysRemaining} días` }})</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Ingresos Fijos -->
         <div class="bg-card border border-border/40 p-6 rounded-3xl shadow-sm relative overflow-hidden group">
@@ -197,6 +213,7 @@ onMounted(() => {
 })
 
 const incomes = computed(() => financeStore.subscriptions.filter(s => s.type === 'INCOME'))
+const urgentPayments = computed(() => financeStore.upcomingPayments.filter(p => p.daysRemaining <= 3))
 const projections = computed(() => financeStore.cashFlowProjections)
 
 const debtStrategy = ref<'avalanche' | 'snowball'>('avalanche')
@@ -247,7 +264,13 @@ const openEditIncome = (inc: any) => {
 }
 
 const deleteIncomeWithConfirm = async (id: number) => {
-  if (confirm('¿Estás seguro de que deseas eliminar este ingreso fijo?')) {
+  const confirmStore = useConfirmStore()
+  if (await confirmStore.ask({
+    title: 'Eliminar ingreso',
+    message: '¿Estás seguro de que deseas eliminar este ingreso fijo?',
+    confirmLabel: 'Eliminar',
+    destructive: true
+  })) {
     await financeStore.deleteSubscription(id)
   }
 }

@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { Toaster } from 'vue-sonner'
+import 'vue-sonner/style.css'
+
 const route = useRoute()
 useHead({
   titleTemplate: (titleChunk) => {
@@ -15,6 +18,8 @@ useHead({
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>
+    <Toaster position="top-right" rich-colors close-button />
+    <ConfirmDialog />
   </div>
 </template>
 

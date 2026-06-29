@@ -217,7 +217,13 @@ const submitProject = async () => {
 }
 
 const deleteProject = async (id: number) => {
-  if (confirm('¿Estás seguro de que deseas eliminar este proyecto? Las tareas asociadas no se borrarán, solo quedarán sueltas.')) {
+  const confirmStore = useConfirmStore()
+  if (await confirmStore.ask({
+    title: 'Eliminar proyecto',
+    message: 'Las tareas asociadas no se borrarán, solo quedarán sueltas.',
+    confirmLabel: 'Eliminar',
+    destructive: true
+  })) {
     await taskStore.deleteProject(id)
     showProjectModal.value = false
   }

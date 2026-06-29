@@ -41,27 +41,27 @@
     --radius: 0.5rem;
   }
 
-  /* Eliminamos el .dark mode forzado para mantener la estética light-mode como base y eliminar el estilo oscuro de laboratorio */
+  /* Dark mode real: café oscuro de base, terracota un poco más vivo */
   .dark {
-    --background: 36 33% 97%; 
-    --foreground: 22 25% 18%;
-    --card: 0 0% 100%;
-    --card-foreground: 22 25% 18%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 22 25% 18%;
-    --primary: 13 65% 62%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 33 22% 89%;
-    --secondary-foreground: 22 25% 18%;
-    --muted: 33 22% 89%;
-    --muted-foreground: 22 15% 45%;
-    --accent: 25 70% 70%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 62.8% 30.6%;
+    --background: 22 20% 10%;          /* #1F1813 café muy oscuro */
+    --foreground: 36 25% 92%;          /* #F0EAE2 crema claro */
+    --card: 22 18% 14%;                /* #2A211B */
+    --card-foreground: 36 25% 92%;
+    --popover: 22 18% 14%;
+    --popover-foreground: 36 25% 92%;
+    --primary: 13 70% 65%;             /* Terracota un toque más brillante */
+    --primary-foreground: 22 25% 10%;
+    --secondary: 22 15% 20%;           /* #3A302A */
+    --secondary-foreground: 36 25% 92%;
+    --muted: 22 15% 20%;
+    --muted-foreground: 33 15% 65%;
+    --accent: 25 70% 60%;
+    --accent-foreground: 22 25% 10%;
+    --destructive: 0 70% 55%;
     --destructive-foreground: 0 0% 98%;
-    --border: 33 22% 89%;
-    --input: 33 22% 89%;
-    --ring: 13 65% 62%;
+    --border: 22 15% 25%;
+    --input: 22 15% 25%;
+    --ring: 13 70% 65%;
   }
 }
 

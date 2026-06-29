@@ -238,7 +238,14 @@ const updateTotal = () => {
 const submitFuelLog = async () => {
   const selectedVehicle = financeStore.vehicles.find(v => v.id === newLog.value.vehicleId)
   if (selectedVehicle && selectedVehicle.tankCapacity && newLog.value.liters > selectedVehicle.tankCapacity) {
-    if (!confirm(`Cuidado: Has registrado ${newLog.value.liters}L, pero la capacidad del tanque es de solo ${selectedVehicle.tankCapacity}L. ¿Deseas continuar de todos modos?`)) {
+    const confirmStore = useConfirmStore()
+    const ok = await confirmStore.ask({
+      title: 'Capacidad excedida',
+      message: `Has registrado ${newLog.value.liters}L, pero la capacidad del tanque es de solo ${selectedVehicle.tankCapacity}L. ¿Deseas continuar?`,
+      confirmLabel: 'Continuar',
+      destructive: true
+    })
+    if (!ok) {
       return
     }
   }

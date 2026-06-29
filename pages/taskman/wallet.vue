@@ -49,10 +49,13 @@
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
             </button>
           </div>
-          <div v-if="financeStore.accounts.length === 0" class="text-sm text-muted-foreground">
+          <div v-if="financeStore.loading && financeStore.accounts.length === 0" class="flex gap-4 overflow-x-auto pb-2">
+            <Skeleton v-for="i in 3" :key="i" class="h-20 min-w-[200px]" />
+          </div>
+          <div v-else-if="financeStore.accounts.length === 0" class="text-sm text-muted-foreground">
              No hay cuentas registradas.
           </div>
-          <div class="flex gap-4 overflow-x-auto pb-2">
+          <div v-else class="flex gap-4 overflow-x-auto pb-2">
             <div v-for="account in financeStore.accounts" :key="account.id" class="bg-secondary/50 p-4 rounded-2xl min-w-[200px] border border-border/30 relative group flex flex-col justify-between">
               <div>
                 <p class="text-muted-foreground text-sm">{{ account.name }}</p>
@@ -677,7 +680,13 @@ const addNewCategory = () => {
 }
 
 const deleteCategoryWithConfirm = async (cat: string) => {
-  if (confirm(`¿Estás seguro de eliminar la categoría "${cat}"?`)) {
+  const confirmStore = useConfirmStore()
+  if (await confirmStore.ask({
+    title: 'Eliminar categoría',
+    message: `¿Estás seguro de eliminar la categoría "${cat}"?`,
+    confirmLabel: 'Eliminar',
+    destructive: true
+  })) {
     await financeStore.removeCategory(cat)
   }
 }
@@ -756,7 +765,13 @@ const submitEditAccount = async () => {
 }
 
 const deleteAccountWithConfirm = async (id: number) => {
-  if (confirm('¿Estás seguro de que deseas eliminar esta cuenta? Se eliminarán también las transacciones asociadas.')) {
+  const confirmStore = useConfirmStore()
+  if (await confirmStore.ask({
+    title: 'Eliminar cuenta',
+    message: 'Se eliminarán también las transacciones asociadas.',
+    confirmLabel: 'Eliminar',
+    destructive: true
+  })) {
     await financeStore.deleteAccount(id)
   }
 }
@@ -775,7 +790,13 @@ const openEditSubscription = (sub: any) => {
 }
 
 const deleteSubscriptionWithConfirm = async (id: number) => {
-  if (confirm('¿Estás seguro de que deseas eliminar esta suscripción o membresía?')) {
+  const confirmStore = useConfirmStore()
+  if (await confirmStore.ask({
+    title: 'Eliminar suscripción',
+    message: '¿Estás seguro de que deseas eliminar esta suscripción o membresía?',
+    confirmLabel: 'Eliminar',
+    destructive: true
+  })) {
     await financeStore.deleteSubscription(id)
   }
 }
@@ -876,7 +897,13 @@ const markAsPaid = (payment: any) => {
 }
 
 const handleDeleteTransaction = async (tx: any) => {
-  if (confirm(`¿Estás seguro de eliminar esta transacción por ${formatCurrency(tx.amount)}? Si es una transferencia, deberás eliminar también la transacción correspondiente en la otra cuenta.`)) {
+  const confirmStore = useConfirmStore()
+  if (await confirmStore.ask({
+    title: 'Eliminar transacción',
+    message: `Monto: ${formatCurrency(tx.amount)}. Si es transferencia, elimina también la transacción correspondiente en la otra cuenta.`,
+    confirmLabel: 'Eliminar',
+    destructive: true
+  })) {
     await financeStore.deleteTransaction(tx.id)
   }
 }

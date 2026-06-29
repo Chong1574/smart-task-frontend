@@ -21,6 +21,17 @@
         </NuxtLink>
       </div>
 
+      <!-- Skeleton mientras carga -->
+      <div v-if="financeStore.loading && !financeStore.accounts.length" class="space-y-6">
+        <Skeleton class="h-40 w-full" />
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Skeleton class="h-64 w-full" />
+          <Skeleton class="h-64 w-full" />
+        </div>
+        <Skeleton class="h-48 w-full" />
+      </div>
+
+      <template v-else>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- Tarjetas de Salud Financiera -->
         <div class="bg-card border border-border/40 p-6 rounded-3xl shadow-sm md:col-span-3">
@@ -128,6 +139,7 @@
           </ClientOnly>
         </div>
       </div>
+      </template>
 
   </div>
 </template>

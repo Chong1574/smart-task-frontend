@@ -92,7 +92,11 @@
           <div class="col-span-1 text-right">Acciones</div>
         </div>
 
-        <div v-if="displayedTasks.length === 0" class="p-8 text-center text-muted-foreground">
+        <div v-if="taskStore.loading && taskStore.tasks.length === 0" class="p-4 space-y-3">
+          <Skeleton v-for="i in 4" :key="i" class="h-12 w-full" />
+        </div>
+
+        <div v-else-if="displayedTasks.length === 0" class="p-8 text-center text-muted-foreground">
           No hay tareas en esta categoría. ¡Disfruta tu tiempo libre o agrega una nueva!
         </div>
 
