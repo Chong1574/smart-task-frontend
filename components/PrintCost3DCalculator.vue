@@ -75,6 +75,24 @@
           </div>
         </div>
 
+        <!-- Mantenimiento -->
+        <div class="border border-border/60 rounded-xl p-4 bg-secondary/10 space-y-3">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" v-model="form.includeMaintenance" class="rounded border-input text-primary focus:ring-primary w-4 h-4" />
+            <span class="text-sm font-medium">Incluir desgaste/mantenimiento</span>
+          </label>
+          <div v-if="form.includeMaintenance" class="grid grid-cols-2 gap-3 pt-2">
+            <div>
+              <label class="text-xs font-medium mb-1.5 block text-muted-foreground">Costo refacciones ($)</label>
+              <input v-model.number="form.maintenanceCost" type="number" min="0" step="1" class="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm" />
+            </div>
+            <div>
+              <label class="text-xs font-medium mb-1.5 block text-muted-foreground">Ciclo (horas)</label>
+              <input v-model.number="form.maintenanceHours" type="number" min="1" step="1" class="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm" />
+            </div>
+          </div>
+        </div>
+
         <p class="text-xs text-muted-foreground">
           Impresora seleccionada:
           <span v-if="selectedPrinter" class="font-medium text-foreground">{{ selectedPrinter.brand }} {{ selectedPrinter.model }} — {{ selectedPrinter.watts }} W</span>
@@ -91,6 +109,7 @@
         <div class="space-y-2 text-sm">
           <Row label="Filamento" :value="fmt(result.filament)" />
           <Row label="Electricidad" :value="fmt(result.electricity)" />
+          <Row v-if="form.includeMaintenance" label="Mantenimiento" :value="fmt(result.maintenance)" />
           <Row label="Subtotal" :value="fmt(result.subtotal)" />
           <div class="border-t border-border pt-2 mt-2">
             <Row label="Margen" :value="fmt(result.margin)" />
@@ -123,6 +142,9 @@ const form = reactive({
   hours: 3,
   kwhPrice: 4.5,
   marginPct: 40,
+  includeMaintenance: false,
+  maintenanceCost: 500,
+  maintenanceHours: 1000,
 })
 
 const filteredPrinters = computed(() => {
@@ -137,9 +159,10 @@ const result = computed(() => {
   const watts = selectedPrinter.value?.watts ?? 0
   const filament = (form.grams / 1000) * form.filamentPricePerKg
   const electricity = form.hours * (watts / 1000) * form.kwhPrice
-  const subtotal = filament + electricity
+  const maintenance = form.includeMaintenance ? (form.hours / form.maintenanceHours) * form.maintenanceCost : 0
+  const subtotal = filament + electricity + maintenance
   const margin = subtotal * (form.marginPct / 100)
-  return { filament, electricity, subtotal, margin, total: subtotal + margin }
+  return { filament, electricity, maintenance, subtotal, margin, total: subtotal + margin }
 })
 
 function selectPrinter(p: Printer) {
