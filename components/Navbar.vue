@@ -16,6 +16,7 @@ import { Rocket, Box, Sparkles, LayoutDashboard } from 'lucide-vue-next'
       <nav class="hidden md:flex items-center gap-6">
         <NuxtLink to="/tienda" class="text-sm font-medium hover:text-primary transition-colors">Tienda</NuxtLink>
         <NuxtLink to="/muro" class="text-sm font-medium hover:text-primary transition-colors">Impresión 3D</NuxtLink>
+        <NuxtLink to="/calculadora-3d" class="text-sm font-medium hover:text-primary transition-colors">Calculadora 3D</NuxtLink>
         <NuxtLink to="https://arveck.com/" target="_blank" external class="text-sm font-medium hover:text-primary transition-colors">Seguros Arveck</NuxtLink>
         <NuxtLink to="/#servicios" class="text-sm font-medium hover:text-primary transition-colors">Servicios</NuxtLink>
       </nav>
