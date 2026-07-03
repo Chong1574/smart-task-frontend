@@ -125,7 +125,7 @@
 import { ref, reactive, computed, watch, onMounted, h } from 'vue'
 import defaultPrinters from '~/data/printers-3d.json'
 
-interface Printer { id: string; brand: string; model: string; watts: number; custom?: boolean }
+interface Printer { id: string; brand: string; model: string; watts: number; maintenanceCost?: number; maintenanceHours?: number; custom?: boolean }
 
 const STORAGE_KEY = 'printcost3d:v1'
 
@@ -168,6 +168,8 @@ const result = computed(() => {
 function selectPrinter(p: Printer) {
   selectedPrinter.value = p
   printerSearch.value = `${p.brand} ${p.model}`
+  if (p.maintenanceCost) form.maintenanceCost = p.maintenanceCost
+  if (p.maintenanceHours) form.maintenanceHours = p.maintenanceHours
   showList.value = false
   persist()
 }
