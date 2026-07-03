@@ -48,9 +48,15 @@
           </div>
         </div>
 
-        <div>
-          <label class="text-sm font-medium mb-1.5 block">Gramos usados</label>
-          <input v-model.number="form.grams" type="number" min="0" step="0.1" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" />
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-sm font-medium mb-1.5 block">Gramos usados</label>
+            <input v-model.number="form.grams" type="number" min="0" step="0.1" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label class="text-sm font-medium mb-1.5 block">Desperdicio (%)</label>
+            <input v-model.number="form.wastePct" type="number" min="0" step="1" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" />
+          </div>
         </div>
 
         <div class="grid grid-cols-2 gap-3">
@@ -93,10 +99,31 @@
           </div>
         </div>
 
+        <!-- Depreciación -->
+        <div class="border border-border/60 rounded-xl p-4 bg-secondary/10 space-y-3">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" v-model="form.includeDepreciation" class="rounded border-input text-primary focus:ring-primary w-4 h-4" />
+            <span class="text-sm font-medium">Incluir depreciación de la impresora</span>
+          </label>
+          <div v-if="form.includeDepreciation" class="grid grid-cols-2 gap-3 pt-2">
+            <div>
+              <label class="text-xs font-medium mb-1.5 block text-muted-foreground">Costo impresora ($)</label>
+              <input v-model.number="form.printerCost" type="number" min="0" step="1" class="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm" />
+            </div>
+            <div>
+              <label class="text-xs font-medium mb-1.5 block text-muted-foreground">Vida útil (horas)</label>
+              <input v-model.number="form.printerLifeHours" type="number" min="1" step="1" class="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm" />
+            </div>
+          </div>
+        </div>
+
         <p class="text-xs text-muted-foreground">
           Impresora seleccionada:
           <span v-if="selectedPrinter" class="font-medium text-foreground">{{ selectedPrinter.brand }} {{ selectedPrinter.model }} — {{ selectedPrinter.watts }} W</span>
           <span v-else class="italic">ninguna</span>
+        </p>
+        <p v-if="!selectedPrinter" class="text-xs text-amber-600 dark:text-amber-500 font-medium">
+          Selecciona una impresora para incluir el costo de electricidad.
         </p>
       </div>
 
@@ -110,6 +137,7 @@
           <Row label="Filamento" :value="fmt(result.filament)" />
           <Row label="Electricidad" :value="fmt(result.electricity)" />
           <Row v-if="form.includeMaintenance" label="Mantenimiento" :value="fmt(result.maintenance)" />
+          <Row v-if="form.includeDepreciation" label="Depreciación" :value="fmt(result.depreciation)" />
           <Row label="Subtotal" :value="fmt(result.subtotal)" />
           <div class="border-t border-border pt-2 mt-2">
             <Row label="Margen" :value="fmt(result.margin)" />
@@ -138,6 +166,7 @@ const customPrinter = reactive<Printer>({ id: '', brand: '', model: '', watts: 1
 
 const form = reactive({
   grams: 50,
+  wastePct: 5,
   filamentPricePerKg: 400,
   hours: 3,
   kwhPrice: 4.5,
@@ -145,6 +174,9 @@ const form = reactive({
   includeMaintenance: false,
   maintenanceCost: 500,
   maintenanceHours: 1000,
+  includeDepreciation: false,
+  printerCost: 8000,
+  printerLifeHours: 5000,
 })
 
 const filteredPrinters = computed(() => {
@@ -157,12 +189,18 @@ const filteredPrinters = computed(() => {
 
 const result = computed(() => {
   const watts = selectedPrinter.value?.watts ?? 0
-  const filament = (form.grams / 1000) * form.filamentPricePerKg
+  const effectiveGrams = form.grams * (1 + (form.wastePct || 0) / 100)
+  const filament = (effectiveGrams / 1000) * form.filamentPricePerKg
   const electricity = form.hours * (watts / 1000) * form.kwhPrice
-  const maintenance = form.includeMaintenance ? (form.hours / form.maintenanceHours) * form.maintenanceCost : 0
-  const subtotal = filament + electricity + maintenance
+  const maintenance = form.includeMaintenance && form.maintenanceHours > 0
+    ? (form.hours / form.maintenanceHours) * form.maintenanceCost
+    : 0
+  const depreciation = form.includeDepreciation && form.printerLifeHours > 0
+    ? (form.hours / form.printerLifeHours) * form.printerCost
+    : 0
+  const subtotal = filament + electricity + maintenance + depreciation
   const margin = subtotal * (form.marginPct / 100)
-  return { filament, electricity, maintenance, subtotal, margin, total: subtotal + margin }
+  return { filament, electricity, maintenance, depreciation, subtotal, margin, total: subtotal + margin }
 })
 
 function selectPrinter(p: Printer) {
