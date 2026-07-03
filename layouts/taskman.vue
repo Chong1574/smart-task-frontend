@@ -98,6 +98,7 @@ import {
   Car,
   Target,
   Activity,
+  Printer,
   LogOut,
   Bell,
   Search,
@@ -125,6 +126,7 @@ const nav = [
   { name: 'Hábitos', path: '/taskman/habits', icon: Activity },
   { name: 'Wallet', path: '/taskman/wallet', icon: TrendingUp },
   { name: 'Garage', path: '/taskman/garage', icon: Car },
+  { name: '3D', path: '/taskman/impresion-3d', icon: Printer },
 ]
 
 const handleLogoutEvent = () => {
