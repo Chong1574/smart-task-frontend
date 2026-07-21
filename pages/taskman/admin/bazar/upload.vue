@@ -59,7 +59,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue';
+import { ref, reactive, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '~/stores/auth';
 import api from '~/utils/api';
@@ -104,14 +104,17 @@ async function onImageChange(e: Event) {
   if (!f) return;
   image.file = f;
   errorMsg.value = '';
+  const uploader = useR2Upload();
+  const stop = watch(() => uploader.progress.value, (v) => { image.progress = v; });
   try {
-    const uploader = useR2Upload();
     const res = await uploader.upload(f, 'image');
     image.key = res.key;
     image.token = res.token;
     image.progress = 100;
   } catch (e: any) {
     errorMsg.value = `Imagen: ${e.message || e}`;
+  } finally {
+    stop();
   }
 }
 
@@ -120,14 +123,17 @@ async function onFileChange(e: Event) {
   if (!f) return;
   file.file = f;
   errorMsg.value = '';
+  const uploader = useR2Upload();
+  const stop = watch(() => uploader.progress.value, (v) => { file.progress = v; });
   try {
-    const uploader = useR2Upload();
     const res = await uploader.upload(f, 'file');
     file.key = res.key;
     file.token = res.token;
     file.progress = 100;
   } catch (e: any) {
     errorMsg.value = `Archivo: ${e.message || e}`;
+  } finally {
+    stop();
   }
 }
 
