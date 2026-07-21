@@ -20,7 +20,11 @@
       </div>
 
       <!-- Galería de Productos -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div v-if="error" class="text-center text-destructive py-8">{{ error }}</div>
+      <div v-else-if="products.length === 0" class="text-center text-muted-foreground py-8">
+        No hay productos disponibles todavía.
+      </div>
+      <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
 
         <div v-for="product in products" :key="product.id" class="group flex flex-col bg-card rounded-2xl overflow-hidden border border-border/60 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-300">
           <div class="aspect-square bg-secondary/50 overflow-hidden relative">
@@ -39,17 +43,26 @@
               <div class="flex items-center justify-between">
                 <span class="font-sans font-medium text-foreground">{{ product.price }}</span>
               </div>
-              <a
-                v-if="product.fileUrl"
-                :href="`${apiBase}/products/${product.id}/download`"
-                class="inline-flex items-center gap-1 text-xs text-primary hover:underline"
-                target="_blank"
-              >
-                Descargar
-                <span v-if="product.fileSizeBytes" class="text-muted-foreground">
-                  ({{ formatSize(product.fileSizeBytes) }})
-                </span>
-              </a>
+              <div class="flex items-center justify-between">
+                <a
+                  v-if="product.fileUrl"
+                  :href="`${apiBase}/products/${product.id}/download`"
+                  class="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                  target="_blank"
+                >
+                  Descargar
+                  <span v-if="product.fileSizeBytes" class="text-muted-foreground">
+                    ({{ formatSize(product.fileSizeBytes) }})
+                  </span>
+                </a>
+                <button
+                  type="button"
+                  class="rounded-md p-2 hover:bg-accent"
+                  aria-label="Agregar al carrito"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -61,8 +74,23 @@
 </template>
 
 <script setup lang="ts">
+interface Product {
+  id: number;
+  title: string;
+  description: string;
+  price: number | string;
+  origin?: string;
+  fileUrl?: string | null;
+  fileSizeBytes?: number | null;
+  source?: string;
+  licenseType?: string;
+  licenseAttribution?: string;
+  imageUrl?: string;
+}
+
 const apiBase = import.meta.env.VITE_API_URL || 'https://taskapi.shongyi.com/api';
-const products = ref<any[]>([]);
+const products = ref<Product[]>([]);
+const error = ref<string | null>(null);
 
 function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -105,11 +133,11 @@ const categorias = [
 onMounted(async () => {
   try {
     const response = await fetch(`${apiBase}/products`);
-    if (response.ok) {
-      products.value = await response.json();
-    }
-  } catch (error) {
-    console.error('Error fetching products:', error);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    products.value = await response.json();
+  } catch (e: any) {
+    error.value = 'No se pudieron cargar los productos. Intenta recargar la página.';
+    console.error('Error fetching products:', e);
   }
 });
 </script>
