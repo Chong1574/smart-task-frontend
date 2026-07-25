@@ -48,7 +48,7 @@
             <p class="text-muted-foreground text-sm mb-4 line-clamp-2">{{ product.description }}</p>
             <div class="mt-auto space-y-3">
               <div class="flex items-center justify-between">
-                <span class="font-sans font-medium text-foreground">{{ product.price }}</span>
+                <span class="font-sans font-medium text-foreground">{{ formatPrice(product.price) }}</span>
               </div>
               <div class="flex items-center justify-between">
                 <a
@@ -93,6 +93,8 @@ interface Product {
   licenseType?: string;
   licenseAttribution?: string;
   imageUrl?: string;
+  isPublic?: boolean;
+  category?: string;
 }
 
 const apiBase = import.meta.env.VITE_API_URL || 'https://taskapi.shongyi.com/api';
@@ -103,6 +105,12 @@ function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function formatPrice(price: number | string | null | undefined): string {
+  const n = typeof price === 'number' ? price : parseFloat(String(price ?? 0));
+  if (isNaN(n) || n === 0) return 'Gratis';
+  return `$${n.toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} MXN`;
 }
 
 useSeoMeta({
