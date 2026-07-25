@@ -48,6 +48,16 @@
         </div>
       </div>
 
+      <label class="flex items-start gap-2 text-sm cursor-pointer select-none">
+        <input v-model="isPublic" type="checkbox" class="mt-1" />
+        <span>
+          <span class="font-medium">Archivo público</span>
+          <span class="block text-xs text-muted-foreground">
+            Si está marcado, cualquiera con el link puede descargar el archivo. Desmárcalo si quieres que solo se genere un link firmado temporal al hacer click en Descargar.
+          </span>
+        </span>
+      </label>
+
       <p v-if="errorMsg" class="text-sm text-destructive">{{ errorMsg }}</p>
 
       <button type="submit" :disabled="!canSubmit || submitting"
@@ -82,6 +92,7 @@ const title = ref('');
 const description = ref('');
 const price = ref(0);
 const category = ref('Impresión 3D');
+const isPublic = ref(true);
 
 const image = reactive({
   file: null as File | null,
@@ -151,6 +162,7 @@ async function submit() {
       description: description.value,
       price: price.value,
       category: category.value,
+      isPublic: isPublic.value,
       imageKey: image.key,
       imageToken: image.token,
       fileKey: file.key,
