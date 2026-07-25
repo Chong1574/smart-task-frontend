@@ -28,7 +28,14 @@
 
         <div v-for="product in products" :key="product.id" class="group flex flex-col bg-card rounded-2xl overflow-hidden border border-border/60 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-300">
           <div class="aspect-square bg-secondary/50 overflow-hidden relative">
-            <div class="absolute inset-0 flex items-center justify-center text-muted-foreground/30 font-serif italic">
+            <img
+              v-if="product.imageUrl"
+              :src="product.imageUrl"
+              :alt="product.title"
+              loading="lazy"
+              class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            />
+            <div v-else class="absolute inset-0 flex items-center justify-center text-muted-foreground/30 font-serif italic">
               [ Imagen del Producto ]
             </div>
             <!-- Etiqueta de Origen -->
