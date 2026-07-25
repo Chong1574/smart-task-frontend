@@ -20,71 +20,49 @@
       </div>
 
       <!-- Galería de Productos -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-        
-        <!-- Producto Ejemplo 1 -->
-        <div class="group flex flex-col bg-card rounded-2xl overflow-hidden border border-border/60 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-300">
+      <div v-if="error" class="text-center text-destructive py-8">{{ error }}</div>
+      <div v-else-if="products.length === 0" class="text-center text-muted-foreground py-8">
+        No hay productos disponibles todavía.
+      </div>
+      <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+
+        <div v-for="product in products" :key="product.id" class="group flex flex-col bg-card rounded-2xl overflow-hidden border border-border/60 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-300">
           <div class="aspect-square bg-secondary/50 overflow-hidden relative">
             <div class="absolute inset-0 flex items-center justify-center text-muted-foreground/30 font-serif italic">
               [ Imagen del Producto ]
             </div>
             <!-- Etiqueta de Origen -->
             <div class="absolute top-4 left-4 bg-background/80 backdrop-blur-sm px-3 py-1 text-xs font-semibold rounded-full border border-border/50 text-foreground">
-              Crafted in 3D
+              {{ product.origin || 'Crafted' }}
             </div>
           </div>
           <div class="p-6 flex flex-col flex-grow">
-            <h3 class="font-serif text-xl font-semibold mb-2 group-hover:text-primary transition-colors">Soporte Geométrico para Auriculares</h3>
-            <p class="text-muted-foreground text-sm mb-4 line-clamp-2">Un diseño minimalista y robusto para mantener tu espacio de trabajo ordenado.</p>
-            <div class="mt-auto flex items-center justify-between">
-              <span class="font-sans font-medium text-foreground">$450 MXN</span>
-              <button class="text-primary hover:text-primary/80 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Producto Ejemplo 2 (Lifestyle/Cuero sugerido) -->
-        <div class="group flex flex-col bg-card rounded-2xl overflow-hidden border border-border/60 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-300">
-          <div class="aspect-square bg-secondary/50 overflow-hidden relative">
-            <div class="absolute inset-0 flex items-center justify-center text-muted-foreground/30 font-serif italic">
-              [ Imagen del Producto ]
-            </div>
-            <div class="absolute top-4 left-4 bg-background/80 backdrop-blur-sm px-3 py-1 text-xs font-semibold rounded-full border border-border/50 text-foreground">
-              Handcrafted
-            </div>
-          </div>
-          <div class="p-6 flex flex-col flex-grow">
-            <h3 class="font-serif text-xl font-semibold mb-2 group-hover:text-primary transition-colors">Billetera de Ruta</h3>
-            <p class="text-muted-foreground text-sm mb-4 line-clamp-2">Pieza rústica y pulida, diseñada para la durabilidad. Descubre el arte detrás de los detalles.</p>
-            <div class="mt-auto flex items-center justify-between">
-              <span class="font-sans font-medium text-foreground">$850 MXN</span>
-              <button class="text-primary hover:text-primary/80 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Producto Ejemplo 3 -->
-        <div class="group flex flex-col bg-card rounded-2xl overflow-hidden border border-border/60 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-300">
-          <div class="aspect-square bg-secondary/50 overflow-hidden relative">
-            <div class="absolute inset-0 flex items-center justify-center text-muted-foreground/30 font-serif italic">
-              [ Imagen del Producto ]
-            </div>
-            <div class="absolute top-4 left-4 bg-background/80 backdrop-blur-sm px-3 py-1 text-xs font-semibold rounded-full border border-border/50 text-foreground">
-              Tech
-            </div>
-          </div>
-          <div class="p-6 flex flex-col flex-grow">
-            <h3 class="font-serif text-xl font-semibold mb-2 group-hover:text-primary transition-colors">Módulo de Control ESP32</h3>
-            <p class="text-muted-foreground text-sm mb-4 line-clamp-2">El cerebro perfecto para tu próximo proyecto de automatización en casa o en el taller.</p>
-            <div class="mt-auto flex items-center justify-between">
-              <span class="font-sans font-medium text-foreground">$220 MXN</span>
-              <button class="text-primary hover:text-primary/80 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
-              </button>
+            <h3 class="font-serif text-xl font-semibold mb-2 group-hover:text-primary transition-colors">{{ product.title }}</h3>
+            <p class="text-muted-foreground text-sm mb-4 line-clamp-2">{{ product.description }}</p>
+            <div class="mt-auto space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="font-sans font-medium text-foreground">{{ product.price }}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <a
+                  v-if="product.fileUrl"
+                  :href="`${apiBase}/products/${product.id}/download`"
+                  class="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                  target="_blank"
+                >
+                  Descargar
+                  <span v-if="product.fileSizeBytes" class="text-muted-foreground">
+                    ({{ formatSize(product.fileSizeBytes) }})
+                  </span>
+                </a>
+                <button
+                  type="button"
+                  class="rounded-md p-2 hover:bg-accent"
+                  aria-label="Agregar al carrito"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -95,7 +73,31 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
+interface Product {
+  id: number;
+  title: string;
+  description: string;
+  price: number | string;
+  origin?: string;
+  fileUrl?: string | null;
+  fileSizeBytes?: number | null;
+  source?: string;
+  licenseType?: string;
+  licenseAttribution?: string;
+  imageUrl?: string;
+}
+
+const apiBase = import.meta.env.VITE_API_URL || 'https://taskapi.shongyi.com/api';
+const products = ref<Product[]>([]);
+const error = ref<string | null>(null);
+
+function formatSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 useSeoMeta({
   title: 'El Bazar — Productos en impresión 3D y accesorios',
   description: 'Galería de creaciones físicas: piezas en impresión 3D, accesorios de estilo de vida y electrónica diseñada con detalle.',
@@ -126,4 +128,16 @@ const categorias = [
   'Estilo de Vida y Equipamiento',
   'Electrónica'
 ];
+
+// Fetch products from API
+onMounted(async () => {
+  try {
+    const response = await fetch(`${apiBase}/products`);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    products.value = await response.json();
+  } catch (e: any) {
+    error.value = 'No se pudieron cargar los productos. Intenta recargar la página.';
+    console.error('Error fetching products:', e);
+  }
+});
 </script>
