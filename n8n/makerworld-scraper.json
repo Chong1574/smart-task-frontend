@@ -151,14 +151,9 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.TASKMAN_API_URL }}/api/products/sync",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            { "name": "Authorization", "value": "=Bearer {{ $env.SYNC_SECRET }}" },
-            { "name": "Content-Type", "value": "application/json" }
-          ]
-        },
+        "url": "http://host.docker.internal:3000/api/products/sync",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ products: $json.products }) }}",
@@ -171,7 +166,8 @@
       "name": "POST /api/products/sync",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1660, 300]
+      "position": [1660, 300],
+      "notes": "Auth: en n8n selecciona credencial Header Auth (Authorization: Bearer <SYNC_SECRET>). El import no vincula credenciales, hay que seleccionarla despues de importar."
     }
   ],
   "connections": {
