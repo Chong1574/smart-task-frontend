@@ -104,14 +104,12 @@
     },
     {
       "parameters": {
-        "aggregate": "aggregateAllItemData",
-        "destinationFieldName": "products",
-        "options": {}
+        "jsCode": "return [{ json: { products: items.map(i => i.json) } }];"
       },
       "id": "aggregate",
       "name": "Wrap as { products: [...] }",
-      "type": "n8n-nodes-base.itemLists",
-      "typeVersion": 3,
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [1340, 300],
       "notes": "Backend espera un POST con array completo, no un POST por item."
     },
