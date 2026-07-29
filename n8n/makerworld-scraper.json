@@ -104,13 +104,48 @@
     },
     {
       "parameters": {
-        "jsCode": "return [{ json: { products: items.map(i => i.json) } }];"
+        "url": "=https://makerworld.com/api/v1/design-service/design/{{ $json.externalId }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "User-Agent", "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36" },
+            { "name": "Accept", "value": "application/json, text/plain, */*" },
+            { "name": "Accept-Language", "value": "es-ES,es;q=0.9,en;q=0.8" },
+            { "name": "Referer", "value": "https://makerworld.com/es/search/models" }
+          ]
+        },
+        "options": {
+          "timeout": 20000,
+          "response": { "response": { "responseFormat": "json" } },
+          "batching": { "batch": { "batchSize": 5, "batchInterval": 500 } }
+        }
+      },
+      "id": "http-detail",
+      "name": "MakerWorld: fetch detail",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1230, 300],
+      "notes": "Un request por producto para obtener weight (g) y prediction (s) del primer plate. Batch 5 con 500ms de intervalo para no gatillar rate-limit."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Calcula precio usando la formula de PrintCost3DCalculator.\n// Fuente: components/PrintCost3DCalculator.vue defaults: filament $400/kg, waste 5%, kwh $4.5, watts fallback 100W.\n// Margen 300% por decision del owner (2026-07-28).\nconst FILAMENT_PRICE_PER_KG = 400;\nconst WASTE_PCT = 5;\nconst KWH_PRICE = 4.5;\nconst WATTS = 100;\nconst MARGIN_PCT = 300;\n\nreturn items.map(({ json }) => {\n  // json aqui es la respuesta del detail (item enriquecido con lo que traia antes).\n  // n8n merge: los datos de Normalize NO estan aqui; hay que sacar del detail mismo lo minimo o pasar por otro camino.\n  const plate = json?.instances?.[0]?.extention?.modelInfo?.plates?.[0];\n  const grams = Number(plate?.weight) || 0;\n  const seconds = Number(plate?.prediction) || 0;\n  const hours = seconds / 3600;\n\n  let price = null;\n  if (grams > 0 && hours > 0) {\n    const effectiveGrams = grams * (1 + WASTE_PCT / 100);\n    const filament = (effectiveGrams / 1000) * FILAMENT_PRICE_PER_KG;\n    const electricity = hours * (WATTS / 1000) * KWH_PRICE;\n    const subtotal = filament + electricity;\n    price = Math.round(subtotal * (1 + MARGIN_PCT / 100));\n  }\n\n  return { json: { detail: json, computed: { grams, hours, price } } };\n});"
+      },
+      "id": "price-compute",
+      "name": "Compute price",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1340, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Combina lo normalizado (paso 'Drop unknown licenses') con el precio calculado.\n// n8n pairing: cada item aqui corresponde 1:1 con el output de Drop (misma posicion),\n// entonces usamos $('Drop unknown licenses').all() para recuperar el shape /sync.\nconst normalized = $('Drop unknown licenses').all();\nconst products = items.map((item, i) => {\n  const n = normalized[i]?.json || {};\n  const price = item?.json?.computed?.price;\n  return { ...n, price: price ?? null };\n});\nreturn [{ json: { products } }];"
       },
       "id": "aggregate",
       "name": "Wrap as { products: [...] }",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1340, 300],
+      "position": [1450, 300],
       "notes": "Backend espera un POST con array completo, no un POST por item."
     },
     {
@@ -136,7 +171,7 @@
       "name": "POST /api/products/sync",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1560, 300]
+      "position": [1660, 300]
     }
   ],
   "connections": {
@@ -144,7 +179,9 @@
     "MakerWorld: search designs": { "main": [[{ "node": "Split designs", "type": "main", "index": 0 }]] },
     "Split designs": { "main": [[{ "node": "Normalize to /sync shape", "type": "main", "index": 0 }]] },
     "Normalize to /sync shape": { "main": [[{ "node": "Drop unknown licenses", "type": "main", "index": 0 }]] },
-    "Drop unknown licenses": { "main": [[{ "node": "Wrap as { products: [...] }", "type": "main", "index": 0 }]] },
+    "Drop unknown licenses": { "main": [[{ "node": "MakerWorld: fetch detail", "type": "main", "index": 0 }]] },
+    "MakerWorld: fetch detail": { "main": [[{ "node": "Compute price", "type": "main", "index": 0 }]] },
+    "Compute price": { "main": [[{ "node": "Wrap as { products: [...] }", "type": "main", "index": 0 }]] },
     "Wrap as { products: [...] }": { "main": [[{ "node": "POST /api/products/sync", "type": "main", "index": 0 }]] }
   },
   "settings": { "executionOrder": "v1" },
