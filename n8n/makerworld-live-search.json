@@ -28,13 +28,48 @@
     },
     {
       "parameters": {
-        "jsCode": "// Fetch a MakerWorld con keyword. Retorna items {json: hit}.\nconst q = items[0].json.q;\nconst headers = {\n  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',\n  'Accept': 'application/json, text/plain, */*',\n  'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',\n  'Referer': 'https://makerworld.com/es/search/models',\n  'Origin': 'https://makerworld.com',\n};\nconst url = `https://makerworld.com/api/v1/search-service/select/design2?orderBy=score&designType=0&isFromSearchList=false&limit=20&offset=0&keyword=${encodeURIComponent(q)}`;\nconst r = await fetch(url, { headers });\nif (!r.ok) return [];\nconst j = await r.json();\nreturn (j.hits || []).map(hit => ({ json: hit }));"
+        "url": "https://makerworld.com/api/v1/search-service/select/design2",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "orderBy", "value": "score" },
+            { "name": "designType", "value": "0" },
+            { "name": "isFromSearchList", "value": "false" },
+            { "name": "limit", "value": "20" },
+            { "name": "offset", "value": "0" },
+            { "name": "keyword", "value": "={{ $json.q }}" }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "User-Agent", "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36" },
+            { "name": "Accept", "value": "application/json, text/plain, */*" },
+            { "name": "Accept-Language", "value": "es-ES,es;q=0.9,en;q=0.8" },
+            { "name": "Referer", "value": "https://makerworld.com/es/search/models" },
+            { "name": "Origin", "value": "https://makerworld.com" }
+          ]
+        },
+        "options": {
+          "timeout": 20000,
+          "response": { "response": { "responseFormat": "json" } }
+        }
       },
-      "id": "search",
+      "id": "http-search",
       "name": "MakerWorld: search keyword",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "return (items[0]?.json?.hits || []).map(hit => ({ json: hit }));"
+      },
+      "id": "flatten-live",
+      "name": "Flatten hits",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [640, 300]
+      "position": [780, 300]
     },
     {
       "parameters": {
@@ -44,7 +79,7 @@
       "name": "Normalize + drop unknown",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [860, 300]
+      "position": [920, 300]
     },
     {
       "parameters": {
@@ -92,7 +127,8 @@
   "connections": {
     "Webhook":                    { "main": [[{ "node": "Auth check",              "type": "main", "index": 0 }]] },
     "Auth check":                 { "main": [[{ "node": "MakerWorld: search keyword", "type": "main", "index": 0 }]] },
-    "MakerWorld: search keyword": { "main": [[{ "node": "Normalize + drop unknown", "type": "main", "index": 0 }]] },
+    "MakerWorld: search keyword": { "main": [[{ "node": "Flatten hits",              "type": "main", "index": 0 }]] },
+    "Flatten hits":               { "main": [[{ "node": "Normalize + drop unknown", "type": "main", "index": 0 }]] },
     "Normalize + drop unknown":   { "main": [[{ "node": "Wrap",                    "type": "main", "index": 0 }]] },
     "Wrap":                       { "main": [[{ "node": "POST /api/products/sync", "type": "main", "index": 0 }]] },
     "POST /api/products/sync":    { "main": [[{ "node": "Respond to Webhook",      "type": "main", "index": 0 }]] }

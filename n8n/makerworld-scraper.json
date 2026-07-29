@@ -11,13 +11,57 @@
     },
     {
       "parameters": {
-        "jsCode": "// Fetch 3 offsets en paralelo → aplana → emite 1 item por hit.\nconst OFFSETS = [0, 40, 80];\nconst headers = {\n  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',\n  'Accept': 'application/json, text/plain, */*',\n  'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',\n  'Referer': 'https://makerworld.com/es/search/models',\n  'Origin': 'https://makerworld.com',\n};\nconst base = 'https://makerworld.com/api/v1/search-service/select/design2?orderBy=score&designType=0&isFromSearchList=false&limit=40';\nconst results = await Promise.all(OFFSETS.map(async off => {\n  try {\n    const r = await fetch(`${base}&offset=${off}`, { headers });\n    if (!r.ok) return [];\n    const j = await r.json();\n    return j.hits || [];\n  } catch { return []; }\n}));\nreturn results.flat().map(hit => ({ json: hit }));"
+        "jsCode": "// Emite 3 items, uno por offset. El HTTP node siguiente hara 1 request por item.\nreturn [0, 40, 80].map(offset => ({ json: { offset } }));"
       },
-      "id": "fetch-multi",
-      "name": "Fetch 3 offsets",
+      "id": "offsets",
+      "name": "Emit offsets",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [460, 300]
+      "position": [340, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://makerworld.com/api/v1/search-service/select/design2",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "orderBy", "value": "score" },
+            { "name": "designType", "value": "0" },
+            { "name": "isFromSearchList", "value": "false" },
+            { "name": "limit", "value": "40" },
+            { "name": "offset", "value": "={{ $json.offset }}" }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "User-Agent", "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36" },
+            { "name": "Accept", "value": "application/json, text/plain, */*" },
+            { "name": "Accept-Language", "value": "es-ES,es;q=0.9,en;q=0.8" },
+            { "name": "Referer", "value": "https://makerworld.com/es/search/models" },
+            { "name": "Origin", "value": "https://makerworld.com" }
+          ]
+        },
+        "options": {
+          "timeout": 30000,
+          "response": { "response": { "responseFormat": "json" } }
+        }
+      },
+      "id": "http-search",
+      "name": "MakerWorld: search",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Aplana los hits de los 3 responses en items individuales.\nreturn items.flatMap(it => (it.json?.hits || []).map(hit => ({ json: hit })));"
+      },
+      "id": "flatten",
+      "name": "Flatten hits",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 300]
     },
     {
       "parameters": {
@@ -27,7 +71,7 @@
       "name": "Normalize + sanitize",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [680, 300]
+      "position": [820, 300]
     },
     {
       "parameters": {
@@ -45,7 +89,7 @@
       "name": "Drop unknown licenses",
       "type": "n8n-nodes-base.filter",
       "typeVersion": 2,
-      "position": [900, 300]
+      "position": [980, 300]
     },
     {
       "parameters": {
@@ -115,8 +159,10 @@
     }
   ],
   "connections": {
-    "Cron 03:00 daily":         { "main": [[{ "node": "Fetch 3 offsets",             "type": "main", "index": 0 }]] },
-    "Fetch 3 offsets":          { "main": [[{ "node": "Normalize + sanitize",        "type": "main", "index": 0 }]] },
+    "Cron 03:00 daily":         { "main": [[{ "node": "Emit offsets",                "type": "main", "index": 0 }]] },
+    "Emit offsets":             { "main": [[{ "node": "MakerWorld: search",          "type": "main", "index": 0 }]] },
+    "MakerWorld: search":       { "main": [[{ "node": "Flatten hits",                "type": "main", "index": 0 }]] },
+    "Flatten hits":             { "main": [[{ "node": "Normalize + sanitize",        "type": "main", "index": 0 }]] },
     "Normalize + sanitize":     { "main": [[{ "node": "Drop unknown licenses",       "type": "main", "index": 0 }]] },
     "Drop unknown licenses":    { "main": [[{ "node": "MakerWorld: fetch detail",    "type": "main", "index": 0 }]] },
     "MakerWorld: fetch detail": { "main": [[{ "node": "Compute price + variants",    "type": "main", "index": 0 }]] },
