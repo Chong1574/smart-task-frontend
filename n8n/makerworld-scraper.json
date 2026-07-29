@@ -20,14 +20,25 @@
     },
     {
       "parameters": {
-        "url": "https://makerworld.com/api/v1/design-service/designs",
+        "url": "https://makerworld.com/api/v1/search-service/select/design2",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
+            { "name": "orderBy", "value": "score" },
+            { "name": "designType", "value": "0" },
+            { "name": "isFromSearchList", "value": "false" },
             { "name": "limit", "value": "40" },
-            { "name": "offset", "value": "0" },
-            { "name": "sort", "value": "hot" },
-            { "name": "license", "value": "CC-BY,CC-BY-SA,CC0,commercial" }
+            { "name": "offset", "value": "0" }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "User-Agent", "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36" },
+            { "name": "Accept", "value": "application/json, text/plain, */*" },
+            { "name": "Accept-Language", "value": "es-ES,es;q=0.9,en;q=0.8" },
+            { "name": "Referer", "value": "https://makerworld.com/es/search/models" },
+            { "name": "Origin", "value": "https://makerworld.com" }
           ]
         },
         "options": {
@@ -36,11 +47,11 @@
         }
       },
       "id": "http-list",
-      "name": "MakerWorld: list hot designs",
+      "name": "MakerWorld: search designs",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [460, 300],
-      "notes": "Endpoint y nombres de query params se validan al primer run; ajustar si MakerWorld responde 400."
+      "notes": "Endpoint interno del frontend de MakerWorld. Cloudflare bloquea sin User-Agent de navegador."
     },
     {
       "parameters": {
@@ -55,7 +66,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Normaliza un design de MakerWorld al shape que /api/products/sync espera.\n// Si MakerWorld cambia nombres de campos, ajustar aquí (un solo lugar).\nconst LICENSE_MAP = {\n  'CC BY': 'CC-BY',\n  'CC BY-SA': 'CC-BY-SA',\n  'CC BY-NC': 'CC-BY-NC',\n  'CC0': 'CC0',\n  'Standard Digital File License': 'commercial',\n};\n\nreturn items.map(({ json: d }) => {\n  const rawLicense = d.license || d.licenseType || '';\n  const licenseType = LICENSE_MAP[rawLicense] || 'unknown';\n  const author = d.designCreator?.name || d.author?.name || 'Unknown';\n  const externalId = String(d.id ?? d.designId ?? '');\n  const slug = d.slug || externalId;\n  return {\n    json: {\n      externalId,\n      source: 'MAKERWORLD',\n      sourceUrl: `https://makerworld.com/en/models/${slug}`,\n      title: d.title || d.name || 'Untitled',\n      description: (d.description || '').slice(0, 2000),\n      imageUrl: d.cover || d.coverImage || d.image,\n      licenseType,\n      licenseAttribution: `${author} — via MakerWorld`,\n      category: d.category || d.categoryName || null,\n      trendScore: d.hotScore ?? d.likeCount ?? 0,\n      price: null,\n      stock: null,\n      provider: 'LOCAL',\n    },\n  };\n});"
+        "jsCode": "// Normaliza un design de MakerWorld al shape que /api/products/sync espera.\n// MakerWorld usa keys 'BY', 'BY-SA', 'BY-NC-SA' (sin prefijo 'CC ') y 'Standard Digital File License' para comercial.\nconst LICENSE_MAP = {\n  'BY': 'CC-BY',\n  'BY-SA': 'CC-BY-SA',\n  'BY-NC': 'CC-BY-NC',\n  'BY-NC-SA': 'CC-BY-NC',\n  'BY-ND': 'CC-BY',\n  'BY-NC-ND': 'CC-BY-NC',\n  'CC0': 'CC0',\n  'Standard Digital File License': 'commercial',\n};\n\nreturn items.map(({ json: d }) => {\n  const rawLicense = (d.license || '').trim();\n  const licenseType = LICENSE_MAP[rawLicense] || 'unknown';\n  const author = d.designCreator?.name || 'Unknown';\n  const externalId = String(d.id ?? '');\n  const slug = d.slug || externalId;\n  return {\n    json: {\n      externalId,\n      source: 'MAKERWORLD',\n      sourceUrl: `https://makerworld.com/en/models/${slug}`,\n      title: d.titleTranslated || d.title || 'Untitled',\n      description: '',\n      imageUrl: d.cover || d.coverPortrait || d.coverLandscape || null,\n      licenseType,\n      licenseAttribution: `${author} — via MakerWorld`,\n      category: (Array.isArray(d.tags) && d.tags[0]) || null,\n      trendScore: Math.round(d.hotScore ?? d.likeCount ?? 0),\n      price: null,\n      stock: null,\n      provider: 'LOCAL',\n    },\n  };\n});"
       },
       "id": "normalize",
       "name": "Normalize to /sync shape",
@@ -131,8 +142,8 @@
     }
   ],
   "connections": {
-    "Cron 03:00 daily": { "main": [[{ "node": "MakerWorld: list hot designs", "type": "main", "index": 0 }]] },
-    "MakerWorld: list hot designs": { "main": [[{ "node": "Split designs", "type": "main", "index": 0 }]] },
+    "Cron 03:00 daily": { "main": [[{ "node": "MakerWorld: search designs", "type": "main", "index": 0 }]] },
+    "MakerWorld: search designs": { "main": [[{ "node": "Split designs", "type": "main", "index": 0 }]] },
     "Split designs": { "main": [[{ "node": "Normalize to /sync shape", "type": "main", "index": 0 }]] },
     "Normalize to /sync shape": { "main": [[{ "node": "Drop unknown licenses", "type": "main", "index": 0 }]] },
     "Drop unknown licenses": { "main": [[{ "node": "Wrap as { products: [...] }", "type": "main", "index": 0 }]] },
