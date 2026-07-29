@@ -1,0 +1,102 @@
+{
+  "name": "Bazar - Live Search",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "bazar-live-search",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 300],
+      "notes": "URL de producción: https://n8n.shongyi.com/webhook/bazar-live-search"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Valida Authorization: Bearer <SYNC_SECRET>. Sale con { q } o throw.\nconst auth = $input.first().json.headers?.authorization || '';\nconst secret = $env.SYNC_SECRET || '';\nif (!secret) throw new Error('SYNC_SECRET not configured');\nif (!auth.startsWith('Bearer ') || auth.slice(7) !== secret) {\n  throw new Error('Unauthorized');\n}\nconst q = (($input.first().json.body || {}).q || '').toString().trim().slice(0, 100);\nif (!q) throw new Error('Missing q');\nreturn [{ json: { q } }];"
+      },
+      "id": "auth",
+      "name": "Auth check",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [420, 300],
+      "notes": "$env.SYNC_SECRET aquí es aceptable — validación runtime del container, no se serializa al JSON exportado."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Fetch a MakerWorld con keyword. Retorna items {json: hit}.\nconst q = items[0].json.q;\nconst headers = {\n  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',\n  'Accept': 'application/json, text/plain, */*',\n  'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',\n  'Referer': 'https://makerworld.com/es/search/models',\n  'Origin': 'https://makerworld.com',\n};\nconst url = `https://makerworld.com/api/v1/search-service/select/design2?orderBy=score&designType=0&isFromSearchList=false&limit=20&offset=0&keyword=${encodeURIComponent(q)}`;\nconst r = await fetch(url, { headers });\nif (!r.ok) return [];\nconst j = await r.json();\nreturn (j.hits || []).map(hit => ({ json: hit }));"
+      },
+      "id": "search",
+      "name": "MakerWorld: search keyword",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normaliza (mismo Code que el scraper diario, sin detail-fetch → sin variantes/precio).\nconst LICENSE_MAP = {\n  'BY': 'CC-BY', 'BY-SA': 'CC-BY-SA', 'BY-NC': 'CC-BY-NC', 'BY-NC-SA': 'CC-BY-NC',\n  'BY-ND': 'CC-BY', 'BY-NC-ND': 'CC-BY-NC', 'CC0': 'CC0',\n  'Standard Digital File License': 'commercial',\n};\nconst PATTERNS = [\n  /\\|?\\s*(no |sin )?(ams|supports?|soportes?)\\b/gi,\n  /\\|?\\s*easy\\s*(to\\s*)?print(ing)?\\b/gi,\n  /\\|?\\s*no\\s*supports?\\b/gi,\n  /\\|?\\s*免支撑\\S*/g,\n  /\\|?\\s*多色一盘\\S*/g,\n  /\\|?\\s*参数优化\\S*/g,\n  /\\|?\\s*模型优化\\S*/g,\n  /\\|?\\s*\\d+\\.?\\d*mm\\s*layer\\b.*$/i,\n  /\\|?\\s*\\d+\\s*walls?\\b.*$/i,\n  /\\|?\\s*\\d+%\\s*infill\\b.*$/i,\n];\nfunction cleanTitle(t) {\n  if (!t) return 'Sin título';\n  let out = String(t);\n  for (const p of PATTERNS) out = out.replace(p, '');\n  out = out.replace(/\\s*[|·—–-]\\s*$/g, '').replace(/\\s{2,}/g, ' ').trim();\n  return out.length >= 3 ? out : 'Sin título';\n}\nreturn items.map(({ json: d }) => {\n  const rawLicense = (d.license || '').trim();\n  const licenseType = LICENSE_MAP[rawLicense] || 'unknown';\n  if (licenseType === 'unknown') return null;\n  const author = d.designCreator?.name || 'Unknown';\n  const externalId = String(d.id ?? '');\n  if (!externalId) return null;\n  const slug = d.slug || externalId;\n  return {\n    json: {\n      externalId,\n      source: 'MAKERWORLD',\n      sourceUrl: `https://makerworld.com/en/models/${slug}`,\n      title: cleanTitle(d.titleTranslated || d.title),\n      description: '',\n      imageUrl: d.cover || d.coverPortrait || null,\n      licenseType,\n      licenseAttribution: `${author} — via MakerWorld`,\n      category: (Array.isArray(d.tags) && d.tags[0]) || null,\n      tags: Array.isArray(d.tags) ? d.tags.slice(0, 15) : [],\n      trendScore: Math.round(d.hotScore ?? d.likeCount ?? 0),\n      provider: 'LOCAL',\n    },\n  };\n}).filter(Boolean);"
+      },
+      "id": "normalize",
+      "name": "Normalize + drop unknown",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [860, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { products: items.map(i => i.json), liveHits: items.length } }];"
+      },
+      "id": "wrap",
+      "name": "Wrap",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1080, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:3000/api/products/sync",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ products: $json.products }) }}",
+        "options": {
+          "timeout": 30000,
+          "response": { "response": { "responseFormat": "json" } }
+        }
+      },
+      "id": "post-sync",
+      "name": "POST /api/products/sync",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1300, 300],
+      "notes": "Auth: seleccionar credencial 'Taskman Sync' post-import."
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { liveHits: $('Wrap').first().json.liveHits } }}"
+      },
+      "id": "respond",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1520, 300]
+    }
+  ],
+  "connections": {
+    "Webhook":                    { "main": [[{ "node": "Auth check",              "type": "main", "index": 0 }]] },
+    "Auth check":                 { "main": [[{ "node": "MakerWorld: search keyword", "type": "main", "index": 0 }]] },
+    "MakerWorld: search keyword": { "main": [[{ "node": "Normalize + drop unknown", "type": "main", "index": 0 }]] },
+    "Normalize + drop unknown":   { "main": [[{ "node": "Wrap",                    "type": "main", "index": 0 }]] },
+    "Wrap":                       { "main": [[{ "node": "POST /api/products/sync", "type": "main", "index": 0 }]] },
+    "POST /api/products/sync":    { "main": [[{ "node": "Respond to Webhook",      "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "active": false
+}
