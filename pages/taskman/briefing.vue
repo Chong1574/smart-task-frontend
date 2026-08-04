@@ -61,7 +61,7 @@
           </h3>
           
           <ul class="space-y-3">
-            <NuxtLink v-for="task in priorityTasks.slice(0, 4)" :key="task.id" to="/taskman/activities" class="block p-3 rounded-xl bg-background/50 border border-border/50 hover:border-primary/50 transition-colors">
+            <NuxtLink v-for="task in priorityTasks.slice(0, 7)" :key="task.id" to="/taskman/activities" class="block p-3 rounded-xl bg-background/50 border border-border/50 hover:border-primary/50 transition-colors">
               <h4 class="font-medium text-sm leading-tight">{{ task.title }}</h4>
             </NuxtLink>
           </ul>
@@ -218,9 +218,10 @@ const updateTime = () => {
 
 // Tareas del día actual
 const todayTasks = computed(() => {
-  const todayStr = new Date().toISOString().split('T')[0];
+  const now = new Date();
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   return taskStore.tasks
-    .filter(t => (t.status === 'pending' || t.status === 'in_progress') && (t.deadline?.startsWith(todayStr) || t.auto_distribute))
+    .filter(t => (t.status === 'pending' || t.status === 'in_progress') && t.deadline?.startsWith(todayStr))
     .sort((a, b) => {
       if (a.priority === 'high' && b.priority !== 'high') return -1;
       if (b.priority === 'high' && a.priority !== 'high') return 1;
