@@ -37,7 +37,7 @@
           <p>No tienes tareas agendadas para hoy.</p>
         </div>
         <ul v-else class="space-y-3">
-          <li v-for="task in todayTasks.slice(0, 5)" :key="task.id" class="p-4 rounded-2xl bg-background/50 border border-border/50">
+          <NuxtLink v-for="task in todayTasks.slice(0, 5)" :key="task.id" to="/taskman/activities" class="block p-4 rounded-2xl bg-background/50 border border-border/50 hover:border-primary/50 transition-colors">
             <h4 class="font-medium leading-tight text-primary">{{ task.title }}</h4>
             <div class="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
               <span v-if="task.duration_minutes">{{ task.duration_minutes }} min</span>
@@ -45,10 +45,10 @@
                 {{ task.priority }}
               </span>
             </div>
-          </li>
-          <li v-if="todayTasks.length > 5" class="text-center text-muted-foreground pt-2 text-sm font-medium">
+          </NuxtLink>
+          <NuxtLink v-if="todayTasks.length > 5" to="/taskman/activities" class="block text-center text-muted-foreground pt-2 text-sm font-medium hover:text-primary transition-colors">
             + {{ todayTasks.length - 5 }} tareas más...
-          </li>
+          </NuxtLink>
         </ul>
       </div>
 
@@ -61,9 +61,9 @@
           </h3>
           
           <ul class="space-y-3">
-            <li v-for="task in priorityTasks.slice(0, 4)" :key="task.id" class="p-3 rounded-xl bg-background/50 border border-border/50">
+            <NuxtLink v-for="task in priorityTasks.slice(0, 4)" :key="task.id" to="/taskman/activities" class="block p-3 rounded-xl bg-background/50 border border-border/50 hover:border-primary/50 transition-colors">
               <h4 class="font-medium text-sm leading-tight">{{ task.title }}</h4>
-            </li>
+            </NuxtLink>
           </ul>
           <div v-if="priorityTasks.length === 0" class="text-muted-foreground text-sm text-center py-4">Todo limpio.</div>
         </div>
@@ -77,9 +77,9 @@
              Sin hábitos activos.
           </div>
           <div v-else class="flex flex-wrap gap-2">
-            <div v-for="habit in activeHabits" :key="habit.id" class="px-4 py-2 rounded-full border border-border/50 bg-background/50 font-medium text-xs">
+            <NuxtLink v-for="habit in activeHabits" :key="habit.id" to="/taskman/habits" class="px-4 py-2 rounded-full border border-border/50 bg-background/50 font-medium text-xs hover:border-primary/50 transition-colors">
               {{ habit.name }}
-            </div>
+            </NuxtLink>
           </div>
         </div>
       </div>
@@ -92,15 +92,28 @@
             Próximos Pagos
           </h3>
           <ul class="space-y-3">
-            <li v-for="payment in upcomingPayments" :key="payment.id" class="flex justify-between items-center p-3 rounded-xl bg-background/50 border border-border/50">
+            <NuxtLink v-for="payment in upcomingPayments" :key="payment.id" to="/taskman/wallet" class="flex justify-between items-center p-3 rounded-xl bg-background/50 border border-border/50 hover:border-primary/50 transition-colors">
               <div>
                 <h4 class="font-medium text-sm">{{ payment.name }}</h4>
                 <p class="text-xs text-muted-foreground">Día {{ payment.paymentDay }}</p>
               </div>
               <span class="font-bold text-sm text-destructive">${{ payment.amount.toFixed(2) }}</span>
-            </li>
+            </NuxtLink>
           </ul>
           <div v-if="upcomingPayments.length === 0" class="text-muted-foreground text-sm text-center py-4">No hay pagos cercanos.</div>
+        </div>
+
+        <div class="bg-card/30 backdrop-blur-xl border border-border/40 rounded-3xl p-6 shadow-2xl">
+          <h3 class="text-2xl font-bold mb-4 flex items-center gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            Proyectos Activos
+          </h3>
+          <ul class="space-y-3">
+            <NuxtLink v-for="project in activeProjects.slice(0, 3)" :key="project.id" to="/taskman/projects" class="block p-3 rounded-xl bg-background/50 border border-border/50 hover:border-primary/50 transition-colors">
+              <h4 class="font-medium text-sm leading-tight">{{ project.name }}</h4>
+            </NuxtLink>
+          </ul>
+          <div v-if="activeProjects.length === 0" class="text-muted-foreground text-sm text-center py-4">Sin proyectos activos.</div>
         </div>
 
         <div class="bg-gradient-to-br from-primary/10 to-orange-500/10 border border-primary/20 rounded-3xl p-6 text-center shadow-lg">
@@ -207,7 +220,7 @@ const updateTime = () => {
 const todayTasks = computed(() => {
   const todayStr = new Date().toISOString().split('T')[0];
   return taskStore.tasks
-    .filter(t => (t.status === 'pending' || t.status === 'in_progress') && t.deadline?.startsWith(todayStr))
+    .filter(t => (t.status === 'pending' || t.status === 'in_progress') && (t.deadline?.startsWith(todayStr) || t.auto_distribute))
     .sort((a, b) => {
       if (a.priority === 'high' && b.priority !== 'high') return -1;
       if (b.priority === 'high' && a.priority !== 'high') return 1;
@@ -218,7 +231,7 @@ const todayTasks = computed(() => {
 // Tareas prioritarias o atrasadas generales
 const priorityTasks = computed(() => {
   return taskStore.tasks
-    .filter(t => (t.status === 'pending' || t.status === 'in_progress'))
+    .filter(t => (t.status === 'pending' || t.status === 'in_progress') && t.priority === 'high')
     .sort((a, b) => {
       if (a.priority === 'high' && b.priority !== 'high') return -1;
       if (b.priority === 'high' && a.priority !== 'high') return 1;
@@ -227,7 +240,12 @@ const priorityTasks = computed(() => {
 })
 
 const activeHabits = computed(() => {
-  return taskStore.habits.filter(h => h.status === 'active')
+  // Use all habits, filtering out archived ones if they exist, but generally show what the store provides
+  return taskStore.habits.filter(h => h.status !== 'archived')
+})
+
+const activeProjects = computed(() => {
+  return taskStore.projects.filter(p => p.status === 'active')
 })
 
 const upcomingPayments = computed(() => {
@@ -252,6 +270,7 @@ onMounted(async () => {
   // Asegurar que toda la información esté cargada
   if (taskStore.tasks.length === 0) taskStore.fetchTasks()
   if (taskStore.habits.length === 0) taskStore.fetchHabits()
+  if (taskStore.projects.length === 0) taskStore.fetchProjects()
   if (financeStore.subscriptions.length === 0) financeStore.fetchSubscriptions()
 })
 
