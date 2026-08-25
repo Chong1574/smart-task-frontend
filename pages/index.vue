@@ -25,9 +25,28 @@
           "Encuentra lo que no sabías que necesitabas."
         </h2>
         
-        <p class="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto mb-10">
+        <p class="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto mb-6">
           Un ecosistema de soluciones. Desde manufactura de alta precisión y desarrollo de productos físicos, hasta ingeniería de software y respaldo patrimonial.
         </p>
+        
+        <div class="bg-card/50 border border-border/50 rounded-2xl p-6 max-w-3xl mx-auto mb-10 backdrop-blur-sm text-left">
+          <h3 class="text-xl font-bold text-primary mb-3 flex items-center gap-2 border-b border-border/50 pb-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="m9 12 2 2 4-4"/></svg>
+            Hogar de Taskman: Tu Sistema de Gestión Personal
+          </h3>
+          <p class="text-muted-foreground text-sm mb-4">
+            Taskman es una suite de productividad integral diseñada para organizar cada aspecto de tu vida en un solo lugar. El propósito de nuestra aplicación incluye:
+          </p>
+          <ul class="text-sm text-muted-foreground space-y-2 mb-4 list-disc pl-5">
+            <li><strong>Gestión de Tiempo:</strong> Sincronización bidireccional con <strong>Google Calendar, Google Tasks y Recordatorios</strong> para unificar tu agenda y pendientes.</li>
+            <li><strong>Proyectos y Hábitos:</strong> Seguimiento diario de metas, construcción de hábitos y organización de proyectos a largo plazo.</li>
+            <li><strong>Finanzas Personales:</strong> Control de patrimonio neto, seguimiento de cuentas, tarjetas, ingresos y gastos.</li>
+            <li><strong>Garage y Vehículos:</strong> Control de rendimiento de combustible, costos de gasolina y registro de odómetros.</li>
+          </ul>
+          <p class="text-sm text-muted-foreground italic">
+            El acceso a las APIs de Google se utiliza exclusivamente para mantener tu planificación diaria sincronizada y accesible desde nuestro panel principal.
+          </p>
+        </div>
 
         <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
           <NuxtLink to="/bazar" class="group relative px-8 py-4 bg-primary text-primary-foreground rounded-full overflow-hidden transition-all hover:shadow-[0_0_30px_rgba(224,122,95,0.4)]">
