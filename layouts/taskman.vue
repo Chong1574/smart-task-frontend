@@ -40,10 +40,16 @@
 
       <!-- User / Actions -->
       <div class="p-4 lg:p-6 flex flex-col gap-2">
-        <NuxtLink v-if="isAdmin" to="/taskman/admin/bazar" class="w-full flex items-center justify-center md:justify-start gap-3 p-3 rounded-xl text-primary hover:bg-primary/10 transition-all" :class="!isSidebarOpen ? 'md:justify-center' : ''">
-          <ShieldAlert class="w-5 h-5 shrink-0" />
-          <span v-show="isSidebarOpen" class="font-medium whitespace-nowrap">Admin</span>
-        </NuxtLink>
+        <div v-if="isAdmin" class="flex flex-col gap-1">
+          <NuxtLink to="/taskman/admin/bazar" class="w-full flex items-center justify-center md:justify-start gap-3 p-3 rounded-xl text-primary hover:bg-primary/10 transition-all" :class="!isSidebarOpen ? 'md:justify-center' : ''">
+            <ShieldAlert class="w-5 h-5 shrink-0" />
+            <span v-show="isSidebarOpen" class="font-medium whitespace-nowrap">Bazar</span>
+          </NuxtLink>
+          <NuxtLink to="/taskman/admin/ttlock" class="w-full flex items-center justify-center md:justify-start gap-3 p-3 rounded-xl text-primary hover:bg-primary/10 transition-all" :class="!isSidebarOpen ? 'md:justify-center' : ''">
+            <Lock class="w-5 h-5 shrink-0" />
+            <span v-show="isSidebarOpen" class="font-medium whitespace-nowrap">Chapa</span>
+          </NuxtLink>
+        </div>
         <button @click="toggleTheme" class="w-full flex items-center justify-center md:justify-start gap-3 p-3 rounded-xl text-muted-foreground hover:bg-secondary transition-all" :class="!isSidebarOpen ? 'md:justify-center' : ''">
           <Moon v-if="colorMode.value === 'dark'" class="w-5 h-5 shrink-0" />
           <Sun v-else class="w-5 h-5 shrink-0" />
@@ -67,6 +73,9 @@
           TaskMan
         </span>
         <div class="flex items-center gap-2">
+          <NuxtLink v-if="isAdmin" to="/taskman/admin/ttlock" class="text-primary hover:text-primary/80 p-2">
+            <Lock class="w-5 h-5" />
+          </NuxtLink>
           <NuxtLink v-if="isAdmin" to="/taskman/admin/bazar" class="text-primary hover:text-primary/80 p-2">
             <ShieldAlert class="w-5 h-5" />
           </NuxtLink>
@@ -116,7 +125,8 @@ import {
   Sun,
   Moon,
   Sunrise,
-  ShieldAlert
+  ShieldAlert,
+  Lock
 } from 'lucide-vue-next'
 import { useAuthStore } from '~/stores/auth'
 
