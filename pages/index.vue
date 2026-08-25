@@ -25,28 +25,9 @@
           "Encuentra lo que no sabías que necesitabas."
         </h2>
         
-        <p class="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto mb-6">
+        <p class="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto mb-10">
           Un ecosistema de soluciones. Desde manufactura de alta precisión y desarrollo de productos físicos, hasta ingeniería de software y respaldo patrimonial.
         </p>
-        
-        <div class="bg-card/50 border border-border/50 rounded-2xl p-6 max-w-3xl mx-auto mb-10 backdrop-blur-sm text-left">
-          <h3 class="text-xl font-bold text-primary mb-3 flex items-center gap-2 border-b border-border/50 pb-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="m9 12 2 2 4-4"/></svg>
-            Hogar de Taskman: Tu Sistema de Gestión Personal
-          </h3>
-          <p class="text-muted-foreground text-sm mb-4">
-            Taskman es una suite de productividad integral diseñada para organizar cada aspecto de tu vida en un solo lugar. El propósito de nuestra aplicación incluye:
-          </p>
-          <ul class="text-sm text-muted-foreground space-y-2 mb-4 list-disc pl-5">
-            <li><strong>Gestión de Tiempo:</strong> Sincronización bidireccional con <strong>Google Calendar, Google Tasks y Recordatorios</strong> para unificar tu agenda y pendientes.</li>
-            <li><strong>Proyectos y Hábitos:</strong> Seguimiento diario de metas, construcción de hábitos y organización de proyectos a largo plazo.</li>
-            <li><strong>Finanzas Personales:</strong> Control de patrimonio neto, seguimiento de cuentas, tarjetas, ingresos y gastos.</li>
-            <li><strong>Garage y Vehículos:</strong> Control de rendimiento de combustible, costos de gasolina y registro de odómetros.</li>
-          </ul>
-          <p class="text-sm text-muted-foreground italic">
-            El acceso a las APIs de Google se utiliza exclusivamente para mantener tu planificación diaria sincronizada y accesible desde nuestro panel principal.
-          </p>
-        </div>
 
         <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
           <NuxtLink to="/bazar" class="group relative px-8 py-4 bg-primary text-primary-foreground rounded-full overflow-hidden transition-all hover:shadow-[0_0_30px_rgba(224,122,95,0.4)]">
@@ -103,18 +84,33 @@
             </div>
           </div>
 
-          <!-- Taskman -->
-          <div class="group relative overflow-hidden rounded-3xl bg-card border border-border/50 p-8 transition-all hover:shadow-xl hover:-translate-y-1">
+          <!-- Taskman (Ocupa 2 columnas) -->
+          <div class="group relative lg:col-span-2 overflow-hidden rounded-3xl bg-card border border-border/50 p-8 transition-all hover:shadow-xl hover:-translate-y-1">
             <div class="relative z-10 flex flex-col h-full justify-between">
-              <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-6">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check-square"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="m9 12 2 2 4-4"/></svg>
+              <div class="flex items-center gap-4 mb-6">
+                <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check-square"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="m9 12 2 2 4-4"/></svg>
+                </div>
+                <h4 class="font-serif text-2xl font-bold">Taskman: Sistema de Gestión Personal</h4>
               </div>
-              <div>
-                <h4 class="font-serif text-xl font-bold mb-2">Taskman</h4>
-                <p class="text-muted-foreground text-sm">
-                  Gestión inteligente de tareas sincronizada con tu Calendario, Tareas y Recordatorios de Google para un control unificado y seguro de tu tiempo.
-                </p>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
+                <div>
+                  <strong class="text-foreground">Gestión de Tiempo:</strong> Sincronización con Google Calendar, Tasks y Recordatorios.
+                </div>
+                <div>
+                  <strong class="text-foreground">Proyectos y Hábitos:</strong> Seguimiento diario de metas y rutinas.
+                </div>
+                <div>
+                  <strong class="text-foreground">Finanzas Personales:</strong> Control de cuentas, tarjetas y patrimonio.
+                </div>
+                <div>
+                  <strong class="text-foreground">Garage y Vehículos:</strong> Rendimiento de combustible y odómetros.
+                </div>
               </div>
+              <p class="text-xs text-muted-foreground italic mt-4 pt-4 border-t border-border/50">
+                * El acceso a las APIs de Google se utiliza exclusivamente para mantener tu planificación sincronizada desde el panel principal.
+              </p>
             </div>
           </div>
 
