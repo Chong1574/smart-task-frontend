@@ -1,10 +1,6 @@
 import { defineStore } from 'pinia';
 import api from '../utils/api';
-
-const baseEnvUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
-const API_URL = baseEnvUrl
-    ? (baseEnvUrl.endsWith('/api') ? baseEnvUrl : `${baseEnvUrl}/api`)
-    : (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? 'https://taskapi.shongyi.com/api' : 'http://localhost:3000/api');
+import { API_URL } from '../utils/apiUrl';
 
 const TOKEN_COOKIE_OPTS = { maxAge: 60 * 60 * 24 * 7, path: '/', sameSite: 'lax' as const };
 

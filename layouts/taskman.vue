@@ -137,7 +137,8 @@ const colorMode = useColorMode()
 const isSidebarOpen = ref(true)
 
 const isAdmin = computed(() => {
-  const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || 'bernalchong@gmail.com'
+  // Default alineado con ADMIN_EMAIL del backend. Override con VITE_ADMIN_EMAIL en Pages env.
+  const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || 'elricondebrandy@gmail.com'
   return authStore.user?.email === adminEmail
 })
 

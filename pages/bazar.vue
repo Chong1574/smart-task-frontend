@@ -130,7 +130,7 @@ interface Product {
   descriptionHtml?: string | null;
 }
 
-const apiBase = import.meta.env.VITE_API_URL || 'https://taskapi.shongyi.com/api';
+import { API_URL as apiBase } from '~/utils/apiUrl';
 const products = ref<Product[]>([]);
 const error = ref<string | null>(null);
 const query = ref('');

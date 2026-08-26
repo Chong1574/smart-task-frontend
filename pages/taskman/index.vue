@@ -60,7 +60,7 @@
         </div>
 
         <!-- Finanzas -->
-        <div @click="$router.push('/taskman/finance')" class="bg-card p-6 rounded-2xl border border-border/40 shadow-sm hover:shadow-md transition-shadow group cursor-pointer">
+        <div @click="$router.push('/taskman/wallet')" class="bg-card p-6 rounded-2xl border border-border/40 shadow-sm hover:shadow-md transition-shadow group cursor-pointer">
           <div class="flex items-center justify-between mb-4">
             <h3 class="font-medium text-muted-foreground">Patrimonio Neto</h3>
             <div class="w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -173,7 +173,7 @@
               No tienes cuentas financieras registradas.
             </div>
             <div v-else class="space-y-3 max-h-64 overflow-y-auto pr-2">
-              <div v-for="acc in financeStore.accounts" :key="acc.id" class="flex justify-between items-center p-3 rounded-xl bg-secondary/20 hover:bg-secondary/40 transition-colors cursor-pointer" @click="$router.push('/taskman/finance')">
+              <div v-for="acc in financeStore.accounts" :key="acc.id" class="flex justify-between items-center p-3 rounded-xl bg-secondary/20 hover:bg-secondary/40 transition-colors cursor-pointer" @click="$router.push('/taskman/wallet')">
                 <div class="flex items-center gap-3">
                   <div class="w-8 h-8 rounded-full bg-gradient-to-br flex-shrink-0" :class="acc.color"></div>
                   <div>
@@ -186,7 +186,7 @@
                 </span>
               </div>
             </div>
-            <button @click="$router.push('/taskman/finance')" class="w-full mt-4 py-2 text-sm text-primary font-medium hover:underline">
+            <button @click="$router.push('/taskman/wallet')" class="w-full mt-4 py-2 text-sm text-primary font-medium hover:underline">
               Ver todas las finanzas &rarr;
             </button>
           </div>

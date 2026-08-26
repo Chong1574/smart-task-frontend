@@ -84,6 +84,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '~/stores/auth'
+import { API_URL } from '~/utils/apiUrl'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -106,17 +107,11 @@ const handleLogin = async () => {
   }
 }
 
-const resolveApiUrl = () => {
-  const baseEnvUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL
-  if (baseEnvUrl) return baseEnvUrl.endsWith('/api') ? baseEnvUrl : `${baseEnvUrl}/api`
-  return window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : 'https://taskapi.shongyi.com/api'
-}
-
 const handleGoogleLogin = () => {
-  window.location.href = `${resolveApiUrl()}/auth/google`
+  window.location.href = `${API_URL}/auth/google`
 }
 
 const handleMicrosoftLogin = () => {
-  window.location.href = `${resolveApiUrl()}/auth/microsoft`
+  window.location.href = `${API_URL}/auth/microsoft`
 }
 </script>

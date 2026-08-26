@@ -1,9 +1,6 @@
 import axios from 'axios';
-
-const baseEnvUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
-const API_URL = baseEnvUrl
-    ? (baseEnvUrl.endsWith('/api') ? baseEnvUrl : `${baseEnvUrl}/api`)
-    : (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? 'https://taskapi.shongyi.com/api' : 'http://localhost:3000/api');
+import { toast } from 'vue-sonner';
+import { API_URL } from './apiUrl';
 
 const api = axios.create({
     baseURL: API_URL,
@@ -38,7 +35,10 @@ api.interceptors.request.use((config) => {
 }, (error) => Promise.reject(error));
 
 api.interceptors.response.use((response) => response, (error) => {
-    if (error.response?.status === 401) {
+    const status = error.response?.status;
+    const data = error.response?.data;
+
+    if (status === 401) {
         const url = error.config?.url || '';
         const isOAuthEndpoint = url.includes('/oauth/');
         const hasToken = !!readToken();
@@ -53,6 +53,17 @@ api.interceptors.response.use((response) => response, (error) => {
             }
         }
     }
+
+    // Plan-limit del backend (planlimits.middleware): 403 con code=PLAN_LIMIT_REACHED.
+    // Mostrar toast explicando qué recurso y cuál es el tope, para que el usuario no
+    // vea un fail silencioso del formulario.
+    if (status === 403 && data?.code === 'PLAN_LIMIT_REACHED') {
+        toast.error(data.message || `Límite del plan free alcanzado (${data.resource})`, {
+            description: `Máx ${data.limit} ${data.resource}. Cambia a premium para más.`,
+            duration: 6000
+        });
+    }
+
     return Promise.reject(error);
 });
 

@@ -155,7 +155,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [1780, 300],
-      "notes": "Auth: seleccionar credencial Header Auth 'Taskman Sync' post-import."
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "notes": "Auth: seleccionar credencial Header Auth 'Taskman Sync' post-import. Ver README debug si D1 queda vacío."
     }
   ],
   "connections": {
