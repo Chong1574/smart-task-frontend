@@ -18,8 +18,11 @@
           <div class="aspect-square bg-secondary/50 rounded-2xl overflow-hidden mb-3">
             <img
               v-if="currentImage"
-              :src="currentImage"
+              :src="imgProxy(currentImage, { width: 900 })"
               :alt="product.title"
+              decoding="async"
+              width="900"
+              height="900"
               class="w-full h-full object-cover"
             />
           </div>
@@ -32,7 +35,7 @@
               class="aspect-square rounded-lg overflow-hidden border-2 transition-colors"
               :class="imgIdx === i ? 'border-primary' : 'border-transparent'"
             >
-              <img :src="img" class="w-full h-full object-cover" />
+              <img :src="imgProxy(img, { width: 160 })" loading="lazy" decoding="async" class="w-full h-full object-cover" />
             </button>
           </div>
         </div>
@@ -80,6 +83,7 @@
 </template>
 
 <script setup lang="ts">
+import { imgProxy } from '~/utils/imgProxy';
 interface Variant { name: string; grams: number; hours: number; price: number }
 interface Product {
   title: string;

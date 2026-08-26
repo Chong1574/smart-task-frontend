@@ -52,9 +52,14 @@
           <div class="aspect-square bg-secondary/50 overflow-hidden relative">
             <img
               v-if="product.imageUrl"
-              :src="product.imageUrl"
+              :src="imgProxy(product.imageUrl, { width: 600 })"
+              :srcset="imgProxySrcSet(product.imageUrl, 600)"
+              sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
               :alt="product.title"
               loading="lazy"
+              decoding="async"
+              width="600"
+              height="600"
               class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
             <div v-else class="absolute inset-0 flex items-center justify-center text-muted-foreground/30 font-serif italic">
@@ -107,6 +112,15 @@
 
 <script setup lang="ts">
 import BazarProductDetail from '~/components/BazarProductDetail.vue';
+import { imgProxy, imgProxySrcSet } from '~/utils/imgProxy';
+
+// Preconnect al proxy de imágenes — evita el hit de handshake TLS en el primer render.
+useHead({
+  link: [
+    { rel: 'preconnect', href: 'https://wsrv.nl', crossorigin: '' },
+    { rel: 'dns-prefetch', href: 'https://wsrv.nl' }
+  ]
+});
 
 interface Variant { name: string; grams: number; hours: number; price: number }
 interface Product {
