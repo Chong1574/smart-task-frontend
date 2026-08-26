@@ -140,28 +140,38 @@ export const useAuthStore = defineStore('auth', {
             }
         },
 
-        handleAuthCallback(token: string) {
+        async handleAuthCallback(token: string) {
             this.token = token;
             const tokenCookie = useCookie('token', TOKEN_COOKIE_OPTS);
             tokenCookie.value = token;
-            
+
+            // Bootstrap desde el JWT (id + email); role/plan se hidratan con /auth/me.
             try {
                 const payload = JSON.parse(atob(token.split('.')[1]));
-                this.user = {
-                    id: payload.userId,
-                    email: payload.email,
-                    name: null
-                };
+                this.user = { id: payload.userId, email: payload.email, name: null };
             } catch (e) {
                 console.error("Failed to decode token", e);
             }
 
             if (typeof window !== 'undefined') {
                 localStorage.setItem('token', token);
-                if (this.user) {
+                localStorage.setItem('oauth_login', 'true');
+            }
+
+            // Fetch role/plan reales. Si falla no rompe el login — el user queda sin admin gate.
+            try {
+                const res = await api.get('/auth/me');
+                if (res.data?.success && res.data.data) {
+                    this.user = { ...this.user, ...res.data.data };
+                    if (typeof window !== 'undefined') {
+                        localStorage.setItem('user', JSON.stringify(this.user));
+                    }
+                }
+            } catch (err) {
+                console.error('handleAuthCallback: /auth/me falló', err);
+                if (typeof window !== 'undefined' && this.user) {
                     localStorage.setItem('user', JSON.stringify(this.user));
                 }
-                localStorage.setItem('oauth_login', 'true');
             }
         }
     }

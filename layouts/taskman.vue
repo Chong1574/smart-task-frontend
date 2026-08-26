@@ -49,6 +49,10 @@
             <Lock class="w-5 h-5 shrink-0" />
             <span v-show="isSidebarOpen" class="font-medium whitespace-nowrap">Chapa</span>
           </NuxtLink>
+          <NuxtLink to="/taskman/admin/audit" class="w-full flex items-center justify-center md:justify-start gap-3 p-3 rounded-xl text-primary hover:bg-primary/10 transition-all" :class="!isSidebarOpen ? 'md:justify-center' : ''">
+            <ShieldAlert class="w-5 h-5 shrink-0" />
+            <span v-show="isSidebarOpen" class="font-medium whitespace-nowrap">Auditoría</span>
+          </NuxtLink>
         </div>
         <button @click="toggleTheme" class="w-full flex items-center justify-center md:justify-start gap-3 p-3 rounded-xl text-muted-foreground hover:bg-secondary transition-all" :class="!isSidebarOpen ? 'md:justify-center' : ''">
           <Moon v-if="colorMode.value === 'dark'" class="w-5 h-5 shrink-0" />
@@ -136,11 +140,7 @@ const colorMode = useColorMode()
 
 const isSidebarOpen = ref(true)
 
-const isAdmin = computed(() => {
-  // Default alineado con ADMIN_EMAIL del backend. Override con VITE_ADMIN_EMAIL en Pages env.
-  const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || 'elricondebrandy@gmail.com'
-  return authStore.user?.email === adminEmail
-})
+const isAdmin = computed(() => authStore.user?.role === 'admin')
 
 const toggleTheme = () => {
   colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'
