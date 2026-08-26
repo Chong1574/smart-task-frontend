@@ -22,13 +22,21 @@ const router = useRouter();
 const authStore = useAuthStore();
 
 onMounted(() => {
-  // Extraer el token de la URL (el backend hace un redirect con el token JWT)
-  const token = route.query.token as string;
+  // Token viene en el fragment (#token=...) para que no quede en Referer ni access logs.
+  // Fallback a query por si sobrevive algún redirect viejo cacheado en el navegador.
+  let token = '';
+  if (typeof window !== 'undefined' && window.location.hash) {
+    const hashParams = new URLSearchParams(window.location.hash.slice(1));
+    token = hashParams.get('token') || '';
+  }
+  if (!token) token = (route.query.token as string) || '';
+
   if (token) {
     authStore.handleAuthCallback(token);
+    // Limpia el fragment para que no se guarde en historial.
+    if (typeof window !== 'undefined') history.replaceState(null, '', window.location.pathname);
     router.push('/taskman');
   } else {
-    // Si no hay token en la URL, redirigir al login
     router.push('/login');
   }
 });
