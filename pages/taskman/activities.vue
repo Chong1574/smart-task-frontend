@@ -12,6 +12,10 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
             Conectar Calendario
           </button>
+          <button v-else @click="showCalendarPanel = !showCalendarPanel" :class="['px-4 py-2 rounded-xl font-medium shadow-lg hover:scale-105 transition-transform flex items-center gap-2', showCalendarPanel ? 'bg-blue-600 text-white shadow-blue-600/20' : 'bg-blue-500/10 text-blue-500 shadow-blue-500/10 border border-blue-500/30']">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+            Calendario
+          </button>
           <button @click="showRoulette = true" class="bg-orange-500 text-white px-4 py-2 rounded-xl font-medium shadow-lg shadow-orange-500/20 hover:scale-105 transition-transform flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
             Jugar Ruleta
@@ -65,6 +69,31 @@
               <button @click="showRoulette = false; selectedTask = null" class="mt-6 bg-secondary text-secondary-foreground px-6 py-2 rounded-full text-sm hover:bg-secondary/80">
                 Aceptar mi destino
               </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel de Google Calendar -->
+      <div v-if="showCalendarPanel && authStore.hasCalendarConnected" class="bg-card border border-border/40 rounded-3xl p-6 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-serif font-bold flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+            Mis Eventos
+          </h2>
+          <button @click="fetchCalendarEvents" class="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+            Refrescar
+          </button>
+        </div>
+        <div v-if="calendarLoading" class="text-center text-muted-foreground py-4">Cargando eventos...</div>
+        <div v-else-if="calendarEvents.length === 0" class="text-center text-muted-foreground py-4">No hay eventos pr&oacute;ximos.</div>
+        <div v-else class="space-y-2 max-h-64 overflow-y-auto">
+          <div v-for="event in calendarEvents" :key="event.id" class="flex items-center gap-3 p-3 rounded-xl bg-secondary/30 border border-border/30">
+            <div class="w-1 h-10 rounded-full bg-blue-500 flex-shrink-0"></div>
+            <div class="flex-1 min-w-0">
+              <p class="font-medium text-sm truncate">{{ event.summary || 'Sin titulo' }}</p>
+              <p class="text-xs text-muted-foreground">{{ formatEventTime(event) }}</p>
             </div>
           </div>
         </div>
@@ -216,7 +245,7 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'taskman' })
 
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { toast } from 'vue-sonner'
 import { useTaskStore, type Task } from '~/stores/tasks'
 import { useAuthStore } from '~/stores/auth'
@@ -389,6 +418,40 @@ const getPriorityClass = (priority?: string) => {
   if (priority === 'medium') return 'bg-orange-500/10 text-orange-500'
   return 'bg-blue-500/10 text-blue-500'
 }
+
+const showCalendarPanel = ref(false)
+const calendarEvents = ref<any[]>([])
+const calendarLoading = ref(false)
+
+const fetchCalendarEvents = async () => {
+  calendarLoading.value = true
+  try {
+    const res = await api.get('/oauth/google/events')
+    if (res.data?.success) {
+      calendarEvents.value = res.data.data || []
+    }
+  } catch (err: any) {
+    const code = err.response?.data?.code
+    if (code === 'CALENDAR_NOT_CONNECTED') {
+      toast.error('Reconecta tu Google Calendar para ver eventos.')
+    } else {
+      toast.error('Error al cargar eventos del calendario')
+    }
+  } finally {
+    calendarLoading.value = false
+  }
+}
+
+const formatEventTime = (event: any) => {
+  const start = event.start?.dateTime || event.start?.date
+  if (!start) return ''
+  const d = new Date(start)
+  return d.toLocaleDateString('es-MX', { weekday: 'short', month: 'short', day: 'numeric' }) + ' ' + d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
+}
+
+watch(showCalendarPanel, (val) => {
+  if (val && calendarEvents.value.length === 0) fetchCalendarEvents()
+})
 
 const connectGoogleCalendar = async () => {
   try {

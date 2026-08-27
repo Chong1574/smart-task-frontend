@@ -273,8 +273,8 @@ export const useTaskStore = defineStore('tasks', {
             this.loading = true;
             try {
                 const res = await api.post('/roulette/spin', { projectIds });
-                if (res.data.success) {
-                    return res.data.data.task; // Retorna la tarea seleccionada
+                if (res.data.success && res.data.data) {
+                    return res.data.data;
                 }
                 return null;
             } catch (err) {
