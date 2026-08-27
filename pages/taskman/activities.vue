@@ -204,7 +204,7 @@
                 <option value="low">Baja</option>
               </select>
             </div>
-            <div v-if="newTask.auto_distribute">
+            <div>
               <label class="block text-sm font-medium mb-1">Fecha Límite (Opcional)</label>
               <input v-model="newTask.deadline" type="date" class="w-full rounded-xl border border-border bg-background px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none transition-shadow" />
             </div>
