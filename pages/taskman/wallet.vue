@@ -468,13 +468,17 @@
             <div>
               <label class="block text-sm font-medium mb-1">Cuenta {{ ['transfer', 'credit_payment', 'loan_payment'].includes(txForm.type) ? 'Origen' : '' }}</label>
               <select v-model.number="txForm.accountId" required class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
-                <option v-for="acc in financeStore.accounts" :key="acc.id" :value="acc.id">{{ acc.name }}</option>
+                <option v-for="acc in filteredSourceAccounts" :key="acc.id" :value="acc.id">{{ acc.name }} — {{ formatCurrency(Number(acc.balance)) }}</option>
               </select>
+              <p v-if="selectedSourceAccount" class="text-xs mt-1 font-mono" :class="Number(selectedSourceAccount.balance) < 0 ? 'text-red-500' : 'text-muted-foreground'">
+                Saldo disponible: <span class="font-bold">{{ formatCurrency(Number(selectedSourceAccount.balance)) }}</span>
+                <span v-if="txForm.amount > 0 && !['credit_payment', 'loan_payment'].includes(txForm.type)"> → después: {{ formatCurrency(Number(selectedSourceAccount.balance) - txForm.amount) }}</span>
+              </p>
             </div>
             <div v-if="['transfer', 'credit_payment', 'loan_payment'].includes(txForm.type)">
               <label class="block text-sm font-medium mb-1">{{ txForm.type === 'transfer' ? 'Cuenta Destino' : 'Cuenta a Pagar' }}</label>
               <select v-model.number="txForm.destinationAccountId" required class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
-                <option v-for="acc in filteredDestinationAccounts" :key="acc.id" :value="acc.id">{{ acc.name }}</option>
+                <option v-for="acc in filteredDestinationAccounts" :key="acc.id" :value="acc.id">{{ acc.name }} — {{ formatCurrency(Number(acc.balance)) }}</option>
               </select>
             </div>
             <div v-if="!['transfer', 'credit_payment', 'loan_payment'].includes(txForm.type)">
@@ -920,7 +924,7 @@ const filteredDestinationAccounts = computed(() => {
   return financeStore.accounts.filter(acc => {
     // No permitir transferencia a la misma cuenta de origen
     if (acc.id === txForm.accountId) return false;
-    
+
     if (txForm.type === 'credit_payment') {
       return acc.type === 'card' && acc.sub_type === 'credit';
     }
@@ -930,6 +934,22 @@ const filteredDestinationAccounts = computed(() => {
     // Para 'transfer', mostrar todas las demás
     return true;
   })
+})
+
+const selectedSourceAccount = computed(() =>
+  financeStore.accounts.find(a => a.id === txForm.accountId) || null
+)
+
+// Fuente de fondos: en pagos de tarjeta/préstamo debe ser cuenta líquida (débito o efectivo),
+// nunca otra tarjeta de crédito o el mismo préstamo.
+const filteredSourceAccounts = computed(() => {
+  if (['credit_payment', 'loan_payment'].includes(txForm.type)) {
+    return financeStore.accounts.filter(acc => acc.type === 'cash' || (acc.type === 'card' && acc.sub_type === 'debit'))
+  }
+  if (txForm.type === 'transfer') {
+    return financeStore.accounts.filter(acc => acc.id !== txForm.destinationAccountId)
+  }
+  return financeStore.accounts
 })
 
 const formatCurrency = (value: number) => {

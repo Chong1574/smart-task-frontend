@@ -65,7 +65,8 @@ export const useTaskStore = defineStore('tasks', {
             try {
                 const res = await api.get('/tasks');
                 if (res.data.success) {
-                    this.tasks = res.data.data;
+                    // ponytail: backend usa camelCase (autoDistribute); alias para que la UI (snake_case) lea el valor real.
+                    this.tasks = res.data.data.map((t: any) => ({ ...t, auto_distribute: t.autoDistribute ?? false }));
                 }
             } catch (err) {
                 console.error("Error fetching tasks:", err);

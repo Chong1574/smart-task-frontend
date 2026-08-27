@@ -148,7 +148,10 @@
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
              </div>
           </div>
-          <div class="col-span-5 font-medium">{{ task.title }}</div>
+          <div class="col-span-5">
+            <div class="font-medium">{{ task.title }}</div>
+            <div v-if="task.description" class="text-xs text-muted-foreground mt-0.5 line-clamp-2 whitespace-pre-line" :title="task.description">{{ task.description }}</div>
+          </div>
           <div class="col-span-3 text-sm text-muted-foreground">{{ getProjectName(task.projectId) || task.category || '-' }}</div>
           <div class="col-span-2">
             <span :class="['px-2 py-1 rounded-full text-xs font-bold', getPriorityClass(task.priority)]">
@@ -359,7 +362,7 @@ const openEditTask = (task: Task) => {
     duration_minutes: task.duration_minutes || 30,
     priority: task.priority || 'medium',
     projectId: task.projectId,
-    auto_distribute: task.auto_distribute ?? true,
+    auto_distribute: task.auto_distribute ?? false,
     status: task.status
   }
   taskHours.value = Math.floor((newTask.value.duration_minutes || 0) / 60)
@@ -382,8 +385,8 @@ const submitTask = async () => {
 
   let ok: boolean;
   if (isEditingTask.value && editingTaskId.value) {
-    const { title, status, category, priority, description, deadline, budget, projectId, goalId } = payload;
-    ok = await taskStore.updateTask(editingTaskId.value, { title, status, category, priority, description, deadline, budget, projectId, goalId });
+    const { title, status, category, priority, description, deadline, budget, projectId, goalId, auto_distribute } = payload;
+    ok = await taskStore.updateTask(editingTaskId.value, { title, status, category, priority, description, deadline, budget, projectId, goalId, auto_distribute });
   } else {
     ok = await taskStore.addTask(payload as Task);
   }
