@@ -861,15 +861,22 @@ const openEditTransaction = (tx: any) => {
   txForm.category = tx.category
   txForm.type = tx.type
   txForm.description = tx.description
-  txForm.date = tx.date ? new Date(tx.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
+  // ponytail: ISO completo, no YYYY-MM-DD; updateTransactionSchema.date rechazaba date-only
+  txForm.date = tx.date ? new Date(tx.date).toISOString() : new Date().toISOString()
   showTransactionModal.value = true
 }
 
 const closeTransactionModal = () => {
   showTransactionModal.value = false
   editingTransactionId.value = null
+  // ponytail: reset completo — dejar type/accountId/destinationAccountId/category del edit anterior filtraba a la próxima "Nueva Transacción"
+  txForm.type = 'expense'
   txForm.amount = 0
+  txForm.accountId = financeStore.accounts[0]?.id ?? null
+  txForm.destinationAccountId = null
+  txForm.category = 'Ocio'
   txForm.description = ''
+  txForm.date = new Date().toISOString()
   txForm.subscriptionId = null
 }
 
@@ -882,7 +889,13 @@ const markAsPaid = (payment: any) => {
   if (payment.sourceType === 'account') {
     txForm.type = payment.type === 'Préstamo' ? 'loan_payment' : 'credit_payment'
     txForm.destinationAccountId = payment.accountId
-    txForm.accountId = financeStore.accounts.find(a => a.type === 'card' && a.sub_type === 'debit')?.id || financeStore.accounts[0]?.id
+    // ponytail: fuente debe ser cuenta con dinero real (débito o cash). Sin fallback a accounts[0] — antes podía debitar una tarjeta de crédito o el mismo préstamo.
+    const source = financeStore.accounts.find(a => (a.type === 'card' && a.sub_type === 'debit') || a.type === 'cash')
+    if (!source) {
+      alert('Necesitas una cuenta de débito o efectivo para registrar el pago.')
+      return
+    }
+    txForm.accountId = source.id
   } else {
     txForm.type = 'expense'
     if (payment.accountId) {

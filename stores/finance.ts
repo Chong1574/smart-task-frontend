@@ -285,12 +285,23 @@ export const useFinanceStore = defineStore('finance', {
             state.accounts.forEach(acc => {
                 const isDebt = acc.type === 'loan' || (acc.type === 'card' && acc.sub_type === 'credit');
                 if (!isDebt || Number(acc.balance) >= 0 || !acc.payment_day) return;
-                
-                let nextDate = new Date(today.getFullYear(), today.getMonth(), acc.payment_day);
-                if (nextDate < today) {
-                    nextDate.setMonth(nextDate.getMonth() + 1);
+                // ponytail: ONCE = pago único; no proyectar recurrencia
+                if (acc.payment_frequency === 'ONCE') return;
+
+                let nextDate: Date;
+                if (acc.payment_frequency === 'WEEKLY') {
+                    // payment_day 1-7 (1=Lun … 7=Dom); mapear a getDay() (0=Dom…6=Sáb)
+                    const targetDow = acc.payment_day === 7 ? 0 : acc.payment_day;
+                    const delta = (targetDow - today.getDay() + 7) % 7 || 7;
+                    nextDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + delta);
+                } else if (acc.payment_frequency === 'BIWEEKLY') {
+                    nextDate = new Date(today.getFullYear(), today.getMonth(), acc.payment_day);
+                    while (nextDate < today) nextDate.setDate(nextDate.getDate() + 14);
+                } else {
+                    nextDate = new Date(today.getFullYear(), today.getMonth(), acc.payment_day);
+                    if (nextDate < today) nextDate.setMonth(nextDate.getMonth() + 1);
                 }
-                
+
                 const daysRemaining = Math.ceil((nextDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
                 
                 // Determinar el monto a pagar (monthly_payment si lo hay, o un estimado del saldo)
@@ -448,21 +459,28 @@ export const useFinanceStore = defineStore('finance', {
 
         async updateAccount(id: number, changes: Partial<Account>) {
             try {
-                const payload: any = { ...changes };
-                if (changes.sub_type !== undefined) payload.subType = changes.sub_type;
-                if (changes.credit_limit !== undefined) payload.creditLimit = changes.credit_limit;
-                if (changes.cutoff_day !== undefined) payload.cutoffDay = changes.cutoff_day;
-                if (changes.payment_day !== undefined) payload.paymentDay = changes.payment_day;
-                if (changes.interest_rate !== undefined) payload.interestRate = changes.interest_rate;
-                if (changes.monthly_payment !== undefined) payload.monthlyPayment = changes.monthly_payment;
-                if (changes.payment_frequency !== undefined) payload.paymentFrequency = changes.payment_frequency;
+                // ponytail: mapeo explícito snake→camel; spread mezclaba ambos y el schema .strict() lo rechazaba
+                const map: Record<string, string> = {
+                    sub_type: 'subType',
+                    credit_limit: 'creditLimit',
+                    cutoff_day: 'cutoffDay',
+                    payment_day: 'paymentDay',
+                    interest_rate: 'interestRate',
+                    monthly_payment: 'monthlyPayment',
+                    payment_frequency: 'paymentFrequency'
+                };
+                const payload: any = {};
+                for (const [k, v] of Object.entries(changes)) {
+                    payload[map[k] ?? k] = v;
+                }
 
                 const res = await api.put(`/finance/accounts/${id}`, payload);
                 if (res.data.success) {
                     await this.fetchAccounts();
                 }
-            } catch (err) {
+            } catch (err: any) {
                 console.error("Error updating account:", err);
+                alert("Error al actualizar cuenta: " + (err.response?.data?.message || err.message || "Error desconocido"));
             }
         },
 
