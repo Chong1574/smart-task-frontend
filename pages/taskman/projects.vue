@@ -146,7 +146,15 @@
               <input v-model="newTask.deadline" type="date" class="w-full rounded-xl border border-border bg-background px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none transition-shadow" />
             </div>
           </div>
-          <div class="grid grid-cols-2 gap-4">
+          <label class="flex items-center gap-3 p-3 border border-border/50 rounded-xl cursor-pointer hover:bg-secondary/20 transition-colors">
+            <input v-model="newTask.auto_distribute" type="checkbox" class="w-5 h-5 rounded text-primary focus:ring-primary" />
+            <div class="flex flex-col">
+              <span class="font-medium text-sm">Distribución Inteligente en Calendario</span>
+              <span class="text-xs text-muted-foreground">Divide la tarea en bloques de trabajo hasta el deadline.</span>
+            </div>
+          </label>
+
+          <div class="grid grid-cols-2 gap-4" v-if="newTask.auto_distribute">
             <div>
               <label class="block text-sm font-medium mb-1">Duración (Horas)</label>
               <input v-model="taskHours" type="number" min="0" class="w-full rounded-xl border border-border bg-background px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none transition-shadow" />
