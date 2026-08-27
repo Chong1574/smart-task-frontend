@@ -238,7 +238,7 @@ const newTask = ref<Partial<Task>>({
   duration_minutes: 30,
   priority: 'medium',
   projectId: undefined,
-  auto_distribute: true,
+  auto_distribute: false,
   status: 'pending'
 })
 
@@ -253,7 +253,7 @@ const openNewTaskForProject = (projectId: number) => {
     duration_minutes: 30,
     priority: 'medium',
     projectId: projectId,
-    auto_distribute: true,
+    auto_distribute: false,
     status: 'pending'
   }
   taskHours.value = 0
