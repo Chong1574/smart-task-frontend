@@ -741,17 +741,12 @@ const openEditAccount = (account: any) => {
 const submitEditAccount = async () => {
   if (editAccountForm.id === null) return
 
-  let editedBalance = editAccountForm.balance;
-  // Auto-convert positive balances to negative for debts
-  if ((editAccountForm.type === 'loan' || (editAccountForm.type === 'card' && editAccountForm.sub_type === 'credit')) && editedBalance > 0) {
-    editedBalance = -editedBalance;
-  }
-
+  // ponytail: sin auto-convert. En edit el signo es intencional (balance > 0 en tarjeta = saldo a favor).
   await financeStore.updateAccount(editAccountForm.id, {
     name: editAccountForm.name,
     type: editAccountForm.type,
     sub_type: editAccountForm.type === 'card' ? editAccountForm.sub_type as any : 'n/a',
-    balance: editedBalance,
+    balance: editAccountForm.balance,
     credit_limit: editAccountForm.credit_limit,
     interest_rate: editAccountForm.interest_rate,
     monthly_payment: editAccountForm.monthly_payment,
