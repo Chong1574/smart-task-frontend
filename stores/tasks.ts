@@ -100,9 +100,12 @@ export const useTaskStore = defineStore('tasks', {
                 const res = await api.put(`/tasks/${id}`, updates);
                 if (res.data.success) {
                     await this.fetchTasks();
+                    return true;
                 }
+                return false;
             } catch (err) {
                 console.error("Error updating task:", err);
+                return false;
             }
         },
 

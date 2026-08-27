@@ -213,6 +213,7 @@
 definePageMeta({ layout: 'taskman' })
 
 import { ref, computed, onMounted } from 'vue'
+import { toast } from 'vue-sonner'
 import { useTaskStore, type Task } from '~/stores/tasks'
 
 const taskStore = useTaskStore()
@@ -315,11 +316,24 @@ const submitTask = async () => {
   newTask.value.duration_minutes = (taskHours.value * 60) + taskMinutes.value;
   if (newTask.value.duration_minutes === 0) newTask.value.duration_minutes = 15;
 
-  if (isEditingTask.value && editingTaskId.value) {
-    await taskStore.updateTask(editingTaskId.value, { ...newTask.value })
-  } else {
-    await taskStore.addTask({ ...newTask.value } as Task)
+  const payload = { ...newTask.value } as any;
+  // Normalizar deadline: '' → null, 'YYYY-MM-DD' → ISO 8601 fin-de-día local
+  if (!payload.deadline) {
+    payload.deadline = null;
+    payload.auto_distribute = false;
+  } else if (!payload.deadline.includes('T')) {
+    payload.deadline = new Date(`${payload.deadline}T23:59:59`).toISOString();
   }
+
+  let ok: boolean;
+  if (isEditingTask.value && editingTaskId.value) {
+    const { title, status, category, priority, description, deadline, budget, projectId, goalId } = payload;
+    ok = await taskStore.updateTask(editingTaskId.value, { title, status, category, priority, description, deadline, budget, projectId, goalId });
+  } else {
+    ok = await taskStore.addTask(payload as Task);
+  }
+  if (!ok) { toast.error('No se pudo guardar la tarea'); return; }
+
   showTaskModal.value = false
   newTask.value = {
     title: '',

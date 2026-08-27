@@ -21,9 +21,7 @@ const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
 
-onMounted(() => {
-  // Token viene en el fragment (#token=...) para que no quede en Referer ni access logs.
-  // Fallback a query por si sobrevive algún redirect viejo cacheado en el navegador.
+onMounted(async () => {
   let token = '';
   if (typeof window !== 'undefined' && window.location.hash) {
     const hashParams = new URLSearchParams(window.location.hash.slice(1));
@@ -32,8 +30,7 @@ onMounted(() => {
   if (!token) token = (route.query.token as string) || '';
 
   if (token) {
-    authStore.handleAuthCallback(token);
-    // Limpia el fragment para que no se guarde en historial.
+    await authStore.handleAuthCallback(token);
     if (typeof window !== 'undefined') history.replaceState(null, '', window.location.pathname);
     router.push('/taskman');
   } else {

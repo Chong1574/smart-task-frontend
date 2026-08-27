@@ -7,12 +7,12 @@ export default defineNuxtRouteMiddleware((to) => {
         to.path.includes('/reset-password')
     ) return;
 
-    const tokenCookie = useCookie('token', { maxAge: 60 * 60 * 24 * 7, path: '/', sameSite: 'lax' });
-    let token = tokenCookie.value || null;
-
-    if (!token && typeof window !== 'undefined') {
+    let token: string | null = null;
+    if (typeof window !== 'undefined') {
         token = localStorage.getItem('token');
-        if (token) tokenCookie.value = token;
+    }
+    if (!token) {
+        try { token = useCookie('token', { maxAge: 60 * 60 * 24 * 7, path: '/', sameSite: 'lax' }).value || null; } catch {}
     }
 
     if (!token) {

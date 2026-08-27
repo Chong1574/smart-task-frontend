@@ -174,6 +174,7 @@
 definePageMeta({ layout: 'taskman' })
 
 import { ref, onMounted } from 'vue'
+import { toast } from 'vue-sonner'
 import { useTaskStore, type Task } from '~/stores/tasks'
 
 const taskStore = useTaskStore()
@@ -264,8 +265,21 @@ const submitTask = async () => {
   newTask.value.duration_minutes = (taskHours.value * 60) + taskMinutes.value;
   if (newTask.value.duration_minutes === 0) newTask.value.duration_minutes = 15;
 
-  await taskStore.addTask({ ...newTask.value } as Task)
-  showTaskModal.value = false
+  const payload = { ...newTask.value } as any;
+  // Normalizar deadline: '' → null, 'YYYY-MM-DD' → ISO 8601 fin-de-día local
+  if (!payload.deadline) {
+    payload.deadline = null;
+    payload.auto_distribute = false;
+  } else if (!payload.deadline.includes('T')) {
+    payload.deadline = new Date(`${payload.deadline}T23:59:59`).toISOString();
+  }
+
+  const ok = await taskStore.addTask(payload as Task);
+  if (ok) {
+    showTaskModal.value = false;
+  } else {
+    toast.error('No se pudo crear la tarea');
+  }
 }
 
 onMounted(() => {

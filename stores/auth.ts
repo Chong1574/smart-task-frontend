@@ -20,14 +20,11 @@ export const useAuthStore = defineStore('auth', {
     actions: {
         init() {
             if (!this.isInitialized) {
-                const tokenCookie = useCookie('token', TOKEN_COOKIE_OPTS);
-                let token = tokenCookie.value || null;
+                let token: string | null = null;
 
+                // localStorage es la fuente de verdad (confiable en SPA y Capacitor)
                 if (typeof window !== 'undefined') {
-                    if (!token) {
-                        token = localStorage.getItem('token');
-                        if (token) tokenCookie.value = token;
-                    }
+                    token = localStorage.getItem('token');
                     const userStr = localStorage.getItem('user');
                     if (userStr && userStr !== 'undefined') {
                         try {
@@ -37,6 +34,12 @@ export const useAuthStore = defineStore('auth', {
                         }
                     }
                 }
+
+                // Fallback a cookie si localStorage no tiene token
+                if (!token) {
+                    try { token = useCookie('token', TOKEN_COOKIE_OPTS).value || null; } catch {}
+                }
+
                 this.token = token;
                 this.isInitialized = true;
             }
@@ -117,33 +120,37 @@ export const useAuthStore = defineStore('auth', {
         setSession(token: string, user: any) {
             this.token = token;
             this.user = user;
-            const tokenCookie = useCookie('token', TOKEN_COOKIE_OPTS);
-            tokenCookie.value = token;
             if (typeof window !== 'undefined') {
                 localStorage.setItem('token', token);
                 localStorage.setItem('user', JSON.stringify(user));
                 localStorage.removeItem('oauth_login');
                 localStorage.removeItem('google_sync_enabled');
             }
+            try { useCookie('token', TOKEN_COOKIE_OPTS).value = token; } catch {}
         },
 
         logout() {
             this.token = null;
             this.user = null;
-            const tokenCookie = useCookie('token', TOKEN_COOKIE_OPTS);
-            tokenCookie.value = null;
             if (typeof window !== 'undefined') {
                 localStorage.removeItem('token');
                 localStorage.removeItem('user');
                 localStorage.removeItem('oauth_login');
                 localStorage.removeItem('google_sync_enabled');
+                document.cookie = 'token=; Path=/; Max-Age=0; SameSite=Lax';
             }
+            try { useCookie('token', TOKEN_COOKIE_OPTS).value = null; } catch {}
         },
 
         async handleAuthCallback(token: string) {
             this.token = token;
-            const tokenCookie = useCookie('token', TOKEN_COOKIE_OPTS);
-            tokenCookie.value = token;
+
+            // localStorage primero (confiable), cookie como respaldo
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('token', token);
+                localStorage.setItem('oauth_login', 'true');
+            }
+            try { useCookie('token', TOKEN_COOKIE_OPTS).value = token; } catch {}
 
             // Bootstrap desde el JWT (id + email); role/plan se hidratan con /auth/me.
             try {
@@ -153,12 +160,8 @@ export const useAuthStore = defineStore('auth', {
                 console.error("Failed to decode token", e);
             }
 
-            if (typeof window !== 'undefined') {
-                localStorage.setItem('token', token);
-                localStorage.setItem('oauth_login', 'true');
-            }
-
             // Fetch role/plan reales. Si falla no rompe el login — el user queda sin admin gate.
+            // Restaurar token si el interceptor 401 lo borró por un glitch transitorio.
             try {
                 const res = await api.get('/auth/me');
                 if (res.data?.success && res.data.data) {
@@ -169,8 +172,10 @@ export const useAuthStore = defineStore('auth', {
                 }
             } catch (err) {
                 console.error('handleAuthCallback: /auth/me falló', err);
-                if (typeof window !== 'undefined' && this.user) {
-                    localStorage.setItem('user', JSON.stringify(this.user));
+                // Re-guardar token — pudo haber sido borrado por el interceptor 401 durante este await
+                if (typeof window !== 'undefined') {
+                    if (!localStorage.getItem('token')) localStorage.setItem('token', token);
+                    if (this.user) localStorage.setItem('user', JSON.stringify(this.user));
                 }
             }
         }

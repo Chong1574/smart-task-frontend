@@ -7,12 +7,13 @@ const api = axios.create({
 });
 
 const readToken = (): string | null => {
+    if (typeof window !== 'undefined') {
+        const ls = localStorage.getItem('token');
+        if (ls) return ls;
+    }
     if (typeof document !== 'undefined') {
         const match = document.cookie.match(/(?:^|;\s*)token=([^;]+)/);
         if (match) return decodeURIComponent(match[1]);
-    }
-    if (typeof window !== 'undefined') {
-        return localStorage.getItem('token');
     }
     return null;
 };
@@ -42,11 +43,19 @@ api.interceptors.response.use((response) => response, (error) => {
         const url = error.config?.url || '';
         const isOAuthEndpoint = url.includes('/oauth/');
         const hasToken = !!readToken();
+        const msg = data?.message || '';
 
         console.error(`[API 401] URL: "${url}" | isOAuth: ${isOAuthEndpoint} | hasToken: ${hasToken}`);
 
-        if (hasToken && !isOAuthEndpoint) {
-            console.warn('[API] Sesión inválida, redirigiendo al login...');
+        // Solo limpiar sesión si el backend confirma que el token de SESIÓN es inválido.
+        // No destruir la sesión por errores transitorios, endpoints OAuth, o missing calendar scope.
+        const code = data?.code || '';
+        const msgLower = msg.toLowerCase();
+        const isTokenRejected = code === 'TOKEN_INVALID'
+            || msgLower.includes('invalid') || msgLower.includes('expired') || msgLower.includes('no token');
+        const isCalendarScope = code === 'CALENDAR_NOT_CONNECTED';
+        if (hasToken && !isOAuthEndpoint && isTokenRejected && !isCalendarScope) {
+            console.warn('[API] Token rechazado por el backend, cerrando sesión...');
             clearAuthArtifacts();
             if (typeof window !== 'undefined') {
                 window.dispatchEvent(new CustomEvent('auth:logout'));
