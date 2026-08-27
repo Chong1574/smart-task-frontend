@@ -15,6 +15,7 @@ export const useAuthStore = defineStore('auth', {
 
     getters: {
         isAuthenticated: (state) => !!state.token,
+        hasCalendarConnected: (state) => !!state.user?.hasCalendarConnected,
     },
 
     actions: {

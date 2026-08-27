@@ -7,7 +7,11 @@
           <h1 class="text-3xl font-serif font-bold">Actividades</h1>
           <p class="text-muted-foreground">Gestiona tus tareas o deja que la Ruleta decida por ti.</p>
         </div>
-        <div class="flex gap-2">
+        <div class="flex gap-2 flex-wrap">
+          <button v-if="!authStore.hasCalendarConnected" @click="connectGoogleCalendar" class="bg-blue-500 text-white px-4 py-2 rounded-xl font-medium shadow-lg shadow-blue-500/20 hover:scale-105 transition-transform flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+            Conectar Calendario
+          </button>
           <button @click="showRoulette = true" class="bg-orange-500 text-white px-4 py-2 rounded-xl font-medium shadow-lg shadow-orange-500/20 hover:scale-105 transition-transform flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
             Jugar Ruleta
@@ -77,7 +81,7 @@
           </div>
           <div class="flex items-center gap-2 mb-2 sm:mb-0">
             <label class="text-sm font-medium text-muted-foreground">Proyecto:</label>
-            <select v-model="filterProjectId" class="text-sm rounded-lg border border-border bg-background px-3 py-1 focus:ring-1 focus:ring-primary focus:outline-none max-w-[150px]">
+            <select v-model="filterProjectId" class="text-sm rounded-xl border border-border/50 bg-background px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none transition-shadow shadow-sm max-w-[180px]">
               <option :value="null">Todos</option>
               <option v-for="p in activeProjects" :key="p.id" :value="p.id">{{ p.name }}</option>
             </select>
@@ -215,12 +219,29 @@ definePageMeta({ layout: 'taskman' })
 import { ref, computed, onMounted } from 'vue'
 import { toast } from 'vue-sonner'
 import { useTaskStore, type Task } from '~/stores/tasks'
+import { useAuthStore } from '~/stores/auth'
+import api from '~/utils/api'
 
 const taskStore = useTaskStore()
+const authStore = useAuthStore()
 
 onMounted(() => {
   taskStore.fetchTasks()
   taskStore.fetchProjects()
+
+  // Manejar resultado del callback de calendario (#calendar=connected|failed)
+  if (typeof window !== 'undefined') {
+    const hash = window.location.hash
+    if (hash.includes('calendar=connected')) {
+      toast.success('Google Calendar conectado correctamente')
+      authStore.user = { ...authStore.user, hasCalendarConnected: true }
+      if (authStore.user) localStorage.setItem('user', JSON.stringify(authStore.user))
+      window.location.hash = ''
+    } else if (hash.includes('calendar=failed')) {
+      toast.error('No se pudo conectar Google Calendar. Intenta de nuevo.')
+      window.location.hash = ''
+    }
+  }
 })
 
 const activeTab = ref('programadas')
@@ -367,6 +388,18 @@ const getPriorityClass = (priority?: string) => {
   if (priority === 'high') return 'bg-red-500/10 text-red-500'
   if (priority === 'medium') return 'bg-orange-500/10 text-orange-500'
   return 'bg-blue-500/10 text-blue-500'
+}
+
+const connectGoogleCalendar = async () => {
+  try {
+    const res = await api.post('/auth/google/calendar-ticket')
+    if (res.data?.success && res.data.ticket) {
+      const baseUrl = api.defaults.baseURL?.replace('/api', '') || ''
+      window.location.href = `${baseUrl}/api/auth/google/calendar?ticket=${res.data.ticket}`
+    }
+  } catch (err) {
+    toast.error('No se pudo iniciar la conexión con Google Calendar')
+  }
 }
 
 const markComplete = async (task: Task) => {
