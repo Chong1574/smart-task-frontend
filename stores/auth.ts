@@ -2,7 +2,8 @@ import { defineStore } from 'pinia';
 import api from '../utils/api';
 import { API_URL } from '../utils/apiUrl';
 
-const TOKEN_COOKIE_OPTS = { maxAge: 60 * 60 * 24 * 7, path: '/', sameSite: 'lax' as const };
+// ponytail: SameSite=Strict + Secure — antes lax/no-secure filtraba en http downgrade / navegaciones cross-site
+const TOKEN_COOKIE_OPTS = { maxAge: 60 * 60 * 24 * 7, path: '/', sameSite: 'strict' as const, secure: true };
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
@@ -138,7 +139,7 @@ export const useAuthStore = defineStore('auth', {
                 localStorage.removeItem('user');
                 localStorage.removeItem('oauth_login');
                 localStorage.removeItem('google_sync_enabled');
-                document.cookie = 'token=; Path=/; Max-Age=0; SameSite=Lax';
+                document.cookie = 'token=; Path=/; Max-Age=0; SameSite=Strict; Secure';
             }
             try { useCookie('token', TOKEN_COOKIE_OPTS).value = null; } catch {}
         },

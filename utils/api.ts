@@ -24,7 +24,7 @@ const clearAuthArtifacts = () => {
     localStorage.removeItem('user');
     localStorage.removeItem('oauth_login');
     localStorage.removeItem('google_sync_enabled');
-    document.cookie = 'token=; Path=/; Max-Age=0; SameSite=Lax';
+    document.cookie = 'token=; Path=/; Max-Age=0; SameSite=Strict; Secure';
 };
 
 api.interceptors.request.use((config) => {
