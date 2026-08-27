@@ -12,10 +12,15 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
             Conectar Calendario
           </button>
-          <button v-else @click="showCalendarPanel = !showCalendarPanel" :class="['px-4 py-2 rounded-xl font-medium shadow-lg hover:scale-105 transition-transform flex items-center gap-2', showCalendarPanel ? 'bg-blue-600 text-white shadow-blue-600/20' : 'bg-blue-500/10 text-blue-500 shadow-blue-500/10 border border-blue-500/30']">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-            Calendario
-          </button>
+          <div v-else class="flex gap-1">
+            <button @click="showCalendarPanel = !showCalendarPanel" :class="['px-4 py-2 rounded-xl font-medium shadow-lg hover:scale-105 transition-transform flex items-center gap-2', showCalendarPanel ? 'bg-blue-600 text-white shadow-blue-600/20' : 'bg-blue-500/10 text-blue-500 shadow-blue-500/10 border border-blue-500/30']">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+              Calendario
+            </button>
+            <button @click="connectGoogleCalendar" class="px-2 py-2 rounded-xl text-blue-500 hover:bg-blue-500/10 transition-colors" title="Reconectar Google Calendar">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+            </button>
+          </div>
           <button @click="showRoulette = true" class="bg-orange-500 text-white px-4 py-2 rounded-xl font-medium shadow-lg shadow-orange-500/20 hover:scale-105 transition-transform flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
             Jugar Ruleta
