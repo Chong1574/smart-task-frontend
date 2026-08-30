@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-card border border-border/40 rounded-3xl p-6 md:p-8 shadow-sm">
+  <div class="bg-card border border-border/40 rounded-3xl p-4 sm:p-6 md:p-8 shadow-sm">
     <div class="grid md:grid-cols-2 gap-6">
       <!-- Inputs -->
       <div class="space-y-4">
@@ -51,7 +51,7 @@
         <!-- Importar desde MakerWorld / n8n -->
         <div class="border border-border/60 rounded-xl p-4 bg-secondary/10 space-y-3">
           <label class="text-sm font-medium mb-1.5 block">Importar de MakerWorld (vía n8n)</label>
-          <div class="flex gap-2">
+          <div class="flex flex-col sm:flex-row gap-2">
             <input v-model="n8nLink" type="url" placeholder="https://makerworld.com/..." class="flex-1 h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
             <button type="button" @click="fetchFromN8n" :disabled="isFetching" class="h-10 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity">
               {{ isFetching ? 'Cargando...' : 'Obtener' }}
@@ -61,7 +61,7 @@
           <p v-if="n8nSuccess" class="text-xs text-green-500">¡Datos importados correctamente!</p>
         </div>
 
-        <div class="grid grid-cols-3 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
             <label class="text-sm font-medium mb-1.5 block">Gramos por impresión</label>
             <input v-model.number="form.grams" type="number" min="0" step="0.1" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" />
@@ -79,7 +79,7 @@
           MakerWorld reporta el peso y tiempo total del plato; si el plato trae varias piezas, ajusta manualmente los gramos/horas para calcular el precio por pieza.
         </p>
 
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="text-sm font-medium mb-1.5 block">Costo filamento (por kg)</label>
             <input v-model.number="form.filamentPricePerKg" type="number" min="0" step="0.01" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" />
@@ -90,7 +90,7 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="text-sm font-medium mb-1.5 block">Costo luz (por kWh)</label>
             <input v-model.number="form.kwhPrice" type="number" min="0" step="0.01" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" />
@@ -107,7 +107,7 @@
             <input type="checkbox" v-model="form.includeMaintenance" class="rounded border-input text-primary focus:ring-primary w-4 h-4" />
             <span class="text-sm font-medium">Incluir desgaste/mantenimiento</span>
           </label>
-          <div v-if="form.includeMaintenance" class="grid grid-cols-2 gap-3 pt-2">
+          <div v-if="form.includeMaintenance" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
             <div>
               <label class="text-xs font-medium mb-1.5 block text-muted-foreground">Costo refacciones ($)</label>
               <input v-model.number="form.maintenanceCost" type="number" min="0" step="1" class="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm" />
@@ -125,7 +125,7 @@
             <input type="checkbox" v-model="form.includeDepreciation" class="rounded border-input text-primary focus:ring-primary w-4 h-4" />
             <span class="text-sm font-medium">Incluir depreciación de la impresora</span>
           </label>
-          <div v-if="form.includeDepreciation" class="grid grid-cols-2 gap-3 pt-2">
+          <div v-if="form.includeDepreciation" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
             <div>
               <label class="text-xs font-medium mb-1.5 block text-muted-foreground">Costo impresora ($)</label>
               <input v-model.number="form.printerCost" type="number" min="0" step="1" class="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm" />
