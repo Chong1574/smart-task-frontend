@@ -128,7 +128,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Merge: cada item aqui trae __detail; buscar el normalized correspondiente por indice (pairing 1:1 con 'Drop unknown licenses').\nconst normalized = $('Drop unknown licenses').all();\nconst products = items.map((item, i) => {\n  const n = normalized[i]?.json || {};\n  const det = item?.json?.__detail || {};\n  return {\n    ...n,\n    descriptionHtml: det.description || '',\n    images: det.images || [],\n    variants: det.variants || [],\n    priceFrom: det.priceFrom ?? null,\n    price: det.priceFrom ?? null,\n  };\n});\nreturn [{ json: { products } }];"
+        "jsCode": "// Merge: cada item aqui trae __detail; buscar el normalized correspondiente por indice (pairing 1:1 con 'Drop unknown licenses').\nconst normalized = $('Drop unknown licenses').all();\n// Strip HTML → plaintext para 'description'. El backend hace decode de entidades,\n// aqui solo removemos tags. slice(0,2000) coincide con el limite del schema.\nconst stripHtml = (html) => String(html || '').replace(/<[^>]+>/g, ' ').replace(/\\s{2,}/g, ' ').trim().slice(0, 2000);\nconst products = items.map((item, i) => {\n  const n = normalized[i]?.json || {};\n  const det = item?.json?.__detail || {};\n  return {\n    ...n,\n    description: stripHtml(det.description),\n    descriptionHtml: det.description || '',\n    images: det.images || [],\n    variants: det.variants || [],\n    priceFrom: det.priceFrom ?? null,\n    price: det.priceFrom ?? null,\n  };\n});\nreturn [{ json: { products } }];"
       },
       "id": "wrap",
       "name": "Wrap as { products: [...] }",
