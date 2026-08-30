@@ -48,14 +48,31 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
+        <!-- Importar desde MakerWorld / n8n -->
+        <div class="border border-border/60 rounded-xl p-4 bg-secondary/10 space-y-3">
+          <label class="text-sm font-medium mb-1.5 block">Importar de MakerWorld (vía n8n)</label>
+          <div class="flex gap-2">
+            <input v-model="n8nLink" type="url" placeholder="https://makerworld.com/..." class="flex-1 h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+            <button type="button" @click="fetchFromN8n" :disabled="isFetching" class="h-10 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity">
+              {{ isFetching ? 'Cargando...' : 'Obtener' }}
+            </button>
+          </div>
+          <p v-if="n8nError" class="text-xs text-red-500">{{ n8nError }}</p>
+          <p v-if="n8nSuccess" class="text-xs text-green-500">¡Datos importados correctamente!</p>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3">
           <div>
-            <label class="text-sm font-medium mb-1.5 block">Gramos usados</label>
+            <label class="text-sm font-medium mb-1.5 block">Gramos (1 pza)</label>
             <input v-model.number="form.grams" type="number" min="0" step="0.1" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" />
           </div>
           <div>
-            <label class="text-sm font-medium mb-1.5 block">Desperdicio (%)</label>
-            <input v-model.number="form.wastePct" type="number" min="0" step="1" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" />
+            <label class="text-sm font-medium mb-1.5 block">Horas (1 pza)</label>
+            <input v-model.number="form.hours" type="number" min="0" step="0.1" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label class="text-sm font-medium mb-1.5 block">Cantidad</label>
+            <input v-model.number="form.quantity" type="number" min="1" step="1" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" />
           </div>
         </div>
 
@@ -65,8 +82,8 @@
             <input v-model.number="form.filamentPricePerKg" type="number" min="0" step="0.01" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" />
           </div>
           <div>
-            <label class="text-sm font-medium mb-1.5 block">Duración (horas)</label>
-            <input v-model.number="form.hours" type="number" min="0" step="0.1" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" />
+            <label class="text-sm font-medium mb-1.5 block">Desperdicio (%)</label>
+            <input v-model.number="form.wastePct" type="number" min="0" step="1" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" />
           </div>
         </div>
 
@@ -141,7 +158,8 @@
           <Row label="Subtotal" :value="fmt(result.subtotal)" />
           <div class="border-t border-border pt-2 mt-2">
             <Row label="Margen" :value="fmt(result.margin)" />
-            <Row label="Precio final" :value="fmt(result.total)" bold />
+            <Row label="Costo Total" :value="fmt(result.total)" bold />
+            <Row v-if="form.quantity > 1" label="Costo por pieza" :value="fmt(result.perPiece)" class="text-primary mt-1" />
           </div>
         </div>
       </div>
@@ -164,11 +182,18 @@ const showList = ref(false)
 const showCustomForm = ref(false)
 const customPrinter = reactive<Printer>({ id: '', brand: '', model: '', watts: 100, custom: true })
 
+const n8nLink = ref('')
+const isFetching = ref(false)
+const n8nError = ref('')
+const n8nSuccess = ref(false)
+const N8N_WEBHOOK_URL = 'https://TU_N8N_URL/webhook/makerworld' // <-- REEMPLAZAR AQUÍ CON LA URL DEL WEBHOOK DE N8N
+
 const form = reactive({
   grams: 50,
   wastePct: 5,
   filamentPricePerKg: 400,
   hours: 3,
+  quantity: 1,
   kwhPrice: 4.5,
   marginPct: 40,
   includeMaintenance: false,
@@ -188,20 +213,53 @@ const filteredPrinters = computed(() => {
 })
 
 const result = computed(() => {
+  const qty = form.quantity || 1
+  const totalGrams = form.grams * qty
+  const totalHours = form.hours * qty
+
   const watts = selectedPrinter.value?.watts ?? 0
-  const effectiveGrams = form.grams * (1 + (form.wastePct || 0) / 100)
+  const effectiveGrams = totalGrams * (1 + (form.wastePct || 0) / 100)
   const filament = (effectiveGrams / 1000) * form.filamentPricePerKg
-  const electricity = form.hours * (watts / 1000) * form.kwhPrice
+  const electricity = totalHours * (watts / 1000) * form.kwhPrice
   const maintenance = form.includeMaintenance && form.maintenanceHours > 0
-    ? (form.hours / form.maintenanceHours) * form.maintenanceCost
+    ? (totalHours / form.maintenanceHours) * form.maintenanceCost
     : 0
   const depreciation = form.includeDepreciation && form.printerLifeHours > 0
-    ? (form.hours / form.printerLifeHours) * form.printerCost
+    ? (totalHours / form.printerLifeHours) * form.printerCost
     : 0
   const subtotal = filament + electricity + maintenance + depreciation
   const margin = subtotal * (form.marginPct / 100)
-  return { filament, electricity, maintenance, depreciation, subtotal, margin, total: subtotal + margin }
+  const total = subtotal + margin
+  return { filament, electricity, maintenance, depreciation, subtotal, margin, total, perPiece: total / qty }
 })
+
+async function fetchFromN8n() {
+  if (!n8nLink.value) return
+  isFetching.value = true
+  n8nError.value = ''
+  n8nSuccess.value = false
+  try {
+    const res = await fetch(N8N_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: n8nLink.value })
+    })
+    
+    if (!res.ok) throw new Error('Error al conectar con n8n')
+    
+    const data = await res.json()
+    // Se espera que n8n devuelva { grams: 120, hours: 2.5 }
+    if (data.grams) form.grams = parseFloat(data.grams)
+    if (data.hours) form.hours = parseFloat(data.hours)
+    
+    n8nSuccess.value = true
+    setTimeout(() => n8nSuccess.value = false, 3000)
+  } catch (err: any) {
+    n8nError.value = err.message || 'Error desconocido'
+  } finally {
+    isFetching.value = false
+  }
+}
 
 function selectPrinter(p: Printer) {
   selectedPrinter.value = p

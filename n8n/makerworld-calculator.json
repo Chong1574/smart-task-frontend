@@ -1,0 +1,81 @@
+{
+  "name": "Taskman - MakerWorld Calculator",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "makerworld-calc",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-node",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const url = $input.item.json.body.url || '';\nconst match = url.match(/models\\/(\\d+)/);\nif (!match) throw new Error('URL de MakerWorld no válida. No se encontró el ID del modelo.');\nreturn { json: { externalId: match[1] } };"
+      },
+      "id": "extract-id",
+      "name": "Extract ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://makerworld.com/api/v1/design-service/design/{{ $json.externalId }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "User-Agent", "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36" },
+            { "name": "Accept", "value": "application/json, text/plain, */*" },
+            { "name": "Accept-Language", "value": "es-ES,es;q=0.9,en;q=0.8" },
+            { "name": "Referer", "value": "https://makerworld.com/es/search/models" }
+          ]
+        },
+        "options": {
+          "timeout": 20000,
+          "response": { "response": { "responseFormat": "json" } }
+        }
+      },
+      "id": "http-detail",
+      "name": "MakerWorld: fetch detail",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.item.json;\nconst instances = data.instances || [];\nif (instances.length === 0) throw new Error('No se encontraron perfiles de impresión (instances).');\n\n// Tomamos el primer perfil de impresión disponible (que suele ser el oficial o el más popular)\nconst firstInstance = instances[0];\nconst plates = (((firstInstance.extention) || {}).modelInfo || {}).plates || [];\n\nconst grams = plates.reduce((s, p) => s + (Number(p.weight) || 0), 0);\nconst seconds = plates.reduce((s, p) => s + (Number(p.prediction) || 0), 0);\nconst hours = Number((seconds / 3600).toFixed(2));\n\nreturn { json: { grams, hours } };"
+      },
+      "id": "extract-stats",
+      "name": "Extract Stats",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [860, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "respond-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1080, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": { "main": [[{ "node": "Extract ID", "type": "main", "index": 0 }]] },
+    "Extract ID": { "main": [[{ "node": "MakerWorld: fetch detail", "type": "main", "index": 0 }]] },
+    "MakerWorld: fetch detail": { "main": [[{ "node": "Extract Stats", "type": "main", "index": 0 }]] },
+    "Extract Stats": { "main": [[{ "node": "Respond to Webhook", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "active": false
+}
