@@ -63,18 +63,21 @@
 
         <div class="grid grid-cols-3 gap-3">
           <div>
-            <label class="text-sm font-medium mb-1.5 block">Gramos (1 pza)</label>
+            <label class="text-sm font-medium mb-1.5 block">Gramos por impresión</label>
             <input v-model.number="form.grams" type="number" min="0" step="0.1" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" />
           </div>
           <div>
-            <label class="text-sm font-medium mb-1.5 block">Horas (1 pza)</label>
+            <label class="text-sm font-medium mb-1.5 block">Horas por impresión</label>
             <input v-model.number="form.hours" type="number" min="0" step="0.1" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" />
           </div>
           <div>
-            <label class="text-sm font-medium mb-1.5 block">Cantidad</label>
+            <label class="text-sm font-medium mb-1.5 block">Impresiones</label>
             <input v-model.number="form.quantity" type="number" min="1" step="1" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" />
           </div>
         </div>
+        <p class="text-xs text-muted-foreground -mt-2">
+          MakerWorld reporta el peso y tiempo total del plato; si el plato trae varias piezas, ajusta manualmente los gramos/horas para calcular el precio por pieza.
+        </p>
 
         <div class="grid grid-cols-2 gap-3">
           <div>
@@ -159,7 +162,7 @@
           <div class="border-t border-border pt-2 mt-2">
             <Row label="Margen" :value="fmt(result.margin)" />
             <Row label="Costo Total" :value="fmt(result.total)" bold />
-            <Row v-if="form.quantity > 1" label="Costo por pieza" :value="fmt(result.perPiece)" class="text-primary mt-1" />
+            <Row v-if="form.quantity > 1" label="Costo por impresión" :value="fmt(result.perPiece)" class="text-primary mt-1" />
           </div>
         </div>
       </div>
@@ -168,12 +171,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onMounted, h } from 'vue'
+import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, h } from 'vue'
 import defaultPrinters from '~/data/printers-3d.json'
+import api from '~/utils/api'
 
 interface Printer { id: string; brand: string; model: string; watts: number; maintenanceCost?: number; maintenanceHours?: number; custom?: boolean }
 
 const STORAGE_KEY = 'printcost3d:v1'
+const MAKERWORLD_URL_RE = /^https?:\/\/[^\s]*makerworld\.com\/[^\s]*\/models\/\d+/i
 
 const printers = ref<Printer[]>([...defaultPrinters])
 const printerSearch = ref('')
@@ -186,7 +191,7 @@ const n8nLink = ref('')
 const isFetching = ref(false)
 const n8nError = ref('')
 const n8nSuccess = ref(false)
-const N8N_WEBHOOK_URL = 'https://TU_N8N_URL/webhook/makerworld' // <-- REEMPLAZAR AQUÍ CON LA URL DEL WEBHOOK DE N8N
+let successTimer: ReturnType<typeof setTimeout> | null = null
 
 const form = reactive({
   grams: 50,
@@ -213,7 +218,7 @@ const filteredPrinters = computed(() => {
 })
 
 const result = computed(() => {
-  const qty = form.quantity || 1
+  const qty = Math.max(1, form.quantity || 1)
   const totalGrams = form.grams * qty
   const totalHours = form.hours * qty
 
@@ -234,32 +239,37 @@ const result = computed(() => {
 })
 
 async function fetchFromN8n() {
-  if (!n8nLink.value) return
+  const link = n8nLink.value.trim()
+  if (!link) return
+  if (!MAKERWORLD_URL_RE.test(link)) {
+    n8nError.value = 'URL inválida. Debe ser https://makerworld.com/…/models/<id>'
+    return
+  }
+  if (successTimer) { clearTimeout(successTimer); successTimer = null }
   isFetching.value = true
   n8nError.value = ''
   n8nSuccess.value = false
   try {
-    const res = await fetch(N8N_WEBHOOK_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: n8nLink.value })
-    })
-    
-    if (!res.ok) throw new Error('Error al conectar con n8n')
-    
-    const data = await res.json()
-    // Se espera que n8n devuelva { grams: 120, hours: 2.5 }
-    if (data.grams) form.grams = parseFloat(data.grams)
-    if (data.hours) form.hours = parseFloat(data.hours)
-    
+    const { data } = await api.post<{ grams: number; hours: number }>('/print-cost/makerworld', { url: link })
+    const grams = Number(data?.grams)
+    const hours = Number(data?.hours)
+    if (!Number.isFinite(grams) || !Number.isFinite(hours) || (grams === 0 && hours === 0)) {
+      throw new Error('El modelo no publica gramos/horas.')
+    }
+    form.grams = grams
+    form.hours = hours
     n8nSuccess.value = true
-    setTimeout(() => n8nSuccess.value = false, 3000)
+    successTimer = setTimeout(() => { n8nSuccess.value = false; successTimer = null }, 3000)
   } catch (err: any) {
-    n8nError.value = err.message || 'Error desconocido'
+    n8nError.value = err?.response?.data?.error || err?.message || 'Error desconocido'
   } finally {
     isFetching.value = false
   }
 }
+
+onBeforeUnmount(() => {
+  if (successTimer) clearTimeout(successTimer)
+})
 
 function selectPrinter(p: Printer) {
   selectedPrinter.value = p

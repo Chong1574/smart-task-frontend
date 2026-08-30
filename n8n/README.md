@@ -27,6 +27,16 @@ n8n corre self-hosted en el Pi 5 en `/home/shongyi/n8n/` (compose separado del b
 
 **Objetivo:** cuando el usuario busca en `/bazar` y no hay hits locales, disparar scrape en vivo de MakerWorld para esa query. Idéntico al scraper diario pero parametrizado por `q` y con rate-limit.
 
+### `makerworld-calculator.json` — importar grams/hours desde MakerWorld
+
+**Objetivo:** el usuario pega una URL de MakerWorld en `/calculadora-3d` y el workflow devuelve `{grams, hours}` (total por plato del primer perfil de impresión).
+
+**Flujo:** `POST /webhook/makerworld-calc` (Bearer SYNC_SECRET) → Auth check → Extract ID → `GET makerworld.com/api/v1/design-service/design/{id}` → suma `plates[*].weight` y `plates[*].prediction/3600` → respondWith `{grams, hours}`.
+
+**Consumer:** el frontend NO llama al webhook directamente. Va vía `POST /api/print-cost/makerworld` en el backend, que valida URL, rate-limita por IP (10/h, scope `calc`) y añade el header `Authorization: Bearer <SYNC_SECRET>` (`service/n8nWebhook.service.ts:callMakerworldCalc`). Configurable con `N8N_MAKERWORLD_CALC_URL` en el `.env` del Pi (default `http://n8n:5678/webhook/makerworld-calc`).
+
+**Estado por default:** `"active": false` — activar en la UI n8n después de importar.
+
 ## Requisitos infra (Pi)
 
 - n8n container con `extra_hosts: - "host.docker.internal:host-gateway"` en su `docker-compose.yml` (Linux Docker no lo mapea por default). Alternativa: usar el nombre del container del backend en la red compartida (ver [[project_pi_tunnel_setup]] — cloudflared usa redes externas y ingress por nombre).

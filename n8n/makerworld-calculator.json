@@ -12,17 +12,29 @@
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1.1,
-      "position": [200, 300]
+      "position": [200, 300],
+      "notes": "URL de producción: https://n8n.shongyi.com/webhook/makerworld-calc"
     },
     {
       "parameters": {
-        "jsCode": "const url = $input.item.json.body.url || '';\nconst match = url.match(/models\\/(\\d+)/);\nif (!match) throw new Error('URL de MakerWorld no válida. No se encontró el ID del modelo.');\nreturn { json: { externalId: match[1] } };"
+        "jsCode": "// Valida Authorization: Bearer <SYNC_SECRET>. Sale con { url } o throw.\nconst auth = $input.first().json.headers?.authorization || '';\nconst secret = $env.SYNC_SECRET || '';\nif (!secret) throw new Error('SYNC_SECRET not configured');\nif (!auth.startsWith('Bearer ') || auth.slice(7) !== secret) {\n  throw new Error('Unauthorized');\n}\nconst url = (($input.first().json.body || {}).url || '').toString().trim();\nif (!url) throw new Error('Missing url');\nreturn [{ json: { url } }];"
+      },
+      "id": "auth",
+      "name": "Auth check",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [340, 300],
+      "notes": "$env.SYNC_SECRET aquí es aceptable — validación runtime del container, no se serializa al JSON exportado."
+    },
+    {
+      "parameters": {
+        "jsCode": "const url = $input.item.json.url || '';\nconst match = url.match(/models\\/(\\d+)/);\nif (!match) throw new Error('URL de MakerWorld no válida. No se encontró el ID del modelo.');\nreturn { json: { externalId: match[1] } };"
       },
       "id": "extract-id",
       "name": "Extract ID",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [420, 300]
+      "position": [480, 300]
     },
     {
       "parameters": {
@@ -49,7 +61,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const data = $input.item.json;\nconst instances = data.instances || [];\nif (instances.length === 0) throw new Error('No se encontraron perfiles de impresión (instances).');\n\n// Tomamos el primer perfil de impresión disponible (que suele ser el oficial o el más popular)\nconst firstInstance = instances[0];\nconst plates = (((firstInstance.extention) || {}).modelInfo || {}).plates || [];\n\nconst grams = plates.reduce((s, p) => s + (Number(p.weight) || 0), 0);\nconst seconds = plates.reduce((s, p) => s + (Number(p.prediction) || 0), 0);\nconst hours = Number((seconds / 3600).toFixed(2));\n\nreturn { json: { grams, hours } };"
+        "jsCode": "const data = $input.item.json;\nconst instances = data.instances || [];\nif (instances.length === 0) throw new Error('No se encontraron perfiles de impresión (instances).');\n\n// Tomamos el primer perfil de impresión disponible (que suele ser el oficial o el más popular)\nconst firstInstance = instances[0];\nconst plates = (((firstInstance.extention) || {}).modelInfo || {}).plates || [];\n\nconst grams = plates.reduce((s, p) => s + (Number(p.weight) || 0), 0);\nconst seconds = plates.reduce((s, p) => s + (Number(p.prediction) || 0), 0);\nconst hours = Number((seconds / 3600).toFixed(2));\n\nif (!Number.isFinite(grams) || !Number.isFinite(hours) || (grams === 0 && hours === 0)) {\n  throw new Error('El modelo no publica estadísticas de slicer (gramos/horas).');\n}\n\nreturn { json: { grams, hours } };"
       },
       "id": "extract-stats",
       "name": "Extract Stats",
@@ -60,7 +72,7 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ JSON.stringify($json) }}",
+        "responseBody": "={{ { grams: $json.grams, hours: $json.hours } }}",
         "options": {}
       },
       "id": "respond-webhook",
@@ -71,10 +83,11 @@
     }
   ],
   "connections": {
-    "Webhook": { "main": [[{ "node": "Extract ID", "type": "main", "index": 0 }]] },
-    "Extract ID": { "main": [[{ "node": "MakerWorld: fetch detail", "type": "main", "index": 0 }]] },
-    "MakerWorld: fetch detail": { "main": [[{ "node": "Extract Stats", "type": "main", "index": 0 }]] },
-    "Extract Stats": { "main": [[{ "node": "Respond to Webhook", "type": "main", "index": 0 }]] }
+    "Webhook":                  { "main": [[{ "node": "Auth check",              "type": "main", "index": 0 }]] },
+    "Auth check":               { "main": [[{ "node": "Extract ID",              "type": "main", "index": 0 }]] },
+    "Extract ID":               { "main": [[{ "node": "MakerWorld: fetch detail","type": "main", "index": 0 }]] },
+    "MakerWorld: fetch detail": { "main": [[{ "node": "Extract Stats",           "type": "main", "index": 0 }]] },
+    "Extract Stats":            { "main": [[{ "node": "Respond to Webhook",      "type": "main", "index": 0 }]] }
   },
   "settings": { "executionOrder": "v1" },
   "active": false
