@@ -59,6 +59,33 @@
           </div>
           <p v-if="n8nError" class="text-xs text-red-500">{{ n8nError }}</p>
           <p v-if="n8nSuccess" class="text-xs text-green-500">¡Datos importados correctamente!</p>
+
+          <!-- Picker de perfiles cuando MakerWorld devuelve varios -->
+          <div v-if="profiles.length > 1" class="pt-1 space-y-1.5">
+            <p class="text-xs font-medium text-muted-foreground">Este modelo tiene {{ profiles.length }} perfiles de impresión. Elige uno:</p>
+            <div class="space-y-1.5 max-h-64 overflow-y-auto pr-1">
+              <label
+                v-for="p in profiles"
+                :key="p.id"
+                class="flex items-start gap-2 p-2 rounded-md border border-border/60 hover:bg-secondary/40 cursor-pointer transition-colors"
+                :class="selectedProfileId === p.id ? 'bg-primary/10 border-primary/50' : ''"
+              >
+                <input type="radio" :value="p.id" v-model="selectedProfileId" @change="applyProfile(p)" class="mt-1 accent-primary" />
+                <div class="flex-1 min-w-0">
+                  <p class="text-xs font-medium truncate">
+                    {{ p.title }}
+                    <span v-if="p.isDefault" class="ml-1 text-[10px] text-primary">(default)</span>
+                  </p>
+                  <p v-if="p.name" class="text-[11px] text-muted-foreground truncate">{{ p.name }}</p>
+                  <p class="text-[11px] text-muted-foreground">
+                    {{ p.grams }} g · {{ formatHours(p.hours) }}
+                    <span v-if="p.needAms || p.colorCount > 1" class="ml-1 text-amber-600 dark:text-amber-500">· AMS ({{ p.colorCount }} colores)</span>
+                    <span v-if="p.plateCount > 1"> · {{ p.plateCount }} placas</span>
+                  </p>
+                </div>
+              </label>
+            </div>
+          </div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -176,6 +203,10 @@ import defaultPrinters from '~/data/printers-3d.json'
 import api from '~/utils/api'
 
 interface Printer { id: string; brand: string; model: string; watts: number; maintenanceCost?: number; maintenanceHours?: number; custom?: boolean }
+interface MakerworldProfile {
+  id: string; title: string; name: string; grams: number; hours: number;
+  plateCount: number; isDefault: boolean; needAms: boolean; colorCount: number; cover: string | null;
+}
 
 const STORAGE_KEY = 'printcost3d:v1'
 const MAKERWORLD_URL_RE = /^https?:\/\/[^\s]*makerworld\.com\/[^\s]*\/models\/\d+/i
@@ -191,6 +222,8 @@ const n8nLink = ref('')
 const isFetching = ref(false)
 const n8nError = ref('')
 const n8nSuccess = ref(false)
+const profiles = ref<MakerworldProfile[]>([])
+const selectedProfileId = ref<string>('')
 let successTimer: ReturnType<typeof setTimeout> | null = null
 
 const form = reactive({
@@ -249,22 +282,40 @@ async function fetchFromN8n() {
   isFetching.value = true
   n8nError.value = ''
   n8nSuccess.value = false
+  profiles.value = []
+  selectedProfileId.value = ''
   try {
-    const { data } = await api.post<{ grams: number; hours: number }>('/print-cost/makerworld', { url: link })
-    const grams = Number(data?.grams)
-    const hours = Number(data?.hours)
-    if (!Number.isFinite(grams) || !Number.isFinite(hours) || (grams === 0 && hours === 0)) {
-      throw new Error('El modelo no publica gramos/horas.')
-    }
-    form.grams = grams
-    form.hours = hours
-    n8nSuccess.value = true
-    successTimer = setTimeout(() => { n8nSuccess.value = false; successTimer = null }, 3000)
+    const { data } = await api.post<{ profiles: MakerworldProfile[] }>('/print-cost/makerworld', { url: link })
+    const list = Array.isArray(data?.profiles) ? data.profiles : []
+    if (!list.length) throw new Error('El modelo no publica gramos/horas.')
+    profiles.value = list
+    // Auto-selecciona el default (o el primero) y aplica sus valores.
+    const pick = list.find(p => p.isDefault) || list[0]
+    selectedProfileId.value = pick.id
+    applyProfile(pick)
   } catch (err: any) {
     n8nError.value = err?.response?.data?.error || err?.message || 'Error desconocido'
   } finally {
     isFetching.value = false
   }
+}
+
+function applyProfile(p: MakerworldProfile) {
+  form.grams = p.grams
+  form.hours = p.hours
+  n8nSuccess.value = true
+  if (successTimer) clearTimeout(successTimer)
+  successTimer = setTimeout(() => { n8nSuccess.value = false; successTimer = null }, 3000)
+}
+
+// "0.463" → "27 min 47 s" para que el label sea legible al lado del picker.
+function formatHours(h: number): string {
+  if (!Number.isFinite(h) || h <= 0) return '0 min'
+  const totalMin = h * 60
+  const min = Math.floor(totalMin)
+  const sec = Math.round((totalMin - min) * 60)
+  if (h >= 1) return `${h.toFixed(2)} h`
+  return sec ? `${min} min ${sec} s` : `${min} min`
 }
 
 onBeforeUnmount(() => {

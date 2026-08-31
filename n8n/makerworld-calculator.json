@@ -11,7 +11,7 @@
       "id": "webhook-node",
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
-      "typeVersion": 1.1,
+      "typeVersion": 2,
       "position": [200, 300],
       "notes": "URL de producción: https://n8n.shongyi.com/webhook/makerworld-calc"
     },
@@ -61,7 +61,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const data = $input.item.json;\nconst instances = data.instances || [];\nif (instances.length === 0) throw new Error('No se encontraron perfiles de impresión (instances).');\n\n// Tomamos el primer perfil de impresión disponible (que suele ser el oficial o el más popular)\nconst firstInstance = instances[0];\nconst plates = (((firstInstance.extention) || {}).modelInfo || {}).plates || [];\n\nconst grams = plates.reduce((s, p) => s + (Number(p.weight) || 0), 0);\nconst seconds = plates.reduce((s, p) => s + (Number(p.prediction) || 0), 0);\nconst hours = Number((seconds / 3600).toFixed(2));\n\nif (!Number.isFinite(grams) || !Number.isFinite(hours) || (grams === 0 && hours === 0)) {\n  throw new Error('El modelo no publica estadísticas de slicer (gramos/horas).');\n}\n\nreturn { json: { grams, hours } };"
+        "jsCode": "// Devuelve TODOS los perfiles de impresión (instances) con metadata suficiente para\n// que el frontend muestre un picker cuando hay más de uno. Prefiere los valores\n// instance-level (ins.weight/ins.prediction) sobre suma de plates — son más fieles al slicer.\nconst data = $input.item.json;\nconst instances = data.instances || [];\nif (!instances.length) throw new Error('No se encontraron perfiles de impresión (instances).');\n\nconst profiles = instances.map(ins => {\n  const plates = ((ins.extention || {}).modelInfo || {}).plates || [];\n  const platesGrams = plates.reduce((s, p) => s + (Number(p.weight) || 0), 0);\n  const platesSeconds = plates.reduce((s, p) => s + (Number(p.prediction) || 0), 0);\n  const grams = Number(ins.weight) || platesGrams;\n  const seconds = Number(ins.prediction) || platesSeconds;\n  return {\n    id: String(ins.id || ins.profileId || ''),\n    title: ins.title || ins.titleTranslated || 'Perfil sin nombre',\n    name: ins.name || '',\n    grams: Number.isFinite(grams) ? Number(grams.toFixed(2)) : 0,\n    hours: Number.isFinite(seconds) ? Number((seconds / 3600).toFixed(3)) : 0,\n    plateCount: plates.length || 1,\n    isDefault: !!ins.isDefault,\n    needAms: !!ins.needAms,\n    colorCount: Number(ins.materialColorCnt) || Number(ins.materialCnt) || 1,\n    cover: ins.cover || null,\n  };\n}).filter(p => p.grams > 0 || p.hours > 0);\n\nif (!profiles.length) throw new Error('El modelo no publica estadísticas de slicer (gramos/horas).');\n\nreturn { json: { profiles } };"
       },
       "id": "extract-stats",
       "name": "Extract Stats",
@@ -72,7 +72,7 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ { grams: $json.grams, hours: $json.hours } }}",
+        "responseBody": "={{ { profiles: $json.profiles } }}",
         "options": {}
       },
       "id": "respond-webhook",
