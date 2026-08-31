@@ -966,10 +966,10 @@ const markAsPaid = (payment: any) => {
   if (payment.sourceType === 'account') {
     txForm.type = payment.type === 'Préstamo' ? 'loan_payment' : 'credit_payment'
     txForm.destinationAccountId = payment.accountId
-    // ponytail: fuente debe ser cuenta con dinero real (débito, nómina o cash). Sin fallback a accounts[0] — antes podía debitar una tarjeta de crédito o el mismo préstamo.
-    const source = financeStore.accounts.find(a => (a.type === 'card' && (a.sub_type === 'debit' || a.sub_type === 'payroll')) || a.type === 'cash')
+    // ponytail: fuente debe ser cuenta con dinero real (débito, nómina, ahorro o cash). Sin fallback a accounts[0]
+    const source = financeStore.accounts.find(a => a.type !== 'loan' && !(a.type === 'card' && a.sub_type === 'credit'))
     if (!source) {
-      alert('Necesitas una cuenta de débito, nómina o efectivo para registrar el pago.')
+      alert('Necesitas una cuenta de efectivo, débito, nómina o ahorro para registrar el pago.')
       return
     }
     txForm.accountId = source.id
@@ -1022,7 +1022,8 @@ const selectedSourceAccount = computed(() =>
 // nunca otra tarjeta de crédito o el mismo préstamo.
 const filteredSourceAccounts = computed(() => {
   if (['credit_payment', 'loan_payment'].includes(txForm.type)) {
-    return financeStore.accounts.filter(acc => acc.type === 'cash' || (acc.type === 'card' && (acc.sub_type === 'debit' || acc.sub_type === 'payroll')))
+    // Permitir cualquier cuenta (efectivo, débito, nómina, ahorro) excepto otra tarjeta de crédito o un préstamo
+    return financeStore.accounts.filter(acc => acc.type !== 'loan' && !(acc.type === 'card' && acc.sub_type === 'credit'))
   }
   if (txForm.type === 'transfer') {
     return financeStore.accounts.filter(acc => acc.id !== txForm.destinationAccountId)
