@@ -259,14 +259,22 @@ export const useFinanceStore = defineStore('finance', {
             // 1. Suscripciones y Servicios
             state.subscriptions.forEach(sub => {
                 if (sub.type === 'INCOME' || !sub.paymentDay) return;
-                
-                let nextDate = new Date(today.getFullYear(), today.getMonth(), sub.paymentDay);
-                // Si ya pasó el día en este mes, el próximo es el mes siguiente
-                if (nextDate < today) {
-                    nextDate.setMonth(nextDate.getMonth() + 1);
+
+                // Preferir nextPaymentDate del backend (se actualiza al registrar pago). Fallback:
+                // computar el próximo día del ciclo. Ambos caminos ocultan el sub del cycle actual
+                // si ya se pagó — resolvimos "los pagos no se propaga si se pagaron".
+                let nextDate: Date;
+                if (sub.nextPaymentDate) {
+                    nextDate = new Date(sub.nextPaymentDate);
+                    // Normalizar a medianoche para que daysRemaining no se contamine con la hora.
+                    nextDate = new Date(nextDate.getFullYear(), nextDate.getMonth(), nextDate.getDate());
+                } else {
+                    nextDate = new Date(today.getFullYear(), today.getMonth(), sub.paymentDay);
+                    if (nextDate < today) nextDate.setMonth(nextDate.getMonth() + 1);
                 }
-                
+
                 const daysRemaining = Math.ceil((nextDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
+                if (daysRemaining < 0) return; // Ya pasó y aún no rolled — evita fantasmas.
                 
                 payments.push({
                     name: sub.name,
@@ -392,8 +400,14 @@ export const useFinanceStore = defineStore('finance', {
             try {
                 const res = await api.post('/finance/transactions', tx);
                 if (res.data.success) {
-                    await this.fetchTransactions();
-                    await this.fetchAccounts(); // Update balances
+                    // Backend refresca balance de cuenta y (si viene subscriptionId) lastPayment/nextPayment
+                    // en un batch atómico. El store tiene que jalar los 3 para que "Próximos Pagos" refleje
+                    // que ese sub ya se pagó este ciclo.
+                    await Promise.all([
+                        this.fetchTransactions(),
+                        this.fetchAccounts(),
+                        this.fetchSubscriptions(),
+                    ]);
                 } else {
                     alert("Error al registrar transacción: " + (res.data.message || "Error desconocido"));
                 }

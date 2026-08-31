@@ -56,16 +56,17 @@
              No hay cuentas registradas.
           </div>
           <div v-else class="flex gap-4 overflow-x-auto pb-2">
-            <div v-for="account in financeStore.accounts" :key="account.id" class="bg-secondary/50 p-4 rounded-2xl min-w-[200px] border border-border/30 relative group flex flex-col justify-between">
+            <div v-for="account in financeStore.accounts" :key="account.id" @click="openHistory(account)" class="bg-secondary/50 p-4 rounded-2xl min-w-[200px] border border-border/30 relative group flex flex-col justify-between cursor-pointer hover:bg-secondary/70 transition-colors">
               <div>
                 <p class="text-muted-foreground text-sm">{{ account.name }}</p>
                 <p class="text-xl font-bold font-mono">{{ formatCurrency(account.balance) }}</p>
+                <p class="text-[10px] text-muted-foreground/70 mt-1 group-hover:text-primary transition-colors">Ver movimientos →</p>
               </div>
               <div class="absolute top-2 right-2 flex gap-1 md:opacity-0 opacity-100 md:group-hover:opacity-100 transition-opacity">
-                <button @click="openEditAccount(account)" class="text-muted-foreground hover:text-primary p-1 bg-background/50 rounded-md" title="Editar Cuenta">
+                <button @click.stop="openEditAccount(account)" class="text-muted-foreground hover:text-primary p-1 bg-background/50 rounded-md" title="Editar Cuenta">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
                 </button>
-                <button @click="deleteAccountWithConfirm(account.id)" class="text-muted-foreground hover:text-destructive p-1 bg-background/50 rounded-md" title="Eliminar Cuenta">
+                <button @click.stop="deleteAccountWithConfirm(account.id)" class="text-muted-foreground hover:text-destructive p-1 bg-background/50 rounded-md" title="Eliminar Cuenta">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                 </button>
               </div>
@@ -112,29 +113,35 @@
           </div>
         </div>
 
-        <!-- Suscripciones y Membresías -->
+        <!-- Suscripciones, Membresías e Ingresos recurrentes -->
         <div class="bg-card border border-border/40 rounded-3xl shadow-sm overflow-hidden flex flex-col">
           <div class="p-6 border-b border-border/40 flex justify-between items-center">
-            <h3 class="font-bold text-lg">Membresías y Servicios</h3>
-            <button @click="showSubscriptionModal = true" class="text-primary hover:bg-primary/10 p-2 rounded-lg transition-colors" title="Añadir Servicio">
+            <h3 class="font-bold text-lg">Ingresos y Servicios Recurrentes</h3>
+            <button @click="showSubscriptionModal = true" class="text-primary hover:bg-primary/10 p-2 rounded-lg transition-colors" title="Añadir">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
             </button>
           </div>
           <div class="flex-1 p-6 space-y-4 overflow-y-auto">
             <div v-if="financeStore.subscriptions.length === 0" class="text-center text-muted-foreground text-sm">
-               No hay membresías registradas.
+               No hay servicios ni ingresos registrados.
             </div>
-            
-            <div v-for="sub in financeStore.subscriptions.filter(s => s.type !== 'INCOME')" :key="sub.id" class="flex justify-between items-center p-4 bg-secondary/30 rounded-2xl border border-border/20 relative group">
+
+            <div v-for="sub in financeStore.subscriptions" :key="sub.id" class="flex justify-between items-center p-4 bg-secondary/30 rounded-2xl border border-border/20 relative group">
               <div>
                 <p class="font-bold">{{ sub.name }}</p>
                 <div class="flex gap-2 text-xs text-muted-foreground mt-1">
-                  <span class="bg-primary/10 text-primary px-2 py-0.5 rounded">{{ sub.type === 'MEMBERSHIP' ? 'Membresía' : 'Servicio' }}</span>
-                  <span v-if="sub.accountId">Domiciliado</span>
+                  <span
+                    class="px-2 py-0.5 rounded"
+                    :class="sub.type === 'INCOME' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-primary/10 text-primary'"
+                  >{{ sub.type === 'MEMBERSHIP' ? 'Membresía' : sub.type === 'INCOME' ? 'Ingreso' : 'Servicio' }}</span>
+                  <span v-if="sub.accountId">{{ sub.type === 'INCOME' ? 'Depósito a cuenta' : 'Domiciliado' }}</span>
                 </div>
               </div>
               <div class="text-right group-hover:opacity-0 md:opacity-100 transition-opacity">
-                <p class="font-mono font-bold text-red-400">{{ formatCurrency(sub.amount) }} <span class="text-xs text-muted-foreground font-sans">/ {{ sub.frequency === 'MONTHLY' ? 'mes' : sub.frequency === 'YEARLY' ? 'año' : sub.frequency === 'WEEKLY' ? 'sem' : 'bimestre' }}</span></p>
+                <p class="font-mono font-bold" :class="sub.type === 'INCOME' ? 'text-emerald-500' : 'text-red-400'">
+                  {{ sub.type === 'INCOME' ? '+' : '' }}{{ formatCurrency(sub.amount) }}
+                  <span class="text-xs text-muted-foreground font-sans">/ {{ sub.frequency === 'MONTHLY' ? 'mes' : sub.frequency === 'YEARLY' ? 'año' : sub.frequency === 'WEEKLY' ? 'sem' : 'bimestre' }}</span>
+                </p>
               </div>
               <div class="absolute top-0 right-0 h-full flex items-center pr-4 gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                 <button @click="openEditSubscription(sub)" class="bg-secondary text-primary p-2 rounded-full hover:bg-primary/20" title="Editar">
@@ -406,6 +413,7 @@
                 <select v-model="subForm.type" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
                   <option value="MEMBERSHIP">Membresía</option>
                   <option value="SERVICE">Servicio</option>
+                  <option value="INCOME">Ingreso / Nómina</option>
                 </select>
               </div>
               <div>
@@ -429,12 +437,16 @@
               <input v-model.number="subForm.paymentDay" type="number" min="1" :max="subForm.frequency === 'WEEKLY' ? 7 : 31" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
             </div>
             <div>
-              <label class="block text-sm font-medium mb-1">Domiciliar a Cuenta (Opcional)</label>
+              <label class="block text-sm font-medium mb-1">{{ subForm.type === 'INCOME' ? 'Depósito a Cuenta (Opcional)' : 'Domiciliar a Cuenta (Opcional)' }}</label>
               <select v-model.number="subForm.accountId" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
-                <option :value="null">Ninguna (Pago Manual)</option>
+                <option :value="null">{{ subForm.type === 'INCOME' ? 'Ninguna (Registro Manual)' : 'Ninguna (Pago Manual)' }}</option>
                 <option v-for="acc in financeStore.accounts.filter(a => a.type === 'cash' || a.type === 'card')" :key="acc.id" :value="acc.id">{{ acc.name }}</option>
               </select>
-              <p class="text-xs text-muted-foreground mt-1">Si domicilias, deberás registrar manualmente cuándo ocurre el cargo usando una Transacción con la categoría del servicio, o bien lo automatizaremos más adelante.</p>
+              <p class="text-xs text-muted-foreground mt-1">
+                {{ subForm.type === 'INCOME'
+                  ? 'Cuenta donde recibes el depósito (p.ej. tarjeta de nómina). Aun así deberás registrar cada ingreso como Transacción.'
+                  : 'Si domicilias, deberás registrar manualmente cuándo ocurre el cargo usando una Transacción con la categoría del servicio.' }}
+              </p>
             </div>
             <div class="flex justify-end gap-3 mt-8">
               <button type="button" @click="showSubscriptionModal = false" class="px-4 py-2 text-muted-foreground hover:bg-secondary rounded-xl transition-colors">Cancelar</button>
@@ -519,6 +531,42 @@
         </div>
       </div>
 
+      <!-- Modal: Historial completo por cuenta -->
+      <div v-if="historyAccount" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" @click.self="historyAccount = null">
+        <div class="bg-card border border-primary/20 rounded-3xl p-6 w-full max-w-2xl max-h-[85vh] shadow-2xl flex flex-col">
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <h2 class="text-2xl font-bold">{{ historyAccount.name }}</h2>
+              <p class="text-sm text-muted-foreground">
+                Saldo actual:
+                <span class="font-mono font-bold" :class="Number(historyAccount.balance) < 0 ? 'text-red-500' : 'text-emerald-500'">{{ formatCurrency(Number(historyAccount.balance)) }}</span>
+                · {{ accountHistory.length }} movimientos
+              </p>
+            </div>
+            <button @click="historyAccount = null" class="text-muted-foreground hover:text-foreground p-2 rounded-lg hover:bg-secondary/50 transition-colors" title="Cerrar">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+          </div>
+
+          <div v-if="accountHistory.length === 0" class="flex-1 flex items-center justify-center text-muted-foreground py-8">
+            No hay movimientos en esta cuenta.
+          </div>
+          <div v-else class="flex-1 overflow-y-auto -mx-6 px-6 space-y-2">
+            <div v-for="tx in accountHistory" :key="tx.id" class="flex items-center justify-between p-3 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors">
+              <div class="flex-1 min-w-0">
+                <p class="font-medium truncate">{{ tx.description || tx.category || 'Sin descripción' }}</p>
+                <p class="text-xs text-muted-foreground">
+                  {{ formatDate(tx.date) }} · <span class="capitalize">{{ txTypeLabel(tx.type) }}</span>
+                </p>
+              </div>
+              <span class="font-mono font-bold whitespace-nowrap" :class="isNegative(tx) ? 'text-red-500' : 'text-emerald-500'">
+                {{ isNegative(tx) ? '-' : '+' }}{{ formatCurrency(tx.amount) }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Modal: Gestionar Categorías -->
       <div v-if="showManageCategoriesModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" @click.self="showManageCategoriesModal = false">
         <div class="bg-card border border-primary/20 rounded-3xl p-6 w-full max-w-md shadow-2xl">
@@ -564,7 +612,7 @@ definePageMeta({ layout: 'taskman' })
 import { ref, onMounted, reactive, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useFinanceStore } from '~/stores/finance'
-import type { AccountType, TransactionType } from '~/stores/finance'
+import type { Account, AccountType, TransactionType } from '~/stores/finance'
 
 const financeStore = useFinanceStore()
 
@@ -575,6 +623,36 @@ const showSubscriptionModal = ref(false)
 const showTransactionModal = ref(false)
 const editingTransactionId = ref<number | null>(null)
 const showManageCategoriesModal = ref(false)
+
+// Historial por cuenta — pide al backend todos los mov de esa cuenta (no solo los 50
+// más recientes que trae el fetch global). Fallback al store si la llamada falla.
+const historyAccount = ref<Account | null>(null)
+const accountHistory = ref<any[]>([])
+async function openHistory(acc: Account) {
+  historyAccount.value = acc
+  accountHistory.value = financeStore.transactions
+    .filter(tx => tx.accountId === acc.id)
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  try {
+    const api = (await import('~/utils/api')).default
+    const res = await api.get(`/finance/transactions?accountId=${acc.id}&t=${Date.now()}`)
+    if (res.data?.success) {
+      accountHistory.value = (res.data.data as any[])
+        .map(tx => ({ ...tx, amount: Number(tx.amount) }))
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    }
+  } catch {
+    // ponytail: si falla el fetch, deja el fallback del store visible.
+  }
+}
+function txTypeLabel(t: TransactionType): string {
+  const map: Record<TransactionType, string> = {
+    income: 'Ingreso', expense: 'Gasto', investment: 'Inversión',
+    credit_payment: 'Pago Tarjeta', loan_payment: 'Pago Préstamo',
+    transfer: 'Transferencia', withdrawal: 'Retiro',
+  }
+  return map[t] || t
+}
 
 // Forms
 const accountForm = reactive({

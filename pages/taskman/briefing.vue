@@ -30,24 +30,30 @@
           Agenda del Día
         </h3>
         
-        <div v-if="taskStore.loading" class="space-y-4">
+        <div v-if="taskStore.loading || calendarLoading" class="space-y-4">
            <div v-for="i in 3" :key="i" class="h-14 bg-muted/50 rounded-2xl animate-pulse"></div>
         </div>
-        <div v-else-if="todayTasks.length === 0" class="text-center py-8 text-muted-foreground">
-          <p>No tienes tareas agendadas para hoy.</p>
+        <div v-else-if="agendaItems.length === 0" class="text-center py-8 text-muted-foreground">
+          <p>No tienes tareas ni eventos agendados para hoy.</p>
         </div>
         <ul v-else class="space-y-3">
-          <NuxtLink v-for="task in todayTasks.slice(0, 5)" :key="task.id" to="/taskman/activities" class="block p-4 rounded-2xl bg-background/50 border border-border/50 hover:border-primary/50 transition-colors">
-            <h4 class="font-medium leading-tight text-primary">{{ task.title }}</h4>
-            <div class="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-              <span v-if="task.duration_minutes">{{ task.duration_minutes }} min</span>
-              <span v-if="task.priority" :class="{'text-destructive': task.priority === 'high', 'text-orange-500': task.priority === 'medium', 'text-green-500': task.priority === 'low'}" class="capitalize">
-                {{ task.priority }}
+          <NuxtLink v-for="item in agendaItems.slice(0, 6)" :key="item.key" :to="item.href" class="block p-4 rounded-2xl bg-background/50 border border-border/50 hover:border-primary/50 transition-colors">
+            <div class="flex items-start justify-between gap-2">
+              <h4 class="font-medium leading-tight" :class="item.kind === 'event' ? 'text-blue-500' : 'text-primary'">
+                <span v-if="item.kind === 'event'" class="text-[10px] uppercase tracking-wider text-blue-500/70 mr-1">GCal</span>
+                {{ item.title }}
+              </h4>
+              <span v-if="item.time" class="text-xs text-muted-foreground whitespace-nowrap">{{ item.time }}</span>
+            </div>
+            <div v-if="item.kind === 'task'" class="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+              <span v-if="item.durationMin">{{ item.durationMin }} min</span>
+              <span v-if="item.priority" :class="{'text-destructive': item.priority === 'high', 'text-orange-500': item.priority === 'medium', 'text-green-500': item.priority === 'low'}" class="capitalize">
+                {{ item.priority }}
               </span>
             </div>
           </NuxtLink>
-          <NuxtLink v-if="todayTasks.length > 5" to="/taskman/activities" class="block text-center text-muted-foreground pt-2 text-sm font-medium hover:text-primary transition-colors">
-            + {{ todayTasks.length - 5 }} tareas más...
+          <NuxtLink v-if="agendaItems.length > 6" to="/taskman/activities" class="block text-center text-muted-foreground pt-2 text-sm font-medium hover:text-primary transition-colors">
+            + {{ agendaItems.length - 6 }} más...
           </NuxtLink>
         </ul>
       </div>
@@ -132,6 +138,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useTaskStore } from '~/stores/tasks'
 import { useAuthStore } from '~/stores/auth'
 import { useFinanceStore } from '~/stores/finance'
+import api from '~/utils/api'
 
 // Desactivar el layout por defecto para hacer un verdadero Wallpaper
 definePageMeta({
@@ -229,6 +236,76 @@ const todayTasks = computed(() => {
     })
 })
 
+// Eventos de Google Calendar para hoy — mismo endpoint que /activities.
+const calendarEvents = ref<any[]>([])
+const calendarLoading = ref(false)
+
+async function fetchTodayEvents() {
+  if (!authStore.hasCalendarConnected) return
+  calendarLoading.value = true
+  try {
+    const res = await api.get('/oauth/google/events')
+    calendarEvents.value = res.data?.data || []
+  } catch {
+    // ponytail: calendario opcional; si falla, la agenda solo muestra tareas.
+    calendarEvents.value = []
+  } finally {
+    calendarLoading.value = false
+  }
+}
+
+// Agenda unificada: eventos GCal de hoy + tareas con deadline hoy, ordenados por hora.
+interface AgendaItem {
+  key: string;
+  kind: 'event' | 'task';
+  title: string;
+  time: string;
+  sortTs: number;
+  href: string;
+  durationMin?: number;
+  priority?: string;
+}
+
+const agendaItems = computed<AgendaItem[]>(() => {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const end = start + 24 * 3600 * 1000;
+  const items: AgendaItem[] = [];
+
+  for (const t of todayTasks.value) {
+    const ts = t.deadline ? new Date(t.deadline).getTime() : start;
+    items.push({
+      key: `t-${t.id}`,
+      kind: 'task',
+      title: t.title,
+      time: t.deadline ? new Date(t.deadline).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) : '',
+      sortTs: ts,
+      href: '/taskman/activities',
+      durationMin: (t as any).duration_minutes,
+      priority: t.priority,
+    });
+  }
+
+  for (const ev of calendarEvents.value) {
+    const startRaw = ev.start?.dateTime || ev.start?.date;
+    if (!startRaw) continue;
+    const startDate = new Date(startRaw);
+    const ts = startDate.getTime();
+    if (ts < start || ts >= end) continue; // solo hoy
+    const isAllDay = !ev.start?.dateTime;
+    items.push({
+      key: `e-${ev.id}`,
+      kind: 'event',
+      title: ev.summary || '(sin título)',
+      time: isAllDay ? 'Todo el día' : startDate.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
+      sortTs: ts,
+      href: '/taskman/activities',
+    });
+  }
+
+  return items.sort((a, b) => a.sortTs - b.sortTs);
+})
+
 // Tareas prioritarias o atrasadas generales
 const priorityTasks = computed(() => {
   return taskStore.tasks
@@ -252,7 +329,8 @@ const activeProjects = computed(() => {
 const upcomingPayments = computed(() => {
   const todayDay = new Date().getDate();
   return financeStore.subscriptions
-    .filter(s => s.paymentDay !== undefined && s.paymentDay !== null)
+    // Nómina/ingresos NO son pagos por hacer — ver [[project_finance_income_subs]].
+    .filter(s => s.type !== 'INCOME' && s.paymentDay !== undefined && s.paymentDay !== null)
     .sort((a, b) => {
       // Ordenar por cercanía al día de hoy
       let diffA = a.paymentDay! - todayDay;
@@ -273,6 +351,7 @@ onMounted(async () => {
   if (taskStore.habits.length === 0) taskStore.fetchHabits()
   if (taskStore.projects.length === 0) taskStore.fetchProjects()
   if (financeStore.subscriptions.length === 0) financeStore.fetchSubscriptions()
+  fetchTodayEvents()
 })
 
 onUnmounted(() => {
