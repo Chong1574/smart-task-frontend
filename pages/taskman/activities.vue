@@ -357,7 +357,7 @@ const openEditTask = (task: Task) => {
   newTask.value = {
     title: task.title,
     description: task.description || '',
-    deadline: task.deadline || '',
+    deadline: task.deadline ? task.deadline.split('T')[0] : '',
     category: task.category || '',
     duration_minutes: task.duration_minutes || 30,
     priority: task.priority || 'medium',
