@@ -54,6 +54,12 @@
             <span v-show="isSidebarOpen" class="font-medium whitespace-nowrap">Auditoría</span>
           </NuxtLink>
         </div>
+        <button @click="openProfile" class="w-full flex items-center justify-center md:justify-start gap-3 p-3 rounded-xl text-muted-foreground hover:bg-secondary transition-all" :class="!isSidebarOpen ? 'md:justify-center' : ''" title="Editar perfil">
+          <div class="w-5 h-5 shrink-0 rounded-full bg-gradient-to-tr from-primary to-orange-400 text-primary-foreground flex items-center justify-center text-[10px] font-bold uppercase">
+            {{ displayName.slice(0,1) }}
+          </div>
+          <span v-show="isSidebarOpen" class="font-medium whitespace-nowrap truncate">{{ displayName }}</span>
+        </button>
         <button @click="toggleTheme" class="w-full flex items-center justify-center md:justify-start gap-3 p-3 rounded-xl text-muted-foreground hover:bg-secondary transition-all" :class="!isSidebarOpen ? 'md:justify-center' : ''">
           <Moon v-if="colorMode.value === 'dark'" class="w-5 h-5 shrink-0" />
           <Sun v-else class="w-5 h-5 shrink-0" />
@@ -94,6 +100,31 @@
         <slot />
       </div>
     </main>
+
+    <!-- Modal: Perfil (nombre) -->
+    <div v-if="showProfile" class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" @click.self="showProfile = false">
+      <div class="bg-card border border-primary/20 rounded-3xl p-6 w-full max-w-md shadow-2xl">
+        <h2 class="text-2xl font-bold mb-2">Tu perfil</h2>
+        <p class="text-sm text-muted-foreground mb-4">Este es el nombre con el que la app te saluda ("Hola, {{ displayName }}").</p>
+        <form @submit.prevent="submitProfile" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium mb-1">Nombre</label>
+            <input v-model="profileName" type="text" maxlength="80" placeholder="Ej. Paulo" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none" autofocus />
+            <p class="text-xs text-muted-foreground mt-1">Solo tu primer nombre está bien. Máx 80 caracteres.</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Correo</label>
+            <input :value="authStore.user?.email" type="text" disabled class="w-full bg-secondary/40 border border-border rounded-xl px-4 py-2 text-muted-foreground" />
+          </div>
+          <div class="flex justify-end gap-3 mt-6">
+            <button type="button" @click="showProfile = false" class="px-4 py-2 text-muted-foreground hover:bg-secondary rounded-xl transition-colors">Cancelar</button>
+            <button type="submit" :disabled="profileSaving" class="bg-primary text-primary-foreground px-6 py-2 rounded-xl font-bold shadow-lg hover:opacity-90 disabled:opacity-50 transition-opacity">
+              {{ profileSaving ? 'Guardando…' : 'Guardar' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
 
     <!-- Bottom Navigation Bar for Mobile -->
     <nav class="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-card/90 backdrop-blur-xl border-t border-border/40 flex items-center justify-around z-50 pb-[env(safe-area-inset-bottom)] px-2 shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
@@ -176,5 +207,28 @@ onUnmounted(() => {
 const handleLogout = () => {
   authStore.logout()
   router.push('/login')
+}
+
+// Perfil: nombre real editable (antes caía al prefijo del email).
+const displayName = computed(() => {
+  const raw = (authStore.user?.name || '').trim()
+  if (raw) return raw.split(/\s+/)[0]
+  return 'Amig@' // ponytail: placeholder claro; empuja al usuario a setear su nombre en el modal
+})
+
+const showProfile = ref(false)
+const profileName = ref('')
+const profileSaving = ref(false)
+
+function openProfile() {
+  profileName.value = (authStore.user?.name || '').trim()
+  showProfile.value = true
+}
+
+async function submitProfile() {
+  profileSaving.value = true
+  const ok = await authStore.updateProfile({ name: profileName.value.trim() || null })
+  profileSaving.value = false
+  if (ok) showProfile.value = false
 }
 </script>

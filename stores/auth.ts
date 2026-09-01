@@ -144,6 +144,22 @@ export const useAuthStore = defineStore('auth', {
             try { useCookie('token', TOKEN_COOKIE_OPTS).value = null; } catch {}
         },
 
+        async updateProfile(patch: { name?: string | null }) {
+            try {
+                const res = await api.put('/auth/me', patch);
+                if (res.data?.success) {
+                    this.user = { ...this.user, ...res.data.data };
+                    if (typeof window !== 'undefined') {
+                        localStorage.setItem('user', JSON.stringify(this.user));
+                    }
+                    return true;
+                }
+            } catch (err: any) {
+                this.error = err.response?.data?.message || 'No se pudo actualizar el perfil';
+            }
+            return false;
+        },
+
         async handleAuthCallback(token: string) {
             this.token = token;
 

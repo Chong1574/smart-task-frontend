@@ -13,7 +13,7 @@
         {{ currentTime }}
       </h1>
       <h2 class="text-3xl md:text-5xl font-medium text-foreground tracking-tight mb-2">
-        {{ greeting }}<span v-if="authStore.user?.name || authStore.user?.email">, {{ authStore.user?.name || authStore.user?.email?.split('@')[0] }}</span>
+        {{ greeting }}<span v-if="firstName">, {{ firstName }}</span>
       </h2>
       <p class="text-xl md:text-2xl text-muted-foreground font-serif">
         {{ currentDate }}
@@ -222,6 +222,12 @@ const updateTime = () => {
     greeting.value = 'Buenas noches'
   }
 }
+
+// Solo primer nombre; ya no fallback al prefijo del email.
+const firstName = computed(() => {
+  const raw = (authStore.user?.name || '').trim()
+  return raw ? raw.split(/\s+/)[0] : ''
+})
 
 // Tareas del día actual
 const todayTasks = computed(() => {

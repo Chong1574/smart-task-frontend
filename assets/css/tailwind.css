@@ -77,6 +77,59 @@
   }
 }
 
+/* Scrollbars con paleta "El Rincón de Brandy" — terracota sobre crema/café */
+@layer base {
+  /* Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--primary) / 0.55) hsl(var(--secondary) / 0.4);
+  }
+
+  /* WebKit (Chrome, Safari, Edge, Capacitor WebView) */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--secondary) / 0.35);
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, hsl(var(--primary) / 0.65), hsl(var(--accent) / 0.65));
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, hsl(var(--primary) / 0.85), hsl(var(--accent) / 0.85));
+    background-clip: padding-box;
+    border: 2px solid transparent;
+  }
+  ::-webkit-scrollbar-thumb:active {
+    background: hsl(var(--primary));
+    background-clip: padding-box;
+    border: 2px solid transparent;
+  }
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  /* Horizontal usa el mismo gradiente pero rotado para no verse "plano" */
+  ::-webkit-scrollbar:horizontal {
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb:horizontal {
+    background: linear-gradient(90deg, hsl(var(--primary) / 0.65), hsl(var(--accent) / 0.65));
+    background-clip: padding-box;
+    border: 2px solid transparent;
+  }
+  ::-webkit-scrollbar-thumb:horizontal:hover {
+    background: linear-gradient(90deg, hsl(var(--primary) / 0.85), hsl(var(--accent) / 0.85));
+    background-clip: padding-box;
+    border: 2px solid transparent;
+  }
+}
+
 /* Page and Layout Transitions */
 .page-enter-active,
 .page-leave-active {

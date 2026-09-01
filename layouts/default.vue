@@ -46,7 +46,7 @@
             Iniciar Sesión
           </NuxtLink>
           <div v-else class="flex items-center gap-3">
-            <span class="text-sm font-medium text-muted-foreground hidden sm:block">Hola, {{ authStore.user?.name || 'Usuario' }}</span>
+            <span class="text-sm font-medium text-muted-foreground hidden sm:block">Hola, {{ (authStore.user?.name || '').trim().split(/\s+/)[0] || 'Amig@' }}</span>
           </div>
           <NuxtLink 
             to="/bazar"

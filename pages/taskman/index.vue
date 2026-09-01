@@ -212,8 +212,10 @@ const authStore = useAuthStore()
 const financeStore = useFinanceStore()
 
 const userName = computed(() => {
-  const name = authStore.user?.name || authStore.user?.email?.split('@')[0] || 'Creador'
-  return name.charAt(0).toUpperCase() + name.slice(1)
+  // Solo primer nombre; sin fallback al prefijo del email (esa es la causa de "bernalchong").
+  const raw = (authStore.user?.name || '').trim()
+  const first = raw ? raw.split(/\s+/)[0] : 'Amig@'
+  return first.charAt(0).toUpperCase() + first.slice(1)
 })
 
 onMounted(async () => {
