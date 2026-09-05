@@ -484,7 +484,7 @@
               </select>
               <p v-if="selectedSourceAccount" class="text-xs mt-1 font-mono" :class="Number(selectedSourceAccount.balance) < 0 ? 'text-red-500' : 'text-muted-foreground'">
                 Saldo disponible: <span class="font-bold">{{ formatCurrency(Number(selectedSourceAccount.balance)) }}</span>
-                <span v-if="txForm.amount > 0 && !['credit_payment', 'loan_payment'].includes(txForm.type)"> → después: {{ formatCurrency(Number(selectedSourceAccount.balance) - txForm.amount) }}</span>
+                <span v-if="txForm.amount > 0 && !['credit_payment', 'loan_payment'].includes(txForm.type)"> → después: {{ formatCurrency(Number(selectedSourceAccount.balance) + (txForm.type === 'income' ? txForm.amount : -txForm.amount)) }}</span>
               </p>
             </div>
             <div v-if="['transfer', 'credit_payment', 'loan_payment'].includes(txForm.type)">
@@ -525,7 +525,9 @@
             </div>
             <div class="flex justify-end gap-3 mt-8">
               <button type="button" @click="closeTransactionModal" class="px-4 py-2 text-muted-foreground hover:bg-secondary rounded-xl transition-colors">Cancelar</button>
-              <button type="submit" class="bg-primary text-primary-foreground px-6 py-2 rounded-xl font-bold shadow-lg hover:opacity-90 transition-opacity">Guardar</button>
+              <button type="submit" :disabled="isSubmittingTx" class="bg-primary text-primary-foreground px-6 py-2 rounded-xl font-bold shadow-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed">
+                {{ isSubmittingTx ? 'Guardando...' : 'Guardar' }}
+              </button>
             </div>
           </form>
         </div>
@@ -609,7 +611,7 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'taskman' })
 
-import { ref, onMounted, reactive, computed } from 'vue'
+import { ref, onMounted, reactive, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useFinanceStore } from '~/stores/finance'
 import type { Account, AccountType, TransactionType } from '~/stores/finance'
@@ -645,6 +647,13 @@ async function openHistory(acc: Account) {
     // ponytail: si falla el fetch, deja el fallback del store visible.
   }
 }
+
+watch(() => financeStore.transactions, () => {
+  if (historyAccount.value) {
+    // Refresh local list silently
+    openHistory(historyAccount.value)
+  }
+}, { deep: true })
 function txTypeLabel(t: TransactionType): string {
   const map: Record<TransactionType, string> = {
     income: 'Ingreso', expense: 'Gasto', investment: 'Inversión',
@@ -901,34 +910,41 @@ const submitSubscription = async () => {
   subForm.paymentDay = 1
 }
 
+const isSubmittingTx = ref(false)
 const submitTransaction = async () => {
-  if (!txForm.accountId) return
+  if (!txForm.accountId || isSubmittingTx.value) return
+  
+  isSubmittingTx.value = true
 
   const isTransferOrPayment = ['transfer', 'credit_payment', 'loan_payment'].includes(txForm.type);
   const category = txForm.type === 'transfer' ? 'Transferencia' : (txForm.type === 'credit_payment' ? 'Pago de Tarjeta' : (txForm.type === 'loan_payment' ? 'Pago de Préstamo' : txForm.category));
 
-  if (editingTransactionId.value) {
-    await financeStore.updateTransaction(editingTransactionId.value, {
-      amount: txForm.amount,
-      category: category,
-      type: txForm.type,
-      description: txForm.description,
-      date: txForm.date || new Date().toISOString()
-    } as any)
-  } else {
-    await financeStore.addTransaction({
-      accountId: txForm.accountId,
-      type: txForm.type,
-      amount: txForm.amount,
-      category: category,
-      description: txForm.description,
-      date: txForm.date || new Date().toISOString(),
-      ...(isTransferOrPayment && txForm.destinationAccountId ? { destinationAccountId: txForm.destinationAccountId } : {} ),
-      ...(txForm.subscriptionId ? { subscriptionId: txForm.subscriptionId } : {})
-    } as any)
+  try {
+    if (editingTransactionId.value) {
+      await financeStore.updateTransaction(editingTransactionId.value, {
+        accountId: txForm.accountId,
+        amount: txForm.amount,
+        category: category,
+        type: txForm.type,
+        description: txForm.description,
+        date: txForm.date || new Date().toISOString()
+      } as any)
+    } else {
+      await financeStore.addTransaction({
+        accountId: txForm.accountId,
+        type: txForm.type,
+        amount: txForm.amount,
+        category: category,
+        description: txForm.description,
+        date: txForm.date || new Date().toISOString(),
+        ...(isTransferOrPayment && txForm.destinationAccountId ? { destinationAccountId: txForm.destinationAccountId } : {} ),
+        ...(txForm.subscriptionId ? { subscriptionId: txForm.subscriptionId } : {})
+      } as any)
+    }
+  } finally {
+    isSubmittingTx.value = false
+    closeTransactionModal()
   }
-  
-  closeTransactionModal()
 }
 
 const openEditTransaction = (tx: any) => {

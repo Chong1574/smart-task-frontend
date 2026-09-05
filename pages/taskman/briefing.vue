@@ -233,8 +233,16 @@ const firstName = computed(() => {
 const todayTasks = computed(() => {
   const now = new Date();
   const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  
   return taskStore.tasks
-    .filter(t => (t.status === 'pending' || t.status === 'in_progress') && t.deadline?.startsWith(todayStr))
+    .filter(t => {
+      if (t.status !== 'pending' && t.status !== 'in_progress') return false;
+      if (!t.deadline) return false;
+      
+      const d = new Date(t.deadline);
+      const localDateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      return localDateStr === todayStr;
+    })
     .sort((a, b) => {
       if (a.priority === 'high' && b.priority !== 'high') return -1;
       if (b.priority === 'high' && a.priority !== 'high') return 1;

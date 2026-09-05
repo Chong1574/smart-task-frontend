@@ -1,12 +1,18 @@
 import axios from 'axios';
 import { toast } from 'vue-sonner';
+import { Preferences } from '@capacitor/preferences';
 import { API_URL } from './apiUrl';
 
 const api = axios.create({
     baseURL: API_URL,
 });
 
-const readToken = (): string | null => {
+const readTokenAsync = async (): Promise<string | null> => {
+    try {
+        const { value } = await Preferences.get({ key: 'token' });
+        if (value) return value;
+    } catch (e) {}
+
     if (typeof window !== 'undefined') {
         const ls = localStorage.getItem('token');
         if (ls) return ls;
@@ -18,17 +24,22 @@ const readToken = (): string | null => {
     return null;
 };
 
-const clearAuthArtifacts = () => {
+const clearAuthArtifactsAsync = async () => {
+    try {
+        await Preferences.remove({ key: 'token' });
+        await Preferences.remove({ key: 'user' });
+    } catch (e) {}
+
     if (typeof window === 'undefined') return;
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     localStorage.removeItem('oauth_login');
     localStorage.removeItem('google_sync_enabled');
-    document.cookie = 'token=; Path=/; Max-Age=0; SameSite=Strict; Secure';
+    document.cookie = 'token=; Path=/; Max-Age=0; SameSite=Lax; Secure';
 };
 
-api.interceptors.request.use((config) => {
-    const token = readToken();
+api.interceptors.request.use(async (config) => {
+    const token = await readTokenAsync();
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
@@ -42,21 +53,23 @@ api.interceptors.response.use((response) => response, (error) => {
     if (status === 401) {
         const url = error.config?.url || '';
         const isOAuthEndpoint = url.includes('/oauth/');
-        const hasToken = !!readToken();
+        
+        // As readToken is now async, we don't have it synchronously here, but we can assume if authorization header was present, it had a token.
+        const hasToken = !!error.config?.headers?.Authorization;
         const msg = data?.message || '';
 
         console.error(`[API 401] URL: "${url}" | isOAuth: ${isOAuthEndpoint} | hasToken: ${hasToken}`);
 
         // Solo limpiar sesión si el backend confirma que el token de SESIÓN es inválido.
-        // No destruir la sesión por errores transitorios, endpoints OAuth, o missing calendar scope.
         const code = data?.code || '';
         const msgLower = msg.toLowerCase();
         const isTokenRejected = code === 'TOKEN_INVALID'
             || msgLower.includes('invalid') || msgLower.includes('expired') || msgLower.includes('no token');
         const isCalendarScope = code === 'CALENDAR_NOT_CONNECTED';
+        
         if (hasToken && !isOAuthEndpoint && isTokenRejected && !isCalendarScope) {
             console.warn('[API] Token rechazado por el backend, cerrando sesión...');
-            clearAuthArtifacts();
+            clearAuthArtifactsAsync(); // Trigger async clear
             if (typeof window !== 'undefined') {
                 window.dispatchEvent(new CustomEvent('auth:logout'));
             }

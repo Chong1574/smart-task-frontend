@@ -235,6 +235,7 @@ const completedProjectsCount = computed(() => taskStore.projects.filter(p => p.s
 const pendingTasksCount = computed(() => taskStore.tasks.filter(t => t.status === 'pending').length)
 const completedTasksCount = computed(() => taskStore.tasks.filter(t => t.status === 'completed').length)
 
+
 const upcomingTasks = computed(() => {
   const now = new Date()
   const nextWeek = new Date()

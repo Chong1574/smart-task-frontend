@@ -220,17 +220,21 @@ export const useTaskStore = defineStore('tasks', {
         },
 
         async logHabit(habitId: number) {
+            const today = new Date();
+            const localDateStr = new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+
             // Optimistic update
             const habit = this.habits.find(h => h.id === habitId);
             let tempLog: HabitLog | null = null;
             if (habit) {
                 if (!habit.logs) habit.logs = [];
-                tempLog = { id: Date.now(), habitId, completedAt: new Date().toISOString() };
+                // Use localDateStr for optimistic update to match exactly what we expect from backend
+                tempLog = { id: Date.now(), habitId, completedAt: localDateStr + 'T00:00:00.000Z' };
                 habit.logs.push(tempLog);
             }
             try {
                 const res = await api.post(`/habits/${habitId}/log`, {
-                    date: new Date().toISOString(),
+                    date: localDateStr,
                     status: 'completed'
                 });
                 if (res.data.success) {

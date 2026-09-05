@@ -1,9 +1,10 @@
 import { defineStore } from 'pinia';
+import { Preferences } from '@capacitor/preferences';
 import api from '../utils/api';
 import { API_URL } from '../utils/apiUrl';
 
-// ponytail: SameSite=Strict + Secure — antes lax/no-secure filtraba en http downgrade / navegaciones cross-site
-const TOKEN_COOKIE_OPTS = { maxAge: 60 * 60 * 24 * 7, path: '/', sameSite: 'strict' as const, secure: true };
+// ponytail: SameSite=Lax + Secure — evita que PWAs en iOS descarten cookie en inicio (navegación cross-site de home screen)
+const TOKEN_COOKIE_OPTS = { maxAge: 60 * 60 * 24 * 7, path: '/', sameSite: 'lax' as const, secure: true };
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
@@ -20,20 +21,29 @@ export const useAuthStore = defineStore('auth', {
     },
 
     actions: {
-        init() {
+        async init() {
             if (!this.isInitialized) {
                 let token: string | null = null;
+                let userStr: string | null = null;
 
-                // localStorage es la fuente de verdad (confiable en SPA y Capacitor)
-                if (typeof window !== 'undefined') {
+                try {
+                    const resToken = await Preferences.get({ key: 'token' });
+                    token = resToken.value;
+                    const resUser = await Preferences.get({ key: 'user' });
+                    userStr = resUser.value;
+                } catch (e) {}
+
+                // localStorage es la fuente de verdad fallback (confiable en SPA)
+                if (!token && typeof window !== 'undefined') {
                     token = localStorage.getItem('token');
-                    const userStr = localStorage.getItem('user');
-                    if (userStr && userStr !== 'undefined') {
-                        try {
-                            this.user = JSON.parse(userStr);
-                        } catch (e) {
-                            this.user = null;
-                        }
+                    if (!userStr) userStr = localStorage.getItem('user');
+                }
+
+                if (userStr && userStr !== 'undefined') {
+                    try {
+                        this.user = JSON.parse(userStr);
+                    } catch (e) {
+                        this.user = null;
                     }
                 }
 
@@ -119,27 +129,41 @@ export const useAuthStore = defineStore('auth', {
             }
         },
 
-        setSession(token: string, user: any) {
+        async setSession(token: string, user: any) {
             this.token = token;
             this.user = user;
+            const userStr = JSON.stringify(user);
+            
+            try {
+                await Preferences.set({ key: 'token', value: token });
+                await Preferences.set({ key: 'user', value: userStr });
+            } catch (e) {}
+
             if (typeof window !== 'undefined') {
                 localStorage.setItem('token', token);
-                localStorage.setItem('user', JSON.stringify(user));
+                localStorage.setItem('user', userStr);
                 localStorage.removeItem('oauth_login');
                 localStorage.removeItem('google_sync_enabled');
+                document.cookie = `token=${encodeURIComponent(token)}; Path=/; Max-Age=${60 * 60 * 24 * 7}; SameSite=Lax; Secure`;
             }
             try { useCookie('token', TOKEN_COOKIE_OPTS).value = token; } catch {}
         },
 
-        logout() {
+        async logout() {
             this.token = null;
             this.user = null;
+
+            try {
+                await Preferences.remove({ key: 'token' });
+                await Preferences.remove({ key: 'user' });
+            } catch (e) {}
+
             if (typeof window !== 'undefined') {
                 localStorage.removeItem('token');
                 localStorage.removeItem('user');
                 localStorage.removeItem('oauth_login');
                 localStorage.removeItem('google_sync_enabled');
-                document.cookie = 'token=; Path=/; Max-Age=0; SameSite=Strict; Secure';
+                document.cookie = 'token=; Path=/; Max-Age=0; SameSite=Lax; Secure';
             }
             try { useCookie('token', TOKEN_COOKIE_OPTS).value = null; } catch {}
         },
@@ -163,10 +187,15 @@ export const useAuthStore = defineStore('auth', {
         async handleAuthCallback(token: string) {
             this.token = token;
 
+            try {
+                await Preferences.set({ key: 'token', value: token });
+            } catch (e) {}
+
             // localStorage primero (confiable), cookie como respaldo
             if (typeof window !== 'undefined') {
                 localStorage.setItem('token', token);
                 localStorage.setItem('oauth_login', 'true');
+                document.cookie = `token=${encodeURIComponent(token)}; Path=/; Max-Age=${60 * 60 * 24 * 7}; SameSite=Lax; Secure`;
             }
             try { useCookie('token', TOKEN_COOKIE_OPTS).value = token; } catch {}
 
@@ -184,8 +213,10 @@ export const useAuthStore = defineStore('auth', {
                 const res = await api.get('/auth/me');
                 if (res.data?.success && res.data.data) {
                     this.user = { ...this.user, ...res.data.data };
+                    const userStr = JSON.stringify(this.user);
+                    try { await Preferences.set({ key: 'user', value: userStr }); } catch (e) {}
                     if (typeof window !== 'undefined') {
-                        localStorage.setItem('user', JSON.stringify(this.user));
+                        localStorage.setItem('user', userStr);
                     }
                 }
             } catch (err) {
@@ -195,6 +226,10 @@ export const useAuthStore = defineStore('auth', {
                     if (!localStorage.getItem('token')) localStorage.setItem('token', token);
                     if (this.user) localStorage.setItem('user', JSON.stringify(this.user));
                 }
+                try {
+                    await Preferences.set({ key: 'token', value: token });
+                    if (this.user) await Preferences.set({ key: 'user', value: JSON.stringify(this.user) });
+                } catch (e) {}
             }
         }
     }

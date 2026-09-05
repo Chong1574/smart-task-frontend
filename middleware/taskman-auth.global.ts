@@ -1,4 +1,6 @@
-export default defineNuxtRouteMiddleware((to) => {
+import { Preferences } from '@capacitor/preferences';
+
+export default defineNuxtRouteMiddleware(async (to) => {
     if (!to.path.startsWith('/taskman')) return;
     if (
         to.path.includes('/login') ||
@@ -8,7 +10,13 @@ export default defineNuxtRouteMiddleware((to) => {
     ) return;
 
     let token: string | null = null;
-    if (typeof window !== 'undefined') {
+    
+    try {
+        const { value } = await Preferences.get({ key: 'token' });
+        token = value;
+    } catch (e) {}
+
+    if (!token && typeof window !== 'undefined') {
         token = localStorage.getItem('token');
     }
     if (!token) {
