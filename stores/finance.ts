@@ -100,6 +100,7 @@ export const useFinanceStore = defineStore('finance', {
             subscriptions: [] as Subscription[],
             vehicles: [] as Vehicle[],
             tasks: [] as any[],
+            wishlistItems: [] as any[],
             loading: false,
             error: null as string | null
         };
@@ -553,7 +554,8 @@ export const useFinanceStore = defineStore('finance', {
                 this.fetchTransactions(),
                 this.fetchSubscriptions(),
                 this.fetchTasks(),
-                this.fetchVehicles()
+                this.fetchVehicles(),
+                this.fetchWishlistItems()
             ]);
         },
 
@@ -659,6 +661,34 @@ export const useFinanceStore = defineStore('finance', {
                 alert("Error de red o servidor: " + (err.response?.data?.message || err.message));
                 return false;
             }
+        },
+
+        async fetchWishlistItems() {
+            try {
+                const res = await api.get('/finance/wishlist');
+                this.wishlistItems = res.data;
+            } catch (err) { console.error("Error fetching wishlist:", err); }
+        },
+
+        async addWishlistItem(item: any) {
+            try {
+                const res = await api.post('/finance/wishlist', item);
+                await this.fetchWishlistItems();
+            } catch (err) { console.error("Error adding wishlist item:", err); }
+        },
+
+        async updateWishlistItem(id: number, item: any) {
+            try {
+                const res = await api.put(`/finance/wishlist/${id}`, item);
+                await this.fetchWishlistItems();
+            } catch (err) { console.error("Error updating wishlist item:", err); }
+        },
+
+        async deleteWishlistItem(id: number) {
+            try {
+                await api.delete(`/finance/wishlist/${id}`);
+                await this.fetchWishlistItems();
+            } catch (err) { console.error("Error deleting wishlist item:", err); }
         }
     }
 });

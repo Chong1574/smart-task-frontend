@@ -317,6 +317,24 @@ const agendaItems = computed<AgendaItem[]>(() => {
     });
   }
 
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  for (const w of financeStore.wishlistItems) {
+    if (!w.targetDate || w.status === 'purchased') continue;
+    const d = new Date(w.targetDate);
+    const wDateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    if (wDateStr === todayStr) {
+      items.push({
+        key: `w-${w.id}`,
+        kind: 'task', // display like a task
+        title: `Comprar: ${w.name}`,
+        time: 'Hoy',
+        sortTs: start, // put at the top or bottom of the day
+        href: '/taskman/wishlist',
+        priority: w.priority === 'urgent' ? 'high' : w.priority === 'not_important' ? 'low' : 'medium',
+      });
+    }
+  }
+
   return items.sort((a, b) => a.sortTs - b.sortTs);
 })
 
@@ -365,6 +383,7 @@ onMounted(async () => {
   if (taskStore.habits.length === 0) taskStore.fetchHabits()
   if (taskStore.projects.length === 0) taskStore.fetchProjects()
   if (financeStore.subscriptions.length === 0) financeStore.fetchSubscriptions()
+  if (financeStore.wishlistItems.length === 0) financeStore.fetchWishlistItems()
   fetchTodayEvents()
 })
 

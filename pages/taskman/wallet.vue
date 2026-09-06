@@ -26,6 +26,9 @@
         <NuxtLink to="/taskman/budget" class="px-4 py-2 border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap">
           Presupuesto & Proyecciones
         </NuxtLink>
+        <NuxtLink to="/taskman/wishlist" class="px-4 py-2 border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap">
+          Wishlist
+        </NuxtLink>
         <NuxtLink to="/taskman/dashboard" class="px-4 py-2 border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap">
           Dashboard y Salud
         </NuxtLink>
