@@ -30,16 +30,15 @@
         </NuxtLink>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         
-        <!-- Urgentes -->
-        <div class="bg-card border border-border/40 rounded-3xl shadow-sm flex flex-col">
-          <div class="p-6 border-b border-border/40 bg-red-500/10 rounded-t-3xl">
-            <h3 class="font-bold text-lg text-red-600 dark:text-red-400">Cosas Urgentes</h3>
-            <p class="text-sm text-red-600/80 dark:text-red-400/80">Compras necesarias o de alta prioridad</p>
+        <div v-for="quadrant in quadrants" :key="quadrant.id" class="bg-card border border-border/40 rounded-3xl shadow-sm flex flex-col">
+          <div :class="`p-6 border-b border-border/40 rounded-t-3xl ${quadrant.bgClass}`">
+            <h3 :class="`font-bold text-lg ${quadrant.textClass}`">{{ quadrant.title }}</h3>
+            <p :class="`text-sm ${quadrant.descClass}`">{{ quadrant.description }}</p>
           </div>
           <div class="flex-1 p-4 space-y-3 overflow-y-auto min-h-[300px]">
-            <div v-for="item in urgentItems" :key="item.id" class="p-4 bg-secondary/30 rounded-2xl border border-border/20 relative group">
+            <div v-for="item in getItems(quadrant.id)" :key="item.id" class="p-4 bg-secondary/30 rounded-2xl border border-border/20 relative group">
               <div class="flex justify-between items-start mb-2">
                 <h4 class="font-bold">{{ item.name }}</h4>
                 <p class="font-mono font-bold">{{ formatCurrency(item.price) }}</p>
@@ -51,7 +50,7 @@
                 <span :class="isAccountEnough(item) ? 'text-green-500' : 'text-red-500'">({{ formatCurrency(item.accountBalance) }})</span>
               </div>
               <div v-if="item.rule" class="text-xs bg-primary/10 text-primary p-2 rounded-lg italic">
-                Regla: {{ item.rule }}
+                Ahorro requerido: {{ formatCurrency(item.rule) }}
               </div>
               <div v-if="item.targetDate" class="text-xs text-muted-foreground mt-2">
                 📅 Fecha: {{ new Date(item.targetDate).toLocaleDateString() }}
@@ -66,83 +65,7 @@
                 </button>
               </div>
             </div>
-            <div v-if="urgentItems.length === 0" class="text-center text-muted-foreground text-sm py-4">No hay ítems urgentes.</div>
-          </div>
-        </div>
-
-        <!-- Gustitos -->
-        <div class="bg-card border border-border/40 rounded-3xl shadow-sm flex flex-col">
-          <div class="p-6 border-b border-border/40 bg-purple-500/10 rounded-t-3xl">
-            <h3 class="font-bold text-lg text-purple-600 dark:text-purple-400">Gustitos</h3>
-            <p class="text-sm text-purple-600/80 dark:text-purple-400/80">Recompensas y cosas que quieres</p>
-          </div>
-          <div class="flex-1 p-4 space-y-3 overflow-y-auto min-h-[300px]">
-            <div v-for="item in treatItems" :key="item.id" class="p-4 bg-secondary/30 rounded-2xl border border-border/20 relative group">
-              <div class="flex justify-between items-start mb-2">
-                <h4 class="font-bold">{{ item.name }}</h4>
-                <p class="font-mono font-bold">{{ formatCurrency(item.price) }}</p>
-              </div>
-              <p v-if="item.description" class="text-sm text-muted-foreground mb-3">{{ item.description }}</p>
-              
-              <div v-if="item.accountName" class="text-xs flex items-center gap-1 mb-2 bg-background p-2 rounded-lg">
-                <span>💳 {{ item.accountName }}</span>
-                <span :class="isAccountEnough(item) ? 'text-green-500' : 'text-red-500'">({{ formatCurrency(item.accountBalance) }})</span>
-              </div>
-              <div v-if="item.rule" class="text-xs bg-primary/10 text-primary p-2 rounded-lg italic">
-                Regla: {{ item.rule }}
-              </div>
-              <div v-if="item.targetDate" class="text-xs text-muted-foreground mt-2">
-                📅 Fecha: {{ new Date(item.targetDate).toLocaleDateString() }}
-              </div>
-
-              <div class="absolute top-2 right-2 flex gap-1 md:opacity-0 opacity-100 md:group-hover:opacity-100 transition-opacity">
-                <button @click.stop="openEdit(item)" class="text-muted-foreground hover:text-primary p-1 bg-background rounded-md">
-                  ✏️
-                </button>
-                <button @click.stop="deleteItem(item.id)" class="text-muted-foreground hover:text-destructive p-1 bg-background rounded-md">
-                  🗑️
-                </button>
-              </div>
-            </div>
-            <div v-if="treatItems.length === 0" class="text-center text-muted-foreground text-sm py-4">No hay gustitos.</div>
-          </div>
-        </div>
-
-        <!-- No Importantes -->
-        <div class="bg-card border border-border/40 rounded-3xl shadow-sm flex flex-col">
-          <div class="p-6 border-b border-border/40 bg-gray-500/10 rounded-t-3xl">
-            <h3 class="font-bold text-lg text-gray-600 dark:text-gray-400">No Importantes</h3>
-            <p class="text-sm text-gray-600/80 dark:text-gray-400/80">Quizás en un futuro, baja prioridad</p>
-          </div>
-          <div class="flex-1 p-4 space-y-3 overflow-y-auto min-h-[300px]">
-            <div v-for="item in notImportantItems" :key="item.id" class="p-4 bg-secondary/30 rounded-2xl border border-border/20 relative group">
-              <div class="flex justify-between items-start mb-2">
-                <h4 class="font-bold">{{ item.name }}</h4>
-                <p class="font-mono font-bold">{{ formatCurrency(item.price) }}</p>
-              </div>
-              <p v-if="item.description" class="text-sm text-muted-foreground mb-3">{{ item.description }}</p>
-              
-              <div v-if="item.accountName" class="text-xs flex items-center gap-1 mb-2 bg-background p-2 rounded-lg">
-                <span>💳 {{ item.accountName }}</span>
-                <span :class="isAccountEnough(item) ? 'text-green-500' : 'text-red-500'">({{ formatCurrency(item.accountBalance) }})</span>
-              </div>
-              <div v-if="item.rule" class="text-xs bg-primary/10 text-primary p-2 rounded-lg italic">
-                Regla: {{ item.rule }}
-              </div>
-              <div v-if="item.targetDate" class="text-xs text-muted-foreground mt-2">
-                📅 Fecha: {{ new Date(item.targetDate).toLocaleDateString() }}
-              </div>
-
-              <div class="absolute top-2 right-2 flex gap-1 md:opacity-0 opacity-100 md:group-hover:opacity-100 transition-opacity">
-                <button @click.stop="openEdit(item)" class="text-muted-foreground hover:text-primary p-1 bg-background rounded-md">
-                  ✏️
-                </button>
-                <button @click.stop="deleteItem(item.id)" class="text-muted-foreground hover:text-destructive p-1 bg-background rounded-md">
-                  🗑️
-                </button>
-              </div>
-            </div>
-            <div v-if="notImportantItems.length === 0" class="text-center text-muted-foreground text-sm py-4">No hay ítems de baja prioridad.</div>
+            <div v-if="getItems(quadrant.id).length === 0" class="text-center text-muted-foreground text-sm py-4">No hay ítems aquí.</div>
           </div>
         </div>
 
@@ -164,11 +87,12 @@
                 <input v-model.number="form.price" required type="number" step="0.01" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
               </div>
               <div>
-                <label class="block text-sm font-medium mb-1">Prioridad</label>
-                <select v-model="form.priority" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
-                  <option value="urgent">Urgente</option>
-                  <option value="treat">Gustito</option>
-                  <option value="not_important">No Importante</option>
+                <label class="block text-sm font-medium mb-1">Prioridad (Matriz)</label>
+                <select v-model="form.priority" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none text-xs">
+                  <option value="important_urgent">Importante, Urgente</option>
+                  <option value="important_not_urgent">Importante, No Urgente</option>
+                  <option value="not_important_urgent">No Importante, Urgente</option>
+                  <option value="not_important_not_urgent">No Importante, No Urgente</option>
                 </select>
               </div>
             </div>
@@ -182,8 +106,8 @@
             </div>
 
             <div>
-              <label class="block text-sm font-medium mb-1">Regla Financiera (Opcional)</label>
-              <input v-model="form.rule" type="text" placeholder="Ej. Comprar solo si hay $500 extras" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+              <label class="block text-sm font-medium mb-1">Regla Numérica: Saldo Requerido (Opcional)</label>
+              <input v-model.number="form.rule" type="number" step="1" placeholder="Ej. 1500" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
             </div>
             
             <div>
@@ -221,12 +145,26 @@ onMounted(() => {
   financeStore.initialize()
 })
 
-const urgentItems = computed(() => financeStore.wishlistItems?.filter(i => i.priority === 'urgent' && i.status !== 'purchased') || [])
-const treatItems = computed(() => financeStore.wishlistItems?.filter(i => i.priority === 'treat' && i.status !== 'purchased') || [])
-const notImportantItems = computed(() => financeStore.wishlistItems?.filter(i => i.priority === 'not_important' && i.status !== 'purchased') || [])
+const quadrants = [
+  { id: 'important_urgent', title: 'Importantes y Urgentes', description: 'Hacer ya (Necesidades críticas)', bgClass: 'bg-red-500/10', textClass: 'text-red-600 dark:text-red-400', descClass: 'text-red-600/80 dark:text-red-400/80' },
+  { id: 'important_not_urgent', title: 'Importantes, No Urgentes', description: 'Planificar (Inversiones, mejoras a largo plazo)', bgClass: 'bg-blue-500/10', textClass: 'text-blue-600 dark:text-blue-400', descClass: 'text-blue-600/80 dark:text-blue-400/80' },
+  { id: 'not_important_urgent', title: 'No Importantes, Urgentes', description: 'Delegar / Ofertas limitadas', bgClass: 'bg-yellow-500/10', textClass: 'text-yellow-600 dark:text-yellow-400', descClass: 'text-yellow-600/80 dark:text-yellow-400/80' },
+  { id: 'not_important_not_urgent', title: 'No Importantes, No Urgentes', description: 'Caprichos / Eliminar', bgClass: 'bg-gray-500/10', textClass: 'text-gray-600 dark:text-gray-400', descClass: 'text-gray-600/80 dark:text-gray-400/80' },
+]
 
-const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(value)
+const getItems = (priorityId: string) => {
+    return financeStore.wishlistItems?.filter(i => {
+        if (i.status === 'purchased') return false;
+        // retrocompatibility logic
+        if (priorityId === 'important_urgent' && i.priority === 'urgent') return true;
+        if (priorityId === 'not_important_not_urgent' && (i.priority === 'not_important' || i.priority === 'treat')) return true;
+        return i.priority === priorityId;
+    }) || []
+}
+
+const formatCurrency = (value: number | string) => {
+  if (value === null || value === undefined || value === '') return ''
+  return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(value))
 }
 
 const isAccountEnough = (item: any) => {
@@ -241,9 +179,9 @@ const editingId = ref<number | null>(null)
 const form = reactive({
   name: '',
   price: 0,
-  priority: 'not_important',
+  priority: 'important_not_urgent',
   accountId: null as number | null,
-  rule: '',
+  rule: null as number | null,
   targetDate: '',
   description: ''
 })
@@ -253,9 +191,9 @@ const openModal = () => {
   editingId.value = null
   form.name = ''
   form.price = 0
-  form.priority = 'not_important'
+  form.priority = 'important_not_urgent'
   form.accountId = null
-  form.rule = ''
+  form.rule = null
   form.targetDate = ''
   form.description = ''
   showModal.value = true
@@ -266,9 +204,14 @@ const openEdit = (item: any) => {
   editingId.value = item.id
   form.name = item.name
   form.price = item.price
-  form.priority = item.priority
+  
+  // Convert old priorities correctly when editing
+  if (item.priority === 'urgent') form.priority = 'important_urgent'
+  else if (item.priority === 'treat' || item.priority === 'not_important') form.priority = 'not_important_not_urgent'
+  else form.priority = item.priority
+
   form.accountId = item.accountId
-  form.rule = item.rule || ''
+  form.rule = item.rule ? Number(item.rule) : null
   form.targetDate = item.targetDate ? new Date(item.targetDate).toISOString().split('T')[0] : ''
   form.description = item.description || ''
   showModal.value = true
@@ -278,7 +221,8 @@ const submitForm = async () => {
   const payload = {
     ...form,
     targetDate: form.targetDate ? new Date(form.targetDate).toISOString() : null,
-    accountId: form.accountId || null
+    accountId: form.accountId || null,
+    rule: form.rule !== null && form.rule !== '' ? Number(form.rule) : null
   }
   
   if (isEditing.value && editingId.value) {
