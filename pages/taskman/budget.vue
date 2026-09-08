@@ -79,13 +79,17 @@
             <div>
               <h3 class="font-bold text-lg mb-1">Burn Rate Fijo</h3>
               <p class="text-3xl font-bold font-mono text-red-500">{{ formatCurrency(financeStore.totalFixedExpenses) }} <span class="text-sm text-muted-foreground font-sans">/ mes</span></p>
-              <p class="text-xs text-muted-foreground mt-1">Lo mínimo que gastas en suscripciones al mes.</p>
+              <p class="text-xs text-muted-foreground mt-1">Lo mínimo que gastas en suscripciones y deudas al mes.</p>
             </div>
           </div>
           <div class="mt-4 space-y-2 relative z-10">
-             <div class="flex justify-between items-center text-sm">
+             <div class="flex justify-between items-center text-sm border-b border-border/30 pb-2">
                 <span>Total Membresías/Servicios</span>
-                <span class="font-mono text-red-400">{{ formatCurrency(financeStore.totalFixedExpenses) }}</span>
+                <span class="font-mono text-red-400">{{ formatCurrency(financeStore.totalFixedSubscriptionExpenses) }}</span>
+             </div>
+             <div class="flex justify-between items-center text-sm">
+                <span>Pagos de Préstamos/Tarjetas</span>
+                <span class="font-mono text-red-400">{{ formatCurrency(financeStore.totalFixedDebtPayments) }}</span>
              </div>
           </div>
           <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-red-500/5 rounded-full blur-3xl group-hover:bg-red-500/10 transition-colors"></div>

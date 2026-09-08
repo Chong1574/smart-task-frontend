@@ -125,7 +125,7 @@ export const useFinanceStore = defineStore('finance', {
             return income - expenses;
         },
 
-        totalFixedExpenses: (state) => {
+        totalFixedSubscriptionExpenses: (state) => {
             return state.subscriptions
                 .filter(sub => sub.type !== 'INCOME')
                 .reduce((sum, sub) => {
@@ -136,6 +136,33 @@ export const useFinanceStore = defineStore('finance', {
                     else if (sub.frequency === 'WEEKLY') val = val * 4.33; // aprox semanas por mes
                     return sum + val;
                 }, 0);
+        },
+
+        totalFixedDebtPayments: (state) => {
+            return state.accounts.reduce((sum, acc) => {
+                const isDebt = acc.type === 'loan' || (acc.type === 'card' && acc.sub_type === 'credit');
+                if (!isDebt || Number(acc.balance) >= 0) return sum;
+                if (acc.payment_frequency === 'ONCE') return sum;
+
+                let amountToPay = Number(acc.monthly_payment);
+                if (!amountToPay || amountToPay === 0) {
+                    const balance = Math.abs(Number(acc.balance));
+                    amountToPay = balance < 500 ? balance : balance * 0.05; 
+                }
+
+                let val = amountToPay;
+                if (acc.payment_frequency === 'WEEKLY') val = val * 4.33;
+                else if (acc.payment_frequency === 'BIWEEKLY') val = val * 2;
+                // MONTHLY is the default
+                
+                return sum + val;
+            }, 0);
+        },
+
+        totalFixedExpenses(state): number {
+            // workaround for pinia getter `this` access or direct call if available
+            // Note: to access other getters we use `this`
+            return (this as any).totalFixedSubscriptionExpenses + (this as any).totalFixedDebtPayments;
         },
 
         totalFixedIncome: (state) => {
@@ -154,33 +181,16 @@ export const useFinanceStore = defineStore('finance', {
         // Devuelve el balance proyectado sumando ingresos y restando gastos fijos según su frecuencia.
         // Asume un modelo simplificado donde si es mensual, se resta una vez en 30 dias.
         // Si es quincenal (BIMONTHLY) se resta/suma 2 veces en 30 días.
-        cashFlowProjections: (state): { d7: number; d15: number; d30: number } => {
+        cashFlowProjections(state): { d7: number; d15: number; d30: number } {
             const currentBalance = state.accounts.reduce((sum, acc) => {
                 const isDebt = acc.type === 'loan' || (acc.type === 'card' && acc.sub_type === 'credit');
                 const balanceVal = Number(acc.balance);
                 return sum + (isDebt ? -Math.abs(balanceVal) : balanceVal);
             }, 0);
             
-            // Calculamos el impacto diario de los ingresos y gastos fijos
-            const dailyBurnRate = state.subscriptions.filter(s => s.type !== 'INCOME').reduce((sum, sub) => {
-                let daily = Number(sub.amount);
-                if (sub.frequency === 'MONTHLY') daily = daily / 30;
-                else if (sub.frequency === 'BIMONTHLY') daily = daily / 60;
-                else if (sub.frequency === 'BIWEEKLY') daily = daily / 15;
-                else if (sub.frequency === 'WEEKLY') daily = daily / 7;
-                else if (sub.frequency === 'YEARLY') daily = daily / 365;
-                return sum + daily;
-            }, 0);
-
-            const dailyIncomeRate = state.subscriptions.filter(s => s.type === 'INCOME').reduce((sum, sub) => {
-                let daily = Number(sub.amount);
-                if (sub.frequency === 'MONTHLY') daily = daily / 30;
-                else if (sub.frequency === 'BIMONTHLY') daily = daily / 60;
-                else if (sub.frequency === 'BIWEEKLY') daily = daily / 15;
-                else if (sub.frequency === 'WEEKLY') daily = daily / 7;
-                else if (sub.frequency === 'YEARLY') daily = daily / 365;
-                return sum + daily;
-            }, 0);
+            // Calculamos el impacto diario de los ingresos y gastos fijos usando los getters globales
+            const dailyBurnRate = ((this as any).totalFixedExpenses || 0) / 30;
+            const dailyIncomeRate = ((this as any).totalFixedIncome || 0) / 30;
 
             const netDaily = dailyIncomeRate - dailyBurnRate;
 
