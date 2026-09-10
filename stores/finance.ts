@@ -676,7 +676,11 @@ export const useFinanceStore = defineStore('finance', {
         async fetchWishlistItems() {
             try {
                 const res = await api.get('/finance/wishlist');
-                this.wishlistItems = res.data;
+                if (res.data.success) {
+                    this.wishlistItems = res.data.data;
+                } else {
+                    this.wishlistItems = res.data;
+                }
             } catch (err) { console.error("Error fetching wishlist:", err); }
         },
 

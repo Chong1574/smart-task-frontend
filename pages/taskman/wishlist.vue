@@ -57,7 +57,10 @@
               </div>
 
               <div class="absolute top-2 right-2 flex gap-1 md:opacity-0 opacity-100 md:group-hover:opacity-100 transition-opacity">
-                <button @click.stop="openEdit(item)" class="text-muted-foreground hover:text-primary p-1 bg-background rounded-md">
+                <button @click.stop="markPurchased(item)" class="text-muted-foreground hover:text-green-500 p-1 bg-background rounded-md" title="Marcar como comprado">
+                  ✅
+                </button>
+                <button @click.stop="openEdit(item)" class="text-muted-foreground hover:text-primary p-1 bg-background rounded-md" title="Editar">
                   ✏️
                 </button>
                 <button @click.stop="deleteItem(item.id)" class="text-muted-foreground hover:text-destructive p-1 bg-background rounded-md">
@@ -241,6 +244,17 @@ const deleteItem = async (id: number) => {
     destructive: true
   })) {
     await financeStore.deleteWishlistItem(id)
+  }
+}
+
+const markPurchased = async (item: any) => {
+  if (await confirmStore.ask({
+    title: 'Comprar Deseo',
+    message: `¿Ya has comprado "${item.name}"?`,
+    confirmLabel: 'Sí, comprado',
+    destructive: false
+  })) {
+    await financeStore.updateWishlistItem(item.id, { status: 'purchased' })
   }
 }
 </script>
