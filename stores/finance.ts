@@ -233,6 +233,27 @@ export const useFinanceStore = defineStore('finance', {
                 byCategory[cat] += Number(t.amount);
             });
 
+            // Incluir gastos de gasolina (fuel logs) del mes actual que no tengan transacción (ej. creados sin cuenta)
+            state.vehicles.forEach(v => {
+                if (v.fuelLogs) {
+                    v.fuelLogs.forEach(log => {
+                        const d = new Date(log.date);
+                        if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+                            // Revisar si existe una transacción con exactamente el mismo monto y fecha cercana (dentro del mismo minuto) para no duplicar
+                            const hasTransaction = expenses.some(t => 
+                                t.category === 'Gasolina' && 
+                                Number(t.amount) === Number(log.totalCost) && 
+                                Math.abs(new Date(t.date).getTime() - d.getTime()) < 60000
+                            );
+                            if (!hasTransaction) {
+                                if (!byCategory['Gasolina']) byCategory['Gasolina'] = 0;
+                                byCategory['Gasolina'] += Number(log.totalCost);
+                            }
+                        }
+                    });
+                }
+            });
+
             return byCategory;
         },
 
@@ -255,10 +276,33 @@ export const useFinanceStore = defineStore('finance', {
                 }
             });
 
-            // Convert to array and sort chronologically
-            return Object.keys(result).sort().map(key => ({
-                month: key,
-                ...result[key]
+            // Incluir gastos de gasolina (fuel logs) que no tengan transacción
+            state.vehicles.forEach(v => {
+                if (v.fuelLogs) {
+                    v.fuelLogs.forEach(log => {
+                        const d = new Date(log.date);
+                        const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                        
+                        if (result[monthKey]) {
+                            // Revisar si existe una transacción con exactamente el mismo monto y fecha cercana
+                            const hasTransaction = state.transactions.some(t => 
+                                t.type === 'expense' &&
+                                t.category === 'Gasolina' && 
+                                Number(t.amount) === Number(log.totalCost) && 
+                                Math.abs(new Date(t.date).getTime() - d.getTime()) < 60000
+                            );
+                            if (!hasTransaction) {
+                                result[monthKey].expense += Number(log.totalCost);
+                            }
+                        }
+                    });
+                }
+            });
+
+            // Format to array and sort chronologically
+            return Object.entries(result).sort().map(([month, data]) => ({
+                month,
+                ...data
             })).slice(-6); // last 6 available months
         },
 

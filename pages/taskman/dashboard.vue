@@ -228,13 +228,18 @@ const emergencyFundStatus = computed(() => {
 const hasCategoryData = computed(() => Object.keys(financeStore.expensesByCategoryThisMonth).length > 0)
 const categoryChartData = computed(() => {
   const data = financeStore.expensesByCategoryThisMonth;
-  const labels = Object.keys(data);
-  const values = Object.values(data);
+  const sortedEntries = Object.entries(data).sort((a, b) => b[1] - a[1]);
+  const labels = sortedEntries.map(e => e[0]);
+  const values = sortedEntries.map(e => e[1]);
   return {
     labels,
     datasets: [
       {
-        backgroundColor: ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#f43f5e'],
+        backgroundColor: [
+          '#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', 
+          '#06b6d4', '#f43f5e', '#a855f7', '#ec4899', '#6366f1',
+          '#14b8a6', '#f97316', '#84cc16', '#eab308', '#d946ef'
+        ],
         data: values
       }
     ]
