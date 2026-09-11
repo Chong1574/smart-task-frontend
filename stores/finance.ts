@@ -375,6 +375,27 @@ export const useFinanceStore = defineStore('finance', {
                     amountToPay = balance < 500 ? balance : balance * 0.05; 
                 }
 
+                // Descontar los pagos ya realizados en el ciclo actual
+                let cycleDays = 30;
+                if (acc.payment_frequency === 'WEEKLY') cycleDays = 7;
+                else if (acc.payment_frequency === 'BIWEEKLY') cycleDays = 14;
+
+                const cycleStart = new Date(nextDate.getTime() - (cycleDays * 24 * 3600 * 1000));
+                const nextDateEnd = new Date(nextDate.getFullYear(), nextDate.getMonth(), nextDate.getDate(), 23, 59, 59);
+
+                const paymentsThisCycle = state.transactions.filter(t => 
+                    t.accountId === acc.id &&
+                    (t.type === 'credit_payment' || t.type === 'loan_payment') &&
+                    new Date(t.date) >= cycleStart &&
+                    new Date(t.date) <= nextDateEnd
+                );
+
+                const totalPaidThisCycle = paymentsThisCycle.reduce((sum, t) => sum + Number(t.amount), 0);
+                amountToPay = Math.max(0, amountToPay - totalPaidThisCycle);
+
+                if (amountToPay <= 0) return; // Ya se pagó la cuota de este ciclo
+
+
                 payments.push({
                     name: `Pago ${acc.name}`,
                     amount: amountToPay,
