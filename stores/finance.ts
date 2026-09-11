@@ -117,11 +117,16 @@ export const useFinanceStore = defineStore('finance', {
 
         netBudget: (state) => {
             const income = state.transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + Number(t.amount), 0);
-            const expenses = state.transactions.filter(t => 
-                t.type === 'expense' || 
-                t.type === 'loan_payment' || 
-                t.type === 'credit_payment'
-            ).reduce((sum, t) => sum + Number(t.amount), 0);
+            const expenses = state.transactions.filter(t => {
+                if (t.type === 'expense') return true;
+                if (['loan_payment', 'credit_payment'].includes(t.type)) {
+                    if (t.description && (t.description.startsWith('Pago recibido') || t.description.startsWith('Transferencia recibida'))) {
+                        return false;
+                    }
+                    return true;
+                }
+                return false;
+            }).reduce((sum, t) => sum + Number(t.amount), 0);
             return income - expenses;
         },
 
@@ -271,8 +276,13 @@ export const useFinanceStore = defineStore('finance', {
                 
                 if (t.type === 'income') {
                     result[monthKey].income += Number(t.amount);
-                } else if (['expense', 'loan_payment', 'credit_payment'].includes(t.type)) {
+                } else if (t.type === 'expense') {
                     result[monthKey].expense += Number(t.amount);
+                } else if (['loan_payment', 'credit_payment'].includes(t.type)) {
+                    // Solo contar la parte "saliente" del pago, no el recibo en la otra cuenta
+                    if (!t.description || !(t.description.startsWith('Pago recibido') || t.description.startsWith('Transferencia recibida'))) {
+                        result[monthKey].expense += Number(t.amount);
+                    }
                 }
             });
 

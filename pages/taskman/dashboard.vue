@@ -69,7 +69,7 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <!-- Gráfica de Donas: Gastos por Categoría -->
         <div class="bg-card border border-border/40 p-6 rounded-3xl shadow-sm">
           <h3 class="font-bold text-lg mb-4">Gastos por Categoría (Este Mes)</h3>
@@ -88,6 +88,50 @@
             <ClientOnly fallback="Cargando gráfica...">
               <Bar v-if="hasTrendData" :data="trendChartData" :options="barOptions" />
               <div v-else class="text-muted-foreground text-sm text-center">No hay transacciones suficientes para graficar tendencias.</div>
+            </ClientOnly>
+          </div>
+        </div>
+        
+        <!-- Gráfica de Donas: Distribución de Patrimonio -->
+        <div class="bg-card border border-border/40 p-6 rounded-3xl shadow-sm">
+          <h3 class="font-bold text-lg mb-4">Distribución de Patrimonio</h3>
+          <div class="h-64 relative flex items-center justify-center">
+            <ClientOnly fallback="Cargando gráfica...">
+              <Doughnut v-if="hasNetWorthData" :data="netWorthChartData" :options="doughnutOptions" />
+              <div v-else class="text-muted-foreground text-sm text-center">No hay cuentas registradas.</div>
+            </ClientOnly>
+          </div>
+        </div>
+
+        <!-- Gráfica de Barras: Gastos de Vehículos -->
+        <div class="bg-card border border-border/40 p-6 rounded-3xl shadow-sm">
+          <h3 class="font-bold text-lg mb-4">Gasto Mensual Vehículos (Gasolina)</h3>
+          <div class="h-64 relative flex items-center justify-center">
+            <ClientOnly fallback="Cargando gráfica...">
+              <Bar v-if="hasVehiclesData" :data="vehiclesChartData" :options="barOptions" />
+              <div v-else class="text-muted-foreground text-sm text-center">No hay registros de combustible/vehículos.</div>
+            </ClientOnly>
+          </div>
+        </div>
+
+        <!-- Gráfica de Donas: Suscripciones vs Flexibles -->
+        <div class="bg-card border border-border/40 p-6 rounded-3xl shadow-sm">
+          <h3 class="font-bold text-lg mb-4">Fijos/Deuda vs Variables (Este Mes)</h3>
+          <div class="h-64 relative flex items-center justify-center">
+            <ClientOnly fallback="Cargando gráfica...">
+              <Doughnut v-if="hasCategoryData" :data="fixedVsVariableChartData" :options="doughnutOptions" />
+              <div v-else class="text-muted-foreground text-sm text-center">No hay gastos registrados este mes.</div>
+            </ClientOnly>
+          </div>
+        </div>
+        
+        <!-- Gráfica de Líneas: Gastos Acumulados del Mes -->
+        <div class="bg-card border border-border/40 p-6 rounded-3xl shadow-sm md:col-span-1 lg:col-span-1">
+          <h3 class="font-bold text-lg mb-4">Flujo de Gastos (Mes Actual)</h3>
+          <div class="h-64 relative flex items-center justify-center">
+            <ClientOnly fallback="Cargando gráfica...">
+              <LineChart v-if="hasMonthlyFlowData" :data="monthlyFlowChartData" :options="lineOptions" />
+              <div v-else class="text-muted-foreground text-sm text-center">No hay gastos este mes.</div>
             </ClientOnly>
           </div>
         </div>
@@ -278,6 +322,127 @@ const barOptions = {
   responsive: true,
   maintainAspectRatio: false
 }
+
+const hasNetWorthData = computed(() => financeStore.accounts.length > 0)
+const netWorthChartData = computed(() => {
+  let assets = 0;
+  let debts = 0;
+  financeStore.accounts.forEach(acc => {
+    const isDebt = acc.type === 'loan' || (acc.type === 'card' && acc.sub_type === 'credit');
+    if (isDebt && Number(acc.balance) < 0) {
+      debts += Math.abs(Number(acc.balance));
+    } else {
+      assets += Math.max(0, Number(acc.balance));
+    }
+  });
+  return {
+    labels: ['Activos a Favor', 'Deudas (Pasivos)'],
+    datasets: [{
+      backgroundColor: ['#10b981', '#ef4444'],
+      data: [assets, debts]
+    }]
+  }
+})
+
+const hasVehiclesData = computed(() => financeStore.vehicles.some(v => v.fuelLogs && v.fuelLogs.length > 0))
+const vehiclesChartData = computed(() => {
+  const result: Record<string, number> = {};
+  financeStore.vehicles.forEach(v => {
+    if (v.fuelLogs) {
+      v.fuelLogs.forEach(log => {
+        const d = new Date(log.date);
+        const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        if (!result[monthKey]) result[monthKey] = 0;
+        result[monthKey] += Number(log.totalCost);
+      });
+    }
+  });
+  const sorted = Object.entries(result).sort().slice(-6);
+  return {
+    labels: sorted.map(s => s[0]),
+    datasets: [{
+      label: 'Gasto en Combustible',
+      backgroundColor: '#f59e0b',
+      data: sorted.map(s => s[1])
+    }]
+  }
+})
+
+const fixedVsVariableChartData = computed(() => {
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+  let fixed = 0;
+  let variable = 0;
+  financeStore.transactions.forEach(t => {
+    const d = new Date(t.date);
+    if (t.type === 'expense' && d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+      if (t.subscriptionId || ['Servicios', 'Interés Automático', 'Suscripción', 'Deuda'].includes(t.category || '')) {
+        fixed += Number(t.amount);
+      } else {
+        variable += Number(t.amount);
+      }
+    }
+    if (['loan_payment', 'credit_payment'].includes(t.type) && d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+      if (!t.description || !(t.description.startsWith('Pago recibido') || t.description.startsWith('Transferencia recibida'))) {
+          fixed += Number(t.amount);
+      }
+    }
+  });
+  return {
+    labels: ['Compromisos Fijos/Deudas', 'Gastos Variables'],
+    datasets: [{
+      backgroundColor: ['#3b82f6', '#f43f5e'],
+      data: [fixed, variable]
+    }]
+  }
+})
+
+const hasMonthlyFlowData = computed(() => {
+  const now = new Date();
+  return financeStore.transactions.some(t => {
+    const d = new Date(t.date);
+    return (t.type === 'expense' || ['loan_payment', 'credit_payment'].includes(t.type)) && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  });
+})
+const monthlyFlowChartData = computed(() => {
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  const dailyExpenses = new Array(daysInMonth).fill(0);
+  
+  financeStore.transactions.forEach(t => {
+    const d = new Date(t.date);
+    if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+      if (t.type === 'expense') {
+        dailyExpenses[d.getDate() - 1] += Number(t.amount);
+      } else if (['loan_payment', 'credit_payment'].includes(t.type)) {
+        if (!t.description || !(t.description.startsWith('Pago recibido') || t.description.startsWith('Transferencia recibida'))) {
+          dailyExpenses[d.getDate() - 1] += Number(t.amount);
+        }
+      }
+    }
+  });
+  
+  const cumulative = [];
+  let sum = 0;
+  for(let i = 0; i < now.getDate(); i++) {
+    sum += dailyExpenses[i];
+    cumulative.push(sum);
+  }
+  return {
+    labels: Array.from({length: now.getDate()}, (_, i) => `${i + 1}`),
+    datasets: [{
+      label: 'Gastos Acumulados',
+      borderColor: '#ef4444',
+      backgroundColor: 'rgba(239, 68, 68, 0.2)',
+      data: cumulative,
+      fill: true,
+      tension: 0.3
+    }]
+  }
+})
 
 const projectionChartData = computed(() => {
   const labels = [];
