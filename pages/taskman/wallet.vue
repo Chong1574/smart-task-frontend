@@ -108,12 +108,12 @@
                   {{ isNegative(tx) ? '-' : '+' }}{{ formatCurrency(tx.amount) }}
                 </span>
               </div>
-              <div class="md:col-span-6 font-medium truncate w-full" :title="tx.description">{{ tx.description }}</div>
+              <div class="md:col-span-6 font-medium truncate w-full" :title="formatDescription(tx.description)">{{ formatDescription(tx.description) }}</div>
               <div class="md:col-span-3 w-full text-right font-mono font-bold flex items-center justify-end gap-3 mt-2 md:mt-0">
                 <span class="hidden md:inline" :class="isNegative(tx) ? 'text-red-500' : 'text-green-500'">
                   {{ isNegative(tx) ? '-' : '+' }}{{ formatCurrency(tx.amount) }}
                 </span>
-                <button v-if="tx.type === 'expense' || tx.type === 'income' || tx.type === 'investment'" @click="openEditTransaction(tx)" class="text-muted-foreground hover:text-primary md:opacity-0 md:group-hover:opacity-100 transition-opacity p-2 md:p-0 bg-secondary/50 md:bg-transparent rounded-md md:rounded-none" title="Editar transacción">
+                <button @click="openEditTransaction(tx)" class="text-muted-foreground hover:text-primary md:opacity-0 md:group-hover:opacity-100 transition-opacity p-2 md:p-0 bg-secondary/50 md:bg-transparent rounded-md md:rounded-none" title="Editar transacción">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
                 </button>
                 <button @click="handleDeleteTransaction(tx)" class="text-muted-foreground hover:text-red-500 md:opacity-0 md:group-hover:opacity-100 transition-opacity p-2 md:p-0 bg-secondary/50 md:bg-transparent rounded-md md:rounded-none" title="Eliminar transacción">
@@ -475,7 +475,7 @@
             <div class="grid grid-cols-2 gap-4">
               <div>
                 <label class="block text-sm font-medium mb-1">Tipo</label>
-                <select v-model="txForm.type" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+                <select v-model="txForm.type" :disabled="!!editingTransactionId && ['transfer', 'credit_payment', 'loan_payment'].includes(txForm.type)" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none disabled:opacity-50">
                   <option value="expense">Gasto</option>
                   <option value="income">Ingreso</option>
                   <option value="transfer">Transferencia</option>
@@ -489,8 +489,8 @@
               </div>
             </div>
             <div>
-              <label class="block text-sm font-medium mb-1">Cuenta {{ ['transfer', 'credit_payment', 'loan_payment'].includes(txForm.type) ? 'Origen' : '' }}</label>
-              <select v-model.number="txForm.accountId" required class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+              <label class="block text-sm font-medium mb-1">Cuenta {{ ['transfer', 'credit_payment', 'loan_payment'].includes(txForm.type) ? (editingTransactionId ? '' : 'Origen') : '' }}</label>
+              <select v-model.number="txForm.accountId" required :disabled="!!editingTransactionId && ['transfer', 'credit_payment', 'loan_payment'].includes(txForm.type)" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none disabled:opacity-50">
                 <option v-for="acc in filteredSourceAccounts" :key="acc.id" :value="acc.id">{{ acc.name }} — {{ formatCurrency(Number(acc.balance)) }}</option>
               </select>
               <p v-if="selectedSourceAccount" class="text-xs mt-1 font-mono" :class="Number(selectedSourceAccount.balance) < 0 ? 'text-red-500' : 'text-muted-foreground'">
@@ -498,7 +498,7 @@
                 <span v-if="txForm.amount > 0 && !['credit_payment', 'loan_payment'].includes(txForm.type)"> → después: {{ formatCurrency(Number(selectedSourceAccount.balance) + (txForm.type === 'income' ? txForm.amount : -txForm.amount)) }}</span>
               </p>
             </div>
-            <div v-if="['transfer', 'credit_payment', 'loan_payment'].includes(txForm.type)">
+            <div v-if="['transfer', 'credit_payment', 'loan_payment'].includes(txForm.type) && !editingTransactionId">
               <label class="block text-sm font-medium mb-1">{{ txForm.type === 'transfer' ? 'Cuenta Destino' : 'Cuenta a Pagar' }}</label>
               <select v-model.number="txForm.destinationAccountId" required class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
                 <option v-for="acc in filteredDestinationAccounts" :key="acc.id" :value="acc.id">{{ acc.name }} — {{ formatCurrency(Number(acc.balance)) }}</option>
@@ -567,7 +567,7 @@
           <div v-else class="flex-1 overflow-y-auto -mx-6 px-6 space-y-2">
             <div v-for="tx in accountHistory" :key="tx.id" class="flex items-center justify-between p-3 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors">
               <div class="flex-1 min-w-0">
-                <p class="font-medium truncate">{{ tx.description || tx.category || 'Sin descripción' }}</p>
+                <p class="font-medium truncate">{{ formatDescription(tx.description) || tx.category || 'Sin descripción' }}</p>
                 <p class="text-xs text-muted-foreground">
                   {{ formatDate(tx.date) }} · <span class="capitalize">{{ txTypeLabel(tx.type) }}</span>
                 </p>
@@ -1091,6 +1091,15 @@ const formatCurrency = (value: number) => {
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric' })
 }
+
+const formatDescription = (desc: string) => {
+  if (!desc) return '';
+  return desc.replace(/cuenta #(\d+)/g, (match, p1) => {
+    const acc = financeStore.accounts.find(a => a.id === Number(p1));
+    return acc ? acc.name : match;
+  });
+}
+
 
 const isNegative = (tx: any) => {
   if (['expense', 'investment'].includes(tx.type)) return true;
