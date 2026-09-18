@@ -136,6 +136,7 @@ export const useFinanceStore = defineStore('finance', {
                 .reduce((sum, sub) => {
                     let val = Number(sub.amount);
                     if (sub.frequency === 'YEARLY') val = val / 12;
+                    else if (sub.frequency === 'QUARTERLY') val = val / 3;
                     else if (sub.frequency === 'BIMONTHLY') val = val / 2;
                     else if (sub.frequency === 'BIWEEKLY') val = val * 2;
                     else if (sub.frequency === 'WEEKLY') val = val * 4.33; // aprox semanas por mes
@@ -176,6 +177,7 @@ export const useFinanceStore = defineStore('finance', {
                 .reduce((sum, sub) => {
                     let val = Number(sub.amount);
                     if (sub.frequency === 'YEARLY') val = val / 12;
+                    else if (sub.frequency === 'QUARTERLY') val = val / 3;
                     else if (sub.frequency === 'BIMONTHLY') val = val / 2;
                     else if (sub.frequency === 'BIWEEKLY') val = val * 2;
                     else if (sub.frequency === 'WEEKLY') val = val * 4.33;
@@ -329,23 +331,34 @@ export const useFinanceStore = defineStore('finance', {
                 // computar el próximo día del ciclo. Ambos caminos ocultan el sub del cycle actual
                 // si ya se pagó — resolvimos "los pagos no se propaga si se pagaron".
                 let nextDate: Date;
-                if (sub.nextPaymentDate) {
-                    nextDate = new Date(sub.nextPaymentDate);
-                    // Normalizar a medianoche para que daysRemaining no se contamine con la hora.
-                    nextDate = new Date(nextDate.getFullYear(), nextDate.getMonth(), nextDate.getDate());
-                } else {
+                let amountToPay = Number(sub.amount);
+                const isProvision = sub.isVariable && ['YEARLY', 'QUARTERLY', 'BIMONTHLY'].includes(sub.frequency);
+
+                if (isProvision) {
                     nextDate = new Date(today.getFullYear(), today.getMonth(), sub.paymentDay);
                     if (nextDate < today) nextDate.setMonth(nextDate.getMonth() + 1);
+                    
+                    if (sub.frequency === 'YEARLY') amountToPay = amountToPay / 12;
+                    else if (sub.frequency === 'QUARTERLY') amountToPay = amountToPay / 3;
+                    else if (sub.frequency === 'BIMONTHLY') amountToPay = amountToPay / 2;
+                } else {
+                    if (sub.nextPaymentDate) {
+                        nextDate = new Date(sub.nextPaymentDate);
+                        nextDate = new Date(nextDate.getFullYear(), nextDate.getMonth(), nextDate.getDate());
+                    } else {
+                        nextDate = new Date(today.getFullYear(), today.getMonth(), sub.paymentDay);
+                        if (nextDate < today) nextDate.setMonth(nextDate.getMonth() + 1);
+                    }
                 }
 
                 const daysRemaining = Math.ceil((nextDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
                 if (daysRemaining < 0) return; // Ya pasó y aún no rolled — evita fantasmas.
                 
                 payments.push({
-                    name: sub.name,
-                    amount: Number(sub.amount),
+                    name: isProvision ? `${sub.name} (Provisión mensual)` : sub.name,
+                    amount: amountToPay,
                     date: nextDate,
-                    type: sub.type === 'MEMBERSHIP' ? 'Membresía' : 'Servicio',
+                    type: isProvision ? 'Guardado' : (sub.type === 'MEMBERSHIP' ? 'Membresía' : 'Servicio'),
                     daysRemaining,
                     sourceType: 'subscription',
                     sourceId: sub.id,

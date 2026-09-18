@@ -151,7 +151,7 @@
               <div class="text-right group-hover:opacity-0 md:opacity-100 transition-opacity">
                 <p class="font-mono font-bold" :class="sub.type === 'INCOME' ? 'text-emerald-500' : 'text-red-400'">
                   {{ sub.type === 'INCOME' ? '+' : '' }}{{ formatCurrency(sub.amount) }}
-                  <span class="text-xs text-muted-foreground font-sans">/ {{ sub.frequency === 'MONTHLY' ? 'mes' : sub.frequency === 'YEARLY' ? 'año' : sub.frequency === 'WEEKLY' ? 'sem' : 'bimestre' }}</span>
+                  <span class="text-xs text-muted-foreground font-sans">/ {{ sub.frequency === 'MONTHLY' ? 'mes' : sub.frequency === 'YEARLY' ? 'año' : sub.frequency === 'QUARTERLY' ? 'trimestre' : sub.frequency === 'WEEKLY' ? 'sem' : 'bimestre' }}</span>
                 </p>
               </div>
               <div class="absolute top-0 right-0 h-full flex items-center pr-4 gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
@@ -433,9 +433,17 @@
                   <option value="WEEKLY">Semanal</option>
                   <option value="MONTHLY">Mensual</option>
                   <option value="BIMONTHLY">Bimestral</option>
+                  <option value="QUARTERLY">Trimestral</option>
                   <option value="YEARLY">Anual</option>
                 </select>
               </div>
+            </div>
+            
+            <div v-if="['BIMONTHLY', 'QUARTERLY', 'YEARLY'].includes(subForm.frequency)" class="flex items-center gap-2 mt-2 bg-secondary/30 p-3 rounded-xl border border-border/40">
+              <input type="checkbox" id="monthlyProvision" v-model="subForm.isVariable" class="w-4 h-4 text-primary rounded focus:ring-primary">
+              <label for="monthlyProvision" class="text-sm">
+                Guardado mensual (dividir pago para que se sienta menos)
+              </label>
             </div>
             <div>
               <label class="block text-sm font-medium mb-1">Monto Estimado</label>
