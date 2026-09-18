@@ -4,7 +4,7 @@ import api from '../utils/api';
 import { API_URL } from '../utils/apiUrl';
 
 // ponytail: SameSite=Lax + Secure — evita que PWAs en iOS descarten cookie en inicio (navegación cross-site de home screen)
-const TOKEN_COOKIE_OPTS = { maxAge: 60 * 60 * 24 * 7, path: '/', sameSite: 'lax' as const, secure: true };
+const TOKEN_COOKIE_OPTS = { maxAge: 60 * 60 * 24 * 365, path: '/', sameSite: 'lax' as const, secure: true };
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
@@ -144,7 +144,7 @@ export const useAuthStore = defineStore('auth', {
                 localStorage.setItem('user', userStr);
                 localStorage.removeItem('oauth_login');
                 localStorage.removeItem('google_sync_enabled');
-                document.cookie = `token=${encodeURIComponent(token)}; Path=/; Max-Age=${60 * 60 * 24 * 7}; SameSite=Lax; Secure`;
+                document.cookie = `token=${encodeURIComponent(token)}; Path=/; Max-Age=${60 * 60 * 24 * 365}; SameSite=Lax; Secure`;
             }
             try { useCookie('token', TOKEN_COOKIE_OPTS).value = token; } catch {}
         },
@@ -195,7 +195,7 @@ export const useAuthStore = defineStore('auth', {
             if (typeof window !== 'undefined') {
                 localStorage.setItem('token', token);
                 localStorage.setItem('oauth_login', 'true');
-                document.cookie = `token=${encodeURIComponent(token)}; Path=/; Max-Age=${60 * 60 * 24 * 7}; SameSite=Lax; Secure`;
+                document.cookie = `token=${encodeURIComponent(token)}; Path=/; Max-Age=${60 * 60 * 24 * 365}; SameSite=Lax; Secure`;
             }
             try { useCookie('token', TOKEN_COOKIE_OPTS).value = token; } catch {}
 

@@ -20,7 +20,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
         token = localStorage.getItem('token');
     }
     if (!token) {
-        try { token = useCookie('token', { maxAge: 60 * 60 * 24 * 7, path: '/', sameSite: 'lax' }).value || null; } catch {}
+        try { token = useCookie('token', { maxAge: 60 * 60 * 24 * 365, path: '/', sameSite: 'lax' }).value || null; } catch {}
     }
 
     if (!token) {
