@@ -21,6 +21,13 @@ export interface Account {
     minimum_payment_percentage: number;
     currency: string;
     color: string; // Front-end decoration
+    statement?: {
+        periodStartDate: string;
+        periodEndDate: string;
+        paymentDueDate: string | null;
+        noInterestPayment: number;
+        minimumPayment: number;
+    };
 }
 
 export interface Transaction {
@@ -459,7 +466,8 @@ export const useFinanceStore = defineStore('finance', {
                         payment_day: Number(acc.paymentDay || 0),
                         minimum_payment_percentage: Number(acc.minimumPaymentPercentage || 5.0),
                         currency: acc.currency,
-                        color: COLORS[index % COLORS.length]
+                        color: COLORS[index % COLORS.length],
+                        statement: acc.statement
                     }));
                 }
             } catch (err) {

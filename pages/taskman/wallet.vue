@@ -63,7 +63,12 @@
               <div>
                 <p class="text-muted-foreground text-sm">{{ account.name }}</p>
                 <p class="text-xl font-bold font-mono">{{ formatCurrency(account.balance) }}</p>
-                <p class="text-[10px] text-muted-foreground/70 mt-1 group-hover:text-primary transition-colors">Ver movimientos →</p>
+                <div v-if="account.statement" class="mt-2 space-y-1">
+                  <p class="text-xs text-muted-foreground">Pago min: <span class="text-foreground font-mono font-medium">{{ formatCurrency(account.statement.minimumPayment) }}</span></p>
+                  <p class="text-xs text-muted-foreground">Para no generar intereses: <span class="text-foreground font-mono font-medium">{{ formatCurrency(account.statement.noInterestPayment) }}</span></p>
+                  <p v-if="account.statement.paymentDueDate" class="text-xs text-muted-foreground">Límite: <span class="text-foreground font-medium">{{ new Date(account.statement.paymentDueDate).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }) }}</span></p>
+                </div>
+                <p class="text-[10px] text-muted-foreground/70 mt-2 group-hover:text-primary transition-colors">Ver movimientos →</p>
               </div>
               <div class="absolute top-2 right-2 flex gap-1 md:opacity-0 opacity-100 md:group-hover:opacity-100 transition-opacity">
                 <button @click.stop="openEditAccount(account)" class="text-muted-foreground hover:text-primary p-1 bg-background/50 rounded-md" title="Editar Cuenta">
