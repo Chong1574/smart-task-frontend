@@ -63,10 +63,15 @@
               <div>
                 <p class="text-muted-foreground text-sm">{{ account.name }}</p>
                 <p class="text-xl font-bold font-mono">{{ formatCurrency(account.balance) }}</p>
-                <div v-if="account.statement" class="mt-2 space-y-1">
+                <div v-if="account.statement" class="mt-2 space-y-1 relative group/statement">
                   <p class="text-xs text-muted-foreground">Pago min: <span class="text-foreground font-mono font-medium">{{ formatCurrency(account.statement.minimumPayment) }}</span></p>
                   <p class="text-xs text-muted-foreground">Para no generar intereses: <span class="text-foreground font-mono font-medium">{{ formatCurrency(account.statement.noInterestPayment) }}</span></p>
                   <p v-if="account.statement.paymentDueDate" class="text-xs text-muted-foreground">Límite: <span class="text-foreground font-medium">{{ new Date(account.statement.paymentDueDate).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }) }}</span></p>
+                  
+                  <button @click.stop="openCalibrateModal(account)" class="absolute -right-2 top-0 md:opacity-0 md:group-hover/statement:opacity-100 transition-opacity bg-secondary/80 text-primary hover:bg-primary/20 p-1.5 rounded-lg text-[10px] flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                    Corregir
+                  </button>
                 </div>
                 <p class="text-[10px] text-muted-foreground/70 mt-2 group-hover:text-primary transition-colors">Ver movimientos →</p>
               </div>
@@ -649,6 +654,37 @@
         </div>
       </div>
 
+      <!-- Modal: Calibrar Estado de Cuenta -->
+      <div v-if="showCalibrateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" @click.self="showCalibrateModal = false">
+        <div class="bg-card border border-primary/20 rounded-3xl p-6 w-full max-w-md shadow-2xl">
+          <h2 class="text-2xl font-bold mb-2">Corregir Estado de Cuenta</h2>
+          <p class="text-sm text-muted-foreground mb-6">Si el banco reporta montos diferentes, ingresa los reales aquí. El sistema registrará los ajustes necesarios.</p>
+          
+          <form @submit.prevent="submitCalibration" class="space-y-4">
+            <div v-if="calibrateForm.error" class="bg-red-500/10 border border-red-500/20 text-red-500 text-sm p-3 rounded-xl">
+              {{ calibrateForm.error }}
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium mb-1">Pago para no generar intereses (Real)</label>
+              <input v-model.number="calibrateForm.reportedNoInterest" required type="number" step="0.01" min="0" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+              <p class="text-xs text-muted-foreground mt-1">Calculado por la app: {{ formatCurrency(calibrateAccount?.statement?.noInterestPayment || 0) }}</p>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium mb-1">Pago mínimo (Real)</label>
+              <input v-model.number="calibrateForm.reportedMinimum" required type="number" step="0.01" min="0" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+              <p class="text-xs text-muted-foreground mt-1">Calculado por la app: {{ formatCurrency(calibrateAccount?.statement?.minimumPayment || 0) }}</p>
+            </div>
+
+            <div class="flex justify-end gap-3 mt-8">
+              <button type="button" @click="showCalibrateModal = false" class="px-4 py-2 text-muted-foreground hover:bg-secondary rounded-xl transition-colors">Cancelar</button>
+              <button type="submit" class="bg-primary text-primary-foreground px-6 py-2 rounded-xl font-bold shadow-lg hover:opacity-90 transition-opacity">Ajustar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
     </div>
 </template>
 
@@ -669,6 +705,14 @@ const showSubscriptionModal = ref(false)
 const showTransactionModal = ref(false)
 const editingTransactionId = ref<number | null>(null)
 const showManageCategoriesModal = ref(false)
+const showCalibrateModal = ref(false)
+
+const calibrateAccount = ref<Account | null>(null)
+const calibrateForm = reactive({
+  reportedNoInterest: 0,
+  reportedMinimum: 0,
+  error: ''
+})
 
 const selectedMonth = ref<string>('all')
 
@@ -796,6 +840,69 @@ const newCategory = ref('')
 const newCategoryName = ref('')
 const editingCategory = ref<string | null>(null)
 const editingCategoryValue = ref('')
+
+function openCalibrateModal(acc: Account) {
+  calibrateAccount.value = acc
+  calibrateForm.reportedNoInterest = acc.statement?.noInterestPayment || 0
+  calibrateForm.reportedMinimum = acc.statement?.minimumPayment || 0
+  calibrateForm.error = ''
+  showCalibrateModal.value = true
+}
+
+async function submitCalibration() {
+  if (!calibrateAccount.value) return
+  const acc = calibrateAccount.value
+  calibrateForm.error = ''
+  let hasChanges = false
+  let minError = false
+
+  try {
+    // 1. Calibrar pago mínimo (si cambió)
+    if (calibrateForm.reportedMinimum !== acc.statement?.minimumPayment) {
+      const api = (await import('~/utils/api')).default
+      const res = await api.post(`/finance/accounts/${acc.id}/calibrate-minimum`, {
+        reportedMinimum: calibrateForm.reportedMinimum
+      })
+      if (res.data.success) {
+        hasChanges = true
+      } else {
+        calibrateForm.error = "Error al calibrar mínimo: " + res.data.message
+        minError = true
+      }
+    }
+
+    // 2. Ajustar Pago para no generar intereses (creando transacción de ajuste si hay diferencia)
+    const diff = calibrateForm.reportedNoInterest - (acc.statement?.noInterestPayment || 0)
+    // Si la diferencia es de más de un centavo
+    if (Math.abs(diff) > 0.01) {
+      // diff > 0 significa que se reporta más deuda (nos falta un gasto)
+      // diff < 0 significa que se reporta menos deuda (sobra un gasto o hay un abono/devolución)
+      await financeStore.addTransaction({
+        accountId: acc.id,
+        type: diff > 0 ? 'expense' : 'income',
+        amount: Math.abs(diff),
+        category: 'Ajuste',
+        description: 'Ajuste de Estado de Cuenta',
+        date: new Date().toISOString(),
+        installments: 1
+      })
+      hasChanges = true
+    }
+
+    if (hasChanges && !minError) {
+      await financeStore.fetchAccounts()
+      await financeStore.fetchTransactions()
+      showCalibrateModal.value = false
+    } else if (hasChanges && minError) {
+      // Hubo cambios en transacciones pero falló el mínimo. Refrescamos para mostrar.
+      await financeStore.fetchAccounts()
+      await financeStore.fetchTransactions()
+    }
+  } catch (err: any) {
+    console.error(err)
+    calibrateForm.error = "Error de conexión: " + (err.response?.data?.message || err.message)
+  }
+}
 
 const handleAddCategoryBtn = () => {
   const cleanCat = newCategoryName.value.trim()
