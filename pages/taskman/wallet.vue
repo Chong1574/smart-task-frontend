@@ -264,6 +264,10 @@
                 </label>
                 <input v-model.number="accountForm.payment_day" type="number" min="1" :max="accountForm.payment_frequency === 'WEEKLY' ? 7 : 31" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
               </div>
+              <div class="col-span-2">
+                <label class="block text-sm font-medium mb-1">Pago Mínimo (%)</label>
+                <input v-model.number="accountForm.minimum_payment_percentage" type="number" step="0.01" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+              </div>
             </div>
 
             <!-- Campos para Ahorro o Inversión -->
@@ -363,6 +367,10 @@
                   Día de Pago {{ editAccountForm.payment_frequency === 'WEEKLY' ? '(1=Lun, 7=Dom)' : '' }}
                 </label>
                 <input v-model.number="editAccountForm.payment_day" type="number" min="1" :max="editAccountForm.payment_frequency === 'WEEKLY' ? 7 : 31" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+              </div>
+              <div class="col-span-2">
+                <label class="block text-sm font-medium mb-1">Pago Mínimo (%)</label>
+                <input v-model.number="editAccountForm.minimum_payment_percentage" type="number" step="0.01" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
               </div>
             </div>
 
@@ -510,6 +518,18 @@
               <label class="block text-sm font-medium mb-1">{{ txForm.type === 'transfer' ? 'Cuenta Destino' : 'Cuenta a Pagar' }}</label>
               <select v-model.number="txForm.destinationAccountId" required class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
                 <option v-for="acc in filteredDestinationAccounts" :key="acc.id" :value="acc.id">{{ acc.name }} — {{ formatCurrency(Number(acc.balance)) }}</option>
+              </select>
+            </div>
+            <div v-if="selectedSourceAccount?.type === 'card' && selectedSourceAccount?.sub_type === 'credit'">
+              <label class="block text-sm font-medium mb-1">Meses sin Intereses (MSI)</label>
+              <select v-model.number="txForm.installments" required class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+                <option value="1">1 (Contado)</option>
+                <option value="3">3 Meses</option>
+                <option value="6">6 Meses</option>
+                <option value="9">9 Meses</option>
+                <option value="12">12 Meses</option>
+                <option value="18">18 Meses</option>
+                <option value="24">24 Meses</option>
               </select>
             </div>
             <div v-if="!['transfer', 'credit_payment', 'loan_payment'].includes(txForm.type)">
@@ -720,11 +740,13 @@ const accountForm = reactive({
   monthly_payment: 0,
   payment_frequency: 'MONTHLY',
   cutoff_day: 1,
-  payment_day: 1
+  payment_day: 1,
+  minimum_payment_percentage: 5.0
 })
 
 const editingAccountId = ref<number | null>(null)
 const editAccountForm = reactive({
+  id: null as number | null,
   name: '',
   type: 'card' as AccountType,
   sub_type: 'debit',
@@ -735,7 +757,8 @@ const editAccountForm = reactive({
   monthly_payment: 0,
   payment_frequency: 'MONTHLY' as any,
   cutoff_day: 1,
-  payment_day: 1
+  payment_day: 1,
+  minimum_payment_percentage: 5.0
 })
 
 const subForm = reactive({
@@ -758,7 +781,8 @@ const txForm = reactive({
   category: 'Ocio',
   description: '',
   date: new Date().toISOString(),
-  subscriptionId: null as number | null
+  subscriptionId: null as number | null,
+  installments: 1
 })
 
 const showAddCategory = ref(false)
@@ -846,6 +870,7 @@ const submitAccount = async () => {
     payment_frequency: accountForm.payment_frequency as any,
     cutoff_day: accountForm.cutoff_day,
     payment_day: accountForm.payment_day,
+    minimum_payment_percentage: accountForm.minimum_payment_percentage,
     currency: accountForm.currency
   })
   showAccountModal.value = false
@@ -855,6 +880,7 @@ const submitAccount = async () => {
   accountForm.credit_limit = 0
   accountForm.interest_rate = 0
   accountForm.monthly_payment = 0
+  accountForm.minimum_payment_percentage = 5.0
 }
 
 const openEditAccount = (account: any) => {
@@ -871,6 +897,7 @@ const openEditAccount = (account: any) => {
   editAccountForm.payment_frequency = account.payment_frequency || 'MONTHLY'
   editAccountForm.cutoff_day = account.cutoff_day || 1
   editAccountForm.payment_day = account.payment_day || 1
+  editAccountForm.minimum_payment_percentage = account.minimum_payment_percentage || 5.0
   showEditAccountModal.value = true
 }
 
@@ -889,6 +916,7 @@ const submitEditAccount = async () => {
     payment_frequency: editAccountForm.payment_frequency as any,
     cutoff_day: editAccountForm.cutoff_day,
     payment_day: editAccountForm.payment_day,
+    minimum_payment_percentage: editAccountForm.minimum_payment_percentage,
     currency: editAccountForm.currency
   })
   showEditAccountModal.value = false
@@ -964,6 +992,9 @@ const submitTransaction = async () => {
   const isTransferOrPayment = ['transfer', 'credit_payment', 'loan_payment'].includes(txForm.type);
   const category = txForm.type === 'transfer' ? 'Transferencia' : (txForm.type === 'credit_payment' ? 'Pago de Tarjeta' : (txForm.type === 'loan_payment' ? 'Pago de Préstamo' : txForm.category));
 
+  const isCreditCard = financeStore.accounts.find(a => a.id === txForm.accountId)?.sub_type === 'credit';
+  const installments = isCreditCard ? txForm.installments : 1;
+
   try {
     if (editingTransactionId.value) {
       await financeStore.updateTransaction(editingTransactionId.value, {
@@ -972,7 +1003,8 @@ const submitTransaction = async () => {
         category: category,
         type: txForm.type,
         description: txForm.description,
-        date: txForm.date || new Date().toISOString()
+        date: txForm.date || new Date().toISOString(),
+        installments: installments
       } as any)
     } else {
       await financeStore.addTransaction({
@@ -982,6 +1014,7 @@ const submitTransaction = async () => {
         category: category,
         description: txForm.description,
         date: txForm.date || new Date().toISOString(),
+        installments: installments,
         ...(isTransferOrPayment && txForm.destinationAccountId ? { destinationAccountId: txForm.destinationAccountId } : {} ),
         ...(txForm.subscriptionId ? { subscriptionId: txForm.subscriptionId } : {})
       } as any)
@@ -999,6 +1032,7 @@ const openEditTransaction = (tx: any) => {
   txForm.category = tx.category
   txForm.type = tx.type
   txForm.description = tx.description
+  txForm.installments = tx.installments || 1
   // ponytail: ISO completo, no YYYY-MM-DD; updateTransactionSchema.date rechazaba date-only
   txForm.date = tx.date ? new Date(tx.date).toISOString() : new Date().toISOString()
   showTransactionModal.value = true
@@ -1014,6 +1048,7 @@ const closeTransactionModal = () => {
   txForm.destinationAccountId = null
   txForm.category = 'Ocio'
   txForm.description = ''
+  txForm.installments = 1
   txForm.date = new Date().toISOString()
   txForm.subscriptionId = null
 }

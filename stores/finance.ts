@@ -18,6 +18,7 @@ export interface Account {
     payment_frequency: 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY' | 'ONCE';
     cutoff_day: number;
     payment_day: number;
+    minimum_payment_percentage: number;
     currency: string;
     color: string; // Front-end decoration
 }
@@ -30,6 +31,7 @@ export interface Transaction {
     category: string;
     description: string;
     date: string;
+    installments?: number;
     subscriptionId?: number;
     account?: { name: string };
 }
@@ -455,6 +457,7 @@ export const useFinanceStore = defineStore('finance', {
                         payment_frequency: acc.paymentFrequency || 'MONTHLY',
                         cutoff_day: Number(acc.cutoffDay || 0),
                         payment_day: Number(acc.paymentDay || 0),
+                        minimum_payment_percentage: Number(acc.minimumPaymentPercentage || 5.0),
                         currency: acc.currency,
                         color: COLORS[index % COLORS.length]
                     }));
@@ -556,7 +559,8 @@ export const useFinanceStore = defineStore('finance', {
                     paymentDay: account.payment_day,
                     interestRate: account.interest_rate,
                     monthlyPayment: account.monthly_payment,
-                    paymentFrequency: account.payment_frequency
+                    paymentFrequency: account.payment_frequency,
+                    minimumPaymentPercentage: account.minimum_payment_percentage
                 };
                 const res = await api.post('/finance/accounts', payload);
                 if (res.data.success) {
@@ -580,7 +584,8 @@ export const useFinanceStore = defineStore('finance', {
                     payment_day: 'paymentDay',
                     interest_rate: 'interestRate',
                     monthly_payment: 'monthlyPayment',
-                    payment_frequency: 'paymentFrequency'
+                    payment_frequency: 'paymentFrequency',
+                    minimum_payment_percentage: 'minimumPaymentPercentage'
                 };
                 const payload: any = {};
                 for (const [k, v] of Object.entries(changes)) {
