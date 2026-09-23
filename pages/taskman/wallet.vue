@@ -857,21 +857,7 @@ async function submitCalibration() {
   let minError = false
 
   try {
-    // 1. Calibrar pago mínimo (si cambió)
-    if (calibrateForm.reportedMinimum !== acc.statement?.minimumPayment) {
-      const api = (await import('~/utils/api')).default
-      const res = await api.post(`/finance/accounts/${acc.id}/calibrate-minimum`, {
-        reportedMinimum: calibrateForm.reportedMinimum
-      })
-      if (res.data.success) {
-        hasChanges = true
-      } else {
-        calibrateForm.error = "Error al calibrar mínimo: " + res.data.message
-        minError = true
-      }
-    }
-
-    // 2. Ajustar Pago para no generar intereses (creando transacción de ajuste si hay diferencia)
+    // 1. Ajustar Pago para no generar intereses (creando transacción de ajuste si hay diferencia)
     const diff = calibrateForm.reportedNoInterest - (acc.statement?.noInterestPayment || 0)
     // Si la diferencia es de más de un centavo
     if (Math.abs(diff) > 0.01) {
@@ -887,6 +873,22 @@ async function submitCalibration() {
         installments: 1
       })
       hasChanges = true
+      // Importante: Actualizar la cuenta localmente para que el backend vea la nueva deuda al calibrar el mínimo
+      await financeStore.fetchAccounts()
+    }
+
+    // 2. Calibrar pago mínimo (si cambió)
+    if (calibrateForm.reportedMinimum !== acc.statement?.minimumPayment) {
+      const api = (await import('~/utils/api')).default
+      const res = await api.post(`/finance/accounts/${acc.id}/calibrate-minimum`, {
+        reportedMinimum: calibrateForm.reportedMinimum
+      })
+      if (res.data.success) {
+        hasChanges = true
+      } else {
+        calibrateForm.error = "Error al calibrar mínimo: " + res.data.message
+        minError = true
+      }
     }
 
     if (hasChanges && !minError) {
