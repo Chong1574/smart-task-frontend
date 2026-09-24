@@ -690,8 +690,10 @@
             </div>
 
             <div class="flex justify-end gap-3 mt-8">
-              <button type="button" @click="showCalibrateModal = false" class="px-4 py-2 text-muted-foreground hover:bg-secondary rounded-xl transition-colors">Cancelar</button>
-              <button type="submit" class="bg-primary text-primary-foreground px-6 py-2 rounded-xl font-bold shadow-lg hover:opacity-90 transition-opacity">Ajustar</button>
+              <button type="button" @click="showCalibrateModal = false" :disabled="isSubmittingCalibration" class="px-4 py-2 text-muted-foreground hover:bg-secondary rounded-xl transition-colors disabled:opacity-50">Cancelar</button>
+              <button type="submit" :disabled="isSubmittingCalibration" class="bg-primary text-primary-foreground px-6 py-2 rounded-xl font-bold shadow-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed">
+                {{ isSubmittingCalibration ? 'Ajustando...' : 'Ajustar' }}
+              </button>
             </div>
           </form>
         </div>
@@ -718,6 +720,7 @@ const showTransactionModal = ref(false)
 const editingTransactionId = ref<number | null>(null)
 const showManageCategoriesModal = ref(false)
 const showCalibrateModal = ref(false)
+const isSubmittingCalibration = ref(false)
 
 const calibrateAccount = ref<Account | null>(null)
 const calibrateForm = reactive({
@@ -862,7 +865,8 @@ function openCalibrateModal(acc: Account) {
 }
 
 async function submitCalibration() {
-  if (!calibrateAccount.value) return
+  if (!calibrateAccount.value || isSubmittingCalibration.value) return
+  isSubmittingCalibration.value = true
   const acc = calibrateAccount.value
   calibrateForm.error = ''
   let hasChanges = false
@@ -912,6 +916,8 @@ async function submitCalibration() {
   } catch (err: any) {
     console.error(err)
     calibrateForm.error = "Error de conexión: " + (err.response?.data?.message || err.message)
+  } finally {
+    isSubmittingCalibration.value = false
   }
 }
 
