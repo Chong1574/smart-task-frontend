@@ -879,7 +879,8 @@ async function submitCalibration() {
     }
 
     // 1. Ajustar Pago para no generar intereses (creando transacción de ajuste que NO afecta el balance)
-    const diff = calibrateForm.reportedNoInterest - (acc.statement?.noInterestPayment || 0)
+    const baseValue = acc.statement?.rawNoInterestPayment !== undefined ? acc.statement.rawNoInterestPayment : (acc.statement?.noInterestPayment || 0)
+    const diff = calibrateForm.reportedNoInterest - baseValue
     if (Math.abs(diff) > 0.01) {
       await financeStore.addTransaction({
         accountId: acc.id,
