@@ -341,13 +341,14 @@ export const useFinanceStore = defineStore('finance', {
                 // si ya se pagó — resolvimos "los pagos no se propaga si se pagaron".
                 let nextDate: Date;
                 let amountToPay = Number(sub.amount);
-                const isProvision = sub.isVariable && ['YEARLY', 'QUARTERLY', 'BIMONTHLY'].includes(sub.frequency);
+                const isProvision = sub.isVariable && ['YEARLY', 'SEMIANNUAL', 'QUARTERLY', 'BIMONTHLY'].includes(sub.frequency);
 
                 if (isProvision) {
                     nextDate = new Date(today.getFullYear(), today.getMonth(), sub.paymentDay);
                     if (nextDate < today) nextDate.setMonth(nextDate.getMonth() + 1);
                     
                     if (sub.frequency === 'YEARLY') amountToPay = amountToPay / 12;
+                    else if (sub.frequency === 'SEMIANNUAL') amountToPay = amountToPay / 6;
                     else if (sub.frequency === 'QUARTERLY') amountToPay = amountToPay / 3;
                     else if (sub.frequency === 'BIMONTHLY') amountToPay = amountToPay / 2;
                 } else {

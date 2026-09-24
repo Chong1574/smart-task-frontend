@@ -464,12 +464,13 @@
                   <option value="MONTHLY">Mensual</option>
                   <option value="BIMONTHLY">Bimestral</option>
                   <option value="QUARTERLY">Trimestral</option>
+                  <option value="SEMIANNUAL">Semestral</option>
                   <option value="YEARLY">Anual</option>
                 </select>
               </div>
             </div>
             
-            <div v-if="['BIMONTHLY', 'QUARTERLY', 'YEARLY'].includes(subForm.frequency)" class="flex items-center gap-2 mt-2 bg-secondary/30 p-3 rounded-xl border border-border/40">
+            <div v-if="['BIMONTHLY', 'QUARTERLY', 'SEMIANNUAL', 'YEARLY'].includes(subForm.frequency)" class="flex items-center gap-2 mt-2 bg-secondary/30 p-3 rounded-xl border border-border/40">
               <input type="checkbox" id="monthlyProvision" v-model="subForm.isVariable" class="w-4 h-4 text-primary rounded focus:ring-primary">
               <label for="monthlyProvision" class="text-sm">
                 Guardado mensual (dividir pago para que se sienta menos)
@@ -484,6 +485,12 @@
                 Día de Pago {{ subForm.frequency === 'WEEKLY' ? '(1=Lun, 7=Dom)' : '' }}
               </label>
               <input v-model.number="subForm.paymentDay" type="number" min="1" :max="subForm.frequency === 'WEEKLY' ? 7 : 31" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+            </div>
+            <div v-else>
+              <label class="block text-sm font-medium mb-1">
+                Próximo Pago (Fecha)
+              </label>
+              <input v-model="subForm.nextPaymentDate" type="date" required class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
             </div>
             <div>
               <label class="block text-sm font-medium mb-1">{{ subForm.type === 'INCOME' ? 'Depósito a Cuenta (Opcional)' : 'Domiciliar a Cuenta (Opcional)' }}</label>
@@ -1076,6 +1083,7 @@ const openEditSubscription = (sub: any) => {
   subForm.isVariable = sub.isVariable
   subForm.accountId = sub.accountId
   subForm.paymentDay = sub.paymentDay || 1
+  subForm.nextPaymentDate = sub.nextPaymentDate ? sub.nextPaymentDate.split('T')[0] : null
   showSubscriptionModal.value = true
 }
 
@@ -1092,7 +1100,7 @@ const deleteSubscriptionWithConfirm = async (id: number) => {
 }
 
 const submitSubscription = async () => {
-  const data = {
+  const data: any = {
     name: subForm.name,
     type: subForm.type as any,
     frequency: subForm.frequency as any,
@@ -1102,6 +1110,18 @@ const submitSubscription = async () => {
     accountId: subForm.accountId,
     paymentDay: subForm.paymentDay
   }
+
+  if (['BIMONTHLY', 'QUARTERLY', 'SEMIANNUAL', 'YEARLY'].includes(subForm.frequency)) {
+    if (subForm.nextPaymentDate) {
+      data.nextPaymentDate = new Date(subForm.nextPaymentDate + 'T12:00:00Z').toISOString()
+      data.paymentDay = new Date(subForm.nextPaymentDate + 'T12:00:00Z').getDate()
+    } else {
+      data.nextPaymentDate = null
+    }
+  } else {
+    data.nextPaymentDate = null
+  }
+
   if (subForm.id) {
     await financeStore.updateSubscription(subForm.id, data)
   } else {
@@ -1112,6 +1132,7 @@ const submitSubscription = async () => {
   subForm.name = ''
   subForm.amount = 0
   subForm.paymentDay = 1
+  subForm.nextPaymentDate = null
 }
 
 const isSubmittingTx = ref(false)
