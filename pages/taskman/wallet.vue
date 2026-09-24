@@ -203,7 +203,7 @@
                 <div class="flex gap-2 text-xs text-muted-foreground mt-1">
                   <span class="bg-primary/10 text-primary px-2 py-0.5 rounded">{{ payment.type }}</span>
                   <span :class="payment.daysRemaining <= 3 ? 'text-red-500 font-bold' : ''">
-                    {{ payment.daysRemaining === 0 ? 'Hoy' : payment.daysRemaining === 1 ? 'Mañana' : `En ${payment.daysRemaining} días` }}
+                    {{ payment.daysRemaining === 0 ? 'Hoy' : payment.daysRemaining === 1 ? 'Mañana' : payment.daysRemaining === -1 ? 'Ayer (Vencido)' : payment.daysRemaining < 0 ? `Vencido hace ${Math.abs(payment.daysRemaining)} días` : `En ${payment.daysRemaining} días` }}
                   </span>
                 </div>
               </div>
@@ -1222,11 +1222,11 @@ const markAsPaid = (payment: any, amountOverride?: number) => {
     }
     txForm.accountId = source.id
   } else {
-    txForm.type = 'expense'
+    txForm.type = payment.isProvisionTransfer ? 'transfer' : 'expense'
     if (payment.accountId) {
       txForm.accountId = payment.accountId
     } else {
-      txForm.accountId = financeStore.accounts[0]?.id
+      txForm.accountId = financeStore.accounts[0]?.id ?? null
     }
     txForm.subscriptionId = payment.sourceId
   }

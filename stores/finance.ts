@@ -342,17 +342,58 @@ export const useFinanceStore = defineStore('finance', {
                 let nextDate: Date;
                 let amountToPay = Number(sub.amount);
                 const isProvision = sub.isVariable && ['YEARLY', 'SEMIANNUAL', 'QUARTERLY', 'BIMONTHLY'].includes(sub.frequency);
-
-                if (isProvision) {
-                    if (sub.frequency === 'YEARLY') amountToPay = amountToPay / 12;
-                    else if (sub.frequency === 'SEMIANNUAL') amountToPay = amountToPay / 6;
-                    else if (sub.frequency === 'QUARTERLY') amountToPay = amountToPay / 3;
-                    else if (sub.frequency === 'BIMONTHLY') amountToPay = amountToPay / 2;
-                }
+                let isProvisionTransfer = false;
 
                 if (sub.nextPaymentDate) {
-                    nextDate = new Date(sub.nextPaymentDate);
-                    nextDate = new Date(nextDate.getFullYear(), nextDate.getMonth(), nextDate.getDate());
+                    const billDate = new Date(sub.nextPaymentDate);
+                    const billMonth = billDate.getMonth();
+                    const billYear = billDate.getFullYear();
+                    const paymentDay = billDate.getDate();
+
+                    if (isProvision) {
+                        // Dynamically calculate the provision date for the current month
+                        let provDate = new Date(today.getFullYear(), today.getMonth(), paymentDay);
+
+                        // If provDate is the bill month (or past it), show the FULL bill
+                        if (provDate.getFullYear() > billYear || (provDate.getFullYear() === billYear && provDate.getMonth() >= billMonth)) {
+                            nextDate = new Date(billDate.getFullYear(), billDate.getMonth(), billDate.getDate());
+                            // Full amount is kept
+                        } else {
+                            // It's a provision month
+                            const monthStart = new Date(provDate.getFullYear(), provDate.getMonth(), 1);
+                            const monthEnd = new Date(provDate.getFullYear(), provDate.getMonth() + 1, 0, 23, 59, 59);
+                            const hasPaidProvision = state.transactions.some(t => 
+                                t.subscriptionId === sub.id && 
+                                new Date(t.date) >= monthStart && 
+                                new Date(t.date) <= monthEnd
+                            );
+
+                            if (hasPaidProvision) {
+                                provDate.setMonth(provDate.getMonth() + 1);
+                                if (provDate.getFullYear() === billYear && provDate.getMonth() === billMonth) {
+                                    // Advanced into the bill month!
+                                    nextDate = new Date(billDate.getFullYear(), billDate.getMonth(), billDate.getDate());
+                                    // Full amount is kept
+                                } else {
+                                    nextDate = provDate;
+                                    isProvisionTransfer = true;
+                                    if (sub.frequency === 'YEARLY') amountToPay = amountToPay / 12;
+                                    else if (sub.frequency === 'SEMIANNUAL') amountToPay = amountToPay / 6;
+                                    else if (sub.frequency === 'QUARTERLY') amountToPay = amountToPay / 3;
+                                    else if (sub.frequency === 'BIMONTHLY') amountToPay = amountToPay / 2;
+                                }
+                            } else {
+                                nextDate = provDate;
+                                isProvisionTransfer = true;
+                                if (sub.frequency === 'YEARLY') amountToPay = amountToPay / 12;
+                                else if (sub.frequency === 'SEMIANNUAL') amountToPay = amountToPay / 6;
+                                else if (sub.frequency === 'QUARTERLY') amountToPay = amountToPay / 3;
+                                else if (sub.frequency === 'BIMONTHLY') amountToPay = amountToPay / 2;
+                            }
+                        }
+                    } else {
+                        nextDate = new Date(billDate.getFullYear(), billDate.getMonth(), billDate.getDate());
+                    }
                 } else {
                     nextDate = new Date(today.getFullYear(), today.getMonth(), sub.paymentDay);
                     if (nextDate < today) nextDate.setMonth(nextDate.getMonth() + 1);
@@ -366,15 +407,16 @@ export const useFinanceStore = defineStore('finance', {
                 if (daysRemaining < -365) return; 
 
                 payments.push({
-                    name: isProvision ? `${sub.name} (Provisión mensual)` : sub.name,
+                    name: isProvisionTransfer ? `${sub.name} (Guardado mensual)` : sub.name,
                     amount: amountToPay,
                     date: nextDate,
-                    type: isProvision ? 'Guardado' : (sub.type === 'MEMBERSHIP' ? 'Membresía' : 'Servicio'),
+                    type: isProvisionTransfer ? 'Guardado' : (sub.type === 'MEMBERSHIP' ? 'Membresía' : 'Servicio'),
                     daysRemaining,
                     sourceType: 'subscription',
                     sourceId: sub.id,
                     accountId: sub.accountId,
-                    category: 'Servicios' // Default category
+                    category: isProvisionTransfer ? 'Ahorro' : 'Servicios',
+                    isProvisionTransfer
                 });
             });
 
