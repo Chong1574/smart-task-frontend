@@ -857,31 +857,17 @@ async function submitCalibration() {
   let minError = false
 
   try {
-    // 1. Ajustar Pago para no generar intereses (creando transacción de ajuste si hay diferencia)
-    const diff = calibrateForm.reportedNoInterest - (acc.statement?.noInterestPayment || 0)
-    // Si la diferencia es de más de un centavo
-    if (Math.abs(diff) > 0.01) {
-      // diff > 0 significa que se reporta más deuda (nos falta un gasto)
-      // diff < 0 significa que se reporta menos deuda (sobra un gasto o hay un abono/devolución)
-      await financeStore.addTransaction({
-        accountId: acc.id,
-        type: diff > 0 ? 'expense' : 'income',
-        amount: Math.abs(diff),
-        category: 'Ajuste',
-        description: 'Ajuste de Estado de Cuenta',
-        date: new Date().toISOString(),
-        installments: 1
-      })
-      hasChanges = true
-      // Importante: Actualizar la cuenta localmente para que el backend vea la nueva deuda al calibrar el mínimo
-      await financeStore.fetchAccounts()
+    if (calibrateForm.reportedNoInterest > (acc.credit_limit || 0)) {
+      calibrateForm.error = `El monto no puede ser mayor al límite de crédito (${acc.credit_limit})`;
+      return;
     }
 
-    // 2. Calibrar pago mínimo (si cambió)
-    if (calibrateForm.reportedMinimum !== acc.statement?.minimumPayment) {
+    // Calibrar pago mínimo
+    if (calibrateForm.reportedMinimum !== acc.statement?.minimumPayment || calibrateForm.reportedNoInterest !== acc.statement?.noInterestPayment) {
       const api = (await import('~/utils/api')).default
       const res = await api.post(`/finance/accounts/${acc.id}/calibrate-minimum`, {
-        reportedMinimum: calibrateForm.reportedMinimum
+        reportedMinimum: calibrateForm.reportedMinimum,
+        reportedNoInterest: calibrateForm.reportedNoInterest
       })
       if (res.data.success) {
         hasChanges = true
@@ -893,12 +879,7 @@ async function submitCalibration() {
 
     if (hasChanges && !minError) {
       await financeStore.fetchAccounts()
-      await financeStore.fetchTransactions()
       showCalibrateModal.value = false
-    } else if (hasChanges && minError) {
-      // Hubo cambios en transacciones pero falló el mínimo. Refrescamos para mostrar.
-      await financeStore.fetchAccounts()
-      await financeStore.fetchTransactions()
     }
   } catch (err: any) {
     console.error(err)
