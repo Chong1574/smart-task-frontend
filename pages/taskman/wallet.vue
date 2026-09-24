@@ -883,11 +883,12 @@ async function submitCalibration() {
     if (Math.abs(diff) > 0.01) {
       await financeStore.addTransaction({
         accountId: acc.id,
-        type: diff > 0 ? 'expense' : 'income',
+        type: diff > 0 ? 'expense' : 'credit_payment',
         amount: Math.abs(diff),
         category: 'Ajuste de Estado de Cuenta',
         description: 'Ajuste de Estado de Cuenta',
-        date: new Date().toISOString(),
+        // Usar periodStartDate asegura que SIEMPRE caiga dentro del ciclo actual y no sea ignorada por horas
+        date: acc.statement?.periodStartDate || new Date().toISOString(),
         installments: 1
       })
       hasChanges = true
