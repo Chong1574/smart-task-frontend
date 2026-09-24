@@ -344,26 +344,27 @@ export const useFinanceStore = defineStore('finance', {
                 const isProvision = sub.isVariable && ['YEARLY', 'SEMIANNUAL', 'QUARTERLY', 'BIMONTHLY'].includes(sub.frequency);
 
                 if (isProvision) {
-                    nextDate = new Date(today.getFullYear(), today.getMonth(), sub.paymentDay);
-                    if (nextDate < today) nextDate.setMonth(nextDate.getMonth() + 1);
-                    
                     if (sub.frequency === 'YEARLY') amountToPay = amountToPay / 12;
                     else if (sub.frequency === 'SEMIANNUAL') amountToPay = amountToPay / 6;
                     else if (sub.frequency === 'QUARTERLY') amountToPay = amountToPay / 3;
                     else if (sub.frequency === 'BIMONTHLY') amountToPay = amountToPay / 2;
-                } else {
-                    if (sub.nextPaymentDate) {
-                        nextDate = new Date(sub.nextPaymentDate);
-                        nextDate = new Date(nextDate.getFullYear(), nextDate.getMonth(), nextDate.getDate());
-                    } else {
-                        nextDate = new Date(today.getFullYear(), today.getMonth(), sub.paymentDay);
-                        if (nextDate < today) nextDate.setMonth(nextDate.getMonth() + 1);
-                    }
                 }
 
+                if (sub.nextPaymentDate) {
+                    nextDate = new Date(sub.nextPaymentDate);
+                    nextDate = new Date(nextDate.getFullYear(), nextDate.getMonth(), nextDate.getDate());
+                } else {
+                    nextDate = new Date(today.getFullYear(), today.getMonth(), sub.paymentDay);
+                    if (nextDate < today) nextDate.setMonth(nextDate.getMonth() + 1);
+                }
+
+                // daysRemaining can be negative if the user missed the payment date.
+                // We shouldn't hide it so the user can clearly see it's overdue.
                 const daysRemaining = Math.ceil((nextDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
-                if (daysRemaining < 0) return; // Ya pasó y aún no rolled — evita fantasmas.
-                
+                // We only hide it if it's crazily overdue (e.g. > 365 days) to avoid complete ghosts if abandoned,
+                // but for normal overdue we keep it.
+                if (daysRemaining < -365) return; 
+
                 payments.push({
                     name: isProvision ? `${sub.name} (Provisión mensual)` : sub.name,
                     amount: amountToPay,
