@@ -437,7 +437,9 @@ export const useFinanceStore = defineStore('finance', {
                     sourceType: 'account',
                     sourceId: acc.id,
                     accountId: acc.id,
-                    category: acc.type === 'loan' ? 'Pago Préstamo' : 'Pago Tarjeta'
+                    category: acc.type === 'loan' ? 'Pago Préstamo' : 'Pago Tarjeta',
+                    statementMinimum: acc.statement?.minimumPayment,
+                    statementNoInterest: acc.statement?.noInterestPayment
                 });
             });
 

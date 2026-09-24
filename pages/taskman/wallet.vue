@@ -207,10 +207,22 @@
                   </span>
                 </div>
               </div>
-              <div class="text-right">
-                <p class="font-mono font-bold text-red-500">{{ formatCurrency(payment.amount) }}</p>
-                <p class="text-xs text-muted-foreground">{{ new Date(payment.date).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }) }}</p>
-                <button @click="markAsPaid(payment)" class="mt-2 text-xs bg-primary/10 text-primary hover:bg-primary/20 px-2 py-1 rounded font-medium transition-colors">Registrar Pago</button>
+              <div class="text-right flex flex-col items-end gap-1">
+                <template v-if="payment.statementMinimum !== undefined && payment.statementNoInterest !== undefined && payment.statementNoInterest > 0">
+                  <div class="text-[10px] text-muted-foreground flex gap-2 mb-1">
+                    <span>Min: {{ formatCurrency(payment.statementMinimum) }}</span>
+                    <span>Sin Int: {{ formatCurrency(payment.statementNoInterest) }}</span>
+                  </div>
+                  <div class="flex gap-1">
+                    <button @click="markAsPaid(payment, payment.statementMinimum)" class="text-[10px] bg-secondary text-secondary-foreground hover:bg-secondary/80 px-2 py-1 rounded border border-border/50 transition-colors">Pagar Mín</button>
+                    <button @click="markAsPaid(payment, payment.statementNoInterest)" class="text-[10px] bg-primary/10 text-primary hover:bg-primary/20 px-2 py-1 rounded font-medium transition-colors">Sin Intereses</button>
+                  </div>
+                </template>
+                <template v-else>
+                  <p class="font-mono font-bold text-red-500">{{ formatCurrency(payment.amount) }}</p>
+                  <p class="text-xs text-muted-foreground">{{ new Date(payment.date).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }) }}</p>
+                  <button @click="markAsPaid(payment)" class="mt-1 text-xs bg-primary/10 text-primary hover:bg-primary/20 px-2 py-1 rounded font-medium transition-colors">Registrar Pago</button>
+                </template>
               </div>
             </div>
           </div>
@@ -862,6 +874,22 @@ async function submitCalibration() {
       return;
     }
 
+    // 1. Ajustar Pago para no generar intereses (creando transacción de ajuste que NO afecta el balance)
+    const diff = calibrateForm.reportedNoInterest - (acc.statement?.noInterestPayment || 0)
+    if (Math.abs(diff) > 0.01) {
+      await financeStore.addTransaction({
+        accountId: acc.id,
+        type: diff > 0 ? 'expense' : 'income',
+        amount: Math.abs(diff),
+        category: 'Ajuste de Estado de Cuenta',
+        description: 'Ajuste de Estado de Cuenta',
+        date: new Date().toISOString(),
+        installments: 1
+      })
+      hasChanges = true
+      await financeStore.fetchAccounts()
+    }
+
     // Calibrar pago mínimo
     if (calibrateForm.reportedMinimum !== acc.statement?.minimumPayment || calibrateForm.reportedNoInterest !== acc.statement?.noInterestPayment) {
       const api = (await import('~/utils/api')).default
@@ -1148,8 +1176,8 @@ const closeTransactionModal = () => {
   txForm.subscriptionId = null
 }
 
-const markAsPaid = (payment: any) => {
-  txForm.amount = payment.amount
+const markAsPaid = (payment: any, amountOverride?: number) => {
+  txForm.amount = amountOverride !== undefined ? amountOverride : payment.amount
   txForm.description = payment.name
   txForm.category = payment.category || 'Servicios'
   txForm.date = new Date().toISOString()
