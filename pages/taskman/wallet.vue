@@ -161,7 +161,7 @@
               <div class="text-right group-hover:opacity-0 md:opacity-100 transition-opacity">
                 <p class="font-mono font-bold" :class="sub.type === 'INCOME' ? 'text-emerald-500' : 'text-red-400'">
                   {{ sub.type === 'INCOME' ? '+' : '' }}{{ formatCurrency(sub.amount) }}
-                  <span class="text-xs text-muted-foreground font-sans">/ {{ sub.frequency === 'MONTHLY' ? 'mes' : sub.frequency === 'YEARLY' ? 'año' : sub.frequency === 'QUARTERLY' ? 'trimestre' : sub.frequency === 'WEEKLY' ? 'sem' : 'bimestre' }}</span>
+                  <span class="text-xs text-muted-foreground font-sans">/ {{ sub.frequency === 'MONTHLY' ? 'mes' : sub.frequency === 'YEARLY' ? 'año' : sub.frequency === 'QUARTERLY' ? 'trimestre' : sub.frequency === 'SEMIANNUAL' ? 'semestre' : sub.frequency === 'WEEKLY' ? 'sem' : (sub.frequency === 'BIWEEKLY' || sub.frequency === 'SEMIMONTHLY') ? 'quincena' : 'bimestre' }}</span>
                 </p>
               </div>
               <div class="absolute top-0 right-0 h-full flex items-center pr-4 gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">

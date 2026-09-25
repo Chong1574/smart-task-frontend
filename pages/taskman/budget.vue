@@ -55,7 +55,7 @@
           <div class="mt-4 space-y-2 relative z-10">
             <div v-for="inc in incomes" :key="inc.id" class="flex justify-between items-center text-sm border-t border-border/40 pt-2 mt-2 group/item relative">
               <div>
-                <span>{{ inc.name }} ({{ inc.frequency === 'MONTHLY' ? 'Mensual' : inc.frequency === 'BIWEEKLY' ? 'Quincenal' : inc.frequency === 'WEEKLY' ? 'Semanal' : 'Anual' }})</span>
+                <span>{{ inc.name }} ({{ inc.frequency === 'MONTHLY' ? 'Mensual' : (inc.frequency === 'BIWEEKLY' || inc.frequency === 'SEMIMONTHLY') ? 'Quincenal' : inc.frequency === 'WEEKLY' ? 'Semanal' : inc.frequency === 'BIMONTHLY' ? 'Bimestral' : inc.frequency === 'QUARTERLY' ? 'Trimestral' : inc.frequency === 'SEMIANNUAL' ? 'Semestral' : 'Anual' }})</span>
               </div>
               <div class="flex items-center gap-3">
                 <span class="font-mono text-green-600 group-hover/item:opacity-0 md:opacity-100 transition-opacity">{{ formatCurrency(inc.amount) }}</span>
