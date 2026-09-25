@@ -14,7 +14,7 @@
             <span v-show="isSidebarOpen" class="font-serif text-xl font-bold tracking-tight whitespace-nowrap transition-opacity">TaskMan</span>
           </NuxtLink>
           <div class="flex items-center">
-            <NotificationBell v-if="isSidebarOpen" />
+            <NotificationBell v-if="isSidebarOpen" popoverClass="absolute right-0 mt-2" />
             <button @click="isSidebarOpen = !isSidebarOpen" v-show="isSidebarOpen" class="text-muted-foreground hover:text-primary transition-colors p-1">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
             </button>
@@ -22,7 +22,7 @@
         </div>
 
         <div v-show="!isSidebarOpen" class="flex flex-col items-center gap-4">
-          <NotificationBell />
+          <NotificationBell popoverClass="absolute left-full ml-4 -mt-2" />
           <button @click="isSidebarOpen = !isSidebarOpen" class="mx-auto text-muted-foreground hover:text-primary transition-colors p-1">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
           </button>
@@ -89,7 +89,7 @@
           TaskMan
         </span>
         <div class="flex items-center gap-2">
-          <NotificationBell />
+          <NotificationBell popoverClass="fixed top-14 right-4" />
           <NuxtLink v-if="isAdmin" to="/taskman/admin/ttlock" class="text-primary hover:text-primary/80 p-2">
             <Lock class="w-5 h-5" />
           </NuxtLink>

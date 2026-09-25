@@ -9,7 +9,7 @@
     </button>
 
     <!-- Popover -->
-    <div v-if="isOpen" class="absolute right-0 mt-2 w-80 bg-card border border-border/40 rounded-2xl shadow-xl z-50 overflow-hidden">
+    <div v-if="isOpen" :class="['w-80 bg-card border border-border/40 rounded-2xl shadow-xl z-50 overflow-hidden', popoverClass]">
       <div class="p-4 border-b border-border/40 flex justify-between items-center bg-secondary/20">
         <h3 class="font-bold">Notificaciones</h3>
         <button v-if="notificationStore.unreadCount > 0" @click="markAllRead" class="text-xs text-primary hover:underline">
@@ -57,6 +57,13 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { Bell } from 'lucide-vue-next'
 import { useNotificationStore, type Notification } from '~/stores/notifications'
+
+const props = defineProps({
+  popoverClass: {
+    type: String,
+    default: 'absolute right-0 mt-2'
+  }
+})
 
 const notificationStore = useNotificationStore()
 const isOpen = ref(false)
