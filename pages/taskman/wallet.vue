@@ -1020,13 +1020,13 @@ const submitAccount = async () => {
     type: accountForm.type,
     sub_type: accountForm.type === 'card' ? accountForm.sub_type as any : 'n/a',
     balance: initialBalance,
-    credit_limit: accountForm.credit_limit,
-    interest_rate: accountForm.interest_rate,
-    monthly_payment: accountForm.monthly_payment,
+    credit_limit: accountForm.type === 'card' && accountForm.sub_type === 'credit' ? (accountForm.credit_limit || 0) : 0,
+    interest_rate: accountForm.interest_rate || 0,
+    monthly_payment: accountForm.monthly_payment || 0,
     payment_frequency: accountForm.payment_frequency as any,
-    cutoff_day: accountForm.cutoff_day,
-    payment_day: accountForm.payment_day,
-    minimum_payment_percentage: accountForm.minimum_payment_percentage,
+    cutoff_day: (accountForm.type === 'card' && accountForm.sub_type === 'credit') ? (accountForm.cutoff_day || 1) : null as any,
+    payment_day: accountForm.payment_frequency !== 'ONCE' ? (accountForm.payment_day || 1) : null as any,
+    minimum_payment_percentage: accountForm.minimum_payment_percentage || 5.0,
     currency: accountForm.currency
   })
   showAccountModal.value = false
@@ -1066,13 +1066,13 @@ const submitEditAccount = async () => {
     type: editAccountForm.type,
     sub_type: editAccountForm.type === 'card' ? editAccountForm.sub_type as any : 'n/a',
     balance: editAccountForm.balance,
-    credit_limit: editAccountForm.credit_limit,
-    interest_rate: editAccountForm.interest_rate,
-    monthly_payment: editAccountForm.monthly_payment,
+    credit_limit: editAccountForm.type === 'card' && editAccountForm.sub_type === 'credit' ? (editAccountForm.credit_limit || 0) : 0,
+    interest_rate: editAccountForm.interest_rate || 0,
+    monthly_payment: editAccountForm.monthly_payment || 0,
     payment_frequency: editAccountForm.payment_frequency as any,
-    cutoff_day: editAccountForm.cutoff_day,
-    payment_day: editAccountForm.payment_day,
-    minimum_payment_percentage: editAccountForm.minimum_payment_percentage,
+    cutoff_day: (editAccountForm.type === 'card' && editAccountForm.sub_type === 'credit') ? (editAccountForm.cutoff_day || 1) : null as any,
+    payment_day: editAccountForm.payment_frequency !== 'ONCE' ? (editAccountForm.payment_day || 1) : null as any,
+    minimum_payment_percentage: editAccountForm.minimum_payment_percentage || 5.0,
     currency: editAccountForm.currency
   })
   showEditAccountModal.value = false
