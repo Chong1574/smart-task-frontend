@@ -410,10 +410,8 @@ export const useFinanceStore = defineStore('finance', {
                         const delta = (targetDow - today.getDay() + 7) % 7 || 7;
                         nextDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + delta);
                     } else if (sub.frequency === 'SEMIMONTHLY') {
-                        const day1 = sub.paymentDay;
-                        // For 15 and 30, or 10 and 25, just add 15.
-                        // If day1 is > 15, we assume the second is end of month or we just strictly do +15.
-                        const day2 = day1 + 15 > 31 ? 31 : day1 + 15;
+                        const day1 = sub.paymentDay > 100 ? Math.floor(sub.paymentDay / 100) : sub.paymentDay;
+                        const day2 = sub.paymentDay > 100 ? sub.paymentDay % 100 : (day1 + 15 > 31 ? 31 : day1 + 15);
                         
                         const date1 = new Date(today.getFullYear(), today.getMonth(), day1);
                         const date2 = new Date(today.getFullYear(), today.getMonth(), day2);
