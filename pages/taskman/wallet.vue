@@ -483,11 +483,22 @@
               <input v-model.number="subForm.amount" required type="number" step="0.01" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
             </div>
             <div v-if="['WEEKLY', 'MONTHLY', 'SEMIMONTHLY'].includes(subForm.frequency)">
-              <label class="block text-sm font-medium mb-1">
-                {{ subForm.frequency === 'SEMIMONTHLY' ? 'Primer Día de Pago (ej. 10 para 10 y 25)' : 'Día de Pago' }} 
-                {{ subForm.frequency === 'WEEKLY' ? '(1=Lun, 7=Dom)' : '' }}
-              </label>
-              <input v-model.number="subForm.paymentDay" type="number" min="1" :max="subForm.frequency === 'WEEKLY' ? 7 : 31" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+              <div v-if="subForm.frequency === 'SEMIMONTHLY'" class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium mb-1">Día de Pago 1</label>
+                  <input v-model.number="subForm.paymentDay" type="number" min="1" max="31" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium mb-1">Día de Pago 2</label>
+                  <input v-model.number="subForm.paymentDay2" type="number" min="1" max="31" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+                </div>
+              </div>
+              <div v-else>
+                <label class="block text-sm font-medium mb-1">
+                  Día de Pago {{ subForm.frequency === 'WEEKLY' ? '(1=Lun, 7=Dom)' : '' }}
+                </label>
+                <input v-model.number="subForm.paymentDay" type="number" min="1" :max="subForm.frequency === 'WEEKLY' ? 7 : 31" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+              </div>
             </div>
             <div v-else>
               <label class="block text-sm font-medium mb-1">
@@ -844,7 +855,9 @@ const subForm = reactive({
   currency: 'MXN',
   isVariable: false,
   accountId: null as number | null,
-  paymentDay: 1 as number | null
+  paymentDay: 1 as number | null,
+  paymentDay2: 15 as number | null,
+  nextPaymentDate: null as string | null
 })
 
 const txForm = reactive({
@@ -1085,7 +1098,13 @@ const openEditSubscription = (sub: any) => {
   subForm.currency = sub.currency || 'MXN'
   subForm.isVariable = sub.isVariable
   subForm.accountId = sub.accountId
-  subForm.paymentDay = sub.paymentDay || 1
+  if (sub.frequency === 'SEMIMONTHLY' && sub.paymentDay > 100) {
+    subForm.paymentDay = Math.floor(sub.paymentDay / 100)
+    subForm.paymentDay2 = sub.paymentDay % 100
+  } else {
+    subForm.paymentDay = sub.paymentDay || 1
+    subForm.paymentDay2 = 15
+  }
   subForm.nextPaymentDate = sub.nextPaymentDate ? sub.nextPaymentDate.split('T')[0] : null
   showSubscriptionModal.value = true
 }
@@ -1111,7 +1130,9 @@ const submitSubscription = async () => {
     currency: subForm.currency,
     isVariable: subForm.isVariable,
     accountId: subForm.accountId,
-    paymentDay: subForm.paymentDay
+    paymentDay: subForm.frequency === 'SEMIMONTHLY' 
+      ? ((subForm.paymentDay || 1) * 100 + (subForm.paymentDay2 || 15)) 
+      : subForm.paymentDay
   }
 
   if (['BIWEEKLY', 'BIMONTHLY', 'QUARTERLY', 'SEMIANNUAL', 'YEARLY'].includes(subForm.frequency)) {
