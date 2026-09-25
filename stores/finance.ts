@@ -567,6 +567,7 @@ export const useFinanceStore = defineStore('finance', {
                         amount: Number(tx.amount),
                         account: tx.account ? { name: tx.account.name } : undefined
                     }));
+                    this.syncCategories();
                 }
             } catch (err) {
                 console.error("Error fetching transactions:", err);
@@ -581,6 +582,7 @@ export const useFinanceStore = defineStore('finance', {
                 const res = await api.get('/tasks');
                 if (res.data.success) {
                     this.tasks = res.data.data;
+                    this.syncCategories();
                 }
             } catch (err) { console.error(err); }
         },
@@ -728,6 +730,32 @@ export const useFinanceStore = defineStore('finance', {
             }
         },
 
+        syncCategories() {
+            const allCats = new Set<string>(this.categories);
+            let added = false;
+            
+            this.transactions.forEach(tx => {
+                if (tx.category && typeof tx.category === 'string' && !allCats.has(tx.category)) {
+                    allCats.add(tx.category);
+                    added = true;
+                }
+            });
+            
+            this.tasks.forEach(t => {
+                if (t.category && typeof t.category === 'string' && !allCats.has(t.category)) {
+                    allCats.add(t.category);
+                    added = true;
+                }
+            });
+            
+            if (added) {
+                this.categories = Array.from(allCats);
+                if (typeof window !== 'undefined' && window.localStorage) {
+                    window.localStorage.setItem('taskman_categories', JSON.stringify(this.categories));
+                }
+            }
+        },
+
         async initialize() {
             if (typeof window !== 'undefined' && window.localStorage) {
                 const stored = window.localStorage.getItem('taskman_categories');
@@ -747,6 +775,8 @@ export const useFinanceStore = defineStore('finance', {
                 this.fetchVehicles(),
                 this.fetchWishlistItems()
             ]);
+
+            this.syncCategories();
         },
 
         async fetchSubscriptions() {
