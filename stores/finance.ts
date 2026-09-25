@@ -359,6 +359,15 @@ export const useFinanceStore = defineStore('finance', {
                             nextDate = new Date(billDate.getFullYear(), billDate.getMonth(), billDate.getDate());
                             // Full amount is kept
                         } else {
+                            // Check if the user just paid the full bill this very same month.
+                            // If they did, they don't start saving for the next cycle until next month!
+                            if (sub.lastPaymentDate) {
+                                const lastDate = new Date(sub.lastPaymentDate);
+                                if (provDate.getFullYear() === lastDate.getFullYear() && provDate.getMonth() === lastDate.getMonth()) {
+                                    return; // Skip this provision
+                                }
+                            }
+
                             // It's a provision month
                             const monthStart = new Date(provDate.getFullYear(), provDate.getMonth(), 1);
                             const monthEnd = new Date(provDate.getFullYear(), provDate.getMonth() + 1, 0, 23, 59, 59);
