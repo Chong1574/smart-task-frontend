@@ -488,18 +488,18 @@
               <div v-if="subForm.frequency === 'SEMIMONTHLY'" class="grid grid-cols-2 gap-4">
                 <div>
                   <label class="block text-sm font-medium mb-1">Día de Pago 1</label>
-                  <input v-model.number="subForm.paymentDay" type="number" min="1" max="31" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+                  <input v-model.number="subForm.paymentDay" required type="number" min="1" max="31" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
                 </div>
                 <div>
                   <label class="block text-sm font-medium mb-1">Día de Pago 2</label>
-                  <input v-model.number="subForm.paymentDay2" type="number" min="1" max="31" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+                  <input v-model.number="subForm.paymentDay2" required type="number" min="1" max="31" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
                 </div>
               </div>
               <div v-else>
                 <label class="block text-sm font-medium mb-1">
                   Día de Pago {{ subForm.frequency === 'WEEKLY' ? '(1=Lun, 7=Dom)' : '' }}
                 </label>
-                <input v-model.number="subForm.paymentDay" type="number" min="1" :max="subForm.frequency === 'WEEKLY' ? 7 : 31" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+                <input v-model.number="subForm.paymentDay" required type="number" min="1" :max="subForm.frequency === 'WEEKLY' ? 7 : 31" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
               </div>
             </div>
             <div v-else>

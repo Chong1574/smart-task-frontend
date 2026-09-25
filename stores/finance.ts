@@ -334,7 +334,7 @@ export const useFinanceStore = defineStore('finance', {
 
             // 1. Suscripciones y Servicios
             state.subscriptions.forEach(sub => {
-                if (!sub.paymentDay) return;
+                if (!sub.paymentDay && !sub.nextPaymentDate) return;
 
                 // Preferir nextPaymentDate del backend (se actualiza al registrar pago). Fallback:
                 // computar el próximo día del ciclo. Ambos caminos ocultan el sub del cycle actual
