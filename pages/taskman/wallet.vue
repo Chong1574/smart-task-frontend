@@ -232,7 +232,7 @@
       <!-- MODALS -->
 
       <!-- Modal: Nueva Cuenta -->
-      <div v-if="showAccountModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" @click.self="showAccountModal = false">
+      <div v-if="showAccountModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
         <div class="bg-card border border-primary/20 rounded-3xl p-6 w-full max-w-md shadow-2xl">
           <h2 class="text-2xl font-bold mb-6">Agregar Cuenta</h2>
           <form @submit.prevent="submitAccount" class="space-y-4">
@@ -336,7 +336,7 @@
       </div>
 
       <!-- Modal: Editar Cuenta -->
-      <div v-if="showEditAccountModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" @click.self="showEditAccountModal = false">
+      <div v-if="showEditAccountModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
         <div class="bg-card border border-primary/20 rounded-3xl p-6 w-full max-w-md shadow-2xl">
           <h2 class="text-2xl font-bold mb-6">Editar Cuenta</h2>
           <form @submit.prevent="submitEditAccount" class="space-y-4">
@@ -440,7 +440,7 @@
       </div>
 
       <!-- Modal: Nueva Suscripción / Servicio -->
-      <div v-if="showSubscriptionModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" @click.self="showSubscriptionModal = false">
+      <div v-if="showSubscriptionModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
         <div class="bg-card border border-primary/20 rounded-3xl p-6 w-full max-w-md shadow-2xl">
           <h2 class="text-2xl font-bold mb-6">Agregar Servicio o Membresía</h2>
           <form @submit.prevent="submitSubscription" class="space-y-4">
@@ -516,7 +516,7 @@
       </div>
 
       <!-- Modal: Nueva / Editar Transacción -->
-      <div v-if="showTransactionModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" @click.self="closeTransactionModal">
+      <div v-if="showTransactionModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
         <div class="bg-card border border-primary/20 rounded-3xl p-6 w-full max-w-md shadow-2xl">
           <h2 class="text-2xl font-bold mb-6">{{ editingTransactionId ? 'Editar Transacción' : 'Registrar Transacción' }}</h2>
           <form @submit.prevent="submitTransaction" class="space-y-4">
@@ -605,7 +605,7 @@
       </div>
 
       <!-- Modal: Historial completo por cuenta -->
-      <div v-if="historyAccount" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" @click.self="historyAccount = null">
+      <div v-if="historyAccount" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
         <div class="bg-card border border-primary/20 rounded-3xl p-6 w-full max-w-2xl max-h-[85vh] shadow-2xl flex flex-col">
           <div class="flex justify-between items-start mb-4">
             <div>
@@ -641,7 +641,7 @@
       </div>
 
       <!-- Modal: Gestionar Categorías -->
-      <div v-if="showManageCategoriesModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" @click.self="showManageCategoriesModal = false">
+      <div v-if="showManageCategoriesModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
         <div class="bg-card border border-primary/20 rounded-3xl p-6 w-full max-w-md shadow-2xl">
           <h2 class="text-2xl font-bold mb-4">Gestionar Categorías</h2>
           
@@ -677,7 +677,7 @@
       </div>
 
       <!-- Modal: Calibrar Estado de Cuenta -->
-      <div v-if="showCalibrateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" @click.self="showCalibrateModal = false">
+      <div v-if="showCalibrateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
         <div class="bg-card border border-primary/20 rounded-3xl p-6 w-full max-w-md shadow-2xl">
           <h2 class="text-2xl font-bold mb-2">Corregir Estado de Cuenta</h2>
           <p class="text-sm text-muted-foreground mb-6">Si el banco reporta montos diferentes, ingresa los reales aquí. El sistema registrará los ajustes necesarios.</p>

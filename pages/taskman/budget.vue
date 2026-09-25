@@ -164,7 +164,7 @@
       </div>
 
       <!-- Modal: Nuevo Ingreso -->
-      <div v-if="showIncomeModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" @click.self="showIncomeModal = false">
+      <div v-if="showIncomeModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
         <div class="bg-card border border-primary/20 rounded-3xl p-6 w-full max-w-md shadow-2xl">
           <h2 class="text-2xl font-bold mb-6">Añadir Ingreso Fijo</h2>
           <form @submit.prevent="submitIncome" class="space-y-4">

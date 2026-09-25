@@ -1,7 +1,7 @@
 <template>
   <div
     class="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm overflow-y-auto"
-    @click.self="$emit('close')"
+   
   >
     <div class="container max-w-4xl mx-auto py-8 px-4">
       <button

@@ -10,7 +10,7 @@ const store = useConfirmStore()
       <div
         v-if="store.open"
         class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-        @click.self="store.cancel()"
+       
       >
         <div class="w-full max-w-sm rounded-lg border bg-card p-6 shadow-lg">
           <h2 class="mb-2 font-serif text-lg font-semibold text-foreground">

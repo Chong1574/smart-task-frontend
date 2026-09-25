@@ -102,7 +102,7 @@
     </main>
 
     <!-- Modal: Perfil (nombre) -->
-    <div v-if="showProfile" class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" @click.self="showProfile = false">
+    <div v-if="showProfile" class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div class="bg-card border border-primary/20 rounded-3xl p-6 w-full max-w-md shadow-2xl">
         <h2 class="text-2xl font-bold mb-2">Tu perfil</h2>
         <p class="text-sm text-muted-foreground mb-4">Este es el nombre con el que la app te saluda ("Hola, {{ displayName }}").</p>
