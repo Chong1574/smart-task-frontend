@@ -6,21 +6,27 @@
     >
       <div class="p-4 lg:p-6 flex flex-col gap-8">
         <!-- Logo y Toggle -->
-        <div class="flex items-center justify-between">
-          <NuxtLink to="/taskman" class="flex items-center gap-3 group">
+        <div class="flex items-center justify-between gap-2">
+          <NuxtLink to="/taskman" class="flex items-center gap-3 group flex-1">
             <div class="w-10 h-10 shrink-0 rounded-xl bg-gradient-to-tr from-primary to-orange-400 flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-105 transition-transform">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1-1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
             </div>
             <span v-show="isSidebarOpen" class="font-serif text-xl font-bold tracking-tight whitespace-nowrap transition-opacity">TaskMan</span>
           </NuxtLink>
-          <button @click="isSidebarOpen = !isSidebarOpen" v-show="isSidebarOpen" class="text-muted-foreground hover:text-primary transition-colors p-1">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-          </button>
+          <div class="flex items-center">
+            <NotificationBell v-if="isSidebarOpen" />
+            <button @click="isSidebarOpen = !isSidebarOpen" v-show="isSidebarOpen" class="text-muted-foreground hover:text-primary transition-colors p-1">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+          </div>
         </div>
 
-        <button @click="isSidebarOpen = !isSidebarOpen" v-show="!isSidebarOpen" class="mx-auto text-muted-foreground hover:text-primary transition-colors p-1">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-        </button>
+        <div v-show="!isSidebarOpen" class="flex flex-col items-center gap-4">
+          <NotificationBell />
+          <button @click="isSidebarOpen = !isSidebarOpen" class="mx-auto text-muted-foreground hover:text-primary transition-colors p-1">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+        </div>
 
         <!-- Navegación Desktop -->
         <nav class="flex flex-col gap-2">
@@ -83,6 +89,7 @@
           TaskMan
         </span>
         <div class="flex items-center gap-2">
+          <NotificationBell />
           <NuxtLink v-if="isAdmin" to="/taskman/admin/ttlock" class="text-primary hover:text-primary/80 p-2">
             <Lock class="w-5 h-5" />
           </NuxtLink>
@@ -192,9 +199,16 @@ const handleLogoutEvent = () => {
   router.push('/login')
 }
 
+import { registerPushNotifications } from '~/utils/push'
+
 onMounted(() => {
   if (typeof window !== 'undefined') {
     window.addEventListener('auth:logout', handleLogoutEvent)
+    
+    // Solo registramos si el usuario está autenticado
+    if (authStore.isAuthenticated) {
+      registerPushNotifications()
+    }
   }
 })
 
