@@ -334,7 +334,7 @@ export const useFinanceStore = defineStore('finance', {
 
             // 1. Suscripciones y Servicios
             state.subscriptions.forEach(sub => {
-                if (sub.type === 'INCOME' || !sub.paymentDay) return;
+                if (!sub.paymentDay) return;
 
                 // Preferir nextPaymentDate del backend (se actualiza al registrar pago). Fallback:
                 // computar el próximo día del ciclo. Ambos caminos ocultan el sub del cycle actual
@@ -442,12 +442,12 @@ export const useFinanceStore = defineStore('finance', {
                     name: isProvisionTransfer ? `${sub.name} (Guardado mensual)` : sub.name,
                     amount: amountToPay,
                     date: nextDate,
-                    type: isProvisionTransfer ? 'Guardado' : (sub.type === 'MEMBERSHIP' ? 'Membresía' : 'Servicio'),
+                    type: isProvisionTransfer ? 'Guardado' : (sub.type === 'INCOME' ? 'Ingreso' : (sub.type === 'MEMBERSHIP' ? 'Membresía' : 'Servicio')),
                     daysRemaining,
                     sourceType: 'subscription',
                     sourceId: sub.id,
                     accountId: sub.accountId,
-                    category: isProvisionTransfer ? 'Ahorro' : 'Servicios',
+                    category: isProvisionTransfer ? 'Ahorro' : (sub.type === 'INCOME' ? 'Nómina' : 'Servicios'),
                     isProvisionTransfer
                 });
             });

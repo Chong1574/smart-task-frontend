@@ -219,9 +219,11 @@
                   </div>
                 </template>
                 <template v-else>
-                  <p class="font-mono font-bold text-red-500">{{ formatCurrency(payment.amount) }}</p>
+                  <p :class="['font-mono font-bold', payment.type === 'Ingreso' ? 'text-green-500' : 'text-red-500']">{{ formatCurrency(payment.amount) }}</p>
                   <p class="text-xs text-muted-foreground">{{ new Date(payment.date).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }) }}</p>
-                  <button @click="markAsPaid(payment)" class="mt-1 text-xs bg-primary/10 text-primary hover:bg-primary/20 px-2 py-1 rounded font-medium transition-colors">Registrar Pago</button>
+                  <button @click="markAsPaid(payment)" class="mt-1 text-xs bg-primary/10 text-primary hover:bg-primary/20 px-2 py-1 rounded font-medium transition-colors">
+                    {{ payment.type === 'Ingreso' ? 'Registrar Ingreso' : 'Registrar Pago' }}
+                  </button>
                 </template>
               </div>
             </div>
@@ -1246,7 +1248,7 @@ const markAsPaid = (payment: any, amountOverride?: number) => {
     }
     txForm.accountId = source.id
   } else {
-    txForm.type = payment.isProvisionTransfer ? 'transfer' : 'expense'
+    txForm.type = payment.isProvisionTransfer ? 'transfer' : (payment.type === 'Ingreso' ? 'income' : 'expense')
     if (payment.accountId) {
       txForm.accountId = payment.accountId
     } else {
