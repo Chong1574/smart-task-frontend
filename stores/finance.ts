@@ -48,7 +48,7 @@ export interface Subscription {
     name: string;
     amount: number;
     currency: string;
-    frequency: 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY' | 'BIMONTHLY' | 'YEARLY';
+    frequency: 'WEEKLY' | 'BIWEEKLY' | 'SEMIMONTHLY' | 'MONTHLY' | 'BIMONTHLY' | 'QUARTERLY' | 'SEMIANNUAL' | 'YEARLY';
     type: 'MEMBERSHIP' | 'SERVICE' | 'INCOME';
     isVariable: boolean;
     paymentDay?: number | null;
@@ -395,8 +395,31 @@ export const useFinanceStore = defineStore('finance', {
                         nextDate = new Date(billDate.getFullYear(), billDate.getMonth(), billDate.getDate());
                     }
                 } else {
-                    nextDate = new Date(today.getFullYear(), today.getMonth(), sub.paymentDay);
-                    if (nextDate < today) nextDate.setMonth(nextDate.getMonth() + 1);
+                    if (sub.frequency === 'WEEKLY') {
+                        // paymentDay is 1-7 (Mon-Sun)
+                        const targetDow = sub.paymentDay === 7 ? 0 : sub.paymentDay;
+                        const delta = (targetDow - today.getDay() + 7) % 7 || 7;
+                        nextDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + delta);
+                    } else if (sub.frequency === 'SEMIMONTHLY') {
+                        const day1 = sub.paymentDay;
+                        // For 15 and 30, or 10 and 25, just add 15.
+                        // If day1 is > 15, we assume the second is end of month or we just strictly do +15.
+                        const day2 = day1 + 15 > 31 ? 31 : day1 + 15;
+                        
+                        const date1 = new Date(today.getFullYear(), today.getMonth(), day1);
+                        const date2 = new Date(today.getFullYear(), today.getMonth(), day2);
+                        
+                        if (today <= date1) {
+                            nextDate = date1;
+                        } else if (today <= date2) {
+                            nextDate = date2;
+                        } else {
+                            nextDate = new Date(today.getFullYear(), today.getMonth() + 1, day1);
+                        }
+                    } else {
+                        nextDate = new Date(today.getFullYear(), today.getMonth(), sub.paymentDay);
+                        if (nextDate < today) nextDate.setMonth(nextDate.getMonth() + 1);
+                    }
                 }
 
                 // daysRemaining can be negative if the user missed the payment date.

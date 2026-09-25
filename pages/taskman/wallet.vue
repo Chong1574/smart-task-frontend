@@ -461,6 +461,8 @@
                 <label class="block text-sm font-medium mb-1">Frecuencia</label>
                 <select v-model="subForm.frequency" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
                   <option value="WEEKLY">Semanal</option>
+                  <option value="BIWEEKLY">Quincenal (cada 14 días)</option>
+                  <option value="SEMIMONTHLY">Quincena Fija (ej. 10 y 25)</option>
                   <option value="MONTHLY">Mensual</option>
                   <option value="BIMONTHLY">Bimestral</option>
                   <option value="QUARTERLY">Trimestral</option>
@@ -480,9 +482,10 @@
               <label class="block text-sm font-medium mb-1">Monto Estimado</label>
               <input v-model.number="subForm.amount" required type="number" step="0.01" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
             </div>
-            <div v-if="subForm.frequency === 'WEEKLY' || subForm.frequency === 'MONTHLY'">
+            <div v-if="['WEEKLY', 'MONTHLY', 'SEMIMONTHLY'].includes(subForm.frequency)">
               <label class="block text-sm font-medium mb-1">
-                Día de Pago {{ subForm.frequency === 'WEEKLY' ? '(1=Lun, 7=Dom)' : '' }}
+                {{ subForm.frequency === 'SEMIMONTHLY' ? 'Primer Día de Pago (ej. 10 para 10 y 25)' : 'Día de Pago' }} 
+                {{ subForm.frequency === 'WEEKLY' ? '(1=Lun, 7=Dom)' : '' }}
               </label>
               <input v-model.number="subForm.paymentDay" type="number" min="1" :max="subForm.frequency === 'WEEKLY' ? 7 : 31" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
             </div>
@@ -1111,7 +1114,7 @@ const submitSubscription = async () => {
     paymentDay: subForm.paymentDay
   }
 
-  if (['BIMONTHLY', 'QUARTERLY', 'SEMIANNUAL', 'YEARLY'].includes(subForm.frequency)) {
+  if (['BIWEEKLY', 'BIMONTHLY', 'QUARTERLY', 'SEMIANNUAL', 'YEARLY'].includes(subForm.frequency)) {
     if (subForm.nextPaymentDate) {
       data.nextPaymentDate = new Date(subForm.nextPaymentDate + 'T12:00:00Z').toISOString()
       data.paymentDay = new Date(subForm.nextPaymentDate + 'T12:00:00Z').getDate()
