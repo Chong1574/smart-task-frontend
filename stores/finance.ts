@@ -520,8 +520,8 @@ export const useFinanceStore = defineStore('finance', {
                 });
             });
 
-            // Ordenar por días restantes y retornar solo próximos 31 días
-            return payments.filter(p => p.daysRemaining <= 31).sort((a, b) => a.daysRemaining - b.daysRemaining);
+            // Ordenar por días restantes y retornar solo próximos 15 días
+            return payments.filter(p => p.daysRemaining <= 15).sort((a, b) => a.daysRemaining - b.daysRemaining);
         }
     },
 
