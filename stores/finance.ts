@@ -483,12 +483,13 @@ export const useFinanceStore = defineStore('finance', {
                     amountToPay = balance < 500 ? balance : balance * 0.05; 
                 }
 
-                // Descontar los pagos ya realizados en el ciclo actual
-                let cycleDays = 30;
-                if (acc.payment_frequency === 'WEEKLY') cycleDays = 7;
-                else if (acc.payment_frequency === 'BIWEEKLY') cycleDays = 14;
+                // Descontar los pagos ya realizados en el ciclo actual.
+                // Usamos una ventana de 15 días (o la mitad del ciclo) para no tomar como "adelanto" un pago atrasado del mes anterior.
+                let cycleWindow = 15;
+                if (acc.payment_frequency === 'WEEKLY') cycleWindow = 3;
+                else if (acc.payment_frequency === 'BIWEEKLY') cycleWindow = 7;
 
-                const cycleStart = new Date(nextDate.getTime() - (cycleDays * 24 * 3600 * 1000));
+                const cycleStart = new Date(nextDate.getTime() - (cycleWindow * 24 * 3600 * 1000));
                 const nextDateEnd = new Date(nextDate.getFullYear(), nextDate.getMonth(), nextDate.getDate(), 23, 59, 59);
 
                 const paymentsThisCycle = state.transactions.filter(t => 
