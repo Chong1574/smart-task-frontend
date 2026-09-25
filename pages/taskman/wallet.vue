@@ -304,7 +304,7 @@
 
             <!-- Campos para Préstamo -->
             <div v-if="accountForm.type === 'loan'" class="grid grid-cols-2 gap-4 bg-secondary/20 p-4 rounded-xl border border-border/30">
-              <div>
+              <div v-if="accountForm.payment_frequency !== 'ONCE'">
                 <label class="block text-sm font-medium mb-1">Pago Fijo</label>
                 <input v-model.number="accountForm.monthly_payment" type="number" step="0.01" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
               </div>
@@ -321,7 +321,7 @@
                   <option value="ONCE">Un solo pago (Dinero rápido)</option>
                 </select>
               </div>
-              <div v-if="accountForm.payment_frequency !== 'ONCE'">
+              <div>
                 <label class="block text-sm font-medium mb-1">
                   Día de Pago {{ accountForm.payment_frequency === 'WEEKLY' ? '(1=Lun, 7=Dom)' : '' }}
                 </label>
@@ -408,7 +408,7 @@
 
             <!-- Campos para Préstamo -->
             <div v-if="editAccountForm.type === 'loan'" class="grid grid-cols-2 gap-4 bg-secondary/20 p-4 rounded-xl border border-border/30">
-              <div>
+              <div v-if="editAccountForm.payment_frequency !== 'ONCE'">
                 <label class="block text-sm font-medium mb-1">Pago Fijo</label>
                 <input v-model.number="editAccountForm.monthly_payment" type="number" step="0.01" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
               </div>
@@ -425,7 +425,7 @@
                   <option value="ONCE">Un solo pago (Dinero rápido)</option>
                 </select>
               </div>
-              <div v-if="editAccountForm.payment_frequency !== 'ONCE'">
+              <div>
                 <label class="block text-sm font-medium mb-1">
                   Día de Pago {{ editAccountForm.payment_frequency === 'WEEKLY' ? '(1=Lun, 7=Dom)' : '' }}
                 </label>
