@@ -178,7 +178,11 @@
                 <select v-model="incomeForm.frequency" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
                   <option value="WEEKLY">Semanal</option>
                   <option value="BIWEEKLY">Quincenal</option>
+                  <option value="SEMIMONTHLY">Quincena Fija (ej. 10 y 25)</option>
                   <option value="MONTHLY">Mensual</option>
+                  <option value="BIMONTHLY">Bimestral</option>
+                  <option value="QUARTERLY">Trimestral</option>
+                  <option value="SEMIANNUAL">Semestral</option>
                   <option value="YEARLY">Anual</option>
                 </select>
               </div>
@@ -186,15 +190,27 @@
                 <label class="block text-sm font-medium mb-1">Monto por periodo</label>
                 <input v-model.number="incomeForm.amount" required type="number" step="0.01" min="0.01" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
                 <p v-if="incomeForm.amount > 0" class="text-xs text-green-600 mt-2 font-medium bg-green-500/10 p-2 rounded-lg">
-                  💡 En tus proyecciones esto equivale a sumar {{ formatCurrency(incomeForm.frequency === 'WEEKLY' ? incomeForm.amount / 7 : incomeForm.frequency === 'BIWEEKLY' ? incomeForm.amount / 15 : incomeForm.frequency === 'MONTHLY' ? incomeForm.amount / 30 : incomeForm.amount / 365) }} diarios.
+                  💡 En tus proyecciones esto equivale a sumar {{ formatCurrency(incomeForm.frequency === 'WEEKLY' ? incomeForm.amount / 7 : (incomeForm.frequency === 'BIWEEKLY' || incomeForm.frequency === 'SEMIMONTHLY') ? incomeForm.amount / 15 : incomeForm.frequency === 'MONTHLY' ? incomeForm.amount / 30 : incomeForm.frequency === 'BIMONTHLY' ? incomeForm.amount / 60 : incomeForm.frequency === 'QUARTERLY' ? incomeForm.amount / 90 : incomeForm.frequency === 'SEMIANNUAL' ? incomeForm.amount / 180 : incomeForm.amount / 365) }} diarios.
                 </p>
               </div>
             </div>
-            <div v-if="incomeForm.frequency === 'WEEKLY' || incomeForm.frequency === 'MONTHLY'">
-              <label class="block text-sm font-medium mb-1">
-                Día de Pago {{ incomeForm.frequency === 'WEEKLY' ? '(1=Lun, 7=Dom)' : '' }}
-              </label>
-              <input v-model.number="incomeForm.paymentDay" type="number" min="1" :max="incomeForm.frequency === 'WEEKLY' ? 7 : 31" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+            <div v-if="['WEEKLY', 'MONTHLY', 'SEMIMONTHLY'].includes(incomeForm.frequency)">
+              <div v-if="incomeForm.frequency === 'SEMIMONTHLY'" class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium mb-1">Día de Pago 1</label>
+                  <input v-model.number="incomeForm.paymentDay" required type="number" min="1" max="31" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium mb-1">Día de Pago 2</label>
+                  <input v-model.number="incomeForm.paymentDay2" required type="number" min="1" max="31" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+                </div>
+              </div>
+              <div v-else>
+                <label class="block text-sm font-medium mb-1">
+                  Día de Pago {{ incomeForm.frequency === 'WEEKLY' ? '(1=Lun, 7=Dom)' : '' }}
+                </label>
+                <input v-model.number="incomeForm.paymentDay" required type="number" min="1" :max="incomeForm.frequency === 'WEEKLY' ? 7 : 31" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+              </div>
             </div>
             <div class="flex justify-end gap-3 mt-8">
               <button type="button" @click="showIncomeModal = false" class="px-4 py-2 text-muted-foreground hover:bg-secondary rounded-xl transition-colors">Cancelar</button>
@@ -248,7 +264,8 @@ const incomeForm = reactive({
   frequency: 'BIWEEKLY',
   amount: 0,
   currency: 'MXN',
-  paymentDay: 1 as number | null
+  paymentDay: 1 as number | null,
+  paymentDay2: 15 as number | null
 })
 
 const openIncomeModal = () => {
@@ -257,6 +274,7 @@ const openIncomeModal = () => {
   incomeForm.frequency = 'BIWEEKLY'
   incomeForm.amount = 0
   incomeForm.paymentDay = 1
+  incomeForm.paymentDay2 = 15
   showIncomeModal.value = true
 }
 
@@ -266,7 +284,13 @@ const openEditIncome = (inc: any) => {
   incomeForm.frequency = inc.frequency
   incomeForm.amount = inc.amount
   incomeForm.currency = inc.currency || 'MXN'
-  incomeForm.paymentDay = inc.paymentDay || 1
+  if (inc.frequency === 'SEMIMONTHLY' && inc.paymentDay > 100) {
+    incomeForm.paymentDay = Math.floor(inc.paymentDay / 100)
+    incomeForm.paymentDay2 = inc.paymentDay % 100
+  } else {
+    incomeForm.paymentDay = inc.paymentDay || 1
+    incomeForm.paymentDay2 = 15
+  }
   showIncomeModal.value = true
 }
 
@@ -291,7 +315,9 @@ const submitIncome = async () => {
     currency: incomeForm.currency,
     isVariable: false,
     accountId: null,
-    paymentDay: incomeForm.paymentDay
+    paymentDay: incomeForm.frequency === 'SEMIMONTHLY' 
+      ? ((incomeForm.paymentDay || 1) * 100 + (incomeForm.paymentDay2 || 15)) 
+      : incomeForm.paymentDay
   }
   
   if (incomeForm.id) {
