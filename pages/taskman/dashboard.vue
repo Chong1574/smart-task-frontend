@@ -226,7 +226,9 @@ const formatCurrency = (value: number) => {
 }
 
 const totalUpcoming = computed(() => {
-  return financeStore.upcomingPayments.reduce((sum, p) => sum + p.amount, 0)
+  return financeStore.upcomingPayments
+    .filter(p => p.type !== 'Ingreso')
+    .reduce((sum, p) => sum + p.amount, 0)
 })
 
 // -- EDU/SALUD LOGIC --

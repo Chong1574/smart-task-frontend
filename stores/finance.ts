@@ -455,7 +455,7 @@ export const useFinanceStore = defineStore('finance', {
                 const isDebt = acc.type === 'loan' || (acc.type === 'card' && acc.sub_type === 'credit');
                 if (!isDebt || Number(acc.balance) >= 0 || !acc.payment_day) return;
                 // ponytail: ONCE = pago único; no proyectar recurrencia
-                if (acc.payment_frequency === 'ONCE') return;
+                // if (acc.payment_frequency === 'ONCE') return;
 
                 let nextDate: Date;
                 if (acc.payment_frequency === 'WEEKLY') {

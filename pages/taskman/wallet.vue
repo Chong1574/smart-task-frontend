@@ -118,7 +118,18 @@
                   {{ isNegative(tx) ? '-' : '+' }}{{ formatCurrency(tx.amount) }}
                 </span>
               </div>
-              <div class="md:col-span-6 font-medium truncate w-full" :title="formatDescription(tx.description)">{{ formatDescription(tx.description) }}</div>
+              <div class="md:col-span-6 flex flex-col w-full min-w-0">
+                <span class="font-medium truncate" :title="formatDescription(tx.description)">{{ formatDescription(tx.description) }}</span>
+                <div class="flex items-center gap-2 mt-1">
+                  <span class="text-[10px] px-2 py-0.5 rounded font-medium" 
+                        :class="isNegative(tx) ? 'bg-red-500/10 text-red-500' : 'bg-emerald-500/10 text-emerald-500'">
+                    {{ isNegative(tx) ? 'Pago / Salida' : 'Abono / Entrada' }}
+                  </span>
+                  <span v-if="tx.category" class="text-[10px] text-muted-foreground border border-border/50 px-2 py-0.5 rounded truncate max-w-[120px]" :title="tx.category">
+                    {{ tx.category }}
+                  </span>
+                </div>
+              </div>
               <div class="md:col-span-3 w-full text-right font-mono font-bold flex items-center justify-end gap-3 mt-2 md:mt-0">
                 <span class="hidden md:inline" :class="isNegative(tx) ? 'text-red-500' : 'text-green-500'">
                   {{ isNegative(tx) ? '-' : '+' }}{{ formatCurrency(tx.amount) }}
@@ -592,6 +603,7 @@
               
               <!-- Selector normal -->
               <select v-if="!showAddCategory" v-model="txForm.category" required class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+                <option value="" disabled>Selecciona una categoría...</option>
                 <option v-for="cat in financeStore.categories" :key="cat" :value="cat">{{ cat }}</option>
               </select>
 
@@ -641,9 +653,16 @@
             <div v-for="tx in accountHistory" :key="tx.id" class="flex items-center justify-between p-3 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors">
               <div class="flex-1 min-w-0">
                 <p class="font-medium truncate">{{ formatDescription(tx.description) || tx.category || 'Sin descripción' }}</p>
-                <p class="text-xs text-muted-foreground">
-                  {{ formatDate(tx.date) }} · <span class="capitalize">{{ txTypeLabel(tx.type) }}</span>
-                </p>
+                <div class="flex items-center gap-2 mt-1">
+                  <span class="text-[10px] px-2 py-0.5 rounded font-medium" 
+                        :class="isNegative(tx) ? 'bg-red-500/10 text-red-500' : 'bg-emerald-500/10 text-emerald-500'">
+                    {{ isNegative(tx) ? 'Pago' : 'Abono' }}
+                  </span>
+                  <span class="text-[10px] text-muted-foreground border border-border/50 px-2 py-0.5 rounded">
+                    {{ tx.category || txTypeLabel(tx.type) }}
+                  </span>
+                  <span class="text-xs text-muted-foreground ml-auto">{{ formatDate(tx.date) }}</span>
+                </div>
               </div>
               <span class="font-mono font-bold whitespace-nowrap" :class="isNegative(tx) ? 'text-red-500' : 'text-emerald-500'">
                 {{ isNegative(tx) ? '-' : '+' }}{{ formatCurrency(tx.amount) }}
@@ -867,7 +886,7 @@ const txForm = reactive({
   amount: 0,
   accountId: null as number | null,
   destinationAccountId: null as number | null,
-  category: 'Ocio',
+  category: '',
   description: '',
   date: new Date().toISOString(),
   subscriptionId: null as number | null,
@@ -964,7 +983,9 @@ const startEditCategory = (cat: string) => {
 const route = useRoute()
 
 const totalUpcoming = computed(() => {
-  return financeStore.upcomingPayments.reduce((sum, p) => sum + p.amount, 0)
+  return financeStore.upcomingPayments
+    .filter(p => p.type !== 'Ingreso')
+    .reduce((sum, p) => sum + p.amount, 0)
 })
 
 onMounted(async () => {
@@ -1025,7 +1046,7 @@ const submitAccount = async () => {
     monthly_payment: accountForm.monthly_payment || 0,
     payment_frequency: accountForm.payment_frequency as any,
     cutoff_day: (accountForm.type === 'card' && accountForm.sub_type === 'credit') ? (accountForm.cutoff_day || 1) : null as any,
-    payment_day: accountForm.payment_frequency !== 'ONCE' ? (accountForm.payment_day || 1) : null as any,
+    payment_day: accountForm.payment_day || 1,
     minimum_payment_percentage: accountForm.minimum_payment_percentage || 5.0,
     currency: accountForm.currency
   })
@@ -1071,7 +1092,7 @@ const submitEditAccount = async () => {
     monthly_payment: editAccountForm.monthly_payment || 0,
     payment_frequency: editAccountForm.payment_frequency as any,
     cutoff_day: (editAccountForm.type === 'card' && editAccountForm.sub_type === 'credit') ? (editAccountForm.cutoff_day || 1) : null as any,
-    payment_day: editAccountForm.payment_frequency !== 'ONCE' ? (editAccountForm.payment_day || 1) : null as any,
+    payment_day: editAccountForm.payment_day || 1,
     minimum_payment_percentage: editAccountForm.minimum_payment_percentage || 5.0,
     currency: editAccountForm.currency
   })
@@ -1224,7 +1245,7 @@ const closeTransactionModal = () => {
   txForm.amount = 0
   txForm.accountId = financeStore.accounts[0]?.id ?? null
   txForm.destinationAccountId = null
-  txForm.category = 'Ocio'
+  txForm.category = ''
   txForm.description = ''
   txForm.installments = 1
   txForm.date = new Date().toISOString()
