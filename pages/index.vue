@@ -66,7 +66,7 @@
       </div>
     </section>
 
-    <!-- Nuestras Ramas (Bento Grid 2x2 Equiparado) -->
+    <!-- Nuestras Ramas (Bento Grid 5 Equiparado) -->
     <section class="py-24 bg-secondary/30 relative" id="servicios">
       <div class="container max-w-6xl">
         <div class="text-center mb-16">
@@ -75,7 +75,7 @@
           <p class="text-muted-foreground max-w-2xl mx-auto text-lg">Las extensiones de nuestro ecosistema multidisciplinario, pensadas para cubrir cada aspecto de la evolución de tu negocio o vida personal.</p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           
           <!-- 1. Manufactura y Diseño Físico -->
           <div class="group relative overflow-hidden rounded-3xl bg-card border border-border/50 p-8 transition-all hover:shadow-2xl hover:border-primary/30 hover:-translate-y-1 cursor-default flex flex-col h-full">
@@ -89,13 +89,13 @@
               <div class="flex-1">
                 <h4 class="font-serif text-2xl font-bold mb-3 group-hover:text-primary transition-colors">Manufactura 3D y Prototipado Físico</h4>
                 <p class="text-muted-foreground leading-relaxed">
-                  Convertimos modelos digitales en objetos tangibles con impresión en resina y filamento. Desde refacciones mecánicas funcionales hasta accesorios personalizados y piezas de exhibición con acabados premium.
+                  Convertimos modelos digitales en objetos tangibles con impresión en resina y filamento. Desde refacciones mecánicas funcionales hasta accesorios personalizados.
                 </p>
               </div>
             </div>
           </div>
 
-          <!-- 2. Desarrollo e Ingeniería IoT -->
+          <!-- 2. Software y Control -->
           <div class="group relative overflow-hidden rounded-3xl bg-card border border-border/50 p-8 transition-all hover:shadow-2xl hover:border-[#F2A65A]/30 hover:-translate-y-1 cursor-default flex flex-col h-full">
             <div class="absolute top-0 right-0 p-8 opacity-5 transition-opacity duration-500 group-hover:opacity-10 group-hover:scale-110">
               <svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
@@ -105,15 +105,33 @@
                 <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
               </div>
               <div class="flex-1">
-                <h4 class="font-serif text-2xl font-bold mb-3 group-hover:text-[#F2A65A] transition-colors">Ingeniería de Software e IoT</h4>
+                <h4 class="font-serif text-2xl font-bold mb-3 group-hover:text-[#F2A65A] transition-colors">Software y Automatización</h4>
                 <p class="text-muted-foreground leading-relaxed">
-                  Desarrollo de sistemas web Full-Stack, automatización de procesos (IoT) e integraciones API. Desde hardware inteligente con sensores hasta páginas de aterrizaje optimizadas para SEO.
+                  Dominio de múltiples lenguajes (Python, JS, etc.) para crear aplicaciones web, apps móviles a medida, scripts de automatización y sistemas de control avanzados.
                 </p>
               </div>
             </div>
           </div>
 
-          <!-- 3. Taskman -->
+          <!-- 3. Electrónica IoT -->
+          <div class="group relative overflow-hidden rounded-3xl bg-card border border-border/50 p-8 transition-all hover:shadow-2xl hover:border-foreground/30 hover:-translate-y-1 cursor-default flex flex-col h-full">
+            <div class="absolute top-0 right-0 p-8 opacity-5 transition-opacity duration-500 group-hover:opacity-10 group-hover:scale-110">
+              <svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg>
+            </div>
+            <div class="relative z-10 flex flex-col h-full">
+              <div class="w-14 h-14 rounded-2xl bg-foreground/5 flex items-center justify-center text-foreground mb-6 shadow-inner shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg>
+              </div>
+              <div class="flex-1">
+                <h4 class="font-serif text-2xl font-bold mb-3 group-hover:text-foreground transition-colors">Electrónica e IoT</h4>
+                <p class="text-muted-foreground leading-relaxed">
+                  Diseño de hardware inteligente, sensores y circuitos para automatizar procesos (IoT) y dotar de inteligencia a tu entorno o línea de producción.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. Taskman -->
           <div class="group relative overflow-hidden rounded-3xl bg-card border border-border/50 p-8 transition-all hover:shadow-2xl hover:border-primary/30 hover:-translate-y-1 cursor-default flex flex-col h-full">
             <div class="absolute top-0 right-0 p-8 opacity-5 transition-opacity duration-500 group-hover:opacity-10 group-hover:scale-110">
               <svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="m9 12 2 2 4-4"/></svg>
@@ -125,13 +143,13 @@
               <div class="flex-1">
                 <h4 class="font-serif text-2xl font-bold mb-3 group-hover:text-primary transition-colors">Taskman: SAAS Personal</h4>
                 <p class="text-muted-foreground leading-relaxed">
-                  Gestor integral con sincronización bi-direccional hacia Google Calendar. Centraliza tu productividad, finanzas, control patrimonial y seguimiento de hábitos gamificados en un solo lugar.
+                  Gestor integral con sincronización hacia Google Calendar. Centraliza tu productividad, finanzas, patrimonio y seguimiento de hábitos gamificados en un solo lugar.
                 </p>
               </div>
             </div>
           </div>
 
-          <!-- 4. Protección (Arveck) -->
+          <!-- 5. Protección (Arveck) -->
           <div class="group relative overflow-hidden rounded-3xl bg-[#2A313C] text-white p-8 transition-all hover:shadow-2xl hover:-translate-y-1 cursor-default flex flex-col h-full border border-[#3A4352]">
             <div class="absolute inset-0 bg-gradient-to-br from-[#2A313C] via-[#2A313C] to-[#1A1F26]"></div>
             <div class="absolute -right-20 -top-20 w-64 h-64 bg-white/5 rounded-full blur-3xl group-hover:bg-white/10 transition-colors duration-700"></div>
@@ -173,7 +191,7 @@
                 <svg class="w-6 h-6 text-primary shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 <div>
                   <h5 class="font-bold text-foreground">Enfoque Técnico</h5>
-                  <p class="text-sm text-muted-foreground">Código limpio, arquitecturas escalables (Cloudflare/Raspberry) y modelos 3D listos para producción.</p>
+                  <p class="text-sm text-muted-foreground">Código limpio, control avanzado (Python, C++), arquitecturas escalables y modelos 3D listos para producción.</p>
                 </div>
               </li>
               <li class="flex items-start gap-3">
@@ -189,18 +207,22 @@
             <div class="aspect-square rounded-3xl bg-secondary/50 border border-border flex items-center justify-center p-8 overflow-hidden relative">
               <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
               <div class="relative z-10 grid grid-cols-2 gap-4 w-full h-full">
+                <!-- Box 1 -->
                 <div class="bg-card rounded-2xl p-6 shadow-sm flex flex-col items-center justify-center text-center gap-2 border border-border/50">
                   <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg></div>
-                  <span class="font-medium text-sm">Desarrollo Web</span>
+                  <span class="font-medium text-sm">Software & Control</span>
                 </div>
+                <!-- Box 2 -->
                 <div class="bg-card rounded-2xl p-6 shadow-sm flex flex-col items-center justify-center text-center gap-2 border border-border/50 translate-y-8">
                   <div class="w-10 h-10 rounded-full bg-[#F2A65A]/10 flex items-center justify-center text-[#F2A65A]"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></div>
                   <span class="font-medium text-sm">Impresión 3D</span>
                 </div>
+                <!-- Box 3 -->
                 <div class="bg-card rounded-2xl p-6 shadow-sm flex flex-col items-center justify-center text-center gap-2 border border-border/50 -translate-y-8">
-                  <div class="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="m9 12 2 2 4-4"/></svg></div>
-                  <span class="font-medium text-sm">Apps Móviles</span>
+                  <div class="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg></div>
+                  <span class="font-medium text-sm">Automatización</span>
                 </div>
+                <!-- Box 4 -->
                 <div class="bg-card rounded-2xl p-6 shadow-sm flex flex-col items-center justify-center text-center gap-2 border border-border/50">
                   <div class="w-10 h-10 rounded-full bg-slate-500/10 flex items-center justify-center text-slate-500"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg></div>
                   <span class="font-medium text-sm">Respaldo Seguro</span>
@@ -282,10 +304,10 @@
 
 <script setup>
 useSeoMeta({
-  title: 'Desarrollo de Software y Manufactura 3D | El Rincón de Brandy',
-  description: 'Agencia tecnológica y de manufactura. Impresión 3D de alta precisión, ingeniería de software a medida, aplicaciones web y respaldo patrimonial.',
-  ogTitle: 'Desarrollo de Software y Manufactura 3D | El Rincón de Brandy',
-  ogDescription: 'Transformamos ideas abstractas en realidades tangibles. Desarrollo Full-Stack, IoT y prototipado 3D.',
+  title: 'Ingeniería, Automatización y Manufactura 3D | El Rincón de Brandy',
+  description: 'Agencia de innovación y tecnología. Impresión 3D, ingeniería de software, automatización, control con Python/C++ y respaldo patrimonial.',
+  ogTitle: 'Ingeniería, Automatización y Manufactura 3D | El Rincón de Brandy',
+  ogDescription: 'Transformamos ideas abstractas en realidades tangibles. Desarrollo Full-Stack, Control, IoT y prototipado 3D.',
   ogType: 'website',
   ogUrl: 'https://shongyi.com/',
   twitterCard: 'summary_large_image'
@@ -301,15 +323,16 @@ useHead({
         name: 'El Rincón de Brandy',
         image: 'https://shongyi.com/logo.png',
         url: 'https://shongyi.com',
-        description: 'Ecosistema multidisciplinario: manufactura de alta precisión, desarrollo de software, productos físicos en impresión 3D y respaldo patrimonial.',
+        description: 'Ecosistema multidisciplinario: automatización y control, ingeniería de software, manufactura física en impresión 3D y respaldo patrimonial.',
         areaServed: 'MX',
         priceRange: '$$',
         knowsAbout: [
           'Impresión 3D',
           'Manufactura de precisión',
-          'Desarrollo de software a medida',
+          'Ingeniería de Software',
           'Automatización industrial',
           'Ingeniería de control',
+          'Desarrollo Python y C++',
           'Seguros patrimoniales'
         ]
       })
