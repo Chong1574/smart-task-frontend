@@ -8,45 +8,43 @@
       <!-- Cabecera -->
       <div class="text-center max-w-3xl mx-auto mb-20 md:mb-24">
         <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/80 border border-border/50 text-secondary-foreground mb-6 text-sm font-medium">
-          Nuestra Experiencia
+          La Ventanilla al Taller
         </div>
         <h1 class="text-5xl md:text-7xl font-serif font-bold tracking-tight mb-6 text-foreground">
           El Estudio
         </h1>
         <p class="text-xl text-muted-foreground leading-relaxed">
-          Donde las ideas complejas toman forma. Nuestro portafolio de ingeniería de software, sistemas de control avanzado, automatización con Python y diseño de productos.
+          Bienvenido a nuestro centro de operaciones. Da un recorrido por nuestras estaciones de trabajo y descubre cómo convergen el código, la electrónica y la manufactura física.
         </p>
       </div>
 
-      <!-- Proyectos Destacados (NUEVO) -->
+      <!-- Recorrido por el Taller -->
       <section class="mb-32">
-        <h2 class="text-sm font-bold tracking-widest text-primary uppercase mb-12 text-center">Casos de Éxito y Proyectos</h2>
+        <h2 class="text-sm font-bold tracking-widest text-primary uppercase mb-12 text-center">Nuestras Áreas de Ingeniería</h2>
         
         <div class="space-y-16 md:space-y-24">
-          <!-- Taskman Showcase -->
+          <!-- Estación 1: Software -->
           <div class="flex flex-col lg:flex-row items-center gap-8 md:gap-12 bg-secondary/20 p-6 md:p-12 rounded-[2rem] border border-border/50 transition-all hover:border-primary/20 hover:shadow-xl hover:shadow-primary/5">
             <div class="lg:w-1/2 space-y-6">
               <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-bold">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="m9 12 2 2 4-4"/></svg>
-                Producto Insignia
+                Estación 01
               </div>
-              <h3 class="text-3xl md:text-4xl font-serif font-bold text-foreground">Taskman: Sistema de Gestión Personal</h3>
+              <h3 class="text-3xl md:text-4xl font-serif font-bold text-foreground">La Incubadora de Software</h3>
               <p class="text-lg text-muted-foreground leading-relaxed">
-                Un SAAS integral desarrollado desde cero. Sincroniza bidireccionalmente con Google Calendar y Tasks. Incluye módulos avanzados para control de finanzas, seguimiento de hábitos gamificados y bitácora de vehículos.
+                Aquí construimos plataformas digitales robustas. Como muestra está <strong class="text-foreground">Taskman</strong>, nuestro propio SAAS desarrollado <i>in-house</i> que sincroniza calendarios, finanzas y hábitos gamificados en un ecosistema web ultra rápido.
               </p>
               <div class="flex flex-wrap gap-2 pt-2">
                 <span class="px-3 py-1 bg-background border border-border rounded-md text-xs font-medium">Vue / Nuxt</span>
                 <span class="px-3 py-1 bg-background border border-border rounded-md text-xs font-medium">TypeScript</span>
                 <span class="px-3 py-1 bg-background border border-border rounded-md text-xs font-medium">Node.js</span>
-                <span class="px-3 py-1 bg-background border border-border rounded-md text-xs font-medium">Google APIs</span>
+                <span class="px-3 py-1 bg-background border border-border rounded-md text-xs font-medium">Arquitectura Web</span>
               </div>
             </div>
             
             <div class="lg:w-1/2 w-full">
               <!-- Contenedor de Video -->
               <div class="relative w-full aspect-[16/10] bg-black rounded-2xl overflow-hidden border border-border/50 shadow-2xl group">
-                <!-- Reemplazar src con la ruta real del video en la carpeta public/ (ej. /videos/taskman-demo.mp4) -->
-                <!-- Por ahora usamos un video placeholder elegante de código -->
                 <video class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-500" autoplay loop muted playsinline>
                   <source src="https://assets.mixkit.co/videos/preview/mixkit-software-developer-working-on-code-in-a-dark-room-43403-large.mp4" type="video/mp4" />
                   Tu navegador no soporta el video.
@@ -59,16 +57,20 @@
                    </div>
                 </div>
               </div>
-              <p class="text-xs text-center text-muted-foreground mt-4 italic">* Placeholder: Pon aquí el video de demostración real de Taskman.</p>
+              <p class="text-xs text-center text-muted-foreground mt-4 italic">Demostración en video de Taskman (En desarrollo).</p>
             </div>
           </div>
 
-          <!-- Automatización e Ingeniería -->
+          <!-- Estación 2: Control -->
           <div class="flex flex-col lg:flex-row-reverse items-center gap-8 md:gap-12 p-2 md:p-12">
             <div class="lg:w-1/2 space-y-6">
-              <h3 class="text-3xl font-serif font-bold text-foreground">Sistemas de Control y Automatización</h3>
+              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/80 text-foreground text-sm font-bold">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
+                Estación 02
+              </div>
+              <h3 class="text-3xl font-serif font-bold text-foreground">El Laboratorio de Control</h3>
               <p class="text-lg text-muted-foreground leading-relaxed">
-                Diseño de scripts avanzados en Python y sistemas de bajo nivel en C/C++ para la automatización de procesos operativos. Integramos hardware IoT (microcontroladores y sensores) con dashboards web en tiempo real para telemetría industrial y control domótico.
+                El puente entre el software y el mundo físico. En esta estación escribimos el código profundo que automatiza procesos, lee telemetría de sensores IoT y controla hardware industrial o domótico en tiempo real.
               </p>
               <div class="flex flex-wrap gap-2 pt-2">
                 <span class="px-3 py-1 bg-secondary/50 border border-border rounded-md text-xs font-medium">Python</span>
@@ -100,23 +102,27 @@
             engine.trigger_alert()
             engine.auto_correct_valves()
             
-<span class="text-[#8b949e]"># Log output</span>
-<span class="text-[#7ee787] animate-pulse">>> System running... OK [200]</span></div>
+<span class="text-[#8b949e]"># Terminal Output</span>
+<span class="text-[#7ee787] animate-pulse">>> Conectando a sensores... OK [200]</span></div>
               </div>
             </div>
           </div>
 
-          <!-- Manufactura -->
+          <!-- Estación 3: Manufactura -->
           <div class="flex flex-col lg:flex-row items-center gap-8 md:gap-12 bg-secondary/20 p-6 md:p-12 rounded-[2rem] border border-border/50 transition-all hover:border-border hover:shadow-xl">
             <div class="lg:w-1/2 space-y-6">
-              <h3 class="text-3xl font-serif font-bold text-foreground">Manufactura 3D y Piezas de Precisión</h3>
+              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-foreground/10 text-foreground text-sm font-bold border border-border">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                Estación 03
+              </div>
+              <h3 class="text-3xl font-serif font-bold text-foreground">El Taller de Manufactura</h3>
               <p class="text-lg text-muted-foreground leading-relaxed">
-                Del plano digital al objeto físico. Creación de modelos CAD paramétricos para prototipado rápido, diseño de piezas mecánicas de reemplazo y producción de bajo volumen utilizando impresoras de resina y filamento de alta resolución.
+                Nuestra área de maquinaria. Aquí es donde los bits se convierten en átomos. Operamos software de diseño paramétrico e impresoras de alta resolución para materializar prototipos funcionales y piezas mecánicas finales.
               </p>
               <div class="flex flex-wrap gap-2 pt-2">
                 <span class="px-3 py-1 bg-background border border-border rounded-md text-xs font-medium">CAD Paramétrico</span>
                 <span class="px-3 py-1 bg-background border border-border rounded-md text-xs font-medium">Resina HD</span>
-                <span class="px-3 py-1 bg-background border border-border rounded-md text-xs font-medium">PLA / ABS / TPU</span>
+                <span class="px-3 py-1 bg-background border border-border rounded-md text-xs font-medium">Impresión FDM (PLA/ABS)</span>
               </div>
             </div>
             
@@ -126,9 +132,8 @@
                 <!-- Icono de cubo isométrico abstracto -->
                 <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" class="group-hover:scale-110 transition-transform duration-700 opacity-30"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
                 <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
-                <p class="absolute bottom-4 right-4 text-xs font-medium uppercase tracking-widest bg-black/20 px-3 py-1 rounded-full backdrop-blur-sm">[ Espacio para Fotos Reales 3D ]</p>
+                <p class="absolute bottom-4 right-4 text-xs font-medium uppercase tracking-widest bg-black/20 px-3 py-1 rounded-full backdrop-blur-sm">[ Espacio para Fotos Reales del Taller ]</p>
               </div>
-              <p class="text-xs text-center text-muted-foreground mt-4 italic">* Placeholder: Sube fotos de tus impresiones 3D o modelos CAD.</p>
             </div>
           </div>
           
@@ -137,10 +142,10 @@
 
       <!-- CTA -->
       <div class="text-center pb-12">
-        <h3 class="text-3xl font-serif font-bold mb-6">¿Tienes un reto técnico o una idea en mente?</h3>
-        <p class="text-muted-foreground mb-8 max-w-lg mx-auto">Ya sea desarrollo web, integración IoT o prototipado físico, estamos listos para colaborar.</p>
+        <h3 class="text-3xl font-serif font-bold mb-6">¿Quieres construir algo en nuestro estudio?</h3>
+        <p class="text-muted-foreground mb-8 max-w-lg mx-auto">Ya sea desarrollo de software, integración IoT o prototipado físico, nuestras estaciones están listas.</p>
         <NuxtLink to="/bazar" class="inline-flex px-8 py-4 bg-primary text-primary-foreground rounded-full font-bold shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all">
-          Iniciar Conversación
+          Cotizar un Proyecto
         </NuxtLink>
       </div>
 
@@ -150,10 +155,10 @@
 
 <script setup>
 useSeoMeta({
-  title: 'El Estudio — Portafolio de Software, Control Automático y 3D',
-  description: 'Proyectos destacados: aplicación Taskman, sistemas IoT con Python/C++, y manufactura paramétrica. Revisa nuestro portafolio técnico.',
-  ogTitle: 'El Estudio — Portafolio de Software, Control Automático y 3D',
-  ogDescription: 'Explora nuestros proyectos reales: desarrollo de SaaS, domótica e IoT, y diseño 3D.',
+  title: 'El Estudio — Taller de Software, Automatización y Manufactura 3D',
+  description: 'Da un recorrido por nuestras estaciones de trabajo: incubadora de software (Taskman), laboratorio de control con Python/C++, y taller de manufactura 3D.',
+  ogTitle: 'El Estudio — Taller de Innovación Tecnológica',
+  ogDescription: 'Conoce nuestras áreas de ingeniería: desarrollo de SaaS, domótica e IoT, y diseño paramétrico 3D.',
   ogType: 'website',
   ogUrl: 'https://shongyi.com/estudio',
   twitterCard: 'summary_large_image'
@@ -165,9 +170,9 @@ useHead({
     innerHTML: JSON.stringify({
       '@context': 'https://schema.org',
       '@type': 'ProfessionalService',
-      name: 'El Estudio — Portafolio',
+      name: 'El Estudio — El Rincón de Brandy',
       url: 'https://shongyi.com/estudio',
-      description: 'Portafolio de proyectos de desarrollo de software, automatización industrial, control e ingeniería.',
+      description: 'Taller de innovación y desarrollo de software, automatización industrial, control e ingeniería 3D.',
       areaServed: 'MX',
       serviceType: [
         'Desarrollo web',
@@ -175,7 +180,7 @@ useHead({
         'Automatización con Python',
         'Sistemas IoT y C++',
         'Ingeniería de control',
-        'Diseño paramétrico CAD 3D'
+        'Manufactura 3D'
       ],
       parentOrganization: { '@type': 'Organization', name: 'El Rincón de Brandy', url: 'https://shongyi.com' }
     })
