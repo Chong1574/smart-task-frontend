@@ -475,7 +475,9 @@ export const useFinanceStore = defineStore('finance', {
                 
                 // Determinar el monto a pagar (monthly_payment si lo hay, o un estimado del saldo)
                 let amountToPay = Number(acc.monthly_payment);
-                if (!amountToPay || amountToPay === 0) {
+                if (acc.payment_frequency === 'ONCE') {
+                    amountToPay = Math.abs(Number(acc.balance));
+                } else if (!amountToPay || amountToPay === 0) {
                     // Si no hay pago mensual definido, sugerir un 5% del saldo o el total si es menor a 500
                     const balance = Math.abs(Number(acc.balance));
                     amountToPay = balance < 500 ? balance : balance * 0.05; 
@@ -498,7 +500,9 @@ export const useFinanceStore = defineStore('finance', {
                 );
 
                 const totalPaidThisCycle = paymentsThisCycle.reduce((sum, t) => sum + Number(t.amount), 0);
-                amountToPay = Math.max(0, amountToPay - totalPaidThisCycle);
+                if (acc.payment_frequency !== 'ONCE') {
+                    amountToPay = Math.max(0, amountToPay - totalPaidThisCycle);
+                }
 
                 if (amountToPay <= 0) return; // Ya se pagó la cuota de este ciclo
 
