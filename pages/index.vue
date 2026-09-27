@@ -66,7 +66,7 @@
       </div>
     </section>
 
-    <!-- Nuestras Ramas (Bento Grid) -->
+    <!-- Nuestras Ramas (Bento Grid 2x2 Equiparado) -->
     <section class="py-24 bg-secondary/30 relative" id="servicios">
       <div class="container max-w-6xl">
         <div class="text-center mb-16">
@@ -75,18 +75,18 @@
           <p class="text-muted-foreground max-w-2xl mx-auto text-lg">Las extensiones de nuestro ecosistema multidisciplinario, pensadas para cubrir cada aspecto de la evolución de tu negocio o vida personal.</p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-[280px]">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
           
-          <!-- Manufactura y Diseño Físico -->
-          <div class="group relative lg:col-span-2 overflow-hidden rounded-3xl bg-card border border-border/50 p-8 transition-all hover:shadow-2xl hover:border-primary/30 hover:-translate-y-1 cursor-default">
+          <!-- 1. Manufactura y Diseño Físico -->
+          <div class="group relative overflow-hidden rounded-3xl bg-card border border-border/50 p-8 transition-all hover:shadow-2xl hover:border-primary/30 hover:-translate-y-1 cursor-default flex flex-col h-full">
             <div class="absolute top-0 right-0 p-8 opacity-5 transition-opacity duration-500 group-hover:opacity-10 group-hover:scale-110">
               <svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
             </div>
-            <div class="relative z-10 flex flex-col h-full justify-between">
-              <div class="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-6 shadow-inner">
+            <div class="relative z-10 flex flex-col h-full">
+              <div class="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-6 shadow-inner shrink-0">
                 <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="7.5 4.21 12 6.81 16.5 4.21"/><polyline points="7.5 19.79 7.5 14.6 3 12"/><polyline points="21 12 16.5 14.6 16.5 19.79"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
               </div>
-              <div>
+              <div class="flex-1">
                 <h4 class="font-serif text-2xl font-bold mb-3 group-hover:text-primary transition-colors">Manufactura 3D y Prototipado Físico</h4>
                 <p class="text-muted-foreground leading-relaxed">
                   Convertimos modelos digitales en objetos tangibles con impresión en resina y filamento. Desde refacciones mecánicas funcionales hasta accesorios personalizados y piezas de exhibición con acabados premium.
@@ -95,94 +95,63 @@
             </div>
           </div>
 
-          <!-- Desarrollo e Ingeniería -->
-          <div class="group relative overflow-hidden rounded-3xl bg-card border border-border/50 p-8 transition-all hover:shadow-2xl hover:border-[#F2A65A]/30 hover:-translate-y-1 cursor-default">
-            <div class="relative z-10 flex flex-col h-full justify-between">
-              <div class="w-14 h-14 rounded-2xl bg-[#F2A65A]/10 flex items-center justify-center text-[#F2A65A] mb-6 shadow-inner">
+          <!-- 2. Desarrollo e Ingeniería IoT -->
+          <div class="group relative overflow-hidden rounded-3xl bg-card border border-border/50 p-8 transition-all hover:shadow-2xl hover:border-[#F2A65A]/30 hover:-translate-y-1 cursor-default flex flex-col h-full">
+            <div class="absolute top-0 right-0 p-8 opacity-5 transition-opacity duration-500 group-hover:opacity-10 group-hover:scale-110">
+              <svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
+            </div>
+            <div class="relative z-10 flex flex-col h-full">
+              <div class="w-14 h-14 rounded-2xl bg-[#F2A65A]/10 flex items-center justify-center text-[#F2A65A] mb-6 shadow-inner shrink-0">
                 <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
               </div>
-              <div>
-                <h4 class="font-serif text-xl font-bold mb-2 group-hover:text-[#F2A65A] transition-colors">Ingeniería de Software</h4>
-                <p class="text-muted-foreground text-sm">
-                  Desarrollo de sistemas web Full-Stack, páginas de aterrizaje optimizadas para SEO, automatización de procesos e integraciones API para digitalizar tu empresa.
+              <div class="flex-1">
+                <h4 class="font-serif text-2xl font-bold mb-3 group-hover:text-[#F2A65A] transition-colors">Ingeniería de Software e IoT</h4>
+                <p class="text-muted-foreground leading-relaxed">
+                  Desarrollo de sistemas web Full-Stack, automatización de procesos (IoT) e integraciones API. Desde hardware inteligente con sensores hasta páginas de aterrizaje optimizadas para SEO.
                 </p>
               </div>
             </div>
           </div>
 
-          <!-- Taskman -->
-          <div class="group relative lg:col-span-2 overflow-hidden rounded-3xl bg-card border border-border/50 p-8 transition-all hover:shadow-2xl hover:border-primary/30 hover:-translate-y-1 cursor-default">
-            <div class="relative z-10 flex flex-col h-full justify-between">
-              <div class="flex items-center gap-4 mb-6">
-                <div class="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary flex-shrink-0 shadow-inner">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="m9 12 2 2 4-4"/></svg>
-                </div>
-                <div>
-                  <h4 class="font-serif text-2xl font-bold group-hover:text-primary transition-colors">Taskman: Nuestro Producto Estrella</h4>
-                  <span class="text-xs font-semibold px-2 py-1 bg-primary/10 text-primary rounded-full">Gestor Personal SAAS</span>
-                </div>
-              </div>
-              
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm text-muted-foreground">
-                <div class="flex items-start gap-2">
-                  <svg class="w-4 h-4 text-primary mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                  <span><strong>Productividad:</strong> Sincronización bi-direccional con Google Calendar y Tasks.</span>
-                </div>
-                <div class="flex items-start gap-2">
-                  <svg class="w-4 h-4 text-primary mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                  <span><strong>Finanzas:</strong> Control total de cuentas, tarjetas, préstamos y patrimonio.</span>
-                </div>
-                <div class="flex items-start gap-2">
-                  <svg class="w-4 h-4 text-primary mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                  <span><strong>Hábitos:</strong> Gamificación de rutinas y seguimiento diario de metas a largo plazo.</span>
-                </div>
-                <div class="flex items-start gap-2">
-                  <svg class="w-4 h-4 text-primary mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                  <span><strong>Gestión de Vehículos:</strong> Bitácora de mantenimiento y rendimiento de combustible.</span>
-                </div>
-              </div>
+          <!-- 3. Taskman -->
+          <div class="group relative overflow-hidden rounded-3xl bg-card border border-border/50 p-8 transition-all hover:shadow-2xl hover:border-primary/30 hover:-translate-y-1 cursor-default flex flex-col h-full">
+            <div class="absolute top-0 right-0 p-8 opacity-5 transition-opacity duration-500 group-hover:opacity-10 group-hover:scale-110">
+              <svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="m9 12 2 2 4-4"/></svg>
             </div>
-          </div>
-
-          <!-- Electrónica -->
-          <div class="group relative overflow-hidden rounded-3xl bg-card border border-border/50 p-8 transition-all hover:shadow-2xl hover:border-foreground/30 hover:-translate-y-1 cursor-default">
-            <div class="relative z-10 flex flex-col h-full justify-between">
-              <div class="w-14 h-14 rounded-2xl bg-foreground/5 flex items-center justify-center text-foreground mb-6 shadow-inner">
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg>
+            <div class="relative z-10 flex flex-col h-full">
+              <div class="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-6 shadow-inner shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="m9 12 2 2 4-4"/></svg>
               </div>
-              <div>
-                <h4 class="font-serif text-xl font-bold mb-2">Electrónica IoT</h4>
-                <p class="text-muted-foreground text-sm">
-                  Diseño de hardware inteligente, sensores y automatización de procesos (IoT) para dotar de inteligencia a cualquier entorno operativo.
+              <div class="flex-1">
+                <h4 class="font-serif text-2xl font-bold mb-3 group-hover:text-primary transition-colors">Taskman: SAAS Personal</h4>
+                <p class="text-muted-foreground leading-relaxed">
+                  Gestor integral con sincronización bi-direccional hacia Google Calendar. Centraliza tu productividad, finanzas, control patrimonial y seguimiento de hábitos gamificados en un solo lugar.
                 </p>
               </div>
             </div>
           </div>
 
-          <!-- Protección (Arveck) -->
-          <div class="group relative lg:col-span-3 overflow-hidden rounded-3xl bg-[#2A313C] text-white p-8 md:p-12 transition-all hover:shadow-2xl hover:-translate-y-1 flex flex-col md:flex-row items-center gap-8 border border-[#3A4352]">
+          <!-- 4. Protección (Arveck) -->
+          <div class="group relative overflow-hidden rounded-3xl bg-[#2A313C] text-white p-8 transition-all hover:shadow-2xl hover:-translate-y-1 cursor-default flex flex-col h-full border border-[#3A4352]">
             <div class="absolute inset-0 bg-gradient-to-br from-[#2A313C] via-[#2A313C] to-[#1A1F26]"></div>
-            <!-- Glow effect -->
             <div class="absolute -right-20 -top-20 w-64 h-64 bg-white/5 rounded-full blur-3xl group-hover:bg-white/10 transition-colors duration-700"></div>
             
-            <div class="relative z-10 w-20 h-20 rounded-2xl bg-white/10 flex items-center justify-center text-white flex-shrink-0 backdrop-blur-md border border-white/20">
-              <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
-            </div>
-            
-            <div class="relative z-10 text-center md:text-left flex-1">
-              <div class="flex flex-col md:flex-row md:items-center gap-3 mb-3">
-                <h4 class="font-serif text-3xl font-bold">Protección Arveck</h4>
-                <span class="text-xs font-semibold px-3 py-1 bg-white/10 text-white rounded-full w-fit mx-auto md:mx-0">Respaldo Patrimonial</span>
+            <div class="relative z-10 flex flex-col h-full">
+              <div class="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center text-white mb-6 shadow-inner shrink-0 backdrop-blur-md border border-white/20">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
               </div>
-              <p class="text-white/80 leading-relaxed max-w-3xl text-lg">
-                Innovar y construir requiere una base segura. Brindamos asesoramiento experto en seguros y estrategias de respaldo patrimonial para garantizar que el fruto de tu trabajo y el bienestar de tu familia estén blindados ante cualquier eventualidad.
-              </p>
-            </div>
-            
-            <div class="relative z-10">
-              <button class="px-6 py-3 bg-white text-[#2A313C] font-bold rounded-full hover:bg-gray-100 transition-colors whitespace-nowrap">
-                Asesoría Gratuita
-              </button>
+              <div class="flex-1">
+                <h4 class="font-serif text-2xl font-bold mb-3 group-hover:text-white transition-colors">Protección Arveck</h4>
+                <p class="text-white/80 leading-relaxed mb-6">
+                  Asesoramiento experto en seguros y estrategias de respaldo patrimonial para garantizar que el fruto de tu trabajo y tu bienestar familiar estén blindados ante eventualidades.
+                </p>
+                <div class="mt-auto pt-4 border-t border-white/10">
+                  <button class="text-sm font-bold text-white hover:text-gray-300 transition-colors inline-flex items-center gap-1">
+                    Asesoría Gratuita
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 

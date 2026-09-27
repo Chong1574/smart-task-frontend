@@ -82,7 +82,7 @@ import { useAuthStore } from '~/stores/auth'
 const authStore = useAuthStore()
 
 const navItems = [
-  { name: 'Hogar', path: '/' },
+  { name: 'Inicio', path: '/' },
   { name: 'El Bazar', path: '/bazar' },
   { name: 'El Estudio', path: '/estudio' },
   { name: 'Protección', path: 'https://arveck.com', external: true },
