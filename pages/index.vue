@@ -75,10 +75,10 @@
           <p class="text-muted-foreground max-w-2xl mx-auto text-lg">Las extensiones de nuestro ecosistema multidisciplinario, pensadas para cubrir cada aspecto de la evolución de tu negocio o vida personal.</p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-8">
           
           <!-- 1. Manufactura y Diseño Físico -->
-          <div class="group relative overflow-hidden rounded-3xl bg-card border border-border/50 p-8 transition-all hover:shadow-2xl hover:border-primary/30 hover:-translate-y-1 cursor-default flex flex-col h-full">
+          <div class="md:col-span-2 lg:col-span-2 group relative overflow-hidden rounded-3xl bg-card border border-border/50 p-8 transition-all hover:shadow-2xl hover:border-primary/30 hover:-translate-y-1 cursor-default flex flex-col h-full">
             <div class="absolute top-0 right-0 p-8 opacity-5 transition-opacity duration-500 group-hover:opacity-10 group-hover:scale-110">
               <svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
             </div>
@@ -96,7 +96,7 @@
           </div>
 
           <!-- 2. Software y Control -->
-          <div class="group relative overflow-hidden rounded-3xl bg-card border border-border/50 p-8 transition-all hover:shadow-2xl hover:border-[#F2A65A]/30 hover:-translate-y-1 cursor-default flex flex-col h-full">
+          <div class="md:col-span-2 lg:col-span-2 group relative overflow-hidden rounded-3xl bg-card border border-border/50 p-8 transition-all hover:shadow-2xl hover:border-[#F2A65A]/30 hover:-translate-y-1 cursor-default flex flex-col h-full">
             <div class="absolute top-0 right-0 p-8 opacity-5 transition-opacity duration-500 group-hover:opacity-10 group-hover:scale-110">
               <svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
             </div>
@@ -114,7 +114,7 @@
           </div>
 
           <!-- 3. Electrónica IoT -->
-          <div class="group relative overflow-hidden rounded-3xl bg-card border border-border/50 p-8 transition-all hover:shadow-2xl hover:border-foreground/30 hover:-translate-y-1 cursor-default flex flex-col h-full">
+          <div class="md:col-span-2 lg:col-span-2 group relative overflow-hidden rounded-3xl bg-card border border-border/50 p-8 transition-all hover:shadow-2xl hover:border-foreground/30 hover:-translate-y-1 cursor-default flex flex-col h-full">
             <div class="absolute top-0 right-0 p-8 opacity-5 transition-opacity duration-500 group-hover:opacity-10 group-hover:scale-110">
               <svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg>
             </div>
@@ -132,7 +132,7 @@
           </div>
 
           <!-- 4. Taskman -->
-          <div class="group relative overflow-hidden rounded-3xl bg-card border border-border/50 p-8 transition-all hover:shadow-2xl hover:border-primary/30 hover:-translate-y-1 cursor-default flex flex-col h-full">
+          <div class="md:col-span-2 lg:col-span-2 lg:col-start-2 group relative overflow-hidden rounded-3xl bg-card border border-border/50 p-8 transition-all hover:shadow-2xl hover:border-primary/30 hover:-translate-y-1 cursor-default flex flex-col h-full">
             <div class="absolute top-0 right-0 p-8 opacity-5 transition-opacity duration-500 group-hover:opacity-10 group-hover:scale-110">
               <svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="m9 12 2 2 4-4"/></svg>
             </div>
@@ -150,7 +150,7 @@
           </div>
 
           <!-- 5. Protección (Arveck) -->
-          <div class="group relative overflow-hidden rounded-3xl bg-[#2A313C] text-white p-8 transition-all hover:shadow-2xl hover:-translate-y-1 cursor-default flex flex-col h-full border border-[#3A4352]">
+          <div class="md:col-span-2 lg:col-span-2 md:col-start-2 lg:col-start-auto group relative overflow-hidden rounded-3xl bg-[#2A313C] text-white p-8 transition-all hover:shadow-2xl hover:-translate-y-1 cursor-default flex flex-col h-full border border-[#3A4352]">
             <div class="absolute inset-0 bg-gradient-to-br from-[#2A313C] via-[#2A313C] to-[#1A1F26]"></div>
             <div class="absolute -right-20 -top-20 w-64 h-64 bg-white/5 rounded-full blur-3xl group-hover:bg-white/10 transition-colors duration-700"></div>
             
