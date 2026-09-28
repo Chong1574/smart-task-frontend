@@ -98,12 +98,12 @@
             Próximos Pagos
           </h3>
           <ul class="space-y-3">
-            <NuxtLink v-for="payment in upcomingPayments" :key="payment.id" to="/taskman/wallet" class="flex justify-between items-center p-3 rounded-xl bg-background/50 border border-border/50 hover:border-primary/50 transition-colors">
+            <NuxtLink v-for="(payment, idx) in upcomingPayments" :key="payment.sourceType + '-' + payment.sourceId + '-' + idx" to="/taskman/wallet" class="flex justify-between items-center p-3 rounded-xl bg-background/50 border border-border/50 hover:border-primary/50 transition-colors">
               <div>
                 <h4 class="font-medium text-sm">{{ payment.name }}</h4>
-                <p class="text-xs text-muted-foreground">Día {{ payment.paymentDay }}</p>
+                <p class="text-xs text-muted-foreground">Día {{ new Date(payment.date).getDate() }}</p>
               </div>
-              <span class="font-bold text-sm text-destructive">${{ payment.amount.toFixed(2) }}</span>
+              <span class="font-bold text-sm" :class="payment.type === 'Ingreso' ? 'text-green-500' : 'text-destructive'">${{ payment.amount.toFixed(2) }}</span>
             </NuxtLink>
           </ul>
           <div v-if="upcomingPayments.length === 0" class="text-muted-foreground text-sm text-center py-4">No hay pagos cercanos.</div>
@@ -359,19 +359,7 @@ const activeProjects = computed(() => {
 })
 
 const upcomingPayments = computed(() => {
-  const todayDay = new Date().getDate();
-  return financeStore.subscriptions
-    // Nómina/ingresos NO son pagos por hacer — ver [[project_finance_income_subs]].
-    .filter(s => s.type !== 'INCOME' && s.paymentDay !== undefined && s.paymentDay !== null)
-    .sort((a, b) => {
-      // Ordenar por cercanía al día de hoy
-      let diffA = a.paymentDay! - todayDay;
-      let diffB = b.paymentDay! - todayDay;
-      if (diffA < 0) diffA += 30; // Ya pasó este mes, cuenta para el próximo
-      if (diffB < 0) diffB += 30;
-      return diffA - diffB;
-    })
-    .slice(0, 5) // Mostrar los 5 más próximos
+  return financeStore.upcomingPayments.slice(0, 5)
 })
 
 onMounted(async () => {
