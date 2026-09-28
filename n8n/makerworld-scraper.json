@@ -292,6 +292,23 @@
         1670,
         300
       ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "force-bazar-sync",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "manual-webhook",
+      "name": "Webhook Manual Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        140,
+        100
+      ],
+      "notes": "URL para arrancar esto manualmente desde el navegador"
     }
   ],
   "connections": {
@@ -399,6 +416,17 @@
         [
           {
             "node": "POST /api/products/sync",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Emit offsets",
             "type": "main",
             "index": 0
           }
