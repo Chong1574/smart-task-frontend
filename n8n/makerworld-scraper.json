@@ -163,7 +163,7 @@
     },
     {
       "parameters": {
-        "url": "=https://makerworld.com/api/v1/design-service/design/{{ $json.externalId }}",
+        "url": "http://api.scraperapi.com/",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -198,7 +198,20 @@
               "batchInterval": 500
             }
           }
-        }
+        },
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "api_key",
+              "value": "TU_API_KEY_SCRAPERAPI_AQUI"
+            },
+            {
+              "name": "url",
+              "value": "https://makerworld.com/api/v1/design-service/design/{{ .externalId }}"
+            }
+          ]
+        },
+        "sendQuery": true
       },
       "id": "http-detail",
       "name": "MakerWorld: fetch detail",
@@ -208,7 +221,7 @@
         1120,
         300
       ],
-      "notes": "Un request por producto. batch 5x500ms para evitar rate limit CF."
+      "notes": "Pon tu API Key de ScraperAPI aqu\u00ed tambi\u00e9n"
     },
     {
       "parameters": {
