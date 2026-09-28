@@ -36,29 +36,17 @@
     },
     {
       "parameters": {
-        "url": "https://makerworld.com/api/v1/search-service/select/design2",
+        "url": "http://api.scraperapi.com/",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
             {
-              "name": "orderBy",
-              "value": "score"
+              "name": "api_key",
+              "value": "TU_API_KEY_SCRAPERAPI_AQUI"
             },
             {
-              "name": "designType",
-              "value": "0"
-            },
-            {
-              "name": "isFromSearchList",
-              "value": "false"
-            },
-            {
-              "name": "limit",
-              "value": "40"
-            },
-            {
-              "name": "offset",
-              "value": "={{ $json.offset }}"
+              "name": "url",
+              "value": "https://makerworld.com/api/v1/search-service/select/design2?orderBy=score&designType=0&isFromSearchList=false&limit=40&offset={{ .offset }}"
             }
           ]
         },
@@ -103,7 +91,8 @@
       "position": [
         500,
         300
-      ]
+      ],
+      "notes": "Pon tu API Key de ScraperAPI aqu\u00ed"
     },
     {
       "parameters": {
