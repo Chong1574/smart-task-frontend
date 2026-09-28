@@ -1,0 +1,166 @@
+{
+  "name": "Bazar - FB Autoposter",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 12 * * 1,3,5,6"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Schedule (4 times/week)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [200, 300],
+      "notes": "Lunes, Miércoles, Viernes y Sábado a las 12:00 PM"
+    },
+    {
+      "parameters": {
+        "url": "http://host.docker.internal:3000/api/products",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "fetch-products",
+      "name": "Fetch Bazar Products",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Seleccionamos un producto al azar para publicar hoy\nconst products = $input.all()[0].json;\nif (!products || products.length === 0) {\n  throw new Error(\"No hay productos en el Bazar\");\n}\n\n// Filtramos productos que tengan precio válido e imagen\nconst valid = products.filter(p => p.price > 0 && p.imageUrl);\nif (valid.length === 0) {\n  throw new Error(\"No hay productos válidos con precio/imagen\");\n}\n\n// Escoger uno al azar\nconst randomIndex = Math.floor(Math.random() * valid.length);\nconst selected = valid[randomIndex];\n\nreturn [{ json: selected }];"
+      },
+      "id": "pick-product",
+      "name": "Pick Random Product",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=TU_API_KEY_GEMINI_AQUI",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"parts\": [\n        {\n          \"text\": \"Actúa como el community manager experto en ventas de 'El Rincón de Brandy', nuestra tienda de impresión 3D y tecnología. Escribe un post para Facebook promocionando este producto:\\n\\nTítulo: {{ $json.title }}\\nDescripción: {{ $json.description }}\\nCategoría: {{ $json.category }}\\nPrecio: ${{ $json.price }} MXN\\n\\nReglas:\\n- Usa un tono amigable, entusiasta y persuasivo.\\n- Menciona que pueden comprarlo o ver más detalles en nuestra tienda en línea: shongyi.com/bazar\\n- Incluye emojis relevantes.\\n- Redacta máximo 3 párrafos cortos.\\n- Agrega 3-4 hashtags relevantes al final.\\n- Devuelve ÚNICAMENTE el texto final del post, sin explicaciones extras.\"\n        }\n      ]\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "gemini-post",
+      "name": "Gemini: Generate Post Text",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [860, 300],
+      "notes": "Genera el copy perfecto con IA"
+    },
+    {
+      "parameters": {
+        "jsCode": "const product = $('Pick Random Product').first().json;\nconst geminiRes = $input.all()[0].json;\n\nconst postText = geminiRes.candidates?.[0]?.content?.parts?.[0]?.text || \"Descubre nuestro nuevo producto en shongyi.com/bazar\";\n\nreturn [{\n  json: {\n    message: postText,\n    link: product.sourceUrl || \"https://shongyi.com/bazar\",\n    imageUrl: product.imageUrl\n  }\n}];"
+      },
+      "id": "format-post",
+      "name": "Format Post Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1080, 300]
+    },
+    {
+      "parameters": {
+        "operation": "photo",
+        "pageId": {
+          "__rl": true,
+          "value": "",
+          "mode": "id"
+        },
+        "url": "={{ $json.imageUrl }}",
+        "additionalFields": {
+          "message": "={{ $json.message }}"
+        }
+      },
+      "id": "fb-publish",
+      "name": "Facebook Pages",
+      "type": "n8n-nodes-base.facebookPages",
+      "typeVersion": 1,
+      "position": [1300, 300],
+      "notes": "Conecta tu cuenta y selecciona tu página"
+    }
+  ],
+  "connections": {
+    "Schedule (4 times/week)": {
+      "main": [
+        [
+          {
+            "node": "Fetch Bazar Products",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Bazar Products": {
+      "main": [
+        [
+          {
+            "node": "Pick Random Product",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pick Random Product": {
+      "main": [
+        [
+          {
+            "node": "Gemini: Generate Post Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini: Generate Post Text": {
+      "main": [
+        [
+          {
+            "node": "Format Post Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Post Data": {
+      "main": [
+        [
+          {
+            "node": "Facebook Pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false
+}
