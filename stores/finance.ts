@@ -345,7 +345,9 @@ export const useFinanceStore = defineStore('finance', {
                 let isProvisionTransfer = false;
 
                 if (sub.nextPaymentDate) {
-                    const billDate = new Date(sub.nextPaymentDate);
+                    // Evitar desfase de zona horaria al parsear fechas UTC
+                    const dateParts = sub.nextPaymentDate.split('T')[0].split('-');
+                    const billDate = new Date(Number(dateParts[0]), Number(dateParts[1]) - 1, Number(dateParts[2]));
                     const billMonth = billDate.getMonth();
                     const billYear = billDate.getFullYear();
                     const paymentDay = billDate.getDate();
