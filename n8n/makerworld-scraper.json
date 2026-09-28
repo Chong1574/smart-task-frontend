@@ -47,6 +47,14 @@
             {
               "name": "url",
               "value": "https://makerworld.com/api/v1/search-service/select/design2?orderBy=score&designType=0&isFromSearchList=false&limit=40&offset={{ .offset }}"
+            },
+            {
+              "name": "premium",
+              "value": "true"
+            },
+            {
+              "name": "render",
+              "value": "true"
             }
           ]
         },
@@ -208,6 +216,14 @@
             {
               "name": "url",
               "value": "https://makerworld.com/api/v1/design-service/design/{{ .externalId }}"
+            },
+            {
+              "name": "premium",
+              "value": "true"
+            },
+            {
+              "name": "render",
+              "value": "true"
             }
           ]
         },
