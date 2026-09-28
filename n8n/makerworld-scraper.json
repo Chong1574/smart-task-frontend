@@ -2,12 +2,24 @@
   "name": "Bazar - MakerWorld Scraper",
   "nodes": [
     {
-      "parameters": { "rule": { "interval": [{ "field": "cronExpression", "expression": "0 3 * * *" }] } },
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 3 * * *"
+            }
+          ]
+        }
+      },
       "id": "cron-daily",
       "name": "Cron 03:00 daily",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.1,
-      "position": [240, 300]
+      "position": [
+        240,
+        300
+      ]
     },
     {
       "parameters": {
@@ -17,7 +29,10 @@
       "name": "Emit offsets",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [340, 300]
+      "position": [
+        340,
+        300
+      ]
     },
     {
       "parameters": {
@@ -25,33 +40,74 @@
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
-            { "name": "orderBy", "value": "score" },
-            { "name": "designType", "value": "0" },
-            { "name": "isFromSearchList", "value": "false" },
-            { "name": "limit", "value": "40" },
-            { "name": "offset", "value": "={{ $json.offset }}" }
+            {
+              "name": "orderBy",
+              "value": "hotScore"
+            },
+            {
+              "name": "designType",
+              "value": "0"
+            },
+            {
+              "name": "isFromSearchList",
+              "value": "false"
+            },
+            {
+              "name": "limit",
+              "value": "40"
+            },
+            {
+              "name": "offset",
+              "value": "={{ $json.offset }}"
+            },
+            {
+              "name": "period",
+              "value": "week"
+            }
           ]
         },
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "User-Agent", "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36" },
-            { "name": "Accept", "value": "application/json, text/plain, */*" },
-            { "name": "Accept-Language", "value": "es-ES,es;q=0.9,en;q=0.8" },
-            { "name": "Referer", "value": "https://makerworld.com/es/search/models" },
-            { "name": "Origin", "value": "https://makerworld.com" }
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json, text/plain, */*"
+            },
+            {
+              "name": "Accept-Language",
+              "value": "es-ES,es;q=0.9,en;q=0.8"
+            },
+            {
+              "name": "Referer",
+              "value": "https://makerworld.com/es/search/models"
+            },
+            {
+              "name": "Origin",
+              "value": "https://makerworld.com"
+            }
           ]
         },
         "options": {
           "timeout": 30000,
-          "response": { "response": { "responseFormat": "json" } }
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
         }
       },
       "id": "http-search",
       "name": "MakerWorld: search",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [500, 300]
+      "position": [
+        500,
+        300
+      ]
     },
     {
       "parameters": {
@@ -61,7 +117,10 @@
       "name": "Flatten hits",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [660, 300]
+      "position": [
+        660,
+        300
+      ]
     },
     {
       "parameters": {
@@ -71,15 +130,38 @@
       "name": "Normalize + sanitize",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [820, 300]
+      "position": [
+        820,
+        300
+      ]
     },
     {
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
           "conditions": [
-            { "id": "lic", "leftValue": "={{ $json.licenseType }}", "rightValue": "unknown", "operator": { "type": "string", "operation": "notEquals" } },
-            { "id": "id",  "leftValue": "={{ $json.externalId }}",  "rightValue": "",        "operator": { "type": "string", "operation": "notEmpty" } }
+            {
+              "id": "lic",
+              "leftValue": "={{ $json.licenseType }}",
+              "rightValue": "unknown",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "id",
+              "leftValue": "={{ $json.externalId }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
           ],
           "combinator": "and"
         },
@@ -89,7 +171,10 @@
       "name": "Drop unknown licenses",
       "type": "n8n-nodes-base.filter",
       "typeVersion": 2,
-      "position": [980, 300]
+      "position": [
+        980,
+        300
+      ]
     },
     {
       "parameters": {
@@ -97,23 +182,47 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "User-Agent", "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36" },
-            { "name": "Accept", "value": "application/json, text/plain, */*" },
-            { "name": "Accept-Language", "value": "es-ES,es;q=0.9,en;q=0.8" },
-            { "name": "Referer", "value": "https://makerworld.com/es/search/models" }
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json, text/plain, */*"
+            },
+            {
+              "name": "Accept-Language",
+              "value": "es-ES,es;q=0.9,en;q=0.8"
+            },
+            {
+              "name": "Referer",
+              "value": "https://makerworld.com/es/search/models"
+            }
           ]
         },
         "options": {
           "timeout": 20000,
-          "response": { "response": { "responseFormat": "json" } },
-          "batching": { "batch": { "batchSize": 5, "batchInterval": 500 } }
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          },
+          "batching": {
+            "batch": {
+              "batchSize": 5,
+              "batchInterval": 500
+            }
+          }
         }
       },
       "id": "http-detail",
       "name": "MakerWorld: fetch detail",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1120, 300],
+      "position": [
+        1120,
+        300
+      ],
       "notes": "Un request por producto. batch 5x500ms para evitar rate limit CF."
     },
     {
@@ -124,7 +233,10 @@
       "name": "Compute price + variants",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1340, 300]
+      "position": [
+        1340,
+        300
+      ]
     },
     {
       "parameters": {
@@ -134,7 +246,10 @@
       "name": "Wrap as { products: [...] }",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1560, 300]
+      "position": [
+        1560,
+        300
+      ]
     },
     {
       "parameters": {
@@ -147,31 +262,154 @@
         "jsonBody": "={{ JSON.stringify({ products: $json.products }) }}",
         "options": {
           "timeout": 60000,
-          "response": { "response": { "responseFormat": "json" } }
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
         }
       },
       "id": "post-sync",
       "name": "POST /api/products/sync",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1780, 300],
+      "position": [
+        1880,
+        300
+      ],
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 5000,
       "notes": "Auth: seleccionar credencial Header Auth 'Taskman Sync' post-import. Ver README debug si D1 queda vacío."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Llama a Gemini API para enriquecer los productos\nconst products = $input.all()[0].json.products;\n\n// Reemplaza esto con tu API Key real de Google Gemini\nconst GEMINI_API_KEY = \"TU_API_KEY_AQUI\"; \nconst GEMINI_URL = \"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=\" + GEMINI_API_KEY;\n\nfor (let i = 0; i < products.length; i++) {\n    const p = products[i];\n    if (!p.title) continue;\n    \n    // Si no hay key configurada, usa un fallback heurístico\n    if (GEMINI_API_KEY === \"TU_API_KEY_AQUI\") {\n        const text = (p.title + ' ' + (p.description || '')).toLowerCase();\n        if (text.includes('tool') || text.includes('mount')) p.category = 'Herramientas';\n        else if (text.includes('toy') || text.includes('dragon')) p.category = 'Juguetes';\n        else if (text.includes('lamp') || text.includes('led')) p.category = 'Electrónica';\n        else if (text.includes('vase') || text.includes('decor')) p.category = 'Decoración';\n        else p.category = 'Impresión 3D';\n        p.tags = [...new Set([...(p.tags || []), p.category])];\n        continue;\n    }\n\n    try {\n        const prompt = `Analiza el siguiente producto de impresión 3D:\nTítulo: ${p.title}\nDescripción actual: ${p.description?.slice(0, 500)}\n\nDevuelve un JSON válido con esta estructura exacta:\n{\n  \"description\": \"Una descripción corta y atractiva para marketing (max 150 caracteres)\",\n  \"category\": \"Elige una de: Herramientas, Juguetes, Electrónica, Decoración, Gadgets, Impresión 3D\",\n  \"hashtags\": [\"tag1\", \"tag2\", \"tag3\"]\n}`;\n\n        const response = await this.helpers.httpRequest({\n            method: 'POST',\n            url: GEMINI_URL,\n            headers: { 'Content-Type': 'application/json' },\n            body: {\n                contents: [{ parts: [{ text: prompt }] }]\n            }\n        });\n\n        const rawText = response?.candidates?.[0]?.content?.parts?.[0]?.text || \"\";\n        const jsonMatch = rawText.match(/\\{.*\\}/s);\n        if (jsonMatch) {\n            const aiData = JSON.parse(jsonMatch[0]);\n            if (aiData.description) p.description = aiData.description;\n            if (aiData.category) p.category = aiData.category;\n            if (aiData.hashtags && Array.isArray(aiData.hashtags)) {\n                p.tags = [...new Set([...(p.tags || []), ...aiData.hashtags])];\n            }\n        }\n    } catch (e) {\n        console.log(\"Error al llamar a Gemini:\", e.message);\n    }\n}\n\nreturn [{ json: { products } }];"
+      },
+      "id": "ai-enrich",
+      "name": "Gemini AI Enrich",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1670,
+        300
+      ]
     }
   ],
   "connections": {
-    "Cron 03:00 daily":         { "main": [[{ "node": "Emit offsets",                "type": "main", "index": 0 }]] },
-    "Emit offsets":             { "main": [[{ "node": "MakerWorld: search",          "type": "main", "index": 0 }]] },
-    "MakerWorld: search":       { "main": [[{ "node": "Flatten hits",                "type": "main", "index": 0 }]] },
-    "Flatten hits":             { "main": [[{ "node": "Normalize + sanitize",        "type": "main", "index": 0 }]] },
-    "Normalize + sanitize":     { "main": [[{ "node": "Drop unknown licenses",       "type": "main", "index": 0 }]] },
-    "Drop unknown licenses":    { "main": [[{ "node": "MakerWorld: fetch detail",    "type": "main", "index": 0 }]] },
-    "MakerWorld: fetch detail": { "main": [[{ "node": "Compute price + variants",    "type": "main", "index": 0 }]] },
-    "Compute price + variants": { "main": [[{ "node": "Wrap as { products: [...] }", "type": "main", "index": 0 }]] },
-    "Wrap as { products: [...] }": { "main": [[{ "node": "POST /api/products/sync", "type": "main", "index": 0 }]] }
+    "Cron 03:00 daily": {
+      "main": [
+        [
+          {
+            "node": "Emit offsets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Emit offsets": {
+      "main": [
+        [
+          {
+            "node": "MakerWorld: search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MakerWorld: search": {
+      "main": [
+        [
+          {
+            "node": "Flatten hits",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Flatten hits": {
+      "main": [
+        [
+          {
+            "node": "Normalize + sanitize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize + sanitize": {
+      "main": [
+        [
+          {
+            "node": "Drop unknown licenses",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Drop unknown licenses": {
+      "main": [
+        [
+          {
+            "node": "MakerWorld: fetch detail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MakerWorld: fetch detail": {
+      "main": [
+        [
+          {
+            "node": "Compute price + variants",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute price + variants": {
+      "main": [
+        [
+          {
+            "node": "Wrap as { products: [...] }",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wrap as { products: [...] }": {
+      "main": [
+        [
+          {
+            "node": "AI/Heuristic Enrich",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI/Heuristic Enrich": {
+      "main": [
+        [
+          {
+            "node": "POST /api/products/sync",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
   },
-  "settings": { "executionOrder": "v1" },
+  "settings": {
+    "executionOrder": "v1"
+  },
   "active": false
 }

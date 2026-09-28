@@ -29,22 +29,37 @@
         </div>
       </div>
 
-      <!-- Navegación Interna de Categorías -->
-      <div class="flex flex-wrap justify-center gap-4 mb-12">
-        <button v-for="cat in categorias" :key="cat" class="px-6 py-2 rounded-full border border-border bg-card text-sm font-medium transition-colors hover:border-primary hover:text-primary">
-          {{ cat }}
-        </button>
+      <!-- Filtros de Categoría y Precio -->
+      <div class="flex flex-col md:flex-row justify-center items-center gap-4 mb-12">
+        <div class="flex flex-wrap justify-center gap-2">
+          <button v-for="cat in categorias" :key="cat" 
+            @click="selectedCategory = cat"
+            :class="['px-5 py-2 rounded-full border border-border bg-card text-sm font-medium transition-colors', selectedCategory === cat ? 'bg-primary text-primary-foreground border-primary' : 'hover:border-primary hover:text-primary']">
+            {{ cat }}
+          </button>
+        </div>
+        <div class="h-8 w-px bg-border hidden md:block"></div>
+        <div class="flex items-center gap-2">
+          <span class="text-sm text-muted-foreground mr-1">Precio:</span>
+          <select v-model="selectedPrice" class="h-9 rounded-full border border-border bg-card px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+            <option value="all">Cualquier precio</option>
+            <option value="free">Gratis</option>
+            <option value="under50">Menos de $50</option>
+            <option value="under150">Menos de $150</option>
+            <option value="over150">Más de $150</option>
+          </select>
+        </div>
       </div>
 
       <!-- Galería de Productos -->
       <div v-if="error" class="text-center text-destructive py-8">{{ error }}</div>
-      <div v-else-if="products.length === 0 && !loading" class="text-center text-muted-foreground py-8">
+      <div v-else-if="filteredProducts.length === 0 && !loading" class="text-center text-muted-foreground py-8">
         No hay productos disponibles todavía.
       </div>
       <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
 
         <div
-          v-for="product in products"
+          v-for="product in filteredProducts"
           :key="product.id"
           class="group flex flex-col bg-card rounded-2xl overflow-hidden border border-border/60 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-300 cursor-pointer"
           @click="selected = product"
@@ -153,6 +168,36 @@ const searchedLive = ref(false);
 const rateLimited = ref(false);
 const selected = ref<Product | null>(null);
 
+const selectedCategory = ref('Todos');
+const selectedPrice = ref('all');
+
+const filteredProducts = computed(() => {
+  return products.value.filter(p => {
+    // Filtrar por categoría
+    if (selectedCategory.value !== 'Todos') {
+      const pCat = p.category || 'Impresión 3D';
+      if (pCat !== selectedCategory.value) {
+        return false;
+      }
+    }
+    
+    // Filtrar por precio
+    if (selectedPrice.value !== 'all') {
+      const hasVariants = Array.isArray(p.variants) && p.variants.length > 1;
+      const rawPrice = hasVariants ? p.priceFrom : (p.priceFrom ?? (typeof p.price === 'number' ? p.price : parseFloat(String(p.price ?? 0))));
+      const price = typeof rawPrice === 'number' ? rawPrice : 0;
+      
+      if (selectedPrice.value === 'free' && price > 0) return false;
+      if (selectedPrice.value === 'under50' && (price === 0 || price >= 50)) return false;
+      if (selectedPrice.value === 'under150' && (price === 0 || price >= 150)) return false;
+      if (selectedPrice.value === 'over150' && price < 150) return false;
+    }
+    
+    return true;
+  });
+});
+
+
 async function load(q: string) {
   loading.value = true;
   error.value = null;
@@ -231,7 +276,11 @@ const categorias = [
   'Todos',
   'Impresión 3D',
   'Estilo de Vida y Equipamiento',
-  'Electrónica'
+  'Electrónica',
+  'Herramientas',
+  'Decoración',
+  'Juguetes',
+  'Gadgets'
 ];
 
 onMounted(() => load(''));
