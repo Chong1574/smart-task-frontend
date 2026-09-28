@@ -46,7 +46,7 @@
             },
             {
               "name": "url",
-              "value": "https://makerworld.com/api/v1/search-service/select/design2?orderBy=score&designType=0&isFromSearchList=false&limit=40&offset={{ .offset }}"
+              "value": "https://makerworld.com/api/v1/search-service/select/design2?orderBy=score&designType=0&isFromSearchList=false&limit=40&offset={{ $json.offset }}"
             },
             {
               "name": "premium",
@@ -215,7 +215,7 @@
             },
             {
               "name": "url",
-              "value": "https://makerworld.com/api/v1/design-service/design/{{ .externalId }}"
+              "value": "https://makerworld.com/api/v1/design-service/design/{{ $json.externalId }}"
             },
             {
               "name": "premium",
