@@ -168,7 +168,7 @@
                 </div>
               </div>
               <div class="text-right">
-                <p class="font-mono font-bold text-red-500">{{ formatCurrency(payment.amount) }}</p>
+                <p class="font-mono font-bold" :class="payment.type === 'Ingreso' ? 'text-green-500' : 'text-red-500'">{{ formatCurrency(payment.amount) }}</p>
                 <p class="text-xs text-muted-foreground">{{ new Date(payment.date).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }) }}</p>
               </div>
             </div>
