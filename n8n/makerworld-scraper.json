@@ -186,8 +186,8 @@
           },
           "batching": {
             "batch": {
-              "batchSize": 3,
-              "batchInterval": 15000
+              "batchSize": 1,
+              "batchInterval": 5000
             }
           }
         },
