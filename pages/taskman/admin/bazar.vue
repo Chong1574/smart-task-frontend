@@ -76,11 +76,12 @@
           <div class="grid grid-cols-2 gap-3">
             <input v-model.number="editBuffer.price" type="number" min="0" step="1" class="rounded-md border bg-background px-3 py-2 text-sm" placeholder="Precio MXN" />
             <select v-model="editBuffer.category" class="rounded-md border bg-background px-3 py-2 text-sm">
-              <option value="Impresión 3D">Impresión 3D</option>
-              <option value="Estilo de Vida y Equipamiento">Estilo de Vida y Equipamiento</option>
-              <option value="Electrónica">Electrónica</option>
-              <option value="Otros">Otros</option>
-            </select>
+              <option value="Coleccionables & Figuras">Coleccionables & Figuras</option>
+          <option value="Hogar & Deco">Hogar & Deco</option>
+          <option value="Organización & Setup">Organización & Setup</option>
+          <option value="Gadgets & Utilidades">Gadgets & Utilidades</option>
+          <option value="Juegos & Diversión">Juegos & Diversión</option>
+</select>
           </div>
           <label class="flex items-center gap-2 text-sm">
             <input v-model="editBuffer.isPublic" type="checkbox" />
@@ -170,7 +171,7 @@ function startEdit(p: Product) {
   editBuffer.title = p.title;
   editBuffer.description = p.description;
   editBuffer.price = typeof p.price === 'number' ? p.price : parseFloat(String(p.price ?? 0)) || 0;
-  editBuffer.category = p.category || 'Impresión 3D';
+  editBuffer.category = p.category || 'Gadgets & Utilidades';
   editBuffer.isPublic = p.isPublic !== false;
   editError.value = null;
 }

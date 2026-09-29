@@ -24,11 +24,12 @@
         <div class="space-y-2">
           <label class="text-sm font-medium">Categoría</label>
           <select v-model="category" class="w-full rounded-md border bg-background px-3 py-2">
-            <option value="Impresión 3D">Impresión 3D</option>
-            <option value="Estilo de Vida y Equipamiento">Estilo de Vida y Equipamiento</option>
-            <option value="Electrónica">Electrónica</option>
-            <option value="Otros">Otros</option>
-          </select>
+            <option value="Coleccionables & Figuras">Coleccionables & Figuras</option>
+          <option value="Hogar & Deco">Hogar & Deco</option>
+          <option value="Organización & Setup">Organización & Setup</option>
+          <option value="Gadgets & Utilidades">Gadgets & Utilidades</option>
+          <option value="Juegos & Diversión">Juegos & Diversión</option>
+</select>
         </div>
       </div>
 
@@ -91,7 +92,7 @@ onMounted(() => {
 const title = ref('');
 const description = ref('');
 const price = ref(0);
-const category = ref('Impresión 3D');
+const category = ref('Gadgets & Utilidades');
 const isPublic = ref(true);
 
 const image = reactive({

@@ -185,7 +185,7 @@ const filteredProducts = computed(() => {
   return products.value.filter(p => {
     // Filtrar por categoría
     if (selectedCategory.value !== 'Todos') {
-      const pCat = p.category || 'Impresión 3D';
+      const pCat = p.category || 'Gadgets & Utilidades';
       if (pCat !== selectedCategory.value) {
         return false;
       }
@@ -284,7 +284,7 @@ useHead({
 
 const categorias = [
   'Todos',
-  'Impresión 3D',
+  'Gadgets & Utilidades',
   'Estilo de Vida y Equipamiento',
   'Electrónica',
   'Herramientas',
