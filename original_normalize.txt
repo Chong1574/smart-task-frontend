@@ -1,0 +1,48 @@
+// Normaliza + sanitiza títulos. Sale con externalId, licenseType mapeado, imageUrl, tags, sourceUrl.
+const LICENSE_MAP = {
+  'BY': 'CC-BY', 'BY-SA': 'CC-BY-SA', 'BY-NC': 'CC-BY-NC', 'BY-NC-SA': 'CC-BY-NC',
+  'BY-ND': 'CC-BY', 'BY-NC-ND': 'CC-BY-NC', 'CC0': 'CC0',
+  'Standard Digital File License': 'commercial',
+};
+const PATTERNS = [
+  /\|?\s*(no |sin )?(ams|supports?|soportes?)\b/gi,
+  /\|?\s*easy\s*(to\s*)?print(ing)?\b/gi,
+  /\|?\s*no\s*supports?\b/gi,
+  /\|?\s*免支撑\S*/g,
+  /\|?\s*多色一盘\S*/g,
+  /\|?\s*参数优化\S*/g,
+  /\|?\s*模型优化\S*/g,
+  /\|?\s*\d+\.?\d*mm\s*layer\b.*$/i,
+  /\|?\s*\d+\s*walls?\b.*$/i,
+  /\|?\s*\d+%\s*infill\b.*$/i,
+];
+function cleanTitle(t) {
+  if (!t) return 'Sin título';
+  let out = String(t);
+  for (const p of PATTERNS) out = out.replace(p, '');
+  out = out.replace(/\s*[|·—–-]\s*$/g, '').replace(/\s{2,}/g, ' ').trim();
+  return out.length >= 3 ? out : 'Sin título';
+}
+return items.map(({ json: d }) => {
+  const rawLicense = (d.license || '').trim();
+  const licenseType = LICENSE_MAP[rawLicense] || 'unknown';
+  const author = d.designCreator?.name || 'Unknown';
+  const externalId = String(d.id ?? '');
+  const slug = d.slug || externalId;
+  return {
+    json: {
+      externalId,
+      source: 'MAKERWORLD',
+      sourceUrl: `https://makerworld.com/en/models/${slug}`,
+      title: cleanTitle(d.titleTranslated || d.title),
+      description: '',
+      imageUrl: d.cover || d.coverPortrait || null,
+      licenseType,
+      licenseAttribution: `${author} — via MakerWorld`,
+      category: (Array.isArray(d.tags) && d.tags[0]) || null,
+      tags: Array.isArray(d.tags) ? d.tags.slice(0, 15) : [],
+      trendScore: Math.round(d.hotScore ?? d.likeCount ?? 0),
+      provider: 'LOCAL',
+    },
+  };
+});
