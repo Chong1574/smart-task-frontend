@@ -205,7 +205,8 @@
         1120,
         300
       ],
-      "notes": "Consulta local v\u00eda FlareSolverr"
+      "notes": "Consulta local v\u00eda FlareSolverr",
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -262,7 +263,8 @@
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 5000,
-      "notes": "Auth: seleccionar credencial Header Auth 'Taskman Sync' post-import. Ver README debug si D1 queda vac\u00edo."
+      "notes": "Auth: seleccionar credencial Header Auth 'Taskman Sync' post-import. Ver README debug si D1 queda vac\u00edo.",
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -275,7 +277,8 @@
       "position": [
         1670,
         300
-      ]
+      ],
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
