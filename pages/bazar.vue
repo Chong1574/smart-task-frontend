@@ -87,6 +87,15 @@
           <div class="p-6 flex flex-col flex-grow">
             <h3 class="font-serif text-xl font-semibold mb-2 group-hover:text-primary transition-colors">{{ product.title }}</h3>
             <p class="text-muted-foreground text-sm mb-4 line-clamp-2">{{ product.description }}</p>
+              <div v-if="product.tags && product.tags.length" class="flex flex-wrap gap-1 mb-4 mt-[-8px]">
+                <span v-for="tag in product.tags.slice(0, 3)" :key="tag" class="px-2 py-0.5 bg-secondary/50 text-secondary-foreground text-[10px] rounded uppercase tracking-wider">
+                  {{ tag }}
+                </span>
+                <span v-if="product.tags.length > 3" class="text-[10px] text-muted-foreground self-center">
+                  +{{ product.tags.length - 3 }}
+                </span>
+              </div>
+
             <div class="mt-auto space-y-3">
               <div class="flex items-center justify-between">
                 <span class="font-sans font-medium text-foreground">{{ priceLabel(product) }}</span>
@@ -157,6 +166,7 @@ interface Product {
   isPublic?: boolean;
   category?: string;
   descriptionHtml?: string | null;
+  tags?: string[] | null;
 }
 
 import { API_URL as apiBase } from '~/utils/apiUrl';

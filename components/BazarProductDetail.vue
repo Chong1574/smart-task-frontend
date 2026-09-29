@@ -69,6 +69,12 @@
           </div>
 
           <p v-if="descriptionSafe" class="text-sm text-muted-foreground mb-6 whitespace-pre-line">{{ descriptionSafe }}</p>
+          <div v-if="product.tags && product.tags.length" class="flex flex-wrap gap-2 mb-6">
+            <span v-for="tag in product.tags" :key="tag" class="px-2 py-1 bg-secondary text-secondary-foreground text-xs rounded-md">
+              {{ tag }}
+            </span>
+          </div>
+
 
           <div class="text-xs text-muted-foreground space-y-1">
             <p v-if="product.licenseAttribution">Atribución: {{ product.licenseAttribution }}</p>
@@ -93,6 +99,7 @@ interface Product {
   price?: number | string | null;
   priceFrom?: number | null;
   variants?: Variant[] | null;
+  tags?: string[] | null;
   images?: string[] | null;
   sourceUrl?: string | null;
   licenseAttribution?: string | null;
