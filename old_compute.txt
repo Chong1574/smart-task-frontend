@@ -1,0 +1,60 @@
+// Suma TODOS los plates de cada instance → variante. Sanitiza nombre de variante. priceFrom = min.
+const FILAMENT_PRICE_PER_KG = 400, WASTE_PCT = 5, KWH_PRICE = 4.5, WATTS = 100, MARGIN_PCT = 300;
+const VARIANT_PATTERNS = [
+  /\|?\s*(no |sin )?(ams|supports?|soportes?)\b/gi,
+  /\|?\s*\d+\.?\d*mm\s*layer\b.*$/i,
+  /\|?\s*\d+\s*walls?\b.*$/i,
+  /\|?\s*\d+%\s*infill\b.*$/i,
+  /\|?\s*免支撑\S*/g,
+  /\|?\s*多色一盘\S*/g,
+  /\|?\s*参数优化\S*/g,
+  /\|?\s*模型优化\S*/g,
+];
+function cleanVariantName(t, idx) {
+  if (!t) return `Variante ${idx + 1}`;
+  let out = String(t);
+  for (const p of VARIANT_PATTERNS) out = out.replace(p, '');
+  out = out.replace(/\s*[|·—–-]\s*$/g, '').replace(/\s{2,}/g, ' ').trim();
+  return out.length >= 3 ? out : `Variante ${idx + 1}`;
+}
+function priceForPlates(plates) {
+  const grams = plates.reduce((s, p) => s + (Number(p.weight) || 0), 0);
+  const seconds = plates.reduce((s, p) => s + (Number(p.prediction) || 0), 0);
+  const hours = seconds / 3600;
+  if (grams <= 0 || hours <= 0) return null;
+  const effectiveGrams = grams * (1 + WASTE_PCT / 100);
+  const filament = (effectiveGrams / 1000) * FILAMENT_PRICE_PER_KG;
+  const electricity = hours * (WATTS / 1000) * KWH_PRICE;
+  const subtotal = filament + electricity;
+  return { grams, hours: Number(hours.toFixed(2)), price: Math.round(subtotal * (1 + MARGIN_PCT / 100)) };
+}
+return items.map(({ json }) => {
+  const instances = json?.instances || [];
+  const designExtension = json?.designExtension || {};
+  const designPics = Array.isArray(designExtension?.design_pictures) ? designExtension.design_pictures.map(p => p.url).filter(Boolean) : [];
+  const cover = json?.cover;
+  const images = cover ? [cover, ...designPics.filter(u => u !== cover)] : designPics;
+
+  const variantsRaw = instances.map((ins, i) => {
+    const plates = (((ins.extention) || {}).modelInfo || {}).plates || [];
+    const calc = priceForPlates(plates);
+    if (!calc) return null;
+    return { name: cleanVariantName(ins.title || ins.titleTranslated, i), grams: calc.grams, hours: calc.hours, price: calc.price };
+  }).filter(Boolean);
+
+  const variants = variantsRaw.sort((a, b) => a.price - b.price);
+  const priceFrom = variants.length ? variants[0].price : null;
+  const description = (json?.description || '').slice(0, 2000);
+
+  return {
+    json: {
+      __detail: {
+        id: json?.id,
+        images,
+        description,
+        variants,
+        priceFrom,
+      },
+    },
+  };
+});
