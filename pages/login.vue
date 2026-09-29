@@ -30,11 +30,18 @@
           />
         </div>
 
+        <div class="flex items-start gap-2 text-sm text-muted-foreground">
+          <input type="checkbox" id="terms" v-model="acceptedTerms" @change="authStore.error = null" class="mt-1" />
+          <label for="terms">
+            Acepto los <NuxtLink to="/terminos" class="text-primary hover:underline">términos y condiciones</NuxtLink> y la <NuxtLink to="/privacidad" class="text-primary hover:underline">política de privacidad</NuxtLink>.
+          </label>
+        </div>
+
         <p v-if="authStore.error" class="text-sm text-destructive">{{ authStore.error }}</p>
 
         <button
           type="submit"
-          :disabled="authStore.loading"
+          :disabled="authStore.loading || !acceptedTerms"
           class="w-full py-4 bg-primary text-primary-foreground rounded-xl font-medium hover:opacity-90 transition-opacity flex justify-center items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {{ authStore.loading ? 'Ingresando...' : 'Iniciar Sesión' }}
@@ -91,6 +98,7 @@ const authStore = useAuthStore()
 
 const email = ref('')
 const password = ref('')
+const acceptedTerms = ref(false)
 
 onMounted(() => {
   authStore.init()
@@ -101,17 +109,25 @@ onMounted(() => {
 
 const handleLogin = async () => {
   authStore.error = null
-  const ok = await authStore.login(email.value, password.value)
+  const ok = await authStore.login(email.value.trim(), password.value)
   if (ok) {
     router.replace('/taskman')
   }
 }
 
 const handleGoogleLogin = () => {
+  if (!acceptedTerms.value) {
+    authStore.error = 'Debes aceptar los términos y condiciones para continuar.'
+    return
+  }
   window.location.href = `${API_URL}/auth/google`
 }
 
 const handleMicrosoftLogin = () => {
+  if (!acceptedTerms.value) {
+    authStore.error = 'Debes aceptar los términos y condiciones para continuar.'
+    return
+  }
   window.location.href = `${API_URL}/auth/microsoft`
 }
 </script>

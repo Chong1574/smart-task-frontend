@@ -22,9 +22,16 @@
 
         <TurnstileWidget @verified="onTurnstileVerified" />
 
+        <div class="flex items-start gap-2 text-sm text-muted-foreground">
+          <input type="checkbox" id="terms" v-model="acceptedTerms" @change="authStore.error = null" class="mt-1" />
+          <label for="terms">
+            Acepto los <NuxtLink to="/terminos" class="text-primary hover:underline">términos y condiciones</NuxtLink> y la <NuxtLink to="/privacidad" class="text-primary hover:underline">política de privacidad</NuxtLink>.
+          </label>
+        </div>
+
         <p v-if="authStore.error" class="text-sm text-destructive">{{ authStore.error }}</p>
 
-        <button type="submit" :disabled="authStore.loading"
+        <button type="submit" :disabled="authStore.loading || !acceptedTerms"
           class="w-full py-4 bg-primary text-primary-foreground rounded-xl font-medium hover:opacity-90 transition disabled:opacity-60 disabled:cursor-not-allowed">
           {{ authStore.loading ? 'Creando cuenta...' : 'Registrarme' }}
         </button>
@@ -88,6 +95,7 @@ const email = ref('')
 const password = ref('')
 const turnstileToken = ref('')
 const submitted = ref(false)
+const acceptedTerms = ref(false)
 
 const onTurnstileVerified = (token: string) => {
   turnstileToken.value = token
@@ -95,15 +103,23 @@ const onTurnstileVerified = (token: string) => {
 
 const handleRegister = async () => {
   authStore.error = null
-  const ok = await authStore.register(email.value, password.value, turnstileToken.value)
+  const ok = await authStore.register(email.value.trim(), password.value, turnstileToken.value)
   if (ok) submitted.value = true
 }
 
 const handleGoogleLogin = () => {
+  if (!acceptedTerms.value) {
+    authStore.error = 'Debes aceptar los términos y condiciones para continuar.'
+    return
+  }
   window.location.href = `${API_URL}/auth/google`
 }
 
 const handleMicrosoftLogin = () => {
+  if (!acceptedTerms.value) {
+    authStore.error = 'Debes aceptar los términos y condiciones para continuar.'
+    return
+  }
   window.location.href = `${API_URL}/auth/microsoft`
 }
 </script>
