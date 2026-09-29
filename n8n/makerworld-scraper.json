@@ -36,28 +36,8 @@
     },
     {
       "parameters": {
-        "url": "http://api.scraperapi.com/",
-        "sendQuery": true,
-        "queryParameters": {
-          "parameters": [
-            {
-              "name": "api_key",
-              "value": "TU_API_KEY_SCRAPERAPI_AQUI"
-            },
-            {
-              "name": "url",
-              "value": "https://makerworld.com/api/v1/search-service/select/design2?orderBy=score&designType=0&isFromSearchList=false&limit=40&offset={{ $json.offset }}"
-            },
-            {
-              "name": "premium",
-              "value": "true"
-            },
-            {
-              "name": "render",
-              "value": "true"
-            }
-          ]
-        },
+        "url": "http://api.scraperapi.com/?api_key=TU_API_KEY_SCRAPERAPI_AQUI&premium=true&render=true&url={{ encodeURIComponent('https://makerworld.com/api/v1/search-service/select/design2?orderBy=score&designType=0&isFromSearchList=false&limit=40&offset=' + $json.offset) }}",
+        "sendQuery": false,
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -171,7 +151,7 @@
     },
     {
       "parameters": {
-        "url": "http://api.scraperapi.com/",
+        "url": "http://api.scraperapi.com/?api_key=TU_API_KEY_SCRAPERAPI_AQUI&premium=true&render=true&url={{ encodeURIComponent('https://makerworld.com/api/v1/design-service/design/' + $json.externalId) }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -207,27 +187,7 @@
             }
           }
         },
-        "queryParameters": {
-          "parameters": [
-            {
-              "name": "api_key",
-              "value": "TU_API_KEY_SCRAPERAPI_AQUI"
-            },
-            {
-              "name": "url",
-              "value": "https://makerworld.com/api/v1/design-service/design/{{ $json.externalId }}"
-            },
-            {
-              "name": "premium",
-              "value": "true"
-            },
-            {
-              "name": "render",
-              "value": "true"
-            }
-          ]
-        },
-        "sendQuery": true
+        "sendQuery": false
       },
       "id": "http-detail",
       "name": "MakerWorld: fetch detail",
