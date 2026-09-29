@@ -74,7 +74,7 @@
         "method": "POST",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "{\n  \"cmd\": \"request.get\",\n  \"url\": \"={{ \\\"https://makerworld.com/api/v1/search-service/select/design2?orderBy=score&designType=0&isFromSearchList=false&limit=40&offset=\\\" + $json.offset }}\",\n  \"maxTimeout\": 60000\n}"
+        "jsonBody": "={{ JSON.stringify({ \"cmd\": \"request.get\", \"url\": \"https://makerworld.com/api/v1/search-service/select/design2?orderBy=score&designType=0&isFromSearchList=false&limit=40&offset=\" + $json.offset, \"maxTimeout\": 60000 }) }}"
       },
       "id": "http-search",
       "name": "MakerWorld: search",
@@ -195,7 +195,7 @@
         "method": "POST",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "{\n  \"cmd\": \"request.get\",\n  \"url\": \"={{ \\\"https://makerworld.com/api/v1/design-service/design/\\\" + $json.externalId }}\",\n  \"maxTimeout\": 60000\n}"
+        "jsonBody": "={{ JSON.stringify({ \"cmd\": \"request.get\", \"url\": \"https://makerworld.com/api/v1/design-service/design/\" + $json.externalId, \"maxTimeout\": 60000 }) }}"
       },
       "id": "http-detail",
       "name": "MakerWorld: fetch detail",
