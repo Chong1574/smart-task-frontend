@@ -36,7 +36,7 @@
     },
     {
       "parameters": {
-        "url": "=\"http://api.scraperapi.com/?api_key=TU_API_KEY_SCRAPERAPI_AQUI&premium=true&render=true&url=\" + encodeURIComponent(\"https://makerworld.com/api/v1/search-service/select/design2?orderBy=score&designType=0&isFromSearchList=false&limit=40&offset=\" + $json.offset)",
+        "url": "={{ 'http://api.scraperapi.com/?api_key=TU_API_KEY_SCRAPERAPI_AQUI&premium=true&render=true&url=' + encodeURIComponent('https://makerworld.com/api/v1/search-service/select/design2?orderBy=score&designType=0&isFromSearchList=false&limit=40&offset=' + $json.offset) }}",
         "sendQuery": false,
         "sendHeaders": true,
         "headerParameters": {
@@ -151,7 +151,7 @@
     },
     {
       "parameters": {
-        "url": "=\"http://api.scraperapi.com/?api_key=TU_API_KEY_SCRAPERAPI_AQUI&premium=true&render=true&url=\" + encodeURIComponent(\"https://makerworld.com/api/v1/design-service/design/\" + $json.externalId)",
+        "url": "={{ 'http://api.scraperapi.com/?api_key=TU_API_KEY_SCRAPERAPI_AQUI&premium=true&render=true&url=' + encodeURIComponent('https://makerworld.com/api/v1/design-service/design/' + $json.externalId) }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
