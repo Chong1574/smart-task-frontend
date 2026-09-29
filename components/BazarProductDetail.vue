@@ -58,9 +58,7 @@
                   <input type="radio" :value="i" v-model="variantIdx" class="accent-primary" />
                   <div>
                     <p class="text-sm font-medium">{{ v.name }}</p>
-                    <p class="text-xs text-muted-foreground">
-                      {{ v.grams }} g · {{ v.hours }} h
-                    </p>
+                    
                   </div>
                 </div>
                 <span class="font-medium">{{ fmt(v.price) }}</span>
