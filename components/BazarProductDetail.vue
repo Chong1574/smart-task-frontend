@@ -135,7 +135,7 @@ function fmt(n: number): string {
 // ponytail: strip HTML sin lib externa. Origen del texto es MakerWorld (controlado) — si algún día se acepta
 // user-input HTML, cambiar a DOMPurify aquí.
 const descriptionSafe = computed(() => {
-  const raw = props.product.descriptionHtml || props.product.description || '';
-  return raw.replace(/<[^>]+>/g, '').trim();
+  const raw = props.product.description || props.product.descriptionHtml || '';
+  return raw.replace(/<[^>]+>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ').replace(/<[^>]+>/g, '').trim();
 });
 </script>
