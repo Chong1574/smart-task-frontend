@@ -268,20 +268,6 @@
     },
     {
       "parameters": {
-        "jsCode": "// Llama a Gemini API para enriquecer los productos\nconst products = $input.all()[0].json.products;\n\n// Reemplaza esto con tu API Key real de Google Gemini\nconst GEMINI_API_KEY = \"TU_API_KEY_AQUI\"; \nconst GEMINI_URL = \"https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=\" + GEMINI_API_KEY.trim();\n\nfor (let i = 0; i < products.length; i++) {\n    const p = products[i];\n    if (!p.title) continue;\n    \n    \n    let base64Image = null;\n    try {\n        let mimeType = 'image/jpeg';\n        const imgUrl = (p.images && p.images.length > 0) ? p.images[0] : p.imageUrl;\n        \n        if (imgUrl) {\n            try {\n                // Descargamos la imagen como Buffer binario para mandarla a Gemini\n                const imgBuffer = await this.helpers.httpRequest({\n                    method: 'GET',\n                    url: imgUrl,\n                    encoding: null,\n                    responseType: 'arraybuffer',\n                    timeout: 5000\n                });\n                if (imgBuffer) {\n                    base64Image = Buffer.from(imgBuffer).toString('base64');\n                    if (imgUrl.toLowerCase().includes('.png')) mimeType = 'image/png';\n                    else if (imgUrl.toLowerCase().includes('.webp')) mimeType = 'image/webp';\n                }\n            } catch (imgErr) {\n                console.log(\"Error descargando imagen para Gemini:\", imgErr.message);\n            }\n        }\n\n        const prompt = `Eres un agente de marketing especializado en impresi\u00f3n 3D y dise\u00f1o.\nAnaliza este producto:\nT\u00edtulo: ${p.title}\nDescripci\u00f3n original: ${p.description?.slice(0, 1000)}\n\n${base64Image ? 'Te adjunto la imagen real del producto para que analices su apariencia, detalles y escala.' : ''}\n\nTu tarea:\nEscribe una descripci\u00f3n cautivadora 100% en ESPA\u00d1OL dise\u00f1ada para vender.\nDebe explicar claramente QU\u00c9 ES el producto y para qu\u00e9 sirve.\nMenciona detalles visuales atractivos o estimaciones de tama\u00f1o/escala basadas en la imagen.\nMant\u00e9n un tono profesional, emocionante y persuasivo (estilo boutique de regalos).\nM\u00e1ximo 250 caracteres.\n\nDevuelve UNICAMENTE un JSON v\u00e1lido con esta estructura exacta:\n{\n  \"description\": \"Tu descripci\u00f3n de marketing en espa\u00f1ol aqu\u00ed...\",\n  \"category\": \"Elige estrictamente una de: Coleccionables & Figuras, Hogar & Deco, Organizaci\u00f3n & Setup, Gadgets & Utilidades, Juegos & Diversi\u00f3n\",\n  \"hashtags\": [\"tag1\", \"tag2\", \"tag3\", \"tag4\"] // 3 a 5 tags en espa\u00f1ol muy limpios\n}`;\n\n        const parts = [{ text: prompt }];\n        if (base64Image) {\n            parts.push({\n                inline_data: {\n                    mime_type: mimeType,\n                    data: base64Image\n                }\n            });\n        }\n\n        const response = await this.helpers.httpRequest({\n            method: 'POST',\n            url: GEMINI_URL,\n            headers: { 'Content-Type': 'application/json' },\n            body: {\n                contents: [{ parts }]\n            }\n        });\n\n        const rawText = response?.candidates?.[0]?.content?.parts?.[0]?.text || \"\";\n        try {\n            const jsonMatch = rawText.match(/\\{.*\\}/s);\n            if (jsonMatch) {\n                const aiData = JSON.parse(jsonMatch[0]);\n                if (aiData.description) p.description = aiData.description;\n                if (aiData.category) p.category = aiData.category;\n                if (aiData.hashtags && Array.isArray(aiData.hashtags)) {\n                    p.tags = aiData.hashtags;\n                }\n            } else {\n                p.description = \"DEBUG GEMINI (NO JSON): \" + rawText.slice(0, 300);\n            }\n        } catch (parseErr) {\n            p.description = \"DEBUG GEMINI (JSON INVALIDO): \" + parseErr.message + \" | TEXTO RECIBIDO: \" + rawText.slice(0, 300);\n        }\n    } catch (e) {\n        let errStr = e.message || e.toString();\n        if (e.error) errStr += \" | \" + JSON.stringify(e.error);\n        if (e.response && e.response.data) errStr += \" | \" + JSON.stringify(e.response.data);\n        p.description = \"DEBUG GEMINI (ERROR CONEXION): \" + errStr + \" | URL: \" + GEMINI_URL.replace(GEMINI_API_KEY.trim(), \"[OCULTA]\");\n        console.log(\"Error al llamar a Gemini:\", errStr);\n    }\n}\n\nreturn [{ json: { products } }];\n"
-      },
-      "id": "ai-enrich",
-      "name": "Gemini AI Enrich",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1670,
-        300
-      ],
-      "onError": "continueErrorOutput"
-    },
-    {
-      "parameters": {
         "httpMethod": "GET",
         "path": "force-bazar-sync",
         "responseMode": "lastNode",
@@ -296,6 +282,157 @@
         100
       ],
       "notes": "URL para arrancar esto manualmente desde el navegador"
+    },
+    {
+      "parameters": {
+        "operation": "splitOutItems",
+        "fieldToSplitOut": "products",
+        "options": {}
+      },
+      "id": "split-products",
+      "name": "Split Products",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 3,
+      "position": [
+        1600,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.images && $json.images.length > 0 ? $json.images[0] : ($json.imageUrl || \"\") }}",
+        "responseFormat": "file",
+        "options": {
+          "ignoreResponseCode": true
+        }
+      },
+      "id": "fetch-image",
+      "name": "Fetch Image Binary",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1800,
+        200
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "text",
+        "operation": "messageModel",
+        "model": "models/gemini-3-flash-preview",
+        "messages": {
+          "values": [
+            {
+              "role": "user",
+              "prompt": "={{ `Eres un experto en marketing de impresi\u00f3n 3D.\nAnaliza este producto:\nT\u00edtulo: ${$json.title}\nDescripci\u00f3n original: ${$json.description}\n\nDevuelve UNICAMENTE un JSON v\u00e1lido con esta estructura exacta:\n{\n  \"description\": \"Tu descripci\u00f3n de marketing en espa\u00f1ol aqu\u00ed...\",\n  \"category\": \"Elige estrictamente una de: Coleccionables & Figuras, Hogar & Deco, Organizaci\u00f3n & Setup, Gadgets & Utilidades, Juegos & Diversi\u00f3n\",\n  \"hashtags\": [\"tag1\", \"tag2\", \"tag3\", \"tag4\"]\n}` }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "gemini-native",
+      "name": "Google Gemini",
+      "type": "n8n-nodes-base.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        2000,
+        200
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "position",
+        "options": {}
+      },
+      "id": "merge-gemini",
+      "name": "Merge Original & AI",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        2200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const original = $input.item.json;\nlet text = original.text || \"\";\n\n// El merge por posicion une las propiedades. La salida de Gemini suele estar en .text\nlet aiData = {};\ntry {\n    const match = text.match(/\\{.*\\}/s);\n    if (match) aiData = JSON.parse(match[0]);\n} catch(e) {}\n\nif (aiData.description) original.description = aiData.description;\nif (aiData.category) original.category = aiData.category;\nif (aiData.hashtags) original.tags = aiData.hashtags;\n\nreturn { json: original };"
+      },
+      "id": "parse-ai",
+      "name": "Parse AI Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2400,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "aggregateItems",
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "externalId"
+            },
+            {
+              "fieldToAggregate": "title"
+            },
+            {
+              "fieldToAggregate": "description"
+            },
+            {
+              "fieldToAggregate": "category"
+            },
+            {
+              "fieldToAggregate": "tags"
+            },
+            {
+              "fieldToAggregate": "priceFrom"
+            },
+            {
+              "fieldToAggregate": "images"
+            },
+            {
+              "fieldToAggregate": "source"
+            },
+            {
+              "fieldToAggregate": "sourceUrl"
+            },
+            {
+              "fieldToAggregate": "imageUrl"
+            },
+            {
+              "fieldToAggregate": "licenseType"
+            },
+            {
+              "fieldToAggregate": "licenseAttribution"
+            },
+            {
+              "fieldToAggregate": "trendScore"
+            },
+            {
+              "fieldToAggregate": "provider"
+            },
+            {
+              "fieldToAggregate": "variants"
+            }
+          ]
+        },
+        "options": {
+          "destinationFieldName": "products"
+        }
+      },
+      "id": "aggregate-products",
+      "name": "Aggregate to Array",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 3,
+      "position": [
+        2600,
+        300
+      ]
     }
   ],
   "connections": {
@@ -391,18 +528,7 @@
       "main": [
         [
           {
-            "node": "Gemini AI Enrich",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Gemini AI Enrich": {
-      "main": [
-        [
-          {
-            "node": "POST /api/products/sync",
+            "node": "Split Products",
             "type": "main",
             "index": 0
           }
@@ -414,6 +540,77 @@
         [
           {
             "node": "Emit offsets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Products": {
+      "main": [
+        [
+          {
+            "node": "Fetch Image Binary",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge Original & AI",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Fetch Image Binary": {
+      "main": [
+        [
+          {
+            "node": "Google Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini": {
+      "main": [
+        [
+          {
+            "node": "Merge Original & AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Original & AI": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Output": {
+      "main": [
+        [
+          {
+            "node": "Aggregate to Array",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate to Array": {
+      "main": [
+        [
+          {
+            "node": "POST /api/products/sync",
             "type": "main",
             "index": 0
           }
