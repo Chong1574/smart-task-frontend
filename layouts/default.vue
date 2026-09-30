@@ -77,17 +77,23 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 
 const authStore = useAuthStore()
 
-const navItems = [
-  { name: 'Inicio', path: '/' },
-  { name: 'El Bazar', path: '/bazar' },
-  { name: 'El Estudio', path: '/estudio' },
-  { name: 'Protección', path: 'https://arveck.com', external: true },
-  { name: 'Task-man', path: '/taskman' },
-];
+const navItems = computed(() => {
+  const items = [
+    { name: 'Inicio', path: '/' },
+    { name: 'El Bazar', path: '/bazar' },
+    { name: 'El Estudio', path: '/estudio' },
+    { name: 'Protección', path: 'https://arveck.com', external: true },
+  ]
+  if (authStore.isAuthenticated) {
+    items.push({ name: 'Task-man', path: '/taskman' })
+  }
+  return items
+})
 </script>
 
 <style scoped>
