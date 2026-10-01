@@ -1,0 +1,408 @@
+{
+  "name": "Bazar - DEBUG 1 Item Scraper",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { offset: 0 } }];"
+      },
+      "id": "offsets",
+      "name": "Emit offsets",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        340,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://flaresolverr:8191/v1",
+        "sendQuery": false,
+        "sendHeaders": false,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json, text/plain, */*"
+            },
+            {
+              "name": "Accept-Language",
+              "value": "es-ES,es;q=0.9,en;q=0.8"
+            },
+            {
+              "name": "Referer",
+              "value": "https://makerworld.com/es/search/models"
+            },
+            {
+              "name": "Origin",
+              "value": "https://makerworld.com"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 90000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        },
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ \"cmd\": \"request.get\", \"url\": \"https://makerworld.com/api/v1/search-service/select/design2?orderBy=score&designType=0&isFromSearchList=false&limit=1&offset=\" + $json.offset, \"maxTimeout\": 60000 }) }}"
+      },
+      "id": "http-search",
+      "name": "MakerWorld: search",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        300
+      ],
+      "notes": "Consulta local v\u00eda FlareSolverr"
+    },
+    {
+      "parameters": {
+        "jsCode": "const allHits = [];\nfor (const item of $input.all()) {\n  const htmlStr = item.json?.solution?.response || \"\";\n  const match = htmlStr.match(/<body[^>]*>(.*?)<\\/body>/is);\n  let rawJson = match ? match[1] : htmlStr;\n  \n  try {\n      rawJson = rawJson.replace(/<[^>]*>?/gm, '');\n      const parsed = JSON.parse(rawJson);\n      const hits = parsed.hits || [];\n      allHits.push(...hits);\n  } catch (e) {\n      console.log(\"Error parsing FlareSolverr response:\", e);\n  }\n}\nreturn allHits.map(hit => ({ json: hit }));"
+      },
+      "id": "flatten",
+      "name": "Flatten hits",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normaliza + sanitiza titulos. Sale con externalId, licenseType mapeado, imageUrl, tags, sourceUrl.\nconst LICENSE_MAP = {\n  'BY': 'CC-BY', 'BY-SA': 'CC-BY-SA', 'BY-NC': 'CC-BY-NC', 'BY-NC-SA': 'CC-BY-NC',\n  'BY-ND': 'CC-BY', 'BY-NC-ND': 'CC-BY-NC', 'CC0': 'CC0',\n  'Standard Digital File License': 'commercial',\n};\nconst PATTERNS = [\n  /\\|?\\s*(no |sin )?(ams|supports?|soportes?)\\b/gi,\n  /\\|?\\s*easy\\s*(to\\s*)?print(ing)?\\b/gi,\n  /\\|?\\s*no\\s*supports?\\b/gi,\n  /\\|?\\s*\u514d\u652f\u6491\\S*/g,\n  /\\|?\\s*\u591a\u8272\u4e00\u76d8\\S*/g,\n  /\\|?\\s*\u53c2\u6570\u4f18\u5316\\S*/g,\n  /\\|?\\s*\u6a21\u578b\u4f18\u5316\\S*/g,\n  /\\|?\\s*\\d+\\.?\\d*mm\\s*layer\\b.*$/i,\n  /\\|?\\s*\\d+\\s*walls?\\b.*$/i,\n  /\\|?\\s*\\d+%\\s*infill\\b.*$/i,\n];\nfunction cleanTitle(t) {\n  if (!t) return 'Sin titulo';\n  let out = String(t);\n  for (const p of PATTERNS) out = out.replace(p, '');\n  out = out.replace(/\\s*[|\u00b7\u2014-\u2014]\\s*$/g, '').replace(/\\s{2,}/g, ' ').trim();\n  return out.length >= 3 ? out : 'Sin titulo';\n}\nreturn $input.all().map(({ json: d }) => {\n  const rawLicense = (d.license || '').trim();\n  const licenseType = LICENSE_MAP[rawLicense] || 'unknown';\n  const author = d.designCreator?.name || 'Unknown';\n  const externalId = String(d.id ?? '');\n  const slug = d.slug || externalId;\n  return {\n    json: {\n      externalId,\n      source: 'MAKERWORLD',\n      sourceUrl: `https://makerworld.com/en/models/${slug}`,\n      title: cleanTitle(d.titleTranslated || d.title),\n      description: '',\n      imageUrl: d.cover || d.coverPortrait || null,\n      licenseType,\n      licenseAttribution: `${author} \u2014 via MakerWorld`,\n      category: (Array.isArray(d.tags) && d.tags[0]) || null,\n      tags: Array.isArray(d.tags) ? d.tags.slice(0, 15) : [],\n      trendScore: Math.round(d.hotScore ?? d.likeCount ?? 0),\n      provider: 'LOCAL',\n    },\n  };\n});"
+      },
+      "id": "normalize",
+      "name": "Normalize + sanitize",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        820,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "lic",
+              "leftValue": "={{ $json.licenseType }}",
+              "rightValue": "unknown",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "id",
+              "leftValue": "={{ $json.externalId }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "filter",
+      "name": "Drop unknown licenses",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [
+        980,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://flaresolverr:8191/v1",
+        "sendHeaders": false,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json, text/plain, */*"
+            },
+            {
+              "name": "Accept-Language",
+              "value": "es-ES,es;q=0.9,en;q=0.8"
+            },
+            {
+              "name": "Referer",
+              "value": "https://makerworld.com/es/search/models"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 90000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          },
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 5000
+            }
+          }
+        },
+        "sendQuery": false,
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ \"cmd\": \"request.get\", \"url\": \"https://makerworld.com/api/v1/design-service/design/\" + $json.externalId, \"maxTimeout\": 60000 }) }}"
+      },
+      "id": "http-detail",
+      "name": "MakerWorld: fetch detail",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        300
+      ],
+      "notes": "Consulta local v\u00eda FlareSolverr",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Suma TODOS los plates de cada instance \u2192 variante. Sanitiza nombre de variante. priceFrom = min.\nconst FILAMENT_PRICE_PER_KG = 400, WASTE_PCT = 5, KWH_PRICE = 4.5, WATTS = 100, MARGIN_PCT = 300;\nconst VARIANT_PATTERNS = [\n  /\\|?\\s*(no |sin )?(ams|supports?|soportes?)\\b/gi,\n  /\\|?\\s*\\d+\\.?\\d*mm\\s*layer\\b.*$/i,\n  /\\|?\\s*\\d+\\s*walls?\\b.*$/i,\n  /\\|?\\s*\\d+%\\s*infill\\b.*$/i,\n  /\\|?\\s*\u514d\u652f\u6491\\S*/g,\n  /\\|?\\s*\u591a\u8272\u4e00\u76d8\\S*/g,\n  /\\|?\\s*\u53c2\u6570\u4f18\u5316\\S*/g,\n  /\\|?\\s*\u6a21\u578b\u4f18\u5316\\S*/g,\n];\nfunction cleanVariantName(t, idx) {\n  if (!t) return `Variante ${idx + 1}`;\n  let out = String(t);\n  for (const p of VARIANT_PATTERNS) out = out.replace(p, '');\n  out = out.replace(/\\s*[|\u00b7\u2014\u2013-]\\s*$/g, '').replace(/\\s{2,}/g, ' ').trim();\n  return out.length >= 3 ? out : `Variante ${idx + 1}`;\n}\nfunction priceForPlates(plates) {\n  const grams = plates.reduce((s, p) => s + (Number(p.weight) || 0), 0);\n  const seconds = plates.reduce((s, p) => s + (Number(p.prediction) || 0), 0);\n  const hours = seconds / 3600;\n  if (grams <= 0 || hours <= 0) return null;\n  const effectiveGrams = grams * (1 + WASTE_PCT / 100);\n  const filament = (effectiveGrams / 1000) * FILAMENT_PRICE_PER_KG;\n  const electricity = hours * (WATTS / 1000) * KWH_PRICE;\n  const subtotal = filament + electricity;\n  return { grams, hours: Number(hours.toFixed(2)), price: Math.round(subtotal * (1 + MARGIN_PCT / 100)) };\n}\nreturn $input.all().map((item) => {\n  const htmlStr = item.json?.solution?.response || \"\";\n  const match = htmlStr.match(/<body[^>]*>(.*?)<\\/body>/is);\n  let rawJson = match ? match[1] : htmlStr;\n  rawJson = rawJson.replace(/<[^>]*>?/gm, '');\n  \n  let json = {};\n  try { json = JSON.parse(rawJson); } catch (e) {}\n\n  const instances = json?.instances || [];\n  const designExtension = json?.designExtension || {};\n  const designPics = Array.isArray(designExtension?.design_pictures) ? designExtension.design_pictures.map(p => p.url).filter(Boolean) : [];\n  const cover = json?.cover;\n  const images = cover ? [cover, ...designPics.filter(u => u !== cover)] : designPics;\n\n  const variantsRaw = instances.map((ins, i) => {\n    const plates = (((ins.extention) || {}).modelInfo || {}).plates || [];\n    const calc = priceForPlates(plates);\n    if (!calc) return null;\n    return { name: cleanVariantName(ins.title || ins.titleTranslated, i), grams: calc.grams, hours: calc.hours, price: calc.price };\n  }).filter(Boolean);\n\n  const variants = variantsRaw.sort((a, b) => a.price - b.price);\n  const priceFrom = variants.length ? variants[0].price : null;\n  const description = (json?.summaryTranslated || json?.summary || '').slice(0, 2000);\n\n  return {\n    json: {\n      __detail: {\n        id: json?.id,\n        images,\n        description,\n        variants,\n        priceFrom,\n      },\n    },\n  };\n});"
+      },
+      "id": "compute",
+      "name": "Compute price + variants",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1340,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge: cada item aqui trae __detail; buscar el normalized correspondiente por indice (pairing 1:1 con 'Drop unknown licenses').\nconst normalized = $('Drop unknown licenses').all();\n// Strip HTML \u2192 plaintext para 'description'. El backend hace decode de entidades,\n// aqui solo removemos tags. slice(0,2000) coincide con el limite del schema.\nconst stripHtml = (html) => String(html || '').replace(/<[^>]+>/g, ' ').replace(/\\s{2,}/g, ' ').trim().slice(0, 2000);\nconst products = items.map((item, i) => {\n  const n = normalized[i]?.json || {};\n  const det = item?.json?.__detail || {};\n  return {\n    ...n,\n    description: stripHtml(det.description),\n    descriptionHtml: det.description || '',\n    images: det.images || [],\n    variants: det.variants || [],\n    priceFrom: det.priceFrom ?? null,\n    price: det.priceFrom ?? null,\n  };\n});\nreturn [{ json: { products } }];"
+      },
+      "id": "wrap",
+      "name": "Wrap as { products: [...] }",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:3000/api/products/sync",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ products: $json.products }) }}",
+        "options": {
+          "timeout": 60000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "post-sync",
+      "name": "POST /api/products/sync",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1880,
+        300
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "notes": "Auth: seleccionar credencial Header Auth 'Taskman Sync' post-import. Ver README debug si D1 queda vac\u00edo.",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Llama a Gemini API para enriquecer los productos\nconst products = $input.all()[0].json.products;\n\n// Reemplaza esto con tu API Key real de Google Gemini\nconst GEMINI_API_KEY = \"TU_API_KEY_AQUI\"; \nconst GEMINI_URL = \"https://generativelanguage.googleapis.com/v1alpha/models/gemini-3-flash-preview:generateContent?key=\" + GEMINI_API_KEY.trim();\n\nfor (let i = 0; i < products.length; i++) {\n    const p = products[i];\n    if (!p.title) continue;\n    \n    \n    let base64Image = null;\n    try {\n        let mimeType = 'image/jpeg';\n        const imgUrl = (p.images && p.images.length > 0) ? p.images[0] : p.imageUrl;\n        \n        if (imgUrl) {\n            try {\n                // Descargamos la imagen como Buffer binario para mandarla a Gemini\n                const imgBuffer = await this.helpers.httpRequest({\n                    method: 'GET',\n                    url: imgUrl,\n                    encoding: null,\n                    responseType: 'arraybuffer',\n                    timeout: 5000\n                });\n                if (imgBuffer) {\n                    base64Image = Buffer.from(imgBuffer).toString('base64');\n                    if (imgUrl.toLowerCase().includes('.png')) mimeType = 'image/png';\n                    else if (imgUrl.toLowerCase().includes('.webp')) mimeType = 'image/webp';\n                }\n            } catch (imgErr) {\n                console.log(\"Error descargando imagen para Gemini:\", imgErr.message);\n            }\n        }\n\n        await new Promise(r => setTimeout(r, 2000));\n        const prompt = `Eres un agente de marketing especializado en impresi\u00f3n 3D y dise\u00f1o.\nAnaliza este producto:\nT\u00edtulo: ${p.title}\nDescripci\u00f3n original: ${p.description?.slice(0, 1000)}\n\n${base64Image ? 'Te adjunto la imagen real del producto para que analices su apariencia, detalles y escala.' : ''}\n\nTu tarea:\nEscribe una descripci\u00f3n cautivadora 100% en ESPA\u00d1OL dise\u00f1ada para vender.\nDebe explicar claramente QU\u00c9 ES el producto y para qu\u00e9 sirve.\nMenciona detalles visuales atractivos o estimaciones de tama\u00f1o/escala basadas en la imagen.\nMant\u00e9n un tono profesional, emocionante y persuasivo (estilo boutique de regalos).\nM\u00e1ximo 250 caracteres.\n\nDevuelve UNICAMENTE un JSON v\u00e1lido con esta estructura exacta:\n{\n  \"description\": \"Tu descripci\u00f3n de marketing en espa\u00f1ol aqu\u00ed...\",\n  \"category\": \"Elige estrictamente una de: Coleccionables & Figuras, Hogar & Deco, Organizaci\u00f3n & Setup, Gadgets & Utilidades, Juegos & Diversi\u00f3n\",\n  \"hashtags\": [\"tag1\", \"tag2\", \"tag3\", \"tag4\"] // 3 a 5 tags en espa\u00f1ol muy limpios\n}`;\n\n        const parts = [{ text: prompt }];\n        if (base64Image) {\n            parts.push({\n                inline_data: {\n                    mime_type: mimeType,\n                    data: base64Image\n                }\n            });\n        }\n\n        const response = await this.helpers.httpRequest({\n            method: 'POST',\n            url: GEMINI_URL,\n            headers: { 'Content-Type': 'application/json' },\n            body: {\n                contents: [{ parts }]\n            }\n        });\n\n        const rawText = response?.candidates?.[0]?.content?.parts?.[0]?.text || \"\";\n        try {\n            const jsonMatch = rawText.match(/\\{.*\\}/s);\n            if (jsonMatch) {\n                const aiData = JSON.parse(jsonMatch[0]);\n                if (aiData.description) p.description = aiData.description;\n                if (aiData.category) p.category = aiData.category;\n                if (aiData.hashtags && Array.isArray(aiData.hashtags)) {\n                    p.tags = aiData.hashtags;\\n                p.RAW_GEMINI_OUTPUT = rawText;\n                }\n            } else {\n                p.description = \"DEBUG GEMINI (NO JSON): \" + rawText.slice(0, 300);\n            }\n        } catch (parseErr) {\n            p.description = \"DEBUG GEMINI (JSON INVALIDO): \" + parseErr.message + \" | TEXTO RECIBIDO: \" + rawText.slice(0, 300);\n        }\n    } catch (e) {\n        let errStr = e.message || e.toString();\n        if (e.error) errStr += \" | \" + JSON.stringify(e.error);\n        if (e.response && e.response.data) errStr += \" | \" + JSON.stringify(e.response.data);\n        p.description = \"DEBUG GEMINI (ERROR CONEXION): \" + errStr + \" | URL: \" + GEMINI_URL.replace(GEMINI_API_KEY.trim(), \"[OCULTA]\");\n        console.log(\"Error al llamar a Gemini:\", errStr);\n    }\n}\n\nreturn [{ json: { products } }];\n"
+      },
+      "id": "ai-enrich",
+      "name": "Gemini AI Enrich",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1670,
+        300
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "force-bazar-sync",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "manual-webhook",
+      "name": "Webhook Manual Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        140,
+        100
+      ],
+      "notes": "URL para arrancar esto manualmente desde el navegador"
+    }
+  ],
+  "connections": {
+    "Cron 03:00 daily": {
+      "main": [
+        [
+          {
+            "node": "Emit offsets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Emit offsets": {
+      "main": [
+        [
+          {
+            "node": "MakerWorld: search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MakerWorld: search": {
+      "main": [
+        [
+          {
+            "node": "Flatten hits",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Flatten hits": {
+      "main": [
+        [
+          {
+            "node": "Normalize + sanitize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize + sanitize": {
+      "main": [
+        [
+          {
+            "node": "Drop unknown licenses",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Drop unknown licenses": {
+      "main": [
+        [
+          {
+            "node": "MakerWorld: fetch detail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MakerWorld: fetch detail": {
+      "main": [
+        [
+          {
+            "node": "Compute price + variants",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute price + variants": {
+      "main": [
+        [
+          {
+            "node": "Wrap as { products: [...] }",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wrap as { products: [...] }": {
+      "main": [
+        [
+          {
+            "node": "Gemini AI Enrich",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini AI Enrich": {
+      "main": [
+        [
+          {
+            "node": "POST /api/products/sync",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Emit offsets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false
+}
