@@ -1,0 +1,169 @@
+{
+  "name": "Publicar Productos Random en RRSS",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days"
+            }
+          ]
+        }
+      },
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.cloudflare.com/client/v4/accounts/da943179e720de04c2308f23f79b1f67/d1/database/efc3cd4d-86b6-4101-ab5a-7b3466446dbb/query",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer your_cloudflare_d1_token_here"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"sql\": \"SELECT id, title, description, price, imageUrl, sourceUrl FROM Product WHERE imageUrl IS NOT NULL ORDER BY RANDOM() LIMIT 3;\"}",
+        "options": {}
+      },
+      "name": "Fetch 3 Random Products",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.first().json.result[0].results.map(item => ({ json: item }));"
+      },
+      "name": "Extract Items",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        650,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 1,
+        "unit": "minutes"
+      },
+      "name": "Wait (Rate Limit)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        850,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "pageId": {
+          "__rl": true,
+          "mode": "id"
+        },
+        "text": "={{ $json.title }}\n\n{{ $json.description }}\n\nPrecio: ${{ $json.price }}\n\nEnlace: {{ $json.sourceUrl }}",
+        "additionalFields": {
+          "link": "={{ $json.imageUrl }}"
+        }
+      },
+      "name": "Facebook Pages",
+      "type": "n8n-nodes-base.facebookPages",
+      "typeVersion": 1,
+      "position": [
+        1050,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "instagramId": {
+          "__rl": true,
+          "mode": "id"
+        },
+        "type": "photo",
+        "photoUrl": "={{ $json.imageUrl }}",
+        "caption": "={{ $json.title }}\n\n{{ $json.description }}\n\nPrecio: ${{ $json.price }}\n\nEnlace: {{ $json.sourceUrl }}"
+      },
+      "name": "Instagram for Business",
+      "type": "n8n-nodes-base.instagramForBusiness",
+      "typeVersion": 1,
+      "position": [
+        1050,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch 3 Random Products",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch 3 Random Products": {
+      "main": [
+        [
+          {
+            "node": "Extract Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Items": {
+      "main": [
+        [
+          {
+            "node": "Wait (Rate Limit)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait (Rate Limit)": {
+      "main": [
+        [
+          {
+            "node": "Facebook Pages",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Instagram for Business",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
