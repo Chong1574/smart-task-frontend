@@ -299,12 +299,13 @@
     },
     {
       "parameters": {
+        "batchSize": 1,
         "options": {}
       },
       "id": "batch-loop-node",
       "name": "Batch Loop",
-      "type": "n8n-nodes-base.loop",
-      "typeVersion": 1,
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 2,
       "position": [
         1500,
         300
