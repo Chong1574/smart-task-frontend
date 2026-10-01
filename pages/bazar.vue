@@ -30,7 +30,7 @@
       </div>
 
       <!-- Filtros de Categoría y Precio -->
-      <div class="flex flex-col md:flex-row justify-center items-center gap-4 mb-12">
+      <div class="flex flex-col md:flex-row justify-center items-center gap-4 mb-12 w-full">
         <div class="flex flex-wrap justify-center gap-2">
           <button v-for="cat in categorias" :key="cat" 
             @click="selectedCategory = cat"
@@ -39,15 +39,14 @@
           </button>
         </div>
         <div class="h-8 w-px bg-border hidden md:block"></div>
-        <div class="flex items-center gap-2">
-          <span class="text-sm text-muted-foreground mr-1">Precio:</span>
-          <select v-model="selectedPrice" class="h-9 rounded-full border border-border bg-card px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
-            <option value="all">Cualquier precio</option>
-            <option value="free">Gratis</option>
-            <option value="under50">Menos de $50</option>
-            <option value="under150">Menos de $150</option>
-            <option value="over150">Más de $150</option>
-          </select>
+        <div class="flex flex-col w-full max-w-[250px] gap-1.5 px-2">
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-muted-foreground">Precio</span>
+            <span class="text-xs font-medium text-foreground">
+              {{ fmt(priceRange[0]) }} - {{ priceRange[1] >= 1000 ? 'Sin límite' : fmt(priceRange[1]) }}
+            </span>
+          </div>
+          <USlider v-model="priceRange" :min="0" :max="1000" :step="10" class="w-full" />
         </div>
       </div>
 
@@ -115,9 +114,9 @@
                 </a>
                 <button
                   type="button"
-                  class="rounded-md p-2 hover:bg-accent"
+                  class="rounded-md p-2 hover:bg-accent hover:text-primary transition-colors"
                   aria-label="Agregar al carrito"
-                  @click.stop
+                  @click.stop="cart.addItem(product)"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
                 </button>
@@ -136,7 +135,11 @@
 
 <script setup lang="ts">
 import BazarProductDetail from '~/components/BazarProductDetail.vue';
+import CartDrawer from '~/components/CartDrawer.vue';
 import { imgProxy, imgProxySrcSet } from '~/utils/imgProxy';
+import { useCartStore } from '~/stores/cart';
+
+const cart = useCartStore();
 
 // Preconnect al proxy de imágenes — evita el hit de handshake TLS en el primer render.
 useHead({
@@ -179,7 +182,7 @@ const rateLimited = ref(false);
 const selected = ref<Product | null>(null);
 
 const selectedCategory = ref('Todos');
-const selectedPrice = ref('all');
+const priceRange = ref([0, 1000]);
 
 const filteredProducts = computed(() => {
   return products.value.filter(p => {
@@ -192,15 +195,13 @@ const filteredProducts = computed(() => {
     }
     
     // Filtrar por precio
-    if (selectedPrice.value !== 'all') {
-      const hasVariants = Array.isArray(p.variants) && p.variants.length > 1;
-      const rawPrice = hasVariants ? p.priceFrom : (p.priceFrom ?? (typeof p.price === 'number' ? p.price : parseFloat(String(p.price ?? 0))));
-      const price = typeof rawPrice === 'number' ? rawPrice : 0;
-      
-      if (selectedPrice.value === 'free' && price > 0) return false;
-      if (selectedPrice.value === 'under50' && (price === 0 || price >= 50)) return false;
-      if (selectedPrice.value === 'under150' && (price === 0 || price >= 150)) return false;
-      if (selectedPrice.value === 'over150' && price < 150) return false;
+    const hasVariants = Array.isArray(p.variants) && p.variants.length > 1;
+    const rawPrice = hasVariants ? p.priceFrom : (p.priceFrom ?? (typeof p.price === 'number' ? p.price : parseFloat(String(p.price ?? 0))));
+    const price = typeof rawPrice === 'number' ? rawPrice : 0;
+    
+    const maxLimit = priceRange.value[1] >= 1000 ? Infinity : priceRange.value[1];
+    if (price < priceRange.value[0] || price > maxLimit) {
+      return false;
     }
     
     return true;
