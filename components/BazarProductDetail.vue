@@ -76,7 +76,7 @@
                 <button
                   type="button"
                   class="px-3 py-2 text-muted-foreground hover:text-foreground disabled:opacity-50"
-                  @click="if(quantity > 1) quantity--"
+                  @click="quantity > 1 ? quantity-- : null"
                   :disabled="quantity <= 1"
                 >
                   -
