@@ -18,12 +18,16 @@
         <li>Comprender y analizar cómo utilizas nuestros servicios.</li>
       </ul>
 
-      <h2 class="text-2xl font-serif font-bold text-[#8E5E44] mt-8">3. Compartir información</h2>
-      <p>No compartimos, vendemos, alquilamos ni comercializamos tu información personal con terceros para sus fines comerciales. Tu información está segura y se usa exclusivamente para el funcionamiento interno de Taskman.</p>
+      <h2 class="text-2xl font-serif font-bold text-[#8E5E44] mt-8">3. Procesamiento de Pagos y Compras</h2>
+      <p>Cuando realizas una compra en nuestra tienda, recopilamos tu nombre, dirección y datos de contacto estrictamente para coordinar el envío de tus productos. <strong>No almacenamos, procesamos ni retenemos directamente la información confidencial de tus tarjetas de crédito o métodos de pago en nuestros servidores.</strong> Todo el procesamiento de pagos se realiza a través de pasarelas de terceros certificadas bajo estrictos estándares de ciberseguridad (como PCI-DSS).</p>
+      <p>Tus datos de pago se utilizan única y exclusivamente para generar el cobro y validar la transacción. Nunca utilizaremos estos datos sensibles para fines de marketing ni los compartiremos con terceros ajenos al proceso de pago.</p>
+
+      <h2 class="text-2xl font-serif font-bold text-[#8E5E44] mt-8">4. Compartir información</h2>
+      <p>No compartimos, vendemos, alquilamos ni comercializamos tu información personal con terceros para sus fines comerciales. Tu información está segura y se usa exclusivamente para el funcionamiento interno de Taskman y la logística de tus envíos.</p>
       <p>El uso y transferencia por parte de Taskman a cualquier otra aplicación de la información recibida de las APIs de Google se adherirá a la <strong>Google API Services User Data Policy</strong>, incluyendo los requisitos de uso limitado (Limited Use Requirements).</p>
 
-      <h2 class="text-2xl font-serif font-bold text-[#8E5E44] mt-8">4. Seguridad</h2>
-      <p>Tomamos medidas razonables para ayudar a proteger la información sobre ti contra pérdida, robo, uso indebido y acceso no autorizado, divulgación, alteración y destrucción.</p>
+      <h2 class="text-2xl font-serif font-bold text-[#8E5E44] mt-8">5. Ciberseguridad y Protección de Datos</h2>
+      <p>Nos tomamos tu seguridad muy en serio. Implementamos encriptación de extremo a extremo en todas las transmisiones de datos, políticas estrictas de control de acceso, y medidas de ciberseguridad para proteger tu información contra pérdida, robo, uso indebido y acceso no autorizado, divulgación, alteración y destrucción.</p>
 
       <div class="mt-12 pt-8 border-t border-gray-200">
         <NuxtLink to="/login" class="text-[#8E5E44] hover:underline">&larr; Volver al inicio</NuxtLink>

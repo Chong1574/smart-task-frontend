@@ -17,7 +17,10 @@
       <h2 class="text-2xl font-serif font-bold text-[#8E5E44] mt-8">4. Privacidad</h2>
       <p>Tu uso del Servicio también está sujeto a nuestra <NuxtLink to="/privacidad" class="text-blue-600 underline">Política de Privacidad</NuxtLink>. Por favor, revisa nuestra Política de Privacidad, que también rige el Servicio e informa a los usuarios sobre nuestras prácticas de recopilación de datos.</p>
 
-      <h2 class="text-2xl font-serif font-bold text-[#8E5E44] mt-8">5. Cambios en los Términos</h2>
+      <h2 class="text-2xl font-serif font-bold text-[#8E5E44] mt-8">5. Tienda, Pagos y Ciberseguridad</h2>
+      <p>Al utilizar nuestra sección de tienda o realizar un pedido, aceptas proporcionar información veraz para el procesamiento y envío. Los pagos electrónicos son procesados por entidades financieras de terceros acreditadas. <strong>No guardamos información de tarjetas de crédito o débito</strong>. Tu información de pago se usa únicamente para procesar el cobro legítimo de tus pedidos y prevenir actividades fraudulentas. Nos comprometemos a mantener altos estándares de ciberseguridad para proteger la integridad de tus datos durante el checkout.</p>
+
+      <h2 class="text-2xl font-serif font-bold text-[#8E5E44] mt-8">6. Cambios en los Términos</h2>
       <p>Nos reservamos el derecho, a nuestra sola discreción, de modificar o reemplazar estos Términos en cualquier momento. Al continuar accediendo o utilizando nuestro Servicio después de que esas revisiones entren en vigencia, aceptas estar sujeto a los términos revisados.</p>
 
       <div class="mt-12 pt-8 border-t border-gray-200">
