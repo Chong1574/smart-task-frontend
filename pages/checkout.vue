@@ -20,8 +20,8 @@
                 <input v-model="form.name" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. Juan López">
               </div>
               <div class="space-y-2">
-                <label class="text-sm font-medium">WhatsApp</label>
-                <input v-model="form.whatsapp" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. 555 123 4567">
+                <label class="text-sm font-medium">Celular</label>
+                <input v-model="form.phone" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. 555 123 4567">
               </div>
             </div>
 
@@ -49,7 +49,10 @@
 
             <div class="space-y-2">
               <label class="text-sm font-medium">Colonia</label>
-              <input v-model="form.neighborhood" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. Centro Histórico">
+              <select v-if="neighborhoodOptions.length > 0" v-model="form.neighborhood" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                <option v-for="colonia in neighborhoodOptions" :key="colonia" :value="colonia">{{ colonia }}</option>
+              </select>
+              <input v-else v-model="form.neighborhood" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. Centro Histórico">
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -176,7 +179,7 @@ const step = ref(1);
 
 const form = ref({
   name: '',
-  whatsapp: '',
+  phone: '',
   email: '',
   street: '',
   number: '',
@@ -186,6 +189,21 @@ const form = ref({
   state: ''
 });
 
+const neighborhoodOptions = ref<string[]>([]);
+
+const stateMap: Record<string, string> = {
+  "Queretaro De Arteaga": "Querétaro",
+  "Michoacan De Ocampo": "Michoacán",
+  "Veracruz-Llave": "Veracruz",
+  "Coahuila De Zaragoza": "Coahuila",
+  "Estado De Mexico": "Estado de México",
+  "Distrito Federal": "Ciudad de México",
+  "Ciudad De Mexico": "Ciudad de México",
+  "Nuevo Leon": "Nuevo León",
+  "San Luis Potosi": "San Luis Potosí",
+  "Yucatan": "Yucatán"
+};
+
 watch(() => form.value.zip, async (newZip) => {
   if (newZip.length === 5) {
     try {
@@ -193,19 +211,29 @@ watch(() => form.value.zip, async (newZip) => {
       if (response.ok) {
         const data = await response.json();
         if (data.places && data.places.length > 0) {
-          const place = data.places[0];
-          form.value.state = place.state;
-          // zippopotam devuelve el municipio/ciudad en 'place name', pero a veces es la colonia. 
-          // Es mejor ponerlo y que el usuario lo edite si lo desea.
-          form.value.city = place['place name'] || '';
+          const rawState = data.places[0].state;
+          form.value.state = stateMap[rawState] || rawState;
           
-          // Nota: Zippopotam en México suele retornar varias colonias en places.
-          // Podríamos llenar un select, pero por ahora solo el Estado es lo más valioso.
+          // Zippopotam en México regresa las colonias en 'place name'
+          const colonias = data.places.map((p: any) => p['place name']);
+          neighborhoodOptions.value = colonias;
+          
+          if (colonias.length > 0) {
+            form.value.neighborhood = colonias[0];
+          }
+          
+          // Zippopotam no da la ciudad real, así que no la sobreescribimos con la colonia
+          if (!form.value.city) {
+            // Un pequeño hack para CDMX
+            if (form.value.state === 'Ciudad de México') form.value.city = 'Ciudad de México';
+          }
         }
       }
     } catch (e) {
-      // Ignorar errores de red en la auto-búsqueda
+      // Ignorar errores
     }
+  } else {
+    neighborhoodOptions.value = [];
   }
 });
 
@@ -235,7 +263,7 @@ function formatPrice(amount: number) {
 const isCalculating = ref(false);
 
 async function calculateShipping() {
-  if (!form.value.name || !form.value.whatsapp || !form.value.email || !form.value.street || !form.value.number || !form.value.neighborhood || !form.value.zip || !form.value.state || !form.value.city) {
+  if (!form.value.name || !form.value.phone || !form.value.email || !form.value.street || !form.value.number || !form.value.neighborhood || !form.value.zip || !form.value.state || !form.value.city) {
     toast.error('Por favor completa todos los datos de envío');
     return;
   }
