@@ -20,33 +20,46 @@
                 <input v-model="form.name" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. Juan López">
               </div>
               <div class="space-y-2">
-                <label class="text-sm font-medium">WhatsApp / Correo</label>
-                <input v-model="form.contact" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. 555 123 4567">
+                <label class="text-sm font-medium">WhatsApp</label>
+                <input v-model="form.whatsapp" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. 555 123 4567">
               </div>
             </div>
 
-            <div class="space-y-2">
-              <label class="text-sm font-medium">Calle y Número</label>
-              <input v-model="form.street" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. Calle Primavera 123">
-            </div>
-
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="space-y-2">
+                <label class="text-sm font-medium">Correo Electrónico</label>
+                <input v-model="form.email" type="email" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. juan@correo.com">
+              </div>
               <div class="space-y-2">
                 <label class="text-sm font-medium">Código Postal</label>
                 <input v-model="form.zip" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. 11000">
               </div>
+            </div>
+
+            <div class="grid grid-cols-12 gap-4">
+              <div class="col-span-8 space-y-2">
+                <label class="text-sm font-medium">Calle</label>
+                <input v-model="form.street" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. Avenida de la Luz">
+              </div>
+              <div class="col-span-4 space-y-2">
+                <label class="text-sm font-medium">Número</label>
+                <input v-model="form.number" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. 123 Ext 4">
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-sm font-medium">Colonia</label>
+              <input v-model="form.neighborhood" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. Centro Histórico">
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="space-y-2">
+                <label class="text-sm font-medium">Estado</label>
+                <input v-model="form.state" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. Querétaro">
+              </div>
               <div class="space-y-2">
                 <label class="text-sm font-medium">Ciudad</label>
-                <input v-model="form.city" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. Tu Ciudad">
-              </div>
-              <div class="col-span-2 md:col-span-1 space-y-2">
-                <label class="text-sm font-medium">Estado</label>
-                <select v-model="form.state" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary">
-                  <option value="Querétaro">Querétaro</option>
-                  <option value="CDMX">Ciudad de México</option>
-                  <option value="Jalisco">Jalisco</option>
-                  <option value="Otro">Otro Estado</option>
-                </select>
+                <input v-model="form.city" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. Querétaro">
               </div>
             </div>
 
@@ -144,7 +157,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useCartStore } from '~/stores/cart';
 import { useRouter } from 'vue-router';
 import { toast } from 'vue-sonner';
@@ -163,11 +176,37 @@ const step = ref(1);
 
 const form = ref({
   name: '',
-  contact: '',
+  whatsapp: '',
+  email: '',
   street: '',
+  number: '',
+  neighborhood: '',
   zip: '',
   city: '',
-  state: 'Querétaro'
+  state: ''
+});
+
+watch(() => form.value.zip, async (newZip) => {
+  if (newZip.length === 5) {
+    try {
+      const response = await fetch(`https://api.zippopotam.us/mx/${newZip}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.places && data.places.length > 0) {
+          const place = data.places[0];
+          form.value.state = place.state;
+          // zippopotam devuelve el municipio/ciudad en 'place name', pero a veces es la colonia. 
+          // Es mejor ponerlo y que el usuario lo edite si lo desea.
+          form.value.city = place['place name'] || '';
+          
+          // Nota: Zippopotam en México suele retornar varias colonias en places.
+          // Podríamos llenar un select, pero por ahora solo el Estado es lo más valioso.
+        }
+      }
+    } catch (e) {
+      // Ignorar errores de red en la auto-búsqueda
+    }
+  }
 });
 
 interface ShippingOption {
@@ -196,7 +235,7 @@ function formatPrice(amount: number) {
 const isCalculating = ref(false);
 
 async function calculateShipping() {
-  if (!form.value.name || !form.value.contact || !form.value.street || !form.value.zip || !form.value.state) {
+  if (!form.value.name || !form.value.whatsapp || !form.value.email || !form.value.street || !form.value.number || !form.value.neighborhood || !form.value.zip || !form.value.state || !form.value.city) {
     toast.error('Por favor completa todos los datos de envío');
     return;
   }
