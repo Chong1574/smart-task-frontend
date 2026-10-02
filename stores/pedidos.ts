@@ -8,9 +8,7 @@ export interface PedidoImpresion {
     descripcion: string;
     archivos?: string;
     precio?: number;
-    abono?: number;
     estado: 'pendiente' | 'imprimiendo' | 'terminados' | 'enviados' | 'entregados';
-    estadoPago: 'pendiente' | 'parcial' | 'pagado';
     fechaCreacion?: string;
     fechaActualizacion?: string;
 }
@@ -89,37 +87,6 @@ export const usePedidosStore = defineStore('pedidos', {
                 return false;
             } catch (err) {
                 console.error("Error updating pedido:", err);
-                this.useLocalFallback = true;
-                this.saveToLocalStorage();
-                return true;
-            }
-        },
-
-        async updatePedidoPago(id: number | string, estadoPago: PedidoImpresion['estadoPago'], abono?: number) {
-            const pedido = this.pedidos.find(p => p.id === id);
-            if (!pedido) return false;
-            
-            const pagoAnterior = pedido.estadoPago;
-            const abonoAnterior = pedido.abono;
-            
-            pedido.estadoPago = estadoPago;
-            if (abono !== undefined) pedido.abono = abono;
-            pedido.fechaActualizacion = new Date().toISOString();
-
-            if (this.useLocalFallback) {
-                this.saveToLocalStorage();
-                return true;
-            }
-
-            try {
-                const res = await api.put(`/pedidos/${id}/pago`, { estadoPago, abono });
-                if (res.data.success) return true;
-                
-                pedido.estadoPago = pagoAnterior;
-                pedido.abono = abonoAnterior;
-                return false;
-            } catch (err) {
-                console.error("Error updating pedido pago:", err);
                 this.useLocalFallback = true;
                 this.saveToLocalStorage();
                 return true;
