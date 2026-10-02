@@ -68,13 +68,46 @@
             </div>
           </div>
           
-          <button
-            @click="addToCart"
-            class="w-full md:w-auto mb-6 bg-primary text-primary-foreground hover:bg-primary/90 font-medium py-3 px-6 rounded-xl transition-all shadow-lg shadow-primary/20 hover:shadow-primary/30 flex justify-center items-center gap-2"
-          >
-            Agregar al carrito
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-          </button>
+          <div class="flex flex-col gap-4 mb-6">
+            <!-- Selector de Cantidad -->
+            <div class="flex items-center gap-4">
+              <span class="text-sm font-medium">Cantidad:</span>
+              <div class="flex items-center border border-border rounded-lg bg-secondary/30">
+                <button
+                  type="button"
+                  class="px-3 py-2 text-muted-foreground hover:text-foreground disabled:opacity-50"
+                  @click="if(quantity > 1) quantity--"
+                  :disabled="quantity <= 1"
+                >
+                  -
+                </button>
+                <span class="px-2 text-sm font-medium w-8 text-center">{{ quantity }}</span>
+                <button
+                  type="button"
+                  class="px-3 py-2 text-muted-foreground hover:text-foreground"
+                  @click="quantity++"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="flex flex-col sm:flex-row gap-3">
+              <button
+                @click="buyNow"
+                class="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 font-medium py-3 px-6 rounded-xl transition-all shadow-lg shadow-primary/20 hover:shadow-primary/30 flex justify-center items-center"
+              >
+                Comprar ahora
+              </button>
+              <button
+                @click="addToCartOnly"
+                class="flex-1 bg-secondary text-secondary-foreground hover:bg-secondary/80 font-medium py-3 px-6 rounded-xl transition-all flex justify-center items-center gap-2 border border-border"
+              >
+                Agregar al carrito
+              </button>
+            </div>
+          </div>
 
           <p v-if="descriptionSafe" class="text-sm text-muted-foreground mb-6 whitespace-pre-line">{{ descriptionSafe }}</p>
           <div v-if="product.tags && product.tags.length" class="flex flex-wrap gap-2 mb-6">
@@ -149,10 +182,23 @@ const descriptionSafe = computed(() => {
 });
 
 import { useCartStore } from '~/stores/cart';
-const cart = useCartStore();
+import { toast } from 'vue-sonner';
 
-function addToCart() {
-  cart.addItem(props.product, variantIdx.value);
-  emit('close'); // Opcional: cerrar el modal al agregar
+const cart = useCartStore();
+const quantity = ref(1);
+
+function buyNow() {
+  cart.addItem(props.product, variantIdx.value, quantity.value);
+  cart.openCart(); // Abre el carrito para comprar ya
+  emit('close');
+}
+
+function addToCartOnly() {
+  cart.addItem(props.product, variantIdx.value, quantity.value);
+  toast.success('Agregado al carrito', {
+    description: `${quantity.value}x ${props.product.title}`,
+    duration: 3000
+  });
+  // No cerramos el modal ni abrimos el carrito, estilo MercadoLibre
 }
 </script>

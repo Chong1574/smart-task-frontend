@@ -62,8 +62,6 @@ export const useCartStore = defineStore('cart', () => {
         variantName: variant ? variant.name : undefined
       });
     }
-    
-    openCart();
   }
 
   function removeItem(cartItemId: string) {

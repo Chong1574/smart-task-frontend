@@ -116,7 +116,7 @@
                   type="button"
                   class="rounded-md p-2 hover:bg-accent hover:text-primary transition-colors"
                   aria-label="Agregar al carrito"
-                  @click.stop="cart.addItem(product)"
+                  @click.stop="addToCartFromGrid(product)"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
                 </button>
@@ -138,8 +138,17 @@ import BazarProductDetail from '~/components/BazarProductDetail.vue';
 import CartDrawer from '~/components/CartDrawer.vue';
 import { imgProxy, imgProxySrcSet } from '~/utils/imgProxy';
 import { useCartStore } from '~/stores/cart';
+import { toast } from 'vue-sonner';
 
 const cart = useCartStore();
+
+function addToCartFromGrid(product: Product) {
+  cart.addItem(product);
+  toast.success('Agregado al carrito', {
+    description: `1x ${product.title}`,
+    duration: 3000
+  });
+}
 
 // Preconnect al proxy de imágenes — evita el hit de handshake TLS en el primer render.
 useHead({
