@@ -206,35 +206,50 @@ const stateMap: Record<string, string> = {
 
 watch(() => form.value.zip, async (newZip) => {
   if (newZip.length === 5) {
+    const config = useRuntimeConfig();
+    const apiUrl = config.public.apiBase || 'https://taskapi.shongyi.com/api';
+
     try {
-      const response = await fetch(`https://api.zippopotam.us/mx/${newZip}`);
-      if (response.ok) {
-        const data = await response.json();
+      const [zipRes, backendRes] = await Promise.allSettled([
+        fetch(`https://api.zippopotam.us/mx/${newZip}`),
+        fetch(`${apiUrl}/shipping/address-info/${newZip}`)
+      ]);
+
+      // 1. Obtener Ciudad y Estado precisos desde Google Maps (vía nuestro backend)
+      if (backendRes.status === 'fulfilled' && backendRes.value.ok) {
+        const addrData = await backendRes.value.json();
+        if (addrData.city) form.value.city = addrData.city;
+        if (addrData.state) form.value.state = stateMap[addrData.state] || addrData.state;
+      }
+
+      // 2. Obtener lista de Colonias desde Zippopotamus
+      if (zipRes.status === 'fulfilled' && zipRes.value.ok) {
+        const data = await zipRes.value.json();
         if (data.places && data.places.length > 0) {
-          const rawState = data.places[0].state;
-          form.value.state = stateMap[rawState] || rawState;
-          
-          // Zippopotam en México regresa las colonias en 'place name'
           const colonias = data.places.map((p: any) => p['place name']);
           neighborhoodOptions.value = colonias;
-          
-          if (colonias.length > 0) {
-            form.value.neighborhood = colonias[0];
-          }
-          
-          // Zippopotam no da la ciudad real, así que no la sobreescribimos con la colonia
-          if (!form.value.city) {
-            // Un pequeño hack para CDMX
-            if (form.value.state === 'Ciudad de México') form.value.city = 'Ciudad de México';
+          if (colonias.length > 0) form.value.neighborhood = colonias[0];
+
+          // Fallback por si nuestro backend falló, usamos el estado de Zippopotam
+          if (!form.value.state) {
+            const rawState = data.places[0].state;
+            form.value.state = stateMap[rawState] || rawState;
+            if (form.value.state === 'Ciudad de México' && !form.value.city) {
+              form.value.city = 'Ciudad de México';
+            }
           }
         }
       } else {
-        // Zippopotam no encontró el CP (ej. 76903)
+        // Si Zippopotam falla (ej. 76903)
         neighborhoodOptions.value = [];
-        toast.info('Ingresa tu colonia y estado manualmente.');
+        if (!form.value.state || !form.value.city) {
+            toast.info('Verifica tu Ciudad y Colonia manualmente.');
+        } else {
+            toast.info('Ingresa tu colonia manualmente.');
+        }
       }
+
     } catch (e) {
-      // Error de red
       neighborhoodOptions.value = [];
     }
   } else {
