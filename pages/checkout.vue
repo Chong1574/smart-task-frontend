@@ -271,8 +271,7 @@ const selectedShipping = ref<ShippingOption | null>(null);
 const paymentMethods = [
   { id: 'transfer', name: 'Transferencia Bancaria (SPEI)' },
   { id: 'card', name: 'Tarjeta de Crédito / Débito' },
-  { id: 'paypal', name: 'PayPal' },
-  { id: 'crypto', name: 'Criptomonedas (USDC / BTC)' }
+  { id: 'paypal', name: 'PayPal' }
 ];
 const selectedPayment = ref('transfer');
 
