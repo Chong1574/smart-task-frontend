@@ -228,9 +228,14 @@ watch(() => form.value.zip, async (newZip) => {
             if (form.value.state === 'Ciudad de México') form.value.city = 'Ciudad de México';
           }
         }
+      } else {
+        // Zippopotam no encontró el CP (ej. 76903)
+        neighborhoodOptions.value = [];
+        toast.info('Ingresa tu colonia y estado manualmente.');
       }
     } catch (e) {
-      // Ignorar errores
+      // Error de red
+      neighborhoodOptions.value = [];
     }
   } else {
     neighborhoodOptions.value = [];
