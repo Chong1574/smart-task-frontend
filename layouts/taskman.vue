@@ -59,6 +59,10 @@
             <ShieldAlert class="w-5 h-5 shrink-0" />
             <span v-show="isSidebarOpen" class="font-medium whitespace-nowrap">Auditoría</span>
           </NuxtLink>
+          <NuxtLink to="/taskman/admin/pedidos" class="w-full flex items-center justify-center md:justify-start gap-3 p-3 rounded-xl text-primary hover:bg-primary/10 transition-all" :class="!isSidebarOpen ? 'md:justify-center' : ''">
+            <Package class="w-5 h-5 shrink-0" />
+            <span v-show="isSidebarOpen" class="font-medium whitespace-nowrap">Pedidos Brandy</span>
+          </NuxtLink>
         </div>
         <button @click="openProfile" class="w-full flex items-center justify-center md:justify-start gap-3 p-3 rounded-xl text-muted-foreground hover:bg-secondary transition-all" :class="!isSidebarOpen ? 'md:justify-center' : ''" title="Editar perfil">
           <div class="w-5 h-5 shrink-0 rounded-full bg-gradient-to-tr from-primary to-orange-400 text-primary-foreground flex items-center justify-center text-[10px] font-bold uppercase">
@@ -95,6 +99,9 @@
           </NuxtLink>
           <NuxtLink v-if="isAdmin" to="/taskman/admin/bazar" class="text-primary hover:text-primary/80 p-2">
             <ShieldAlert class="w-5 h-5" />
+          </NuxtLink>
+          <NuxtLink v-if="isAdmin" to="/taskman/admin/pedidos" class="text-primary hover:text-primary/80 p-2">
+            <Package class="w-5 h-5" />
           </NuxtLink>
           <button @click="handleLogout" class="text-muted-foreground hover:text-destructive p-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
@@ -168,7 +175,8 @@ import {
   Moon,
   Sunrise,
   ShieldAlert,
-  Lock
+  Lock,
+  Package
 } from 'lucide-vue-next'
 import { useAuthStore } from '~/stores/auth'
 
