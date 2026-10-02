@@ -164,6 +164,7 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { useCartStore } from '~/stores/cart';
 import { useRouter } from 'vue-router';
 import { toast } from 'vue-sonner';
+import { useLocalStorage } from '@vueuse/core';
 
 const cart = useCartStore();
 const router = useRouter();
@@ -177,7 +178,7 @@ onMounted(() => {
 
 const step = ref(1);
 
-const form = ref({
+const form = useLocalStorage('checkout-form', {
   name: '',
   phone: '',
   email: '',
