@@ -39,10 +39,24 @@
               </div>
               <p class="text-sm text-muted-foreground line-clamp-2 mb-3">{{ pedido.descripcion }}</p>
               
-              <div class="flex items-center justify-between text-xs text-muted-foreground mb-3" v-if="pedido.precio">
-                <span class="bg-green-500/10 text-green-600 dark:text-green-400 font-bold px-2 py-1 rounded-md">
-                  ${{ pedido.precio }}
-                </span>
+              <div class="flex items-center justify-between text-xs mb-3 flex-wrap gap-2">
+                <div v-if="pedido.precio" class="flex gap-2">
+                  <span class="bg-green-500/10 text-green-600 dark:text-green-400 font-bold px-2 py-1 rounded-md">
+                    ${{ pedido.precio }}
+                  </span>
+                  <span v-if="pedido.abono" class="bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold px-2 py-1 rounded-md" title="Abono">
+                    - ${{ pedido.abono }}
+                  </span>
+                </div>
+                <!-- Badge de Pago -->
+                <button @click.stop="togglePago(pedido)" class="px-2 py-1 rounded-md font-bold transition-colors ml-auto border"
+                  :class="{
+                    'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20': pedido.estadoPago === 'pendiente',
+                    'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20': pedido.estadoPago === 'parcial',
+                    'bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20': pedido.estadoPago === 'pagado'
+                  }">
+                  {{ pedido.estadoPago === 'pendiente' ? 'Pendiente Pago' : pedido.estadoPago === 'parcial' ? 'Pago Parcial' : 'Pagado' }}
+                </button>
               </div>
 
               <!-- Acciones de estado -->
@@ -76,9 +90,15 @@
             <label class="block text-sm font-medium mb-1">Descripción del Pedido</label>
             <textarea v-model="form.descripcion" required rows="3" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none" placeholder="Detalles de impresión, color, material..."></textarea>
           </div>
-          <div>
-            <label class="block text-sm font-medium mb-1">Precio ($)</label>
-            <input v-model="form.precio" type="number" step="0.01" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none" placeholder="Ej. 150.00" />
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium mb-1">Precio Total ($)</label>
+              <input v-model="form.precio" type="number" step="0.01" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none" placeholder="Ej. 150.00" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">Abono ($)</label>
+              <input v-model="form.abono" type="number" step="0.01" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none" placeholder="Opcional" />
+            </div>
           </div>
           
           <div class="pt-4 flex justify-end gap-3">
@@ -121,7 +141,8 @@ const showAddModal = ref(false);
 const form = ref({
   cliente: '',
   descripcion: '',
-  precio: '' as number | ''
+  precio: '' as number | '',
+  abono: '' as number | ''
 });
 
 type PedidoStatus = PedidoImpresion['estado'];
@@ -156,13 +177,15 @@ const submitPedido = async () => {
     cliente: form.value.cliente,
     descripcion: form.value.descripcion,
     precio: form.value.precio ? Number(form.value.precio) : undefined,
-    estado: 'pendiente'
+    abono: form.value.abono ? Number(form.value.abono) : undefined,
+    estado: 'pendiente',
+    estadoPago: 'pendiente'
   };
 
   const ok = await pedidosStore.addPedido(newPedido);
   if (ok) {
     showAddModal.value = false;
-    form.value = { cliente: '', descripcion: '', precio: '' };
+    form.value = { cliente: '', descripcion: '', precio: '', abono: '' };
   }
 };
 
@@ -170,6 +193,16 @@ const confirmDelete = (pedido: PedidoImpresion) => {
   if (confirm(`¿Eliminar el pedido de ${pedido.cliente}?`)) {
     pedidosStore.deletePedido(pedido.id!);
   }
+};
+
+const togglePago = (pedido: PedidoImpresion) => {
+  const current = pedido.estadoPago;
+  let next: PedidoImpresion['estadoPago'] = 'pendiente';
+  if (current === 'pendiente') next = 'parcial';
+  else if (current === 'parcial') next = 'pagado';
+  else next = 'pendiente';
+  
+  pedidosStore.updatePedidoPago(pedido.id!, next);
 };
 </script>
 
