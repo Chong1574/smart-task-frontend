@@ -109,9 +109,10 @@
 
 <script setup lang="ts">
 import { useCartStore } from '~/stores/cart';
-import { toast } from 'vue-sonner';
+import { useRouter } from 'vue-router';
 
 const cart = useCartStore();
+const router = useRouter();
 
 function formatPrice(amount: number) {
   if (amount === 0) return 'Gratis';
@@ -123,9 +124,7 @@ function formatPrice(amount: number) {
 }
 
 function checkout() {
-  // Lógica de checkout. Por ahora, un mensaje temporal
-  toast.success('Pedido recibido. Te contactaremos pronto.');
-  cart.clearCart();
   cart.closeCart();
+  router.push('/checkout');
 }
 </script>
