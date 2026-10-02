@@ -273,6 +273,15 @@ const paymentMethods = [
   { id: 'card', name: 'Tarjeta de Crédito / Débito' },
   { id: 'paypal', name: 'PayPal' }
 ];
+
+watch(form, () => {
+  if (step.value > 1) {
+    step.value = 1;
+    selectedShipping.value = null;
+    shippingOptions.value = [];
+  }
+}, { deep: true });
+
 const selectedPayment = ref('transfer');
 
 function formatPrice(amount: number) {
