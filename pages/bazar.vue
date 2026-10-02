@@ -46,7 +46,7 @@
               {{ fmt(priceRange[0]) }} - {{ priceRange[1] >= 1000 ? 'Sin límite' : fmt(priceRange[1]) }}
             </span>
           </div>
-          <USlider v-model="priceRange" :min="0" :max="1000" :step="10" class="w-full" />
+          <Slider v-model="priceRange" :min="0" :max="1000" :step="10" class="w-full" />
         </div>
       </div>
 
