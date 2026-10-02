@@ -270,7 +270,7 @@ async function calculateShipping() {
 
   isCalculating.value = true;
   const config = useRuntimeConfig();
-  const apiUrl = config.public.apiBase || 'https://api.shongyi.com/api'; // O ajustar según env
+  const apiUrl = config.public.apiBase || 'https://taskapi.shongyi.com/api';
 
   try {
     const response = await fetch(`${apiUrl}/shipping/quote`, {
