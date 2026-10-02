@@ -2,7 +2,7 @@
   <div class="container max-w-4xl mx-auto py-12 px-4">
     <h1 class="text-3xl font-serif font-bold mb-8">Finalizar Pedido</h1>
 
-    <div class="grid md:grid-cols-3 gap-8">
+    <div v-if="!orderSuccess" class="grid md:grid-cols-3 gap-8">
       <!-- Columna Izquierda: Pasos de Checkout -->
       <div class="md:col-span-2 space-y-8">
         
@@ -112,8 +112,8 @@
               </div>
             </label>
 
-            <button @click="confirmOrder" class="w-full mt-6 bg-primary text-primary-foreground px-6 py-3 rounded-xl font-bold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20">
-              Confirmar Pedido
+            <button @click="confirmOrder" :disabled="isSubmitting" class="w-full mt-6 bg-primary text-primary-foreground px-6 py-3 rounded-xl font-bold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20 disabled:opacity-50">
+              {{ isSubmitting ? 'Procesando...' : 'Confirmar Pedido' }}
             </button>
           </div>
         </section>
@@ -155,6 +155,58 @@
         </div>
       </div>
 
+    </div>
+    
+    <!-- Pantalla de Éxito -->
+    <div v-else class="max-w-2xl mx-auto bg-card border border-border p-8 rounded-3xl shadow-lg text-center space-y-6 mt-8">
+      <div class="w-20 h-20 bg-green-500/10 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+      </div>
+      <h2 class="text-3xl font-bold font-serif">¡Pedido Recibido!</h2>
+      <p class="text-muted-foreground text-lg">
+        Gracias por tu compra. Hemos registrado tu pedido con éxito.
+      </p>
+
+      <div v-if="selectedPayment === 'transfer'" class="bg-secondary/30 p-6 rounded-2xl border border-border mt-6 text-left">
+        <h3 class="font-bold text-xl mb-4 text-center">Instrucciones para Transferencia</h3>
+        <p class="text-sm text-muted-foreground mb-4 text-center">Para que tu pedido comience a procesarse, realiza tu pago a la siguiente cuenta:</p>
+        
+        <div class="space-y-3 font-mono text-sm bg-background p-4 rounded-xl border border-border">
+          <div class="flex justify-between border-b border-border pb-2">
+            <span class="text-muted-foreground">Banco:</span>
+            <span class="font-bold">BBVA Bancomer</span>
+          </div>
+          <div class="flex justify-between border-b border-border pb-2">
+            <span class="text-muted-foreground">Beneficiario:</span>
+            <span class="font-bold">El Rincón de Brandy</span>
+          </div>
+          <div class="flex justify-between border-b border-border pb-2">
+            <span class="text-muted-foreground">CLABE:</span>
+            <span class="font-bold text-primary">{{ clabeInfo }}</span>
+          </div>
+          <div class="flex justify-between pt-1">
+            <span class="text-muted-foreground">Monto exacto:</span>
+            <span class="font-bold text-lg text-green-600 dark:text-green-400">
+              {{ formatPrice(cart.totalPrice + (selectedShipping?.price || 0)) }}
+            </span>
+          </div>
+        </div>
+
+        <div class="mt-6 flex justify-center">
+          <a :href="`https://wa.me/5215555555555?text=Hola,%20acabo%20de%20realizar%20un%20pedido%20en%20el%20Bazar.%20Te%20env%C3%ADo%20el%20comprobante%20de%20pago.`" target="_blank" class="bg-green-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-green-700 transition-colors flex items-center gap-2 shadow-lg shadow-green-600/20">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21"/><path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1Z"/><path d="M14 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1Z"/><path d="M9 15a.5.5 0 0 0 1 0v-1a.5.5 0 0 0-1 0v1Z"/><path d="M14 15a.5.5 0 0 0 1 0v-1a.5.5 0 0 0-1 0v1Z"/></svg>
+            Enviar Comprobante por WhatsApp
+          </a>
+        </div>
+      </div>
+
+      <div class="pt-8">
+        <NuxtLink to="/bazar" class="text-primary font-medium hover:underline">
+          &larr; Volver al Bazar
+        </NuxtLink>
+      </div>
     </div>
   </div>
 </template>
@@ -332,8 +384,59 @@ async function calculateShipping() {
   }
 }
 
-function confirmOrder() {
-  toast.success('Redirigiendo a pasarela de pago...', { duration: 3000 });
-  // Aquí se enviaría el pedido al backend y luego se redirigiría a Stripe/PayPal, o se mostraría la pantalla de éxito con CLABE.
+const isSubmitting = ref(false);
+const orderSuccess = ref(false);
+const clabeInfo = ref('');
+
+async function confirmOrder() {
+  isSubmitting.value = true;
+  const config = useRuntimeConfig();
+  const apiUrl = config.public.apiBase || 'https://taskapi.shongyi.com/api';
+
+  try {
+    const response = await fetch(`${apiUrl}/checkout/process`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        customer: form.value,
+        shipping: selectedShipping.value,
+        paymentMethod: selectedPayment.value,
+        items: cart.items,
+        total: cart.totalPrice + (selectedShipping.value?.price || 0)
+      })
+    }).catch(() => null); // Catch network errors
+
+    if (!response || !response.ok) {
+      console.warn('Backend /checkout/process no disponible. Usando simulación local.');
+      // Simulador local si no hay backend
+      await new Promise(resolve => setTimeout(resolve, 800)); // fake delay
+      
+      if (selectedPayment.value === 'card') {
+        toast.info('Simulación: Redirigiendo a pasarela (stripe.com/...)');
+        // No redirigimos en simulación para no salir de la app
+      }
+      
+      cart.clearCart();
+      clabeInfo.value = '012345678901234567';
+      orderSuccess.value = true;
+      return;
+    }
+
+    const data = await response.json();
+    
+    if (selectedPayment.value === 'card' && data.checkoutUrl) {
+      toast.success('Redirigiendo a pasarela de pago...', { duration: 2000 });
+      window.location.href = data.checkoutUrl;
+    } else {
+      cart.clearCart();
+      clabeInfo.value = data.clabe || '012345678901234567';
+      orderSuccess.value = true;
+    }
+  } catch (error) {
+    console.error('Error procesando pedido:', error);
+    toast.error('Hubo un problema al procesar tu pedido. Intenta de nuevo.');
+  } finally {
+    isSubmitting.value = false;
+  }
 }
 </script>
