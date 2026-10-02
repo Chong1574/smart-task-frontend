@@ -50,8 +50,8 @@
               </div>
             </div>
 
-            <button v-if="step === 1" @click="calculateShipping" class="mt-4 bg-primary text-primary-foreground px-6 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors">
-              Continuar a Envío
+            <button v-if="step === 1" @click="calculateShipping" :disabled="isCalculating" class="mt-4 bg-primary text-primary-foreground px-6 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50">
+              {{ isCalculating ? 'Cotizando...' : 'Continuar a Envío' }}
             </button>
           </div>
         </section>
@@ -193,68 +193,47 @@ function formatPrice(amount: number) {
   return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(amount);
 }
 
-function calculateShipping() {
-  if (!form.value.name || !form.value.contact || !form.value.street || !form.value.zip) {
+const isCalculating = ref(false);
+
+async function calculateShipping() {
+  if (!form.value.name || !form.value.contact || !form.value.street || !form.value.zip || !form.value.state) {
     toast.error('Por favor completa todos los datos de envío');
     return;
   }
 
-  // Lógica temporal para mostrar cómo funcionaría
-  const options: ShippingOption[] = [];
-  
-  if (form.value.state === 'Querétaro') {
-    // Opción Punto Medio
-    options.push({
-      id: 'punto_medio',
-      name: 'Punto de Encuentro',
-      description: 'Entrega en punto céntrico a convenir',
-      price: 0
+  isCalculating.value = true;
+  const config = useRuntimeConfig();
+  const apiUrl = config.public.apiBase || 'https://api.shongyi.com/api'; // O ajustar según env
+
+  try {
+    const response = await fetch(`${apiUrl}/shipping/quote`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        zip: form.value.zip,
+        state: form.value.state,
+        subtotal: cart.totalPrice
+      })
     });
 
-    // Lógica dinámica de distancia simulada
-    // Asumimos un viaje de 15km a $5/km = $75. Viaje doble = $150
-    const subtotal = cart.totalPrice;
-    const realProfit = subtotal * 0.818; // 450% markup -> ganancia es ~81.8%
-    const coverageFund = realProfit / 2;
-    
-    const simulatedTripCost = 150; // Esto luego vendrá de Google Maps
-    const roundTrip = simulatedTripCost * 2;
-    
-    let finalDeliveryPrice = 0;
-    
-    if (coverageFund >= simulatedTripCost) {
-      finalDeliveryPrice = 0;
-    } else {
-      finalDeliveryPrice = roundTrip - coverageFund;
-      // Prevenir números negativos o absurdos
-      if (finalDeliveryPrice < 0) finalDeliveryPrice = 0;
+    if (!response.ok) {
+      throw new Error('Error al cotizar envío');
     }
 
-    options.push({
-      id: 'domicilio_qro',
-      name: 'Entrega a Domicilio',
-      description: 'Llevamos tu pedido directamente a tu puerta',
-      price: Math.round(finalDeliveryPrice)
-    });
-  } else {
-    // Fuera de Querétaro -> Skydropx
-    options.push({
-      id: 'nacional_estandar',
-      name: 'Envío Nacional Estándar',
-      description: '3 a 5 días hábiles vía FedEx/Redpack',
-      price: 150
-    });
-    options.push({
-      id: 'nacional_express',
-      name: 'Envío Express',
-      description: '1 a 2 días hábiles vía DHL/Estafeta',
-      price: 250
-    });
+    const data = await response.json();
+    shippingOptions.value = data.options || [];
+    if (shippingOptions.value.length > 0) {
+      selectedShipping.value = shippingOptions.value[0];
+      step.value = 2;
+    } else {
+      toast.error('No hay opciones de envío disponibles para tu dirección.');
+    }
+  } catch (error) {
+    console.error('Error calculando envío:', error);
+    toast.error('No pudimos calcular el envío. Revisa tu código postal e intenta de nuevo.');
+  } finally {
+    isCalculating.value = false;
   }
-
-  shippingOptions.value = options;
-  selectedShipping.value = options[0];
-  step.value = 2;
 }
 
 function confirmOrder() {
