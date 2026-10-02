@@ -1,0 +1,45 @@
+{
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "start",
+      "name": "Start",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "resource": "text",
+        "operation": "messageModel",
+        "model": "models/gemini-3-flash-preview",
+        "messages": {
+          "values": [
+            {
+              "prompt": "hello",
+              "role": "user"
+            }
+          ]
+        }
+      },
+      "id": "gemini",
+      "name": "Gemini",
+      "type": "n8n-nodes-base.googleGemini",
+      "typeVersion": 1,
+      "position": [200, 0]
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

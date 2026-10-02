@@ -42,7 +42,20 @@
 
         <!-- Derecha: CTA -->
         <div class="flex items-center gap-4">
-          <NuxtLink v-if="!authStore.isAuthenticated" to="/login" class="text-sm font-medium hover:text-primary transition-colors">
+          <!-- Cart Icon -->
+          <button
+            v-if="cartStore.totalItems > 0"
+            @click="cartStore.openCart()"
+            class="relative p-2 rounded-full hover:bg-accent transition-colors flex items-center justify-center"
+            aria-label="Abrir carrito"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+            <span class="absolute 0 top-0 right-0 translate-x-1/4 -translate-y-1/4 bg-destructive text-destructive-foreground text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+              {{ cartStore.totalItems }}
+            </span>
+          </button>
+
+          <NuxtLink v-if="!authStore.isAuthenticated" to="/login" class="text-sm font-medium hover:text-primary transition-colors hidden sm:block">
             Iniciar Sesión
           </NuxtLink>
           <div v-else class="flex items-center gap-3">
@@ -73,14 +86,19 @@
         </div>
       </div>
     </footer>
+
+    <CartDrawer />
   </div>
 </template>
 
 <script setup>
 import { computed } from 'vue'
 import { useAuthStore } from '~/stores/auth'
+import { useCartStore } from '~/stores/cart'
+import CartDrawer from '~/components/CartDrawer.vue'
 
 const authStore = useAuthStore()
+const cartStore = useCartStore()
 
 const navItems = computed(() => {
   const items = [

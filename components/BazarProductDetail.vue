@@ -3,14 +3,16 @@
     class="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm overflow-y-auto"
    
   >
-    <div class="container max-w-4xl mx-auto py-8 px-4">
-      <button
-        type="button"
-        class="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-        @click="$emit('close')"
-      >
-        ← Volver
-      </button>
+    <div class="container max-w-4xl mx-auto py-8 px-4 relative">
+      <div class="sticky top-4 z-10 mb-6 bg-background/80 backdrop-blur-md p-2 -mx-2 rounded-lg inline-block">
+        <button
+          type="button"
+          class="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground font-medium"
+          @click="$emit('close')"
+        >
+          ← Volver
+        </button>
+      </div>
 
       <div class="grid md:grid-cols-2 gap-8">
         <!-- Galería -->
@@ -65,6 +67,14 @@
               </label>
             </div>
           </div>
+          
+          <button
+            @click="addToCart"
+            class="w-full md:w-auto mb-6 bg-primary text-primary-foreground hover:bg-primary/90 font-medium py-3 px-6 rounded-xl transition-all shadow-lg shadow-primary/20 hover:shadow-primary/30 flex justify-center items-center gap-2"
+          >
+            Agregar al carrito
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          </button>
 
           <p v-if="descriptionSafe" class="text-sm text-muted-foreground mb-6 whitespace-pre-line">{{ descriptionSafe }}</p>
           <div v-if="product.tags && product.tags.length" class="flex flex-wrap gap-2 mb-6">
@@ -90,6 +100,7 @@
 import { imgProxy } from '~/utils/imgProxy';
 interface Variant { name: string; grams: number; hours: number; price: number }
 interface Product {
+  id?: number | string;
   title: string;
   description?: string | null;
   descriptionHtml?: string | null;
@@ -104,7 +115,7 @@ interface Product {
 }
 
 const props = defineProps<{ product: Product }>();
-defineEmits<{ (e: 'close'): void }>();
+const emit = defineEmits<{ (e: 'close'): void }>();
 
 const images = computed(() => {
   const arr = Array.isArray(props.product.images) ? props.product.images : [];
@@ -136,4 +147,12 @@ const descriptionSafe = computed(() => {
   const raw = props.product.description || props.product.descriptionHtml || '';
   return raw.replace(/<[^>]+>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ').replace(/<[^>]+>/g, '').trim();
 });
+
+import { useCartStore } from '~/stores/cart';
+const cart = useCartStore();
+
+function addToCart() {
+  cart.addItem(props.product, variantIdx.value);
+  emit('close'); // Opcional: cerrar el modal al agregar
+}
 </script>
