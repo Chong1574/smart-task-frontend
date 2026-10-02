@@ -360,7 +360,8 @@ async function calculateShipping() {
       body: JSON.stringify({
         zip: form.value.zip,
         state: form.value.state,
-        subtotal: cart.totalPrice
+        subtotal: cart.totalPrice,
+        items: cart.items
       })
     });
 
