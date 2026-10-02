@@ -55,12 +55,7 @@
             </span>
           </button>
 
-          <NuxtLink v-if="!authStore.isAuthenticated" to="/login" class="text-sm font-medium hover:text-primary transition-colors hidden sm:block">
-            Iniciar Sesión
-          </NuxtLink>
-          <div v-else class="flex items-center gap-3">
-            <span class="text-sm font-medium text-muted-foreground hidden sm:block">Hola, {{ (authStore.user?.name || '').trim().split(/\s+/)[0] || 'Amig@' }}</span>
-          </div>
+
           <NuxtLink 
             to="/bazar"
             class="hidden lg:inline-flex items-center justify-center rounded-full border border-primary text-primary px-6 py-2.5 text-sm font-medium transition-all hover:bg-gradient-to-tr hover:from-[#F2A65A] hover:to-[#E07A5F] hover:text-white hover:border-transparent hover:shadow-lg hover:shadow-primary/20"
