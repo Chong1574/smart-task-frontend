@@ -17,27 +17,27 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="space-y-2">
                 <label class="text-sm font-medium">Nombre Completo</label>
-                <input v-model="form.name" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Juan Pérez">
+                <input v-model="form.name" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. Juan López">
               </div>
               <div class="space-y-2">
                 <label class="text-sm font-medium">WhatsApp / Correo</label>
-                <input v-model="form.contact" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="442 123 4567">
+                <input v-model="form.contact" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. 555 123 4567">
               </div>
             </div>
 
             <div class="space-y-2">
               <label class="text-sm font-medium">Calle y Número</label>
-              <input v-model="form.street" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Av. Universidad 123">
+              <input v-model="form.street" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. Calle Primavera 123">
             </div>
 
             <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
               <div class="space-y-2">
                 <label class="text-sm font-medium">Código Postal</label>
-                <input v-model="form.zip" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="76000">
+                <input v-model="form.zip" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. 11000">
               </div>
               <div class="space-y-2">
                 <label class="text-sm font-medium">Ciudad</label>
-                <input v-model="form.city" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Santiago de Querétaro">
+                <input v-model="form.city" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. Tu Ciudad">
               </div>
               <div class="col-span-2 md:col-span-1 space-y-2">
                 <label class="text-sm font-medium">Estado</label>
