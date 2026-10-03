@@ -239,6 +239,19 @@ const router = useRouter();
 onMounted(() => {
   if (cart.items.length === 0) {
     router.push('/bazar');
+  } else {
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'begin_checkout', {
+        currency: 'MXN',
+        value: cart.totalPrice,
+        items: cart.items.map(i => ({
+          item_id: i.id,
+          item_name: i.title,
+          price: i.price,
+          quantity: i.quantity
+        }))
+      });
+    }
   }
 });
 
@@ -417,6 +430,14 @@ async function confirmOrder() {
   const apiUrl = config.public.apiBase || 'https://taskapi.shongyi.com/api';
 
   try {
+    const orderValue = cart.totalPrice + (selectedShipping.value?.price || 0);
+    const orderItems = cart.items.map(i => ({
+      item_id: i.id,
+      item_name: i.title,
+      price: i.price,
+      quantity: i.quantity
+    }));
+
     const response = await fetch(`${apiUrl}/checkout/process`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -425,7 +446,7 @@ async function confirmOrder() {
         shipping: selectedShipping.value,
         paymentMethod: selectedPayment.value,
         items: cart.items,
-        total: cart.totalPrice + (selectedShipping.value?.price || 0)
+        total: orderValue
       })
     }).catch(() => null); // Catch network errors
 
@@ -439,6 +460,14 @@ async function confirmOrder() {
         // No redirigimos en simulación para no salir de la app
       }
       
+      if (typeof window !== 'undefined' && (window as any).gtag) {
+        (window as any).gtag('event', 'purchase', {
+          transaction_id: `SIM_${Date.now()}`,
+          value: orderValue,
+          currency: 'MXN',
+          items: orderItems
+        });
+      }
       cart.clearCart();
       clabeInfo.value = '012345678901234567';
       orderSuccess.value = true;
@@ -451,6 +480,14 @@ async function confirmOrder() {
       toast.success('Redirigiendo a pasarela de pago...', { duration: 2000 });
       window.location.href = data.checkoutUrl;
     } else {
+      if (typeof window !== 'undefined' && (window as any).gtag) {
+        (window as any).gtag('event', 'purchase', {
+          transaction_id: data.orderId || `ORD_${Date.now()}`,
+          value: orderValue,
+          currency: 'MXN',
+          items: orderItems
+        });
+      }
       cart.clearCart();
       clabeInfo.value = data.clabe || '012345678901234567';
       orderSuccess.value = true;

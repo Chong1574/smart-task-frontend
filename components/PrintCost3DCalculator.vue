@@ -293,6 +293,17 @@ async function fetchFromN8n() {
     const pick = list.find(p => p.isDefault) || list[0]
     selectedProfileId.value = pick.id
     applyProfile(pick)
+
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'view_item', {
+        item_list_id: 'makerworld_calculator',
+        item_list_name: 'MakerWorld Calculator',
+        items: [{
+          item_id: link,
+          item_name: `Makerworld Model - ${pick.id}`,
+        }]
+      });
+    }
   } catch (err: any) {
     n8nError.value = err?.response?.data?.error || err?.message || 'Error desconocido'
   } finally {

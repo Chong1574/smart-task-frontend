@@ -19,12 +19,29 @@ export const useCartStore = defineStore('cart', () => {
   const totalItems = computed(() => items.value.reduce((acc, item) => acc + item.quantity, 0));
   const totalPrice = computed(() => items.value.reduce((acc, item) => acc + (item.price * item.quantity), 0));
 
+  function trackViewCart() {
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'view_cart', {
+        currency: 'MXN',
+        value: totalPrice.value,
+        items: items.value.map(i => ({
+          item_id: i.id,
+          item_name: i.title,
+          price: i.price,
+          quantity: i.quantity
+        }))
+      });
+    }
+  }
+
   function toggleCart() {
     isOpen.value = !isOpen.value;
+    if (isOpen.value) trackViewCart();
   }
 
   function openCart() {
     isOpen.value = true;
+    trackViewCart();
   }
 
   function closeCart() {
@@ -62,9 +79,39 @@ export const useCartStore = defineStore('cart', () => {
         variantName: variant ? variant.name : undefined
       });
     }
+
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'add_to_cart', {
+        currency: 'MXN',
+        value: resolvedPrice * quantity,
+        items: [
+          {
+            item_id: cartItemId,
+            item_name: product.title,
+            price: resolvedPrice,
+            quantity: quantity
+          }
+        ]
+      });
+    }
   }
 
   function removeItem(cartItemId: string) {
+    const item = items.value.find(item => item.id === cartItemId);
+    if (item && typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'remove_from_cart', {
+        currency: 'MXN',
+        value: item.price * item.quantity,
+        items: [
+          {
+            item_id: item.id,
+            item_name: item.title,
+            price: item.price,
+            quantity: item.quantity
+          }
+        ]
+      });
+    }
     items.value = items.value.filter(item => item.id !== cartItemId);
   }
 

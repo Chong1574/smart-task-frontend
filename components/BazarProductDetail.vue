@@ -183,6 +183,23 @@ const descriptionSafe = computed(() => {
 
 import { useCartStore } from '~/stores/cart';
 import { toast } from 'vue-sonner';
+import { onMounted } from 'vue';
+
+onMounted(() => {
+  if (typeof window !== 'undefined' && (window as any).gtag) {
+    (window as any).gtag('event', 'view_item', {
+      currency: 'MXN',
+      value: typeof props.product.price === 'number' ? props.product.price : (props.product.priceFrom || 0),
+      items: [
+        {
+          item_id: props.product.id,
+          item_name: props.product.title,
+          price: typeof props.product.price === 'number' ? props.product.price : (props.product.priceFrom || 0)
+        }
+      ]
+    });
+  }
+});
 
 const cart = useCartStore();
 const quantity = ref(1);

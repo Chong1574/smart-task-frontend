@@ -13,7 +13,8 @@ export default defineNuxtConfig({
     '@nuxtjs/google-fonts',
     '@nuxtjs/sitemap',
     '@nuxtjs/robots',
-    '@sentry/nuxt/module'
+    '@sentry/nuxt/module',
+    'nuxt-gtag'
   ],
   sentry: {
     sourceMapsUploadOptions: {
@@ -66,5 +67,10 @@ export default defineNuxtConfig({
     pageTransition: { name: 'page', mode: 'out-in' },
     layoutTransition: { name: 'layout', mode: 'out-in' }
   },
-
+  gtag: {
+    id: 'G-T142ZNLG0C',
+    config: {
+      page_title: 'El Rincón de Brandy'
+    }
+  }
 })
