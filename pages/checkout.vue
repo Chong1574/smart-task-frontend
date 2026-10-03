@@ -358,8 +358,7 @@ async function calculateShipping() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        zip: form.value.zip,
-        state: form.value.state,
+        customer: form.value,
         subtotal: cart.totalPrice,
         items: cart.items
       })
