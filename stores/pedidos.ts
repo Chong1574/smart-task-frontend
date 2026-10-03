@@ -11,6 +11,7 @@ export interface PedidoImpresion {
     estado: 'pendiente' | 'imprimiendo' | 'terminados' | 'enviados' | 'entregados';
     fechaCreacion?: string;
     fechaActualizacion?: string;
+    paymentStatus?: string;
 }
 
 export const usePedidosStore = defineStore('pedidos', {
@@ -90,6 +91,36 @@ export const usePedidosStore = defineStore('pedidos', {
                 this.useLocalFallback = true;
                 this.saveToLocalStorage();
                 return true;
+            }
+        },
+
+        async validatePayment(id: number | string) {
+            const pedido = this.pedidos.find(p => p.id === id);
+            if (!pedido) return false;
+
+            const previousStatus = pedido.paymentStatus;
+            pedido.paymentStatus = 'PAID';
+
+            if (this.useLocalFallback) {
+                this.saveToLocalStorage();
+                return true;
+            }
+
+            try {
+                const res = await api.put(`/pedidos/${id}/payment`);
+                if (res.data.success) {
+                    toast.success('Pago validado y correo enviado');
+                    return true;
+                } else {
+                    pedido.paymentStatus = previousStatus;
+                    toast.error('Error al validar pago');
+                    return false;
+                }
+            } catch (err) {
+                console.error("Error validating payment:", err);
+                pedido.paymentStatus = previousStatus;
+                toast.error('Error de conexión');
+                return false;
             }
         },
 

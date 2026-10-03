@@ -43,6 +43,18 @@
                 <span class="bg-green-500/10 text-green-600 dark:text-green-400 font-bold px-2 py-1 rounded-md">
                   ${{ pedido.precio }}
                 </span>
+                <span v-if="pedido.paymentStatus === 'UNPAID'" class="bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold px-2 py-1 rounded-md">
+                  Por Pagar
+                </span>
+                <span v-else-if="pedido.paymentStatus === 'PAID'" class="bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold px-2 py-1 rounded-md">
+                  Pagado
+                </span>
+              </div>
+
+              <div v-if="pedido.paymentStatus === 'UNPAID'" class="mb-3">
+                <button @click="pedidosStore.validatePayment(pedido.id!)" class="w-full text-xs bg-amber-500 hover:bg-amber-600 text-white py-1.5 rounded-lg font-semibold transition-colors flex items-center justify-center gap-1">
+                   <CheckCircle2 class="w-3 h-3" /> Validar Pago SPEI
+                </button>
               </div>
 
               <!-- Acciones de estado -->
