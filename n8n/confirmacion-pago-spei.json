@@ -1,0 +1,56 @@
+{
+  "name": "Confirmación de Pago SPEI",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "confirmar-pago",
+        "options": {}
+      },
+      "id": "278e34f6-8c4d-44a3-b939-f53833bba65b",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ],
+      "webhookId": "9b16ea98-5c02-4fb8-8f81-5c8c56e2978a"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.body.order.shippingAddress.customer.email }}",
+        "subject": "={{ '¡Pago Confirmado! Tu pedido #' + $json.body.order.id + ' está en proceso' }}",
+        "message": "={{ '<div style=\"font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;\"><h2 style=\"color: #d97706;\">¡Pago Confirmado! 🎉</h2><p>Hola <strong>' + $json.body.order.shippingAddress.customer.name + '</strong>,</p><p>Hemos validado exitosamente tu transferencia SPEI por <strong>$' + $json.body.order.totalAmount + ' MXN</strong> para el pedido <strong>#' + $json.body.order.id + '</strong>.</p><p>Tu pedido ya está en proceso y pronto te notificaremos cuando sea enviado a la siguiente dirección:</p><div style=\"background-color: #f3f4f6; padding: 15px; border-radius: 8px;\">' + $json.body.order.shippingAddress.customer.street + ' ' + $json.body.order.shippingAddress.customer.number + '<br>Col. ' + $json.body.order.shippingAddress.customer.neighborhood + ', C.P. ' + $json.body.order.shippingAddress.customer.zip + '<br>' + $json.body.order.shippingAddress.customer.city + ', ' + $json.body.order.shippingAddress.customer.state + '</div><p>¡Gracias por tu compra en El Rincón de Brandy!</p></div>' }}",
+        "appendAttribution": false
+      },
+      "id": "e2a3c1f5-1b2c-4f7a-8b8a-9c8b7a6d5c4b",
+      "name": "Gmail",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        480,
+        300
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "f7823ab2-4b2a-4c2d-9e1a-8c9b7a6d5c4b"
+}
