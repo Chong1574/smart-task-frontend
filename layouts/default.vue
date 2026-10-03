@@ -101,10 +101,8 @@ const navItems = computed(() => {
     { name: 'El Bazar', path: '/bazar' },
     { name: 'El Estudio', path: '/estudio' },
     { name: 'Protección', path: 'https://arveck.com', external: true },
+    { name: 'Task-man', path: '/taskman' },
   ]
-  if (authStore.isAuthenticated) {
-    items.push({ name: 'Task-man', path: '/taskman' })
-  }
   return items
 })
 </script>
