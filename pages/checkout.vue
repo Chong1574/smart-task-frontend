@@ -54,6 +54,16 @@
               </select>
               <input v-else v-model="form.neighborhood" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. Centro Histórico">
             </div>
+            
+            <div class="space-y-2">
+              <label class="text-sm font-medium">Referencias (Opcional)</label>
+              <input v-model="form.reference" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. Entre calle X y calle Y, casa color azul">
+            </div>
+            
+            <div class="space-y-2">
+              <label class="text-sm font-medium">Empresa (Opcional)</label>
+              <input v-model="form.company" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. Mi Negocio S.A.">
+            </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="space-y-2">
@@ -244,7 +254,9 @@ const form = useLocalStorage('checkout-form', {
   neighborhood: '',
   zip: '',
   city: '',
-  state: ''
+  state: '',
+  reference: '',
+  company: ''
 });
 
 const neighborhoodOptions = ref<string[]>([]);
