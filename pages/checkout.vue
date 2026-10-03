@@ -199,7 +199,7 @@
           <div class="flex justify-between pt-1">
             <span class="text-muted-foreground">Monto exacto:</span>
             <span class="font-bold text-lg text-green-600 dark:text-green-400">
-              {{ formatPrice(cart.totalPrice + (selectedShipping?.price || 0)) }}
+              {{ formatPrice(finalTotal) }}
             </span>
           </div>
         </div>
@@ -414,6 +414,7 @@ async function calculateShipping() {
 const isSubmitting = ref(false);
 const orderSuccess = ref(false);
 const clabeInfo = ref('');
+const finalTotal = ref(0);
 
 async function confirmOrder() {
   isSubmitting.value = true;
@@ -422,6 +423,7 @@ async function confirmOrder() {
 
   try {
     const orderValue = cart.totalPrice + (selectedShipping.value?.price || 0);
+    finalTotal.value = orderValue;
     const orderItems = cart.items.map(i => ({
       item_id: i.id,
       item_name: i.title,
