@@ -80,6 +80,10 @@
           </div>
 
           <div v-if="step >= 2" class="space-y-3">
+            <div v-if="debugInfo" class="p-3 bg-red-900/20 text-red-400 border border-red-900 rounded-lg text-xs break-words">
+              {{ debugInfo }}
+            </div>
+            
             <label v-for="option in shippingOptions" :key="option.id" class="flex items-center justify-between p-4 rounded-xl border border-border cursor-pointer hover:border-primary transition-colors" :class="selectedShipping?.id === option.id ? 'border-primary bg-primary/5' : ''">
               <div class="flex items-center gap-3">
                 <input type="radio" :value="option" v-model="selectedShipping" class="accent-primary" />
@@ -229,6 +233,7 @@ onMounted(() => {
 });
 
 const step = ref(1);
+const debugInfo = ref('');
 
 const form = useLocalStorage('checkout-form', {
   name: '',
@@ -369,6 +374,12 @@ async function calculateShipping() {
     }
 
     const data = await response.json();
+    if (data._debug) {
+      debugInfo.value = data._debug;
+    } else {
+      debugInfo.value = '';
+    }
+    
     shippingOptions.value = data.options || [];
     if (shippingOptions.value.length > 0) {
       selectedShipping.value = shippingOptions.value[0];
