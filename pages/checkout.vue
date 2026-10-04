@@ -6,7 +6,7 @@
       <!-- Columna Izquierda: Pasos de Checkout -->
       <div class="md:col-span-2 space-y-8">
         
-        <!-- Paso 1: InformaciÃ³n de EnvÃ­o -->
+        <!-- Paso 1: InformaciÃ³n de Envío -->
         <section class="bg-card border border-border p-6 rounded-2xl shadow-sm">
           <div class="flex items-center gap-3 mb-6">
             <div class="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">1</div>
@@ -77,12 +77,12 @@
             </div>
 
             <button v-if="step === 1" @click="calculateShipping" :disabled="isCalculating" class="mt-4 bg-primary text-primary-foreground px-6 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50">
-              {{ isCalculating ? 'Cotizando...' : 'Continuar a EnvÃ­o' }}
+              {{ isCalculating ? 'Cotizando...' : 'Continuar a Envío' }}
             </button>
           </div>
         </section>
 
-        <!-- Paso 2: Opciones de EnvÃ­o -->
+        <!-- Paso 2: Opciones de Envío -->
         <section :class="['bg-card border border-border p-6 rounded-2xl shadow-sm transition-opacity duration-300', step < 2 ? 'opacity-50 pointer-events-none' : '']">
           <div class="flex items-center gap-3 mb-6">
             <div class="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">2</div>
@@ -158,7 +158,7 @@
               <span class="font-medium">{{ formatPrice(cart.totalPrice) }}</span>
             </div>
             <div v-if="selectedShipping" class="flex justify-between">
-              <span class="text-muted-foreground">EnvÃ­o ({{ selectedShipping.name }})</span>
+              <span class="text-muted-foreground">Envío ({{ selectedShipping.name }})</span>
               <span class="font-medium">{{ formatPrice(selectedShipping.price) }}</span>
             </div>
             <div class="border-t border-border pt-2 flex justify-between font-bold text-lg mt-2">
@@ -408,7 +408,7 @@ async function calculateShipping() {
     });
 
     if (!response.ok) {
-      throw new Error('Error al cotizar envÃ­o');
+      throw new Error('Error al cotizar envío');
     }
 
     const data = await response.json();
@@ -418,11 +418,11 @@ async function calculateShipping() {
       selectedShipping.value = shippingOptions.value[0];
       step.value = 2;
     } else {
-      toast.error('No hay opciones de envÃ­o disponibles para tu direcciÃ³n.');
+      toast.error('No hay opciones de envío disponibles para tu dirección.');
     }
   } catch (error) {
-    console.error('Error calculando envÃ­o:', error);
-    toast.error('No pudimos calcular el envÃ­o. Revisa tu cÃ³digo postal e intenta de nuevo.');
+    console.error('Error calculando envío:', error);
+    toast.error('No pudimos calcular el envío. Revisa tu código postal e intenta de nuevo.');
   } finally {
     isCalculating.value = false;
   }
@@ -466,7 +466,7 @@ async function confirmOrder() {
       await new Promise(resolve => setTimeout(resolve, 800)); // fake delay
       
       if (selectedPayment.value === 'card') {
-        toast.info('SimulaciÃ³n: Redirigiendo a pasarela (stripe.com/...)');
+        toast.info('Simulación: Redirigiendo a pasarela (stripe.com/...)');
         // No redirigimos en simulaciÃ³n para no salir de la app
       }
       
