@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="container max-w-4xl mx-auto py-12 px-4">
     <h1 class="text-3xl font-serif font-bold mb-8">Finalizar Pedido</h1>
 
@@ -10,7 +10,7 @@
         <section class="bg-card border border-border p-6 rounded-2xl shadow-sm">
           <div class="flex items-center gap-3 mb-6">
             <div class="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">1</div>
-            <h2 class="text-xl font-semibold">Datos de EnvÃ­o</h2>
+            <h2 class="text-xl font-semibold">Datos de Envío</h2>
           </div>
           
           <div v-if="step >= 1" class="space-y-4">
@@ -86,7 +86,7 @@
         <section :class="['bg-card border border-border p-6 rounded-2xl shadow-sm transition-opacity duration-300', step < 2 ? 'opacity-50 pointer-events-none' : '']">
           <div class="flex items-center gap-3 mb-6">
             <div class="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">2</div>
-            <h2 class="text-xl font-semibold">MÃ©todo de Entrega</h2>
+            <h2 class="text-xl font-semibold">Método de Entrega</h2>
           </div>
 
           <div v-if="step >= 2" class="space-y-3">
@@ -111,14 +111,18 @@
         <section :class="['bg-card border border-border p-6 rounded-2xl shadow-sm transition-opacity duration-300', step < 3 ? 'opacity-50 pointer-events-none' : '']">
           <div class="flex items-center gap-3 mb-6">
             <div class="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">3</div>
-            <h2 class="text-xl font-semibold">MÃ©todo de Pago</h2>
+            <h2 class="text-xl font-semibold">Método de Pago</h2>
           </div>
 
           <div v-if="step === 3" class="space-y-3">
-            <label v-for="method in paymentMethods" :key="method.id" class="flex items-center justify-between p-4 rounded-xl border border-border cursor-pointer hover:border-primary transition-colors" :class="selectedPayment === method.id ? 'border-primary bg-primary/5' : ''">
+            <label v-for="method in paymentMethods" :key="method.id" class="flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-colors" 
+              :class="selectedPayment === method.id ? `${method.borderColor} ${method.bgColor}` : 'border-border hover:border-foreground/20'">
               <div class="flex items-center gap-3">
                 <input type="radio" :value="method.id" v-model="selectedPayment" class="accent-primary" />
-                <span class="font-medium text-foreground">{{ method.name }}</span>
+                <div class="flex flex-col">
+                  <span class="font-bold" :class="method.textColor">{{ method.name }}</span>
+                  <span v-if="method.sub" class="text-xs text-muted-foreground">{{ method.sub }}</span>
+                </div>
               </div>
             </label>
 
@@ -347,8 +351,22 @@ const shippingOptions = ref<ShippingOption[]>([]);
 const selectedShipping = ref<ShippingOption | null>(null);
 
 const paymentMethods = [
-  { id: 'mp', name: 'Mercado Pago (Tarjetas, Efectivo y SPEI)' },
-  { id: 'paypal', name: 'PayPal' }
+  { 
+    id: 'mp', 
+    name: 'Mercado Pago', 
+    sub: '(Tarjetas, Efectivo y SPEI)', 
+    textColor: 'text-[#009EE3]', // Azul MP
+    bgColor: 'bg-[#FFE600]/10',  // Amarillo MP sutil
+    borderColor: 'border-[#009EE3]' 
+  },
+  { 
+    id: 'paypal', 
+    name: 'PayPal', 
+    sub: '',
+    textColor: 'text-[#003087]', // Azul PayPal
+    bgColor: 'bg-[#0079C1]/10',
+    borderColor: 'border-[#003087]'
+  }
 ];
 
 watch(form, () => {
@@ -359,7 +377,7 @@ watch(form, () => {
   }
 }, { deep: true });
 
-const selectedPayment = ref('transfer');
+const selectedPayment = ref('mp');
 
 function formatPrice(amount: number) {
   if (amount === 0) return 'Gratis';
@@ -370,7 +388,7 @@ const isCalculating = ref(false);
 
 async function calculateShipping() {
   if (!form.value.name || !form.value.phone || !form.value.email || !form.value.street || !form.value.number || !form.value.neighborhood || !form.value.zip || !form.value.state || !form.value.city) {
-    toast.error('Por favor completa todos los datos de envÃ­o');
+    toast.error('Por favor completa todos los Datos de Envío');
     return;
   }
 
