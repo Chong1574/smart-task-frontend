@@ -57,7 +57,7 @@
 
 
           <NuxtLink 
-            to="/bazar"
+            to="/#contacto"
             class="hidden lg:inline-flex items-center justify-center rounded-full border border-primary text-primary px-6 py-2.5 text-sm font-medium transition-all hover:bg-gradient-to-tr hover:from-[#F2A65A] hover:to-[#E07A5F] hover:text-white hover:border-transparent hover:shadow-lg hover:shadow-primary/20"
           >
             Empezar un Proyecto
