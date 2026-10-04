@@ -468,20 +468,40 @@ async function confirmOrder() {
 
     const data = await response.json();
     
-    if (selectedPayment.value === 'card' && data.checkoutUrl) {
-      toast.success('Redirigiendo a pasarela de pago...', { duration: 2000 });
-      window.location.href = data.checkoutUrl;
-    } else {
-      if (typeof window !== 'undefined' && (window as any).gtag) {
-        (window as any).gtag('event', 'purchase', {
-          transaction_id: data.orderId || `ORD_${Date.now()}`,
-          value: orderValue,
-          currency: 'MXN',
-          items: orderItems
-        });
+    // Tracking
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'purchase', {
+        transaction_id: data.orderId || `ORD_${Date.now()}`,
+        value: orderValue,
+        currency: 'MXN',
+        items: orderItems
+      });
+    }
+
+    if (selectedPayment.value === 'mp' && data.orderId) {
+      toast.info('Generando link de Mercado Pago...', { duration: 2000 });
+      // Llamar al endpoint de MP
+      const mpResponse = await fetch(`${apiUrl}/payment/mp/preference`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId: data.orderId })
+      });
+      const mpData = await mpResponse.json();
+      if (mpData.success && mpData.init_point) {
+        cart.clearCart();
+        window.location.href = mpData.init_point;
+        return;
+      } else {
+        toast.error('Error al conectar con Mercado Pago');
       }
+    } else if (selectedPayment.value === 'paypal' && data.orderId) {
+      toast.info('Conectando con PayPal...', { duration: 2000 });
+      // Aquí iría el redirect o flow de paypal
+      // Como placeholder, lo marcamos como success manual por ahora
       cart.clearCart();
-      clabeInfo.value = data.clabe || '012345678901234567';
+      orderSuccess.value = true;
+    } else {
+      cart.clearCart();
       orderSuccess.value = true;
     }
   } catch (error) {
