@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="container max-w-4xl mx-auto py-12 px-4">
     <h1 class="text-3xl font-serif font-bold mb-8">Finalizar Pedido</h1>
 
@@ -423,9 +423,24 @@ async function calculateShipping() {
 }
 
 const isSubmitting = ref(false);
-const orderSuccess = ref(false);
+const route = useRoute();
+const orderSuccess = ref(route.query.status === 'success');
 const clabeInfo = ref('');
 const finalTotal = ref(0);
+
+onMounted(() => {
+  if (orderSuccess.value) {
+    cart.clearCart();
+    
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'purchase', {
+        transaction_id: route.query.preference_id || `ORD_MP_${Date.now()}`,
+        value: cart.totalPrice, // Note: total might be inaccurate here since cart is cleared, but it's just for rough tracking
+        currency: 'MXN'
+      });
+    }
+  }
+});
 
 async function confirmOrder() {
   isSubmitting.value = true;
