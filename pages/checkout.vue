@@ -6,18 +6,18 @@
       <!-- Columna Izquierda: Pasos de Checkout -->
       <div class="md:col-span-2 space-y-8">
         
-        <!-- Paso 1: Información de Envío -->
+        <!-- Paso 1: InformaciÃ³n de EnvÃ­o -->
         <section class="bg-card border border-border p-6 rounded-2xl shadow-sm">
           <div class="flex items-center gap-3 mb-6">
             <div class="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">1</div>
-            <h2 class="text-xl font-semibold">Datos de Envío</h2>
+            <h2 class="text-xl font-semibold">Datos de EnvÃ­o</h2>
           </div>
           
           <div v-if="step >= 1" class="space-y-4">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="space-y-2">
                 <label class="text-sm font-medium">Nombre Completo</label>
-                <input v-model="form.name" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. Juan López">
+                <input v-model="form.name" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. Juan LÃ³pez">
               </div>
               <div class="space-y-2">
                 <label class="text-sm font-medium">Celular</label>
@@ -27,11 +27,11 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="space-y-2">
-                <label class="text-sm font-medium">Correo Electrónico</label>
+                <label class="text-sm font-medium">Correo ElectrÃ³nico</label>
                 <input v-model="form.email" type="email" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. juan@correo.com">
               </div>
               <div class="space-y-2">
-                <label class="text-sm font-medium">Código Postal</label>
+                <label class="text-sm font-medium">CÃ³digo Postal</label>
                 <input v-model="form.zip" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. 11000">
               </div>
             </div>
@@ -42,7 +42,7 @@
                 <input v-model="form.street" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. Avenida de la Luz">
               </div>
               <div class="col-span-4 space-y-2">
-                <label class="text-sm font-medium">Número</label>
+                <label class="text-sm font-medium">NÃºmero</label>
                 <input v-model="form.number" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. 123 Ext 4">
               </div>
             </div>
@@ -52,7 +52,7 @@
               <select v-if="neighborhoodOptions.length > 0" v-model="form.neighborhood" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary">
                 <option v-for="colonia in neighborhoodOptions" :key="colonia" :value="colonia">{{ colonia }}</option>
               </select>
-              <input v-else v-model="form.neighborhood" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. Centro Histórico">
+              <input v-else v-model="form.neighborhood" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. Centro HistÃ³rico">
             </div>
             
             <div class="space-y-2">
@@ -68,25 +68,25 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="space-y-2">
                 <label class="text-sm font-medium">Estado</label>
-                <input v-model="form.state" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. Querétaro">
+                <input v-model="form.state" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. QuerÃ©taro">
               </div>
               <div class="space-y-2">
                 <label class="text-sm font-medium">Ciudad</label>
-                <input v-model="form.city" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. Querétaro">
+                <input v-model="form.city" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. QuerÃ©taro">
               </div>
             </div>
 
             <button v-if="step === 1" @click="calculateShipping" :disabled="isCalculating" class="mt-4 bg-primary text-primary-foreground px-6 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50">
-              {{ isCalculating ? 'Cotizando...' : 'Continuar a Envío' }}
+              {{ isCalculating ? 'Cotizando...' : 'Continuar a EnvÃ­o' }}
             </button>
           </div>
         </section>
 
-        <!-- Paso 2: Opciones de Envío -->
+        <!-- Paso 2: Opciones de EnvÃ­o -->
         <section :class="['bg-card border border-border p-6 rounded-2xl shadow-sm transition-opacity duration-300', step < 2 ? 'opacity-50 pointer-events-none' : '']">
           <div class="flex items-center gap-3 mb-6">
             <div class="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">2</div>
-            <h2 class="text-xl font-semibold">Método de Entrega</h2>
+            <h2 class="text-xl font-semibold">MÃ©todo de Entrega</h2>
           </div>
 
           <div v-if="step >= 2" class="space-y-3">
@@ -111,7 +111,7 @@
         <section :class="['bg-card border border-border p-6 rounded-2xl shadow-sm transition-opacity duration-300', step < 3 ? 'opacity-50 pointer-events-none' : '']">
           <div class="flex items-center gap-3 mb-6">
             <div class="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">3</div>
-            <h2 class="text-xl font-semibold">Método de Pago</h2>
+            <h2 class="text-xl font-semibold">MÃ©todo de Pago</h2>
           </div>
 
           <div v-if="step === 3" class="space-y-3">
@@ -154,7 +154,7 @@
               <span class="font-medium">{{ formatPrice(cart.totalPrice) }}</span>
             </div>
             <div v-if="selectedShipping" class="flex justify-between">
-              <span class="text-muted-foreground">Envío ({{ selectedShipping.name }})</span>
+              <span class="text-muted-foreground">EnvÃ­o ({{ selectedShipping.name }})</span>
               <span class="font-medium">{{ formatPrice(selectedShipping.price) }}</span>
             </div>
             <div class="border-t border-border pt-2 flex justify-between font-bold text-lg mt-2">
@@ -167,16 +167,16 @@
 
     </div>
     
-    <!-- Pantalla de Éxito -->
+    <!-- Pantalla de Ã‰xito -->
     <div v-else class="max-w-2xl mx-auto bg-card border border-border p-8 rounded-3xl shadow-lg text-center space-y-6 mt-8">
       <div class="w-20 h-20 bg-green-500/10 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
         </svg>
       </div>
-      <h2 class="text-3xl font-bold font-serif">¡Pedido Recibido!</h2>
+      <h2 class="text-3xl font-bold font-serif">Â¡Pedido Recibido!</h2>
       <p class="text-muted-foreground text-lg">
-        Gracias por tu compra. Hemos registrado tu pedido con éxito.
+        Gracias por tu compra. Hemos registrado tu pedido con Ã©xito.
       </p>
 
       <div v-if="selectedPayment === 'transfer'" class="bg-secondary/30 p-6 rounded-2xl border border-border mt-6 text-left">
@@ -190,7 +190,7 @@
           </div>
           <div class="flex justify-between border-b border-border pb-2">
             <span class="text-muted-foreground">Beneficiario:</span>
-            <span class="font-bold">El Rincón de Brandy</span>
+            <span class="font-bold">El RincÃ³n de Brandy</span>
           </div>
           <div class="flex justify-between border-b border-border pb-2">
             <span class="text-muted-foreground">CLABE:</span>
@@ -231,7 +231,7 @@ import { useLocalStorage } from '@vueuse/core';
 const cart = useCartStore();
 const router = useRouter();
 
-// Si el carrito está vacío, regresar al bazar
+// Si el carrito estÃ¡ vacÃ­o, regresar al bazar
 onMounted(() => {
   if (cart.items.length === 0) {
     router.push('/bazar');
@@ -271,16 +271,16 @@ const form = useLocalStorage('checkout-form', {
 const neighborhoodOptions = ref<string[]>([]);
 
 const stateMap: Record<string, string> = {
-  "Queretaro De Arteaga": "Querétaro",
-  "Michoacan De Ocampo": "Michoacán",
+  "Queretaro De Arteaga": "QuerÃ©taro",
+  "Michoacan De Ocampo": "MichoacÃ¡n",
   "Veracruz-Llave": "Veracruz",
   "Coahuila De Zaragoza": "Coahuila",
-  "Estado De Mexico": "Estado de México",
-  "Distrito Federal": "Ciudad de México",
-  "Ciudad De Mexico": "Ciudad de México",
-  "Nuevo Leon": "Nuevo León",
-  "San Luis Potosi": "San Luis Potosí",
-  "Yucatan": "Yucatán"
+  "Estado De Mexico": "Estado de MÃ©xico",
+  "Distrito Federal": "Ciudad de MÃ©xico",
+  "Ciudad De Mexico": "Ciudad de MÃ©xico",
+  "Nuevo Leon": "Nuevo LeÃ³n",
+  "San Luis Potosi": "San Luis PotosÃ­",
+  "Yucatan": "YucatÃ¡n"
 };
 
 watch(() => form.value.zip, async (newZip) => {
@@ -294,7 +294,7 @@ watch(() => form.value.zip, async (newZip) => {
         fetch(`${apiUrl}/shipping/address-info/${newZip}`)
       ]);
 
-      // 1. Obtener Ciudad y Estado precisos desde Google Maps (vía nuestro backend)
+      // 1. Obtener Ciudad y Estado precisos desde Google Maps (vÃ­a nuestro backend)
       if (backendRes.status === 'fulfilled' && backendRes.value.ok) {
         const addrData = await backendRes.value.json();
         if (addrData.city) form.value.city = addrData.city;
@@ -309,12 +309,12 @@ watch(() => form.value.zip, async (newZip) => {
           neighborhoodOptions.value = colonias;
           if (colonias.length > 0) form.value.neighborhood = colonias[0];
 
-          // Fallback por si nuestro backend falló, usamos el estado de Zippopotam
+          // Fallback por si nuestro backend fallÃ³, usamos el estado de Zippopotam
           if (!form.value.state) {
             const rawState = data.places[0].state;
             form.value.state = stateMap[rawState] || rawState;
-            if (form.value.state === 'Ciudad de México' && !form.value.city) {
-              form.value.city = 'Ciudad de México';
+            if (form.value.state === 'Ciudad de MÃ©xico' && !form.value.city) {
+              form.value.city = 'Ciudad de MÃ©xico';
             }
           }
         }
@@ -347,8 +347,7 @@ const shippingOptions = ref<ShippingOption[]>([]);
 const selectedShipping = ref<ShippingOption | null>(null);
 
 const paymentMethods = [
-  { id: 'transfer', name: 'Transferencia Bancaria (SPEI)' },
-  { id: 'card', name: 'Tarjeta de Crédito / Débito' },
+  { id: 'mp', name: 'Mercado Pago (Tarjetas, Efectivo y SPEI)' },
   { id: 'paypal', name: 'PayPal' }
 ];
 
@@ -371,7 +370,7 @@ const isCalculating = ref(false);
 
 async function calculateShipping() {
   if (!form.value.name || !form.value.phone || !form.value.email || !form.value.street || !form.value.number || !form.value.neighborhood || !form.value.zip || !form.value.state || !form.value.city) {
-    toast.error('Por favor completa todos los datos de envío');
+    toast.error('Por favor completa todos los datos de envÃ­o');
     return;
   }
 
@@ -391,7 +390,7 @@ async function calculateShipping() {
     });
 
     if (!response.ok) {
-      throw new Error('Error al cotizar envío');
+      throw new Error('Error al cotizar envÃ­o');
     }
 
     const data = await response.json();
@@ -401,11 +400,11 @@ async function calculateShipping() {
       selectedShipping.value = shippingOptions.value[0];
       step.value = 2;
     } else {
-      toast.error('No hay opciones de envío disponibles para tu dirección.');
+      toast.error('No hay opciones de envÃ­o disponibles para tu direcciÃ³n.');
     }
   } catch (error) {
-    console.error('Error calculando envío:', error);
-    toast.error('No pudimos calcular el envío. Revisa tu código postal e intenta de nuevo.');
+    console.error('Error calculando envÃ­o:', error);
+    toast.error('No pudimos calcular el envÃ­o. Revisa tu cÃ³digo postal e intenta de nuevo.');
   } finally {
     isCalculating.value = false;
   }
@@ -444,13 +443,13 @@ async function confirmOrder() {
     }).catch(() => null); // Catch network errors
 
     if (!response || !response.ok) {
-      console.warn('Backend /checkout/process no disponible. Usando simulación local.');
+      console.warn('Backend /checkout/process no disponible. Usando simulaciÃ³n local.');
       // Simulador local si no hay backend
       await new Promise(resolve => setTimeout(resolve, 800)); // fake delay
       
       if (selectedPayment.value === 'card') {
-        toast.info('Simulación: Redirigiendo a pasarela (stripe.com/...)');
-        // No redirigimos en simulación para no salir de la app
+        toast.info('SimulaciÃ³n: Redirigiendo a pasarela (stripe.com/...)');
+        // No redirigimos en simulaciÃ³n para no salir de la app
       }
       
       if (typeof window !== 'undefined' && (window as any).gtag) {
@@ -493,3 +492,4 @@ async function confirmOrder() {
   }
 }
 </script>
+
