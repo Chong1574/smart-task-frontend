@@ -30,7 +30,7 @@ export const registerPushNotifications = async () => {
             console.log('Push registration success, token: ' + token.value);
             // Send token to our backend
             try {
-                await api.post('/api/notifications/register-device', {
+                await api.post('/notifications/register-device', {
                     token: token.value,
                     platform: Capacitor.getPlatform()
                 });

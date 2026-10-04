@@ -26,7 +26,7 @@ export const useNotificationStore = defineStore('notifications', () => {
     if (!authStore.isAuthenticated) return
     loading.value = true
     try {
-      const response = await api.get('/api/notifications')
+      const response = await api.get('/notifications')
       if (response.data?.success) {
         notifications.value = response.data.data
       }
@@ -39,7 +39,7 @@ export const useNotificationStore = defineStore('notifications', () => {
 
   async function markAsRead(id: number) {
     try {
-      const response = await api.put(`/api/notifications/${id}/mark-read`)
+      const response = await api.put(`/notifications/${id}/mark-read`)
       if (response.data?.success) {
         const notif = notifications.value.find(n => n.id === id)
         if (notif) {
@@ -53,7 +53,7 @@ export const useNotificationStore = defineStore('notifications', () => {
 
   async function markAllAsRead() {
     try {
-      const response = await api.put('/api/notifications/mark-all-read')
+      const response = await api.put('/notifications/mark-all-read')
       if (response.data?.success) {
         notifications.value.forEach(n => n.isRead = true)
         toast.success('Todas las notificaciones marcadas como leídas')
