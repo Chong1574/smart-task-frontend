@@ -27,11 +27,11 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="space-y-2">
-                <label class="text-sm font-medium">Correo ElectrÃ³nico</label>
+                <label class="text-sm font-medium">Correo Electrónico</label>
                 <input v-model="form.email" type="email" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. juan@correo.com">
               </div>
               <div class="space-y-2">
-                <label class="text-sm font-medium">CÃ³digo Postal</label>
+                <label class="text-sm font-medium">Código Postal</label>
                 <input v-model="form.zip" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. 11000">
               </div>
             </div>
@@ -42,7 +42,7 @@
                 <input v-model="form.street" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. Avenida de la Luz">
               </div>
               <div class="col-span-4 space-y-2">
-                <label class="text-sm font-medium">NÃºmero</label>
+                <label class="text-sm font-medium">Número</label>
                 <input v-model="form.number" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. 123 Ext 4">
               </div>
             </div>
@@ -115,12 +115,12 @@
           </div>
 
           <div v-if="step === 3" class="space-y-3">
-            <label v-for="method in paymentMethods" :key="method.id" class="flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-colors" 
-              :class="selectedPayment === method.id ? `${method.borderColor} ${method.bgColor}` : 'border-border hover:border-foreground/20'">
+            <label v-for="method in paymentMethods" :key="method.id" class="flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-colors hover:border-primary" 
+              :class="selectedPayment === method.id ? 'border-primary bg-primary/5' : 'border-border'">
               <div class="flex items-center gap-3">
                 <input type="radio" :value="method.id" v-model="selectedPayment" class="accent-primary" />
                 <div class="flex flex-col">
-                  <span class="font-bold" :class="method.textColor">{{ method.name }}</span>
+                  <span class="font-medium text-foreground">{{ method.name }}</span>
                   <span v-if="method.sub" class="text-xs text-muted-foreground">{{ method.sub }}</span>
                 </div>
               </div>
@@ -171,16 +171,16 @@
 
     </div>
     
-    <!-- Pantalla de Ã‰xito -->
+    <!-- Pantalla de Éxito -->
     <div v-else class="max-w-2xl mx-auto bg-card border border-border p-8 rounded-3xl shadow-lg text-center space-y-6 mt-8">
       <div class="w-20 h-20 bg-green-500/10 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
         </svg>
       </div>
-      <h2 class="text-3xl font-bold font-serif">Â¡Pedido Recibido!</h2>
+<h2 class="text-3xl font-bold font-serif">¡Pedido Recibido!</h2>
       <p class="text-muted-foreground text-lg">
-        Gracias por tu compra. Hemos registrado tu pedido con Ã©xito.
+        Gracias por tu compra. Hemos registrado tu pedido con éxito.
       </p>
 
       <div v-if="selectedPayment === 'transfer'" class="bg-secondary/30 p-6 rounded-2xl border border-border mt-6 text-left">
@@ -279,9 +279,9 @@ const stateMap: Record<string, string> = {
   "Michoacan De Ocampo": "MichoacÃ¡n",
   "Veracruz-Llave": "Veracruz",
   "Coahuila De Zaragoza": "Coahuila",
-  "Estado De Mexico": "Estado de MÃ©xico",
-  "Distrito Federal": "Ciudad de MÃ©xico",
-  "Ciudad De Mexico": "Ciudad de MÃ©xico",
+  "Estado De Mexico": "Estado de México",
+  "Distrito Federal": "Ciudad de México",
+  "Ciudad De Mexico": "Ciudad de México",
   "Nuevo Leon": "Nuevo LeÃ³n",
   "San Luis Potosi": "San Luis PotosÃ­",
   "Yucatan": "YucatÃ¡n"
@@ -298,7 +298,7 @@ watch(() => form.value.zip, async (newZip) => {
         fetch(`${apiUrl}/shipping/address-info/${newZip}`)
       ]);
 
-      // 1. Obtener Ciudad y Estado precisos desde Google Maps (vÃ­a nuestro backend)
+      // 1. Obtener Ciudad y Estado precisos desde Google Maps (vía nuestro backend)
       if (backendRes.status === 'fulfilled' && backendRes.value.ok) {
         const addrData = await backendRes.value.json();
         if (addrData.city) form.value.city = addrData.city;
@@ -313,12 +313,12 @@ watch(() => form.value.zip, async (newZip) => {
           neighborhoodOptions.value = colonias;
           if (colonias.length > 0) form.value.neighborhood = colonias[0];
 
-          // Fallback por si nuestro backend fallÃ³, usamos el estado de Zippopotam
+          // Fallback por si nuestro backend falló, usamos el estado de Zippopotam
           if (!form.value.state) {
             const rawState = data.places[0].state;
             form.value.state = stateMap[rawState] || rawState;
-            if (form.value.state === 'Ciudad de MÃ©xico' && !form.value.city) {
-              form.value.city = 'Ciudad de MÃ©xico';
+            if (form.value.state === 'Ciudad de México' && !form.value.city) {
+              form.value.city = 'Ciudad de México';
             }
           }
         }
@@ -354,18 +354,12 @@ const paymentMethods = [
   { 
     id: 'mp', 
     name: 'Mercado Pago', 
-    sub: '(Tarjetas, Efectivo y SPEI)', 
-    textColor: 'text-[#009EE3]', // Azul MP
-    bgColor: 'bg-[#FFE600]/10',  // Amarillo MP sutil
-    borderColor: 'border-[#009EE3]' 
+    sub: '(Tarjetas, Efectivo y SPEI)'
   },
   { 
     id: 'paypal', 
     name: 'PayPal', 
-    sub: '',
-    textColor: 'text-[#003087]', // Azul PayPal
-    bgColor: 'bg-[#0079C1]/10',
-    borderColor: 'border-[#003087]'
+    sub: ''
   }
 ];
 
