@@ -455,27 +455,7 @@ async function confirmOrder() {
     }).catch(() => null); // Catch network errors
 
     if (!response || !response.ok) {
-      console.warn('Backend /checkout/process no disponible. Usando simulaciÃ³n local.');
-      // Simulador local si no hay backend
-      await new Promise(resolve => setTimeout(resolve, 800)); // fake delay
-      
-      if (selectedPayment.value === 'card') {
-        toast.info('Simulación: Redirigiendo a pasarela (stripe.com/...)');
-        // No redirigimos en simulaciÃ³n para no salir de la app
-      }
-      
-      if (typeof window !== 'undefined' && (window as any).gtag) {
-        (window as any).gtag('event', 'purchase', {
-          transaction_id: `SIM_${Date.now()}`,
-          value: orderValue,
-          currency: 'MXN',
-          items: orderItems
-        });
-      }
-      cart.clearCart();
-      clabeInfo.value = '012345678901234567';
-      orderSuccess.value = true;
-      return;
+      throw new Error('No se pudo conectar con el servidor.');
     }
 
     const data = await response.json();
