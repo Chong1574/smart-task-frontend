@@ -68,11 +68,11 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="space-y-2">
                 <label class="text-sm font-medium">Estado</label>
-                <input v-model="form.state" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. QuerÃ©taro">
+                <input v-model="form.state" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. Querétaro">
               </div>
               <div class="space-y-2">
                 <label class="text-sm font-medium">Ciudad</label>
-                <input v-model="form.city" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. QuerÃ©taro">
+                <input v-model="form.city" type="text" class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. Querétaro">
               </div>
             </div>
 
@@ -171,7 +171,7 @@
 
     </div>
     
-    <!-- Pantalla de Éxito -->
+    <!-- Pantalla de éxito -->
     <div v-else class="max-w-2xl mx-auto bg-card border border-border p-8 rounded-3xl shadow-lg text-center space-y-6 mt-8">
       <div class="w-20 h-20 bg-green-500/10 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -275,16 +275,16 @@ const form = useLocalStorage('checkout-form', {
 const neighborhoodOptions = ref<string[]>([]);
 
 const stateMap: Record<string, string> = {
-  "Queretaro De Arteaga": "QuerÃ©taro",
-  "Michoacan De Ocampo": "MichoacÃ¡n",
+  "Queretaro De Arteaga": "Querétaro",
+  "Michoacan De Ocampo": "Michoacán",
   "Veracruz-Llave": "Veracruz",
   "Coahuila De Zaragoza": "Coahuila",
   "Estado De Mexico": "Estado de México",
   "Distrito Federal": "Ciudad de México",
   "Ciudad De Mexico": "Ciudad de México",
-  "Nuevo Leon": "Nuevo LeÃ³n",
-  "San Luis Potosi": "San Luis PotosÃ­",
-  "Yucatan": "YucatÃ¡n"
+  "Nuevo Leon": "Nuevo León",
+  "San Luis Potosi": "San Luis Potosí",
+  "Yucatan": "Yucatán"
 };
 
 watch(() => form.value.zip, async (newZip) => {
