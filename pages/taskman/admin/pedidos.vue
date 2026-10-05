@@ -30,10 +30,10 @@
               Sin pedidos
             </div>
             
-            <div v-for="pedido in pedidosByStatus(col.id)" :key="pedido.id" class="bg-card border border-border/50 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow group">
+            <div v-for="pedido in pedidosByStatus(col.id)" :key="pedido.id" @click="openDetails(pedido)" class="bg-card border border-border/50 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow group cursor-pointer">
               <div class="flex justify-between items-start mb-2">
                 <h3 class="font-bold text-foreground line-clamp-1" :title="pedido.cliente">{{ pedido.cliente }}</h3>
-                <button @click="confirmDelete(pedido)" class="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity p-1">
+                <button @click.stop="confirmDelete(pedido)" class="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity p-1">
                   <Trash2 class="w-4 h-4" />
                 </button>
               </div>
@@ -52,17 +52,17 @@
               </div>
 
               <div v-if="pedido.paymentStatus === 'UNPAID'" class="mb-3">
-                <button @click="pedidosStore.validatePayment(pedido.id!)" class="w-full text-xs bg-amber-500 hover:bg-amber-600 text-white py-1.5 rounded-lg font-semibold transition-colors flex items-center justify-center gap-1">
+                <button @click.stop="pedidosStore.validatePayment(pedido.id!)" class="w-full text-xs bg-amber-500 hover:bg-amber-600 text-white py-1.5 rounded-lg font-semibold transition-colors flex items-center justify-center gap-1">
                    <CheckCircle2 class="w-3 h-3" /> Validar Pago SPEI
                 </button>
               </div>
 
               <!-- Acciones de estado -->
               <div class="flex gap-2 mt-auto pt-3 border-t border-border/40">
-                <button v-if="col.prev" @click="pedidosStore.updatePedidoStatus(pedido.id!, col.prev)" class="flex-1 flex justify-center items-center py-1.5 rounded-lg bg-secondary text-muted-foreground hover:text-foreground transition-colors" title="Retroceder">
+                <button v-if="col.prev" @click.stop="pedidosStore.updatePedidoStatus(pedido.id!, col.prev)" class="flex-1 flex justify-center items-center py-1.5 rounded-lg bg-secondary text-muted-foreground hover:text-foreground transition-colors" title="Retroceder">
                   <ArrowLeft class="w-4 h-4" />
                 </button>
-                <button v-if="col.next" @click="pedidosStore.updatePedidoStatus(pedido.id!, col.next)" class="flex-1 flex justify-center items-center py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground transition-colors font-medium text-sm gap-1">
+                <button v-if="col.next" @click.stop="pedidosStore.updatePedidoStatus(pedido.id!, col.next)" class="flex-1 flex justify-center items-center py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground transition-colors font-medium text-sm gap-1">
                   Avanzar <ArrowRight class="w-4 h-4" />
                 </button>
               </div>
@@ -86,7 +86,15 @@
           </div>
           <div>
             <label class="block text-sm font-medium mb-1">Descripción del Pedido</label>
-            <textarea v-model="form.descripcion" required rows="3" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none" placeholder="Detalles de impresión, color, material..."></textarea>
+            <textarea v-model="form.descripcion" required rows="2" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none" placeholder="Detalles de impresión, color, material..."></textarea>
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Piezas / Cantidad</label>
+            <input v-model="form.piezas" type="text" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none" placeholder="Ej. 2 llaveros, 1 figura" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Dirección de Envío</label>
+            <input v-model="form.direccion" type="text" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none" placeholder="Calle, Número, Colonia, C.P." />
           </div>
           <div>
             <label class="block text-sm font-medium mb-1">Precio ($)</label>
@@ -101,6 +109,44 @@
             </button>
           </div>
         </form>
+      </div>
+    </div>
+    <!-- Details Modal -->
+    <div v-if="showDetailsModal && selectedPedido" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
+      <div class="bg-card border border-border rounded-3xl p-6 w-full max-w-md shadow-2xl relative">
+        <button @click="showDetailsModal = false" class="absolute top-4 right-4 p-2 text-muted-foreground hover:bg-secondary rounded-full transition-colors">
+          <X class="w-5 h-5" />
+        </button>
+        <h2 class="text-2xl font-bold mb-1">{{ selectedPedido.cliente }}</h2>
+        <span class="text-sm text-muted-foreground uppercase tracking-wider font-semibold">{{ selectedPedido.estado }}</span>
+        
+        <div class="mt-6 space-y-4">
+          <div>
+            <h4 class="text-sm font-semibold text-muted-foreground">Descripción</h4>
+            <p class="text-foreground mt-1 whitespace-pre-wrap">{{ selectedPedido.descripcion }}</p>
+          </div>
+          <div v-if="selectedPedido.piezas">
+            <h4 class="text-sm font-semibold text-muted-foreground">Piezas</h4>
+            <p class="text-foreground mt-1">{{ selectedPedido.piezas }}</p>
+          </div>
+          <div v-if="selectedPedido.direccion">
+            <h4 class="text-sm font-semibold text-muted-foreground">Dirección de Envío</h4>
+            <p class="text-foreground mt-1">{{ selectedPedido.direccion }}</p>
+          </div>
+          <div v-if="selectedPedido.precio">
+            <h4 class="text-sm font-semibold text-muted-foreground">Precio y Pago</h4>
+            <p class="text-foreground mt-1 font-bold">
+              ${{ selectedPedido.precio }} - 
+              <span :class="selectedPedido.paymentStatus === 'PAID' ? 'text-blue-500' : 'text-amber-500'">
+                {{ selectedPedido.paymentStatus === 'PAID' ? 'Pagado' : 'Por Pagar' }}
+              </span>
+            </p>
+          </div>
+        </div>
+        
+        <div class="mt-8 flex justify-end">
+          <button @click="showDetailsModal = false" class="bg-secondary text-foreground px-6 py-2 rounded-xl font-bold hover:bg-secondary/80 transition-colors">Cerrar</button>
+        </div>
       </div>
     </div>
   </div>
@@ -130,11 +176,21 @@ const authStore = useAuthStore();
 const router = useRouter();
 
 const showAddModal = ref(false);
+const showDetailsModal = ref(false);
+const selectedPedido = ref<PedidoImpresion | null>(null);
+
 const form = ref({
   cliente: '',
   descripcion: '',
+  piezas: '',
+  direccion: '',
   precio: '' as number | ''
 });
+
+const openDetails = (pedido: PedidoImpresion) => {
+  selectedPedido.value = pedido;
+  showDetailsModal.value = true;
+};
 
 type PedidoStatus = PedidoImpresion['estado'];
 
@@ -167,6 +223,8 @@ const submitPedido = async () => {
   const newPedido: PedidoImpresion = {
     cliente: form.value.cliente,
     descripcion: form.value.descripcion,
+    piezas: form.value.piezas || undefined,
+    direccion: form.value.direccion || undefined,
     precio: form.value.precio ? Number(form.value.precio) : undefined,
     estado: 'pendiente'
   };
@@ -174,7 +232,7 @@ const submitPedido = async () => {
   const ok = await pedidosStore.addPedido(newPedido);
   if (ok) {
     showAddModal.value = false;
-    form.value = { cliente: '', descripcion: '', precio: '' };
+    form.value = { cliente: '', descripcion: '', piezas: '', direccion: '', precio: '' };
   }
 };
 

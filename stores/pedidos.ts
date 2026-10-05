@@ -8,6 +8,8 @@ export interface PedidoImpresion {
     descripcion: string;
     archivos?: string;
     precio?: number;
+    direccion?: string;
+    piezas?: string;
     estado: 'pendiente' | 'imprimiendo' | 'terminados' | 'enviados' | 'entregados';
     fechaCreacion?: string;
     fechaActualizacion?: string;
