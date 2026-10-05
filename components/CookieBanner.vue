@@ -27,30 +27,37 @@ import { ref, onMounted } from 'vue'
 
 const hasConsented = ref(true)
 
-// Destructure initialize from useGtag
-const { initialize } = useGtag()
-
-const enableClarity = () => {
+const enableAnalytics = () => {
   if (typeof window !== 'undefined') {
+    // Microsoft Clarity
     (function(c,l,a,r,i,t,y){
         c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
         t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
         y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
     })(window, document, "clarity", "script", "ysm453nrza");
-  }
-}
 
-const grantConsent = () => {
-  // initialize gtag
-  initialize()
+    // Google Analytics
+    const script = document.createElement('script')
+    script.src = 'https://www.googletagmanager.com/gtag/js?id=G-T142ZNLG0C'
+    script.async = true
+    document.head.appendChild(script)
+
+    const inlineScript = document.createElement('script')
+    inlineScript.innerHTML = `
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-T142ZNLG0C');
+    `
+    document.head.appendChild(inlineScript)
+  }
 }
 
 onMounted(() => {
   const consent = localStorage.getItem('cookie-consent')
   if (consent === 'accepted') {
     hasConsented.value = true
-    grantConsent()
-    enableClarity()
+    enableAnalytics()
   } else if (consent === 'rejected') {
     hasConsented.value = true
   } else {
@@ -61,8 +68,7 @@ onMounted(() => {
 const acceptCookies = () => {
   localStorage.setItem('cookie-consent', 'accepted')
   hasConsented.value = true
-  grantConsent()
-  enableClarity()
+  enableAnalytics()
 }
 
 const rejectCookies = () => {
