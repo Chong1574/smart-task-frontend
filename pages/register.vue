@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="min-h-[80vh] flex flex-col items-center justify-center p-4">
     <div class="w-full max-w-md bg-card p-8 rounded-3xl border border-border/50 shadow-xl">
       <div class="text-center mb-8">
@@ -8,26 +8,21 @@
 
       <form v-if="!submitted" @submit.prevent="handleRegister" class="space-y-6">
         <div>
-          <label class="block text-sm font-medium mb-2">Correo electrónico</label>
+          <label class="block text-sm font-medium mb-2">Correo electrÃ³nico</label>
           <input v-model="email" type="email" required autocomplete="email"
             class="w-full px-4 py-3 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
             placeholder="tu@correo.com" />
         </div>
         <div>
-          <label class="block text-sm font-medium mb-2">Contraseña</label>
+          <label class="block text-sm font-medium mb-2">ContraseÃ±a</label>
           <input v-model="password" type="password" required minlength="8" autocomplete="new-password"
             class="w-full px-4 py-3 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
-            placeholder="Mínimo 8 caracteres" />
+            placeholder="MÃ­nimo 8 caracteres" />
         </div>
 
         <TurnstileWidget @verified="onTurnstileVerified" />
 
-        <div class="flex items-start gap-2 text-sm text-muted-foreground">
-          <input type="checkbox" id="terms" v-model="acceptedTerms" @change="authStore.error = null" class="mt-1" />
-          <label for="terms">
-            Acepto los <NuxtLink to="/terminos" class="text-primary hover:underline">términos y condiciones</NuxtLink> y la <NuxtLink to="/privacidad" class="text-primary hover:underline">política de privacidad</NuxtLink>.
-          </label>
-        </div>
+        <div class="flex flex-col gap-3 text-sm text-muted-foreground"><div class="flex items-start gap-2"><input type="checkbox" id="terms" v-model="acceptedTerms" @change="authStore.error = null" class="mt-1" /><label for="terms">Acepto los <NuxtLink to="/terminos" class="text-primary hover:underline">términos y condiciones</NuxtLink>.</label></div><p class="text-xs">Al registrarte, confirmas que has leído nuestra <NuxtLink to="/privacidad" class="text-primary hover:underline">política de privacidad</NuxtLink>.</p></div>
 
         <p v-if="authStore.error" class="text-sm text-destructive">{{ authStore.error }}</p>
 
@@ -37,8 +32,8 @@
         </button>
 
         <p class="text-center text-sm text-muted-foreground">
-          ¿Ya tienes cuenta?
-          <NuxtLink to="/login" class="text-primary font-medium hover:underline">Inicia sesión</NuxtLink>
+          Â¿Ya tienes cuenta?
+          <NuxtLink to="/login" class="text-primary font-medium hover:underline">Inicia sesiÃ³n</NuxtLink>
         </p>
 
         <div class="relative flex items-center py-2">
@@ -74,11 +69,11 @@
       </form>
 
       <div v-else class="text-center space-y-4">
-        <div class="text-4xl">📬</div>
+        <div class="text-4xl">ðŸ“¬</div>
         <h2 class="font-serif text-xl font-bold">Revisa tu correo</h2>
         <p class="text-muted-foreground text-sm">
-          Te enviamos un enlace de verificación a <strong>{{ email }}</strong>.
-          Haz clic en él para activar tu cuenta.
+          Te enviamos un enlace de verificaciÃ³n a <strong>{{ email }}</strong>.
+          Haz clic en Ã©l para activar tu cuenta.
         </p>
       </div>
     </div>
@@ -109,7 +104,7 @@ const handleRegister = async () => {
 
 const handleGoogleLogin = () => {
   if (!acceptedTerms.value) {
-    authStore.error = 'Debes aceptar los términos y condiciones para continuar.'
+    authStore.error = 'Debes aceptar los tÃ©rminos y condiciones para continuar.'
     return
   }
   window.location.href = `${API_URL}/auth/google`
@@ -117,9 +112,10 @@ const handleGoogleLogin = () => {
 
 const handleMicrosoftLogin = () => {
   if (!acceptedTerms.value) {
-    authStore.error = 'Debes aceptar los términos y condiciones para continuar.'
+    authStore.error = 'Debes aceptar los tÃ©rminos y condiciones para continuar.'
     return
   }
   window.location.href = `${API_URL}/auth/microsoft`
 }
 </script>
+

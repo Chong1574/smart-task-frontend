@@ -20,6 +20,7 @@ useHead({
     </NuxtLayout>
     <Toaster position="top-right" rich-colors close-button />
     <ConfirmDialog />
+    <CookieBanner />
   </div>
 </template>
 

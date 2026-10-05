@@ -5,6 +5,14 @@
       
       <p>Última actualización: {{ new Date().toLocaleDateString('es-MX') }}</p>
 
+      <h2 class="text-2xl font-serif font-bold text-[#8E5E44] mt-8">Identidad del Responsable</h2>
+      <p>
+        Razón Social: Taskman Corp<br>
+        NIF/CIF: X0000000X<br>
+        Domicilio: Calle Falsa 123, Ciudad<br>
+        Email de contacto: soporte@taskman.com
+      </p>
+
       <h2 class="text-2xl font-serif font-bold text-[#8E5E44] mt-8">1. Aceptación de los Términos</h2>
       <p>Al acceder o utilizar Taskman ("el Servicio"), aceptas estar sujeto a estos Términos de Servicio. Si no estás de acuerdo con alguna parte de los términos, no podrás acceder al Servicio.</p>
 
@@ -20,7 +28,10 @@
       <h2 class="text-2xl font-serif font-bold text-[#8E5E44] mt-8">5. Tienda, Pagos y Ciberseguridad</h2>
       <p>Al utilizar nuestra sección de tienda o realizar un pedido, aceptas proporcionar información veraz para el procesamiento y envío. Los pagos electrónicos son procesados por entidades financieras de terceros acreditadas. <strong>No guardamos información de tarjetas de crédito o débito</strong>. Tu información de pago se usa únicamente para procesar el cobro legítimo de tus pedidos y prevenir actividades fraudulentas. Nos comprometemos a mantener altos estándares de ciberseguridad para proteger la integridad de tus datos durante el checkout.</p>
 
-      <h2 class="text-2xl font-serif font-bold text-[#8E5E44] mt-8">6. Cambios en los Términos</h2>
+      <h2 class="text-2xl font-serif font-bold text-[#8E5E44] mt-8">6. Desistimiento y Devoluciones</h2>
+      <p>Para clientes residentes en la Unión Europea o jurisdicciones aplicables, cuentas con un derecho de desistimiento de 14 días naturales desde la recepción de tu producto físico. Para productos digitales, este derecho expira en cuanto el contenido ha comenzado a descargarse o ejecutarse con tu previo consentimiento expreso.</p>
+
+      <h2 class="text-2xl font-serif font-bold text-[#8E5E44] mt-8">7. Cambios en los Términos</h2>
       <p>Nos reservamos el derecho, a nuestra sola discreción, de modificar o reemplazar estos Términos en cualquier momento. Al continuar accediendo o utilizando nuestro Servicio después de que esas revisiones entren en vigencia, aceptas estar sujeto a los términos revisados.</p>
 
       <div class="mt-12 pt-8 border-t border-gray-200">

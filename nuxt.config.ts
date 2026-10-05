@@ -63,31 +63,14 @@ export default defineNuxtConfig({
         { rel: 'icon', type: 'image/png', href: '/logo.png' },
         { rel: 'canonical', href: SITE_URL }
       ],
-      script: [
-        {
-          async: true,
-          src: 'https://www.googletagmanager.com/gtag/js?id=G-T142ZNLG0C'
-        },
-        {
-          children: `window.dataLayer = window.dataLayer || [];
-function gtag(){dataLayer.push(arguments);}
-gtag('js', new Date());
-gtag('config', 'G-T142ZNLG0C');`
-        },
-        {
-          children: `(function(c,l,a,r,i,t,y){
-    c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-    t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-    y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-})(window, document, "clarity", "script", "ysm453nrza");`
-        }
-      ]
+      script: []
     },
     pageTransition: { name: 'page', mode: 'out-in' },
     layoutTransition: { name: 'layout', mode: 'out-in' }
   },
   gtag: {
     id: 'G-T142ZNLG0C',
+    initialConsent: false,
     config: {
       page_title: 'El Rincón de Brandy'
     }
