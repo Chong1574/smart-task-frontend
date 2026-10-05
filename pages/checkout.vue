@@ -436,10 +436,14 @@ onMounted(() => {
     if (typeof window !== 'undefined' && (window as any).gtag) {
       (window as any).gtag('event', 'purchase', {
         transaction_id: route.query.preference_id || `ORD_MP_${Date.now()}`,
-        value: cart.totalPrice, // Note: total might be inaccurate here since cart is cleared, but it's just for rough tracking
+        value: cart.totalPrice,
         currency: 'MXN'
       });
     }
+  } else if (statusQuery === 'failure' || (Array.isArray(statusQuery) && statusQuery.includes('failure')) || route.query.status === 'rejected') {
+    toast.error('Tu pago fue rechazado o no se pudo completar. Por favor intenta de nuevo con otro método de pago.');
+  } else if (statusQuery === 'pending' || (Array.isArray(statusQuery) && statusQuery.includes('pending'))) {
+    toast.info('Tu pago está pendiente. Te avisaremos en cuanto se acredite.');
   }
 });
 
