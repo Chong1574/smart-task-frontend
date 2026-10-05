@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="container max-w-4xl mx-auto py-12 px-4">
     <h1 class="text-3xl font-serif font-bold mb-8">Finalizar Pedido</h1>
 

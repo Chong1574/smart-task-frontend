@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="min-h-[80vh] flex flex-col items-center justify-center p-4">
     <div class="w-full max-w-md bg-card p-8 rounded-3xl border border-border/50 shadow-xl">
       <div class="text-center mb-8">

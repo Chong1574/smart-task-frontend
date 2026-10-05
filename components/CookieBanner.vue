@@ -24,9 +24,11 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-const hasConsented = ref(true) // assume true to prevent flash, then check in mount
 
-const { grantConsent } = useGtag()
+const hasConsented = ref(true)
+
+// Destructure initialize from useGtag
+const { initialize } = useGtag()
 
 const enableClarity = () => {
   if (typeof window !== 'undefined') {
@@ -36,6 +38,11 @@ const enableClarity = () => {
         y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
     })(window, document, "clarity", "script", "ysm453nrza");
   }
+}
+
+const grantConsent = () => {
+  // initialize gtag
+  initialize()
 }
 
 onMounted(() => {
