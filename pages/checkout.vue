@@ -14,8 +14,8 @@
           <div>
             <h4 class="font-bold text-sm mb-1">Producción Bajo Demanda 🖨️</h4>
             <p class="text-xs opacity-90 leading-relaxed">
-              Tus piezas serán fabricadas en 3D especialmente para ti al confirmar la compra. 
-              <strong>El tiempo de fabricación ya está incluido</strong> en los tiempos estimados de entrega de la paquetería.
+              Algunas piezas de tu pedido podrían fabricarse en 3D especialmente para ti. 
+              <strong>El tiempo máximo estimado ya está incluido</strong> en las opciones de envío, aunque es muy probable que tu pedido esté listo mucho antes.
             </p>
           </div>
         </div>
