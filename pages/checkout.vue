@@ -5,6 +5,20 @@
     <div v-if="!orderSuccess" class="grid md:grid-cols-3 gap-8">
       <!-- Columna Izquierda: Pasos de Checkout -->
       <div class="md:col-span-2 space-y-8">
+
+        <!-- Alerta de Producción bajo demanda -->
+        <div class="bg-blue-500/10 border border-blue-500/20 text-blue-700 dark:text-blue-300 p-4 rounded-2xl flex gap-4 items-start shadow-sm">
+          <div class="p-2 bg-blue-500/20 rounded-full flex-shrink-0 mt-0.5">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+          </div>
+          <div>
+            <h4 class="font-bold text-sm mb-1">Producción Bajo Demanda 🖨️</h4>
+            <p class="text-xs opacity-90 leading-relaxed">
+              Tus piezas serán fabricadas en 3D especialmente para ti al confirmar la compra. 
+              <strong>El tiempo de fabricación ya está incluido</strong> en los tiempos estimados de entrega de la paquetería.
+            </p>
+          </div>
+        </div>
         
         <!-- Paso 1: InformaciÃ³n de Envío -->
         <section class="bg-card border border-border p-6 rounded-2xl shadow-sm">
