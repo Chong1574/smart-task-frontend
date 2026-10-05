@@ -125,7 +125,18 @@
             <h4 class="text-sm font-semibold text-muted-foreground">Descripción</h4>
             <p class="text-foreground mt-1 whitespace-pre-wrap">{{ selectedPedido.descripcion }}</p>
           </div>
-          <div v-if="selectedPedido.piezas">
+          <div v-if="selectedPedido.items && selectedPedido.items.length > 0">
+            <h4 class="text-sm font-semibold text-muted-foreground">Items</h4>
+            <ul class="mt-1 space-y-2">
+              <li v-for="(item, idx) in selectedPedido.items" :key="idx" class="text-sm text-foreground flex flex-col bg-secondary/20 p-2 rounded-lg border border-border/50">
+                <span class="font-medium">{{ item.quantity || 1 }}x {{ item.title || item.item_name || 'Item' }}</span>
+                <span class="text-xs text-muted-foreground mt-1" v-if="item.productId || item.item_id">
+                  Modelo: <a :href="`https://makerworld.com/en/models/${item.productId || item.item_id}`" target="_blank" class="text-primary hover:underline font-semibold">{{ item.productId || item.item_id }}</a>
+                </span>
+              </li>
+            </ul>
+          </div>
+          <div v-else-if="selectedPedido.piezas">
             <h4 class="text-sm font-semibold text-muted-foreground">Piezas</h4>
             <p class="text-foreground mt-1">{{ selectedPedido.piezas }}</p>
           </div>

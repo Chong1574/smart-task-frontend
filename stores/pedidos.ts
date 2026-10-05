@@ -10,6 +10,7 @@ export interface PedidoImpresion {
     precio?: number;
     direccion?: string;
     piezas?: string;
+    items?: any[];
     estado: 'pendiente' | 'imprimiendo' | 'terminados' | 'enviados' | 'entregados';
     fechaCreacion?: string;
     fechaActualizacion?: string;
