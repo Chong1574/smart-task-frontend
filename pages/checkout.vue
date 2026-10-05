@@ -234,12 +234,15 @@ import { useLocalStorage } from '@vueuse/core';
 
 const cart = useCartStore();
 const router = useRouter();
+const route = useRoute();
+const statusQuery = route.query.status;
+const orderSuccess = ref(statusQuery === 'success' || (Array.isArray(statusQuery) && statusQuery.includes('success')) || statusQuery === 'approved' || (Array.isArray(statusQuery) && statusQuery.includes('approved')));
 
-// Si el carrito estÃ¡ vacÃ­o, regresar al bazar
 onMounted(() => {
-  if (cart.items.length === 0) {
+  // Solo regresamos al bazar si el carrito está vacío Y NO es la página de éxito de retorno
+  if (cart.items.length === 0 && !orderSuccess.value) {
     router.push('/bazar');
-  } else {
+  } else if (!orderSuccess.value) {
     if (typeof window !== 'undefined' && (window as any).gtag) {
       (window as any).gtag('event', 'begin_checkout', {
         currency: 'MXN',
@@ -423,8 +426,6 @@ async function calculateShipping() {
 }
 
 const isSubmitting = ref(false);
-const route = useRoute();
-const orderSuccess = ref(route.query.status === 'success');
 const clabeInfo = ref('');
 const finalTotal = ref(0);
 
