@@ -495,7 +495,7 @@ async function confirmOrder() {
       });
       const mpData = await mpResponse.json();
       if (mpData.success && mpData.init_point) {
-        cart.clearCart();
+        // NO vaciar carrito aquí — se vacía al regresar con ?status=success
         window.location.href = mpData.init_point;
         return;
       } else {
