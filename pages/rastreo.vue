@@ -110,10 +110,11 @@ onMounted(() => {
 
 const statusConfig: Record<string, any> = {
   'PENDING': { label: 'Recibido / Pendiente', bg: 'bg-yellow-100 dark:bg-yellow-900/30', text: 'text-yellow-700 dark:text-yellow-400', dot: 'bg-yellow-500' },
-  'PRINTING': { label: 'En Producción', bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-700 dark:text-blue-400', dot: 'bg-blue-500' },
-  'READY_TO_SHIP': { label: 'Listo para Envío', bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-700 dark:text-purple-400', dot: 'bg-purple-500' },
-  'COMPLETED': { label: 'Enviado', bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-700 dark:text-green-400', dot: 'bg-green-500' },
-  'CANCELLED': { label: 'Cancelado', bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-700 dark:text-red-400', dot: 'bg-red-500' }
+  'PRINTING': { label: 'En Producción 🖨️', bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-700 dark:text-blue-400', dot: 'bg-blue-500' },
+  'COMPLETED': { label: 'Producción Terminada / Empacando 📦', bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-700 dark:text-purple-400', dot: 'bg-purple-500' },
+  'SHIPPED': { label: 'Enviado (En camino) 🚚', bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-700 dark:text-green-400', dot: 'bg-green-500' },
+  'DELIVERED': { label: 'Entregado ✅', bg: 'bg-teal-100 dark:bg-teal-900/30', text: 'text-teal-700 dark:text-teal-400', dot: 'bg-teal-500' },
+  'CANCELLED': { label: 'Cancelado ❌', bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-700 dark:text-red-400', dot: 'bg-red-500' }
 };
 
 const parsedAddress = computed(() => {
