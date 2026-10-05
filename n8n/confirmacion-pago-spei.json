@@ -1,5 +1,5 @@
 {
-  "name": "Confirmación de Pago SPEI",
+  "name": "Confirmación de Pago",
   "nodes": [
     {
       "parameters": {
@@ -20,9 +20,12 @@
     {
       "parameters": {
         "sendTo": "={{ $json.body.order.shippingAddress.customer.email }}",
-        "subject": "={{ '¡Pago Confirmado! Tu pedido #' + $json.body.order.id + ' está en proceso' }}",
-        "message": "={{ '<div style=\"font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;\"><h2 style=\"color: #d97706;\">¡Pago Confirmado! 🎉</h2><p>Hola <strong>' + $json.body.order.shippingAddress.customer.name + '</strong>,</p><p>Hemos validado exitosamente tu transferencia SPEI por <strong>$' + $json.body.order.totalAmount + ' MXN</strong> para el pedido <strong>#' + $json.body.order.id + '</strong>.</p><p>Tu pedido ya está en proceso y pronto te notificaremos cuando sea enviado a la siguiente dirección:</p><div style=\"background-color: #f3f4f6; padding: 15px; border-radius: 8px;\">' + $json.body.order.shippingAddress.customer.street + ' ' + $json.body.order.shippingAddress.customer.number + '<br>Col. ' + $json.body.order.shippingAddress.customer.neighborhood + ', C.P. ' + $json.body.order.shippingAddress.customer.zip + '<br>' + $json.body.order.shippingAddress.customer.city + ', ' + $json.body.order.shippingAddress.customer.state + '</div><p>¡Gracias por tu compra en El Rincón de Brandy!</p></div>' }}",
-        "appendAttribution": false
+        "subject": "=¡Pago Confirmado! Tu pedido #{{ $json.body.order.id }} está en proceso",
+        "emailType": "html",
+        "message": "=<div style=\"background:#f6f3ef;padding:24px 0;font-family:Helvetica,Arial,sans-serif;\">\n<div style=\"max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;padding:32px;color:#333;\">\n  <h2 style=\"font-family:Georgia,serif;color:#3B2C23;text-align:center;margin:0 0 16px;\">¡Pago Confirmado! 🎉</h2>\n  <p style=\"text-align:center;font-size:14px;line-height:1.6;margin:0;\">\n    Hola <strong>{{ $json.body.order.shippingAddress.customer.name }}</strong>,<br>\n    Hemos recibido y validado tu pago por <strong>{{ $json.body.order.totalFormatted }}</strong>.<br>\n    Tu pedido ya está en proceso y te avisaremos en cuanto vaya en camino.\n  </p>\n  <div style=\"text-align:center;margin:20px 0;\">\n    <span style=\"display:inline-block;padding:8px 16px;border:1px solid #f0d9cc;background:#fdf6f2;border-radius:8px;color:#E07A5F;font-weight:bold;font-size:13px;\">Pedido #{{ $json.body.order.id }}</span>\n  </div>\n\n  <h3 style=\"font-family:Georgia,serif;font-size:13px;letter-spacing:1px;text-transform:uppercase;color:#3B2C23;border-bottom:1px solid #eee;padding-bottom:10px;margin:24px 0 0;\">Artículos ordenados</h3>\n  <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"border-collapse:collapse;\">\n    {{ $json.body.order.itemsHtml }}\n  </table>\n\n  <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"border-collapse:collapse;margin-top:16px;font-size:13px;\">\n    <tr>\n      <td style=\"padding:6px 0;color:#666;\">Subtotal</td>\n      <td style=\"padding:6px 0;text-align:right;color:#333;\">{{ $json.body.order.subtotalFormatted }}</td>\n    </tr>\n    <tr>\n      <td style=\"padding:6px 0;color:#666;\">Envío ({{ $json.body.order.shippingMethodName }})</td>\n      <td style=\"padding:6px 0;text-align:right;color:#333;\">{{ $json.body.order.shippingCostFormatted }}</td>\n    </tr>\n    <tr>\n      <td style=\"padding:12px 0 6px;border-top:1px solid #eee;font-weight:bold;font-size:15px;color:#3B2C23;\">Total del Pedido</td>\n      <td style=\"padding:12px 0 6px;border-top:1px solid #eee;text-align:right;font-weight:bold;font-size:15px;color:#3B2C23;\">{{ $json.body.order.totalFormatted }}</td>\n    </tr>\n  </table>\n\n  <div style=\"background:#faf8f5;border:1px solid #eee;border-radius:8px;padding:16px;margin-top:24px;font-size:12px;line-height:1.7;color:#555;\">\n    <h3 style=\"font-family:Georgia,serif;font-size:13px;letter-spacing:1px;text-transform:uppercase;color:#3B2C23;margin:0 0 8px;\">Dirección de envío</h3>\n    <strong>{{ $json.body.order.shippingAddress.customer.name }}</strong><br>\n    {{ $json.body.order.shippingAddress.customer.street }} {{ $json.body.order.shippingAddress.customer.number }}<br>\n    Col. {{ $json.body.order.shippingAddress.customer.neighborhood }}, C.P. {{ $json.body.order.shippingAddress.customer.zip }}<br>\n    {{ $json.body.order.shippingAddress.customer.city }}, {{ $json.body.order.shippingAddress.customer.state }}<br>\n    Tel: {{ $json.body.order.shippingAddress.customer.phone }}\n  </div>\n\n  <div style=\"text-align:center;margin-top:28px;\">\n    <a href=\"https://shongyi.com/rastreo\" style=\"display:inline-block;background:#E07A5F;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:bold;font-size:14px;\">Rastrear mi pedido</a>\n  </div>\n  <p style=\"text-align:center;color:#999;font-size:11px;margin-top:28px;\">Si tienes alguna duda, escríbenos respondiendo a este correo.<br>¡Gracias por tu compra en El Rincón de Brandy!</p>\n</div>\n</div>",
+        "options": {
+          "appendAttribution": false
+        }
       },
       "id": "e2a3c1f5-1b2c-4f7a-8b8a-9c8b7a6d5c4b",
       "name": "Gmail",
@@ -51,6 +54,5 @@
   "active": false,
   "settings": {
     "executionOrder": "v1"
-  },
-  "versionId": "f7823ab2-4b2a-4c2d-9e1a-8c9b7a6d5c4b"
+  }
 }
