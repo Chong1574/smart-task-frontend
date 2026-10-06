@@ -141,7 +141,7 @@
 
 <script setup lang="ts">
 import { imgProxy } from '~/utils/imgProxy';
-interface Variant { name: string; grams: number; hours: number; price: number }
+interface Variant { name: string; grams: number; hours: number; price: number; imageIndex?: number; imageUrl?: string }
 interface Product {
   id?: number | string;
   title: string;
@@ -171,6 +171,21 @@ const currentImage = computed(() => images.value[imgIdx.value] || '');
 
 const variants = computed(() => Array.isArray(props.product.variants) ? props.product.variants : []);
 const variantIdx = ref(0);
+
+import { watch } from 'vue';
+watch(variantIdx, (newIdx) => {
+  const v = variants.value[newIdx];
+  if (v) {
+    if (v.imageIndex !== undefined && v.imageIndex >= 0 && v.imageIndex < images.value.length) {
+      imgIdx.value = v.imageIndex;
+    } else if (v.imageUrl) {
+      const existingIdx = images.value.findIndex(img => img === v.imageUrl);
+      if (existingIdx !== -1) {
+        imgIdx.value = existingIdx;
+      }
+    }
+  }
+});
 
 const isPersonalized = computed(() => {
   if (!variants.value.length) return false;
