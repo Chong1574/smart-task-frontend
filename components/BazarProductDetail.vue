@@ -68,6 +68,16 @@
             </div>
           </div>
           
+          <div v-if="isPersonalized" class="mb-6 animate-in fade-in slide-in-from-top-2">
+            <label class="block text-sm font-medium mb-2">Texto para personalizar <span class="text-red-500">*</span></label>
+            <input 
+              type="text" 
+              v-model="customText" 
+              placeholder="Ej. Juan, Mamá, Feliz Navidad..." 
+              class="w-full h-11 px-4 rounded-lg border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
+          
           <div class="flex flex-col gap-4 mb-6">
             <!-- Selector de Cantidad -->
             <div class="flex items-center gap-4">
@@ -119,7 +129,7 @@
 
           <div class="text-xs text-muted-foreground space-y-1">
             <p v-if="product.licenseAttribution">Atribución: {{ product.licenseAttribution }}</p>
-            <a v-if="product.sourceUrl" :href="product.sourceUrl" target="_blank" rel="noopener" class="text-primary hover:underline inline-block">
+            <a v-if="product.sourceUrl || product.externalId" :href="product.externalId ? `https://makerworld.com/es/models/${product.externalId}` : product.sourceUrl" target="_blank" rel="noopener" class="text-primary hover:underline inline-block">
               Ver original en MakerWorld →
             </a>
           </div>
@@ -144,6 +154,7 @@ interface Product {
   tags?: string[] | null;
   images?: string[] | null;
   sourceUrl?: string | null;
+  externalId?: string | null;
   licenseAttribution?: string | null;
 }
 
@@ -160,6 +171,14 @@ const currentImage = computed(() => images.value[imgIdx.value] || '');
 
 const variants = computed(() => Array.isArray(props.product.variants) ? props.product.variants : []);
 const variantIdx = ref(0);
+
+const isPersonalized = computed(() => {
+  if (!variants.value.length) return false;
+  const v = variants.value[variantIdx.value];
+  return v && v.name && /personalizada|personalizado|custom|nombre/i.test(v.name);
+});
+const customText = ref('');
+
 const currentPrice = computed(() => {
   if (variants.value.length) return variants.value[variantIdx.value]?.price ?? 0;
   return props.product.priceFrom ?? (typeof props.product.price === 'number' ? props.product.price : 0);
@@ -177,8 +196,19 @@ function fmt(n: number): string {
 // ponytail: strip HTML sin lib externa. Origen del texto es MakerWorld (controlado) — si algún día se acepta
 // user-input HTML, cambiar a DOMPurify aquí.
 const descriptionSafe = computed(() => {
-  const raw = props.product.description || props.product.descriptionHtml || '';
-  return raw.replace(/<[^>]+>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ').replace(/<[^>]+>/g, '').trim();
+  let raw = props.product.description || props.product.descriptionHtml || '';
+  
+  // Convertir tags de bloque a saltos de linea antes de limpiar HTML
+  raw = raw.replace(/<br\s*\/?>/gi, '\n');
+  raw = raw.replace(/<\/p>/gi, '\n\n');
+  raw = raw.replace(/<\/li>/gi, '\n');
+  raw = raw.replace(/<li>/gi, '• ');
+
+  // Limpiar el resto del HTML
+  raw = raw.replace(/<[^>]+>/g, '');
+  
+  // Decodificar entidades
+  return raw.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ').trim();
 });
 
 import { useCartStore } from '~/stores/cart';
@@ -205,13 +235,21 @@ const cart = useCartStore();
 const quantity = ref(1);
 
 function buyNow() {
-  cart.addItem(props.product, variantIdx.value, quantity.value);
+  if (isPersonalized.value && !customText.value.trim()) {
+    toast.error('Atención', { description: 'Por favor, ingresa el texto a personalizar.' });
+    return;
+  }
+  cart.addItem(props.product, variantIdx.value, quantity.value, customText.value.trim());
   cart.openCart(); // Abre el carrito para comprar ya
   emit('close');
 }
 
 function addToCartOnly() {
-  cart.addItem(props.product, variantIdx.value, quantity.value);
+  if (isPersonalized.value && !customText.value.trim()) {
+    toast.error('Atención', { description: 'Por favor, ingresa el texto a personalizar.' });
+    return;
+  }
+  cart.addItem(props.product, variantIdx.value, quantity.value, customText.value.trim());
   toast.success('Agregado al carrito', {
     description: `${quantity.value}x ${props.product.title}`,
     duration: 3000

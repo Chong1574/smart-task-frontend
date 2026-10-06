@@ -10,6 +10,7 @@ export interface CartItem {
   quantity: number;
   imageUrl?: string;
   variantName?: string;
+  customText?: string;
 }
 
 export const useCartStore = defineStore('cart', () => {
@@ -48,7 +49,7 @@ export const useCartStore = defineStore('cart', () => {
     isOpen.value = false;
   }
 
-  function addItem(product: any, variantIdx: number = 0, quantity: number = 1) {
+  function addItem(product: any, variantIdx: number = 0, quantity: number = 1, customText: string = '') {
     const isVariant = Array.isArray(product.variants) && product.variants.length > 0;
     const variant = isVariant ? product.variants[variantIdx] : null;
     
@@ -62,7 +63,10 @@ export const useCartStore = defineStore('cart', () => {
       ? product.images[0] 
       : product.imageUrl;
 
-    const cartItemId = variant ? `${product.id}-${variantIdx}` : `${product.id}-default`;
+    let cartItemId = variant ? `${product.id}-${variantIdx}` : `${product.id}-default`;
+    if (customText) {
+      cartItemId += `-${encodeURIComponent(customText)}`;
+    }
 
     const existingItem = items.value.find(item => item.id === cartItemId);
 
@@ -76,7 +80,8 @@ export const useCartStore = defineStore('cart', () => {
         price: resolvedPrice,
         quantity,
         imageUrl: image,
-        variantName: variant ? variant.name : undefined
+        variantName: variant ? variant.name : undefined,
+        customText: customText || undefined
       });
     }
 

@@ -52,6 +52,7 @@
               <div>
                 <h3 class="font-medium text-sm text-foreground line-clamp-2 leading-tight">{{ item.title }}</h3>
                 <p v-if="item.variantName" class="text-xs text-muted-foreground mt-1">{{ item.variantName }}</p>
+                <p v-if="item.customText" class="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5 italic text-balance font-medium">Texto: "{{ item.customText }}"</p>
               </div>
               <button
                 @click="cart.removeItem(item.id)"

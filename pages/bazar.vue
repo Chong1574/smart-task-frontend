@@ -29,33 +29,62 @@
         </div>
       </div>
 
-      <!-- Filtros de Categoría y Precio -->
-      <div class="flex flex-col md:flex-row justify-center items-center gap-4 mb-12 w-full">
-        <div class="flex flex-wrap justify-center gap-2">
-          <button v-for="cat in categorias" :key="cat" 
-            @click="selectedCategory = cat"
-            :class="['px-5 py-2 rounded-full border border-border bg-card text-sm font-medium transition-colors', selectedCategory === cat ? 'bg-primary text-primary-foreground border-primary' : 'hover:border-primary hover:text-primary']">
-            {{ cat }}
-          </button>
-        </div>
-        <div class="h-8 w-px bg-border hidden md:block"></div>
-        <div class="flex flex-col w-full max-w-[250px] gap-1.5 px-2">
-          <div class="flex justify-between items-center">
-            <span class="text-sm text-muted-foreground">Precio</span>
-            <span class="text-xs font-medium text-foreground">
-              {{ fmt(priceRange[0]) }} - {{ priceRange[1] >= 1000 ? 'Sin límite' : fmt(priceRange[1]) }}
-            </span>
+      <!-- Layout con Sidebar (estilo MercadoLibre/Amazon) -->
+      <div class="flex flex-col md:flex-row gap-8 items-start">
+        
+        <!-- Sidebar de Filtros -->
+        <aside class="w-full md:w-64 flex-shrink-0 bg-card border border-border/60 rounded-2xl p-6 shadow-sm sticky top-24 z-10">
+          <h2 class="text-lg font-bold mb-4 font-serif">Filtros</h2>
+          
+          <div class="mb-8">
+            <h3 class="font-semibold text-sm mb-3 text-foreground">Categorías</h3>
+            <ul class="space-y-2">
+              <li v-for="cat in categorias" :key="cat">
+                <button 
+                  @click="selectedCategory = cat"
+                  class="text-sm w-full text-left transition-colors flex items-center justify-between"
+                  :class="selectedCategory === cat ? 'text-primary font-bold' : 'text-muted-foreground hover:text-foreground'"
+                >
+                  {{ cat }}
+                  <span v-if="selectedCategory === cat" class="w-2 h-2 rounded-full bg-primary"></span>
+                </button>
+              </li>
+            </ul>
           </div>
-          <Slider v-model="priceRange" :min="0" :max="1000" :step="10" class="w-full" />
-        </div>
-      </div>
 
-      <!-- Galería de Productos -->
-      <div v-if="error" class="text-center text-destructive py-8">{{ error }}</div>
-      <div v-else-if="filteredProducts.length === 0 && !loading" class="text-center text-muted-foreground py-8">
-        No hay productos disponibles todavía.
-      </div>
-      <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div class="mb-6">
+            <h3 class="font-semibold text-sm mb-3 text-foreground">Precio</h3>
+            <div class="flex justify-between items-center mb-3">
+              <span class="text-xs text-muted-foreground">{{ fmt(priceRange[0]) }}</span>
+              <span class="text-xs text-muted-foreground">{{ priceRange[1] >= 1000 ? 'Sin límite' : fmt(priceRange[1]) }}</span>
+            </div>
+            <Slider v-model="priceRange" :min="0" :max="1000" :step="10" class="w-full" />
+          </div>
+
+          <!-- Botón de Búsqueda Profunda (MakerWorld) -->
+          <div class="mt-8 pt-6 border-t border-border">
+            <h3 class="font-semibold text-sm mb-2 text-foreground">¿No encuentras lo que buscas?</h3>
+            <p class="text-xs text-muted-foreground mb-4">Podemos buscar y traer modelos directamente desde MakerWorld.</p>
+            <button 
+              @click="triggerDeepSearch" 
+              class="w-full bg-secondary hover:bg-secondary/80 text-secondary-foreground text-xs font-medium py-2.5 px-3 rounded-xl transition-all border border-border flex items-center justify-center shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              :disabled="loadingDeep || !query.trim()"
+            >
+              <span v-if="loadingDeep" class="animate-pulse">Buscando... (espera unos segs)</span>
+              <span v-else>Traer de toda la Web</span>
+            </button>
+            <p v-if="!query.trim()" class="text-[10px] text-muted-foreground mt-2 text-center">Escribe algo en el buscador primero.</p>
+          </div>
+        </aside>
+
+        <!-- Contenido Principal -->
+        <main class="flex-1 w-full min-w-0">
+          <div v-if="error" class="text-center text-destructive py-8">{{ error }}</div>
+          <div v-else-if="filteredProducts.length === 0 && !loading && !loadingDeep" class="text-center text-muted-foreground py-16 bg-card border border-border/60 rounded-2xl">
+            <p class="text-lg font-medium mb-2">No hay resultados locales.</p>
+            <p class="text-sm">Intenta ajustar los filtros o haz clic en "Traer de toda la Web".</p>
+          </div>
+          <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
         <div
           v-for="product in filteredProducts"
@@ -128,7 +157,8 @@
       </div>
 
       <BazarProductDetail v-if="selected" :product="selected" @close="selected = null" />
-
+        </main>
+      </div>
     </div>
   </div>
 </template>
@@ -186,6 +216,7 @@ const products = ref<Product[]>([]);
 const error = ref<string | null>(null);
 const query = ref('');
 const loading = ref(false);
+const loadingDeep = ref(false);
 const searchedLive = ref(false);
 const rateLimited = ref(false);
 const selected = ref<Product | null>(null);
@@ -217,6 +248,27 @@ const filteredProducts = computed(() => {
   });
 });
 
+async function triggerDeepSearch() {
+  if (!query.value.trim()) return;
+  loadingDeep.value = true;
+  error.value = null;
+  try {
+    const url = `${apiBase}/products?q=${encodeURIComponent(query.value.trim())}&deep=true`;
+    const r = await fetch(url);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const data = await r.json();
+    if (!Array.isArray(data)) {
+      products.value = data.items || [];
+      searchedLive.value = !!data.searchedLive;
+      rateLimited.value = !!data.rateLimited;
+    }
+    toast.success('Búsqueda profunda completada', { description: 'Se han cargado nuevos modelos.' });
+  } catch (e: any) {
+    toast.error('Error', { description: 'El servidor de MakerWorld tardó demasiado o no respondió.' });
+  } finally {
+    loadingDeep.value = false;
+  }
+}
 
 async function load(q: string) {
   loading.value = true;

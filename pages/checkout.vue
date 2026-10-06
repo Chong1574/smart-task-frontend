@@ -163,7 +163,9 @@
               </div>
               <div class="flex-1">
                 <p class="text-sm font-medium line-clamp-1">{{ item.title }}</p>
-                <p class="text-xs text-muted-foreground">{{ item.quantity }}x {{ formatPrice(item.price) }}</p>
+                <p v-if="item.variantName" class="text-xs text-muted-foreground">{{ item.variantName }}</p>
+                <p v-if="item.customText" class="text-xs text-emerald-600 dark:text-emerald-400 italic">"{{ item.customText }}"</p>
+                <p class="text-xs text-muted-foreground mt-0.5">{{ item.quantity }}x {{ formatPrice(item.price) }}</p>
               </div>
               <p class="text-sm font-medium">{{ formatPrice(item.price * item.quantity) }}</p>
             </div>
