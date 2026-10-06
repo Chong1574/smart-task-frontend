@@ -33,7 +33,7 @@
       <div class="flex flex-col md:flex-row gap-8 items-start">
         
         <!-- Sidebar de Filtros -->
-        <aside class="w-full md:w-64 flex-shrink-0 bg-card border border-border/60 rounded-2xl p-6 shadow-sm sticky top-24 z-10">
+        <aside class="w-full md:w-64 flex-shrink-0 bg-card border border-border/60 rounded-2xl p-6 shadow-sm md:sticky md:top-24 md:z-10">
           <h2 class="text-lg font-bold mb-4 font-serif">Filtros</h2>
           
           <div class="mb-8">
@@ -381,3 +381,4 @@ const categorias = [
 
 onMounted(() => load(''));
 </script>
+
