@@ -130,8 +130,11 @@
             <ul class="mt-1 space-y-2">
               <li v-for="(item, idx) in selectedPedido.items" :key="idx" class="text-sm text-foreground flex flex-col bg-secondary/20 p-2 rounded-lg border border-border/50">
                 <span class="font-medium">{{ item.quantity || 1 }}x {{ item.title || item.item_name || 'Item' }}</span>
-                <span class="text-xs text-muted-foreground mt-1" v-if="item.productId || item.item_id">
-                  Modelo: <a :href="`https://makerworld.com/en/models/${item.productId || item.item_id}`" target="_blank" class="text-primary hover:underline font-semibold">{{ item.productId || item.item_id }}</a>
+                <span class="text-xs text-muted-foreground mt-1" v-if="item.externalId">
+                  Modelo: <a :href="`https://makerworld.com/en/models/${item.externalId}`" target="_blank" class="text-primary hover:underline font-semibold">{{ item.externalId }}</a>
+                </span>
+                <span class="text-xs text-muted-foreground mt-1" v-else-if="item.productId || item.item_id">
+                  ID Local: {{ item.productId || item.item_id }}
                 </span>
               </li>
             </ul>
