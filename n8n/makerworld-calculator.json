@@ -12,8 +12,11 @@
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [200, 300],
-      "notes": "URL de producción: https://n8n.shongyi.com/webhook/makerworld-calc"
+      "position": [
+        200,
+        300
+      ],
+      "notes": "URL de producci\u00f3n: https://n8n.shongyi.com/webhook/makerworld-calc"
     },
     {
       "parameters": {
@@ -23,51 +26,62 @@
       "name": "Auth check",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [340, 300],
-      "notes": "$env.SYNC_SECRET aquí es aceptable — validación runtime del container, no se serializa al JSON exportado."
+      "position": [
+        340,
+        300
+      ],
+      "notes": "$env.SYNC_SECRET aqu\u00ed es aceptable \u2014 validaci\u00f3n runtime del container, no se serializa al JSON exportado."
     },
     {
       "parameters": {
-        "jsCode": "const url = $input.item.json.url || '';\nconst match = url.match(/models\\/(\\d+)/);\nif (!match) throw new Error('URL de MakerWorld no válida. No se encontró el ID del modelo.');\nreturn { json: { externalId: match[1] } };"
+        "jsCode": "const urlOrId = String($input.item.json.url || '').trim();\nlet id = '';\nif (/^\\d+$/.test(urlOrId)) {\n  id = urlOrId;\n} else {\n  const match = urlOrId.match(/models\\/(\\d+)/);\n  if (!match) throw new Error('Entrada no v\u01edlida. Pon ID o URL.');\n  id = match[1];\n}\nreturn { json: { externalId: id } };"
       },
       "id": "extract-id",
       "name": "Extract ID",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [480, 300]
+      "position": [
+        480,
+        300
+      ]
     },
     {
       "parameters": {
-        "url": "=https://makerworld.com/api/v1/design-service/design/{{ $json.externalId }}",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            { "name": "User-Agent", "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36" },
-            { "name": "Accept", "value": "application/json, text/plain, */*" },
-            { "name": "Accept-Language", "value": "es-ES,es;q=0.9,en;q=0.8" },
-            { "name": "Referer", "value": "https://makerworld.com/es/search/models" }
-          ]
-        },
+        "method": "POST",
+        "url": "http://flaresolverr:8191/v1",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ \"cmd\": \"request.get\", \"url\": \"https://makerworld.com/api/v1/design-service/design/\" + $json.externalId, \"maxTimeout\": 25000 }) }}",
         "options": {
-          "timeout": 20000,
-          "response": { "response": { "responseFormat": "json" } }
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
         }
       },
       "id": "http-detail",
       "name": "MakerWorld: fetch detail",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [640, 300]
+      "position": [
+        640,
+        300
+      ]
     },
     {
       "parameters": {
-        "jsCode": "// Devuelve TODOS los perfiles de impresión (instances) con metadata suficiente para\n// que el frontend muestre un picker cuando hay más de uno. Prefiere los valores\n// instance-level (ins.weight/ins.prediction) sobre suma de plates — son más fieles al slicer.\nconst data = $input.item.json;\nconst instances = data.instances || [];\nif (!instances.length) throw new Error('No se encontraron perfiles de impresión (instances).');\n\nconst profiles = instances.map(ins => {\n  const plates = ((ins.extention || {}).modelInfo || {}).plates || [];\n  const platesGrams = plates.reduce((s, p) => s + (Number(p.weight) || 0), 0);\n  const platesSeconds = plates.reduce((s, p) => s + (Number(p.prediction) || 0), 0);\n  const grams = Number(ins.weight) || platesGrams;\n  const seconds = Number(ins.prediction) || platesSeconds;\n  return {\n    id: String(ins.id || ins.profileId || ''),\n    title: ins.title || ins.titleTranslated || 'Perfil sin nombre',\n    name: ins.name || '',\n    grams: Number.isFinite(grams) ? Number(grams.toFixed(2)) : 0,\n    hours: Number.isFinite(seconds) ? Number((seconds / 3600).toFixed(3)) : 0,\n    plateCount: plates.length || 1,\n    isDefault: !!ins.isDefault,\n    needAms: !!ins.needAms,\n    colorCount: Number(ins.materialColorCnt) || Number(ins.materialCnt) || 1,\n    cover: ins.cover || null,\n  };\n}).filter(p => p.grams > 0 || p.hours > 0);\n\nif (!profiles.length) throw new Error('El modelo no publica estadísticas de slicer (gramos/horas).');\n\nreturn { json: { profiles } };"
+        "jsCode": "const htmlStr = $input.item.json?.solution?.response || \"\";\nconst match = htmlStr.match(/<body[^>]*>(.*?)<\\/body>/is);\nlet rawJson = match ? match[1] : htmlStr;\ntry {\n    rawJson = rawJson.replace(/^<pre[^>]*>/i, '').replace(/<\\/pre>$/i, '').trim();\n    const data = JSON.parse(rawJson);\n    const instances = data.instances || [];\n    if (!instances.length) throw new Error('No instances found.');\n    const profiles = instances.map(ins => {\n      const plates = ((ins.extention || {}).modelInfo || {}).plates || [];\n      const platesGrams = plates.reduce((s, p) => s + (Number(p.weight) || 0), 0);\n      const platesSeconds = plates.reduce((s, p) => s + (Number(p.prediction) || 0), 0);\n      const grams = Number(ins.weight) || platesGrams;\n      const seconds = Number(ins.prediction) || platesSeconds;\n      return {\n        id: String(ins.id || ins.profileId || ''),\n        title: ins.title || ins.titleTranslated || 'Perfil sin nombre',\n        name: ins.name || '',\n        grams: Number.isFinite(grams) ? Number(grams.toFixed(2)) : 0,\n        hours: Number.isFinite(seconds) ? Number((seconds / 3600).toFixed(3)) : 0,\n        plateCount: plates.length || 1,\n        isDefault: !!ins.isDefault,\n        needAms: !!ins.needAms,\n        colorCount: Number(ins.materialColorCnt) || Number(ins.materialCnt) || 1,\n        cover: ins.cover || null,\n      };\n    }).filter(p => p.grams > 0 || p.hours > 0);\n    if (!profiles.length) throw new Error('No stats.');\n    return { json: { profiles } };\n} catch (e) {\n    throw new Error(\"Parse error: \" + e.message);\n}"
       },
       "id": "extract-stats",
       "name": "Extract Stats",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [860, 300]
+      "position": [
+        860,
+        300
+      ]
     },
     {
       "parameters": {
@@ -79,16 +93,71 @@
       "name": "Respond to Webhook",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [1080, 300]
+      "position": [
+        1080,
+        300
+      ]
     }
   ],
   "connections": {
-    "Webhook":                  { "main": [[{ "node": "Auth check",              "type": "main", "index": 0 }]] },
-    "Auth check":               { "main": [[{ "node": "Extract ID",              "type": "main", "index": 0 }]] },
-    "Extract ID":               { "main": [[{ "node": "MakerWorld: fetch detail","type": "main", "index": 0 }]] },
-    "MakerWorld: fetch detail": { "main": [[{ "node": "Extract Stats",           "type": "main", "index": 0 }]] },
-    "Extract Stats":            { "main": [[{ "node": "Respond to Webhook",      "type": "main", "index": 0 }]] }
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Auth check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auth check": {
+      "main": [
+        [
+          {
+            "node": "Extract ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract ID": {
+      "main": [
+        [
+          {
+            "node": "MakerWorld: fetch detail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MakerWorld: fetch detail": {
+      "main": [
+        [
+          {
+            "node": "Extract Stats",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Stats": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
   },
-  "settings": { "executionOrder": "v1" },
+  "settings": {
+    "executionOrder": "v1"
+  },
   "active": false
 }
