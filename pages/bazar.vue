@@ -271,7 +271,7 @@ async function triggerDeepSearch() {
     let ticks = 0;
     const interval = setInterval(async () => {
       ticks++;
-      if (ticks > 4) {
+      if (ticks > 20) {
         clearInterval(interval);
         return;
       }
@@ -285,7 +285,7 @@ async function triggerDeepSearch() {
            }
         }
       } catch (e) {}
-    }, 15000);
+    }, 3000);
 
   } catch (e: any) {
     toast.error('Error', { description: 'El servidor tardó demasiado o no respondió.' });
