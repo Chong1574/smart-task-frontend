@@ -262,9 +262,30 @@ async function triggerDeepSearch() {
       searchedLive.value = !!data.searchedLive;
       rateLimited.value = !!data.rateLimited;
     }
-    toast.success('Búsqueda profunda completada', { description: 'Se han cargado nuevos modelos.' });
+    toast.success('Búsqueda profunda iniciada', { description: 'Llegaron los primeros resultados. El resto seguirá cargando en el fondo en los próximos minutos.' });
+    
+    // Auto refresh local db without deep trigger every 15s for 1 min
+    let ticks = 0;
+    const interval = setInterval(async () => {
+      ticks++;
+      if (ticks > 4) {
+        clearInterval(interval);
+        return;
+      }
+      try {
+        const refreshUrl = `${apiBase}/products?q=${encodeURIComponent(query.value.trim())}`;
+        const refreshR = await fetch(refreshUrl);
+        if (refreshR.ok) {
+           const refreshData = await refreshR.json();
+           if (!Array.isArray(refreshData) && refreshData.items) {
+             products.value = refreshData.items;
+           }
+        }
+      } catch (e) {}
+    }, 15000);
+
   } catch (e: any) {
-    toast.error('Error', { description: 'El servidor de MakerWorld tardó demasiado o no respondió.' });
+    toast.error('Error', { description: 'El servidor tardó demasiado o no respondió.' });
   } finally {
     loadingDeep.value = false;
   }
