@@ -64,7 +64,7 @@
           <!-- Botón de Búsqueda Profunda (MakerWorld) -->
           <div class="mt-8 pt-6 border-t border-border">
             <h3 class="font-semibold text-sm mb-2 text-foreground">¿No encuentras lo que buscas?</h3>
-            <p class="text-xs text-muted-foreground mb-4">Podemos buscar y traer modelos directamente desde MakerWorld.</p>
+            <p class="text-xs text-muted-foreground mb-4">Busca en toda la red y encuentra el modelo perfecto para hacerlo realidad.</p>
             <button 
               @click="triggerDeepSearch" 
               class="w-full bg-secondary hover:bg-secondary/80 text-secondary-foreground text-xs font-medium py-2.5 px-3 rounded-xl transition-all border border-border flex items-center justify-center shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
