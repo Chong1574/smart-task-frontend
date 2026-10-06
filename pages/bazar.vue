@@ -70,7 +70,7 @@
               class="w-full bg-secondary hover:bg-secondary/80 text-secondary-foreground text-xs font-medium py-2.5 px-3 rounded-xl transition-all border border-border flex items-center justify-center shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
               :disabled="loadingDeep || !query.trim()"
             >
-              <span v-if="loadingDeep" class="animate-pulse">Buscando... (espera unos segs)</span>
+              <span v-if="loadingDeep" class="animate-pulse">{{ deepSearchPhrases[deepSearchStatusIndex] }}</span>
               <span v-else>Traer de toda la Web</span>
             </button>
             <p v-if="!query.trim()" class="text-[10px] text-muted-foreground mt-2 text-center">Escribe algo en el buscador primero.</p>
@@ -217,6 +217,9 @@ const error = ref<string | null>(null);
 const query = ref('');
 const loading = ref(false);
 const loadingDeep = ref(false);
+const deepSearchPhrases = ['Buscando en la web...', 'Filtrando opciones...', 'Escogiendo los mejores modelos para ti...', 'Traduciendo y optimizando detalles...', 'Casi listo...'];
+const deepSearchStatusIndex = ref(0);
+let deepSearchStatusInterval = null;
 const searchedLive = ref(false);
 const rateLimited = ref(false);
 const selected = ref<Product | null>(null);
