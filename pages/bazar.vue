@@ -80,11 +80,20 @@
         <!-- Contenido Principal -->
         <main class="flex-1 w-full min-w-0">
           <div v-if="error" class="text-center text-destructive py-8">{{ error }}</div>
-          <div v-else-if="filteredProducts.length === 0 && !loading && !loadingDeep" class="text-center text-muted-foreground py-16 bg-card border border-border/60 rounded-2xl">
+          <div v-else-if="filteredProducts.length === 0 && !loading && !isDeepSearching" class="text-center text-muted-foreground py-16 bg-card border border-border/60 rounded-2xl">
             <p class="text-lg font-medium mb-2">No hay resultados locales.</p>
             <p class="text-sm">Intenta ajustar los filtros o haz clic en "Traer de toda la Web".</p>
           </div>
-          <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <template v-else>
+            <div v-if="isDeepSearching" class="flex items-center gap-3 mb-6 px-4 py-3 rounded-xl bg-card border border-border/60 text-sm text-muted-foreground shadow-sm">
+              <span class="relative flex h-2.5 w-2.5 shrink-0">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
+              </span>
+              <span class="font-medium animate-pulse">{{ deepSearchPhrases[deepSearchStatusIndex] }}</span>
+              <span class="ml-auto text-[10px] uppercase tracking-wider text-muted-foreground/70">Procesando</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
         <div
           v-for="product in filteredProducts"
@@ -154,7 +163,21 @@
           </div>
         </div>
 
+        <!-- Esqueletos mientras carga -->
+        <div v-if="loading || isDeepSearching" v-for="i in (filteredProducts.length === 0 ? 6 : 2)" :key="'skel-'+i" class="group flex flex-col bg-card rounded-2xl overflow-hidden border border-border/60">
+          <div class="aspect-square bg-secondary/50 animate-pulse"></div>
+          <div class="p-6 flex flex-col flex-grow">
+            <div class="h-6 bg-secondary/60 rounded animate-pulse w-3/4 mb-3"></div>
+            <div class="h-4 bg-secondary/40 rounded animate-pulse w-full mb-2"></div>
+            <div class="h-4 bg-secondary/40 rounded animate-pulse w-5/6 mb-4"></div>
+            <div class="mt-auto flex items-center justify-between">
+              <div class="h-5 bg-secondary/50 rounded animate-pulse w-1/3"></div>
+              <div class="h-8 w-8 bg-secondary/50 rounded animate-pulse"></div>
+            </div>
+          </div>
+        </div>
       </div>
+      </template>
 
       <BazarProductDetail v-if="selected" :product="selected" @close="selected = null" />
         </main>
@@ -217,6 +240,7 @@ const error = ref<string | null>(null);
 const query = ref('');
 const loading = ref(false);
 const loadingDeep = ref(false);
+const isDeepSearching = ref(false);
 const deepSearchPhrases = ['Buscando en la web...', 'Filtrando opciones...', 'Escogiendo los mejores modelos para ti...', 'Traduciendo y optimizando detalles...', 'Casi listo...'];
 const deepSearchStatusIndex = ref(0);
 let deepSearchStatusInterval = null;
@@ -254,7 +278,13 @@ const filteredProducts = computed(() => {
 async function triggerDeepSearch() {
   if (!query.value.trim()) return;
   loadingDeep.value = true;
+  isDeepSearching.value = true;
   error.value = null;
+  deepSearchStatusIndex.value = 0;
+  clearInterval(deepSearchStatusInterval);
+  deepSearchStatusInterval = setInterval(() => {
+    deepSearchStatusIndex.value = (deepSearchStatusIndex.value + 1) % deepSearchPhrases.length;
+  }, 4500);
   try {
     const url = `${apiBase}/products?q=${encodeURIComponent(query.value.trim())}&deep=true`;
     const r = await fetch(url);
@@ -273,6 +303,8 @@ async function triggerDeepSearch() {
       ticks++;
       if (ticks > 20) {
         clearInterval(interval);
+        isDeepSearching.value = false;
+        clearInterval(deepSearchStatusInterval);
         return;
       }
       try {
