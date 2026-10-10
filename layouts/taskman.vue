@@ -192,16 +192,21 @@ const toggleTheme = () => {
   colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'
 }
 
-const nav = [
-  { name: 'Dashboard', path: '/taskman', icon: LayoutDashboard },
-  { name: 'Briefing', path: '/taskman/briefing', icon: Sunrise },
-  { name: 'Actividades', path: '/taskman/activities', icon: CheckSquare },
-  { name: 'Proyectos', path: '/taskman/projects', icon: Target },
-  { name: 'Hábitos', path: '/taskman/habits', icon: Activity },
-  { name: 'Wallet', path: '/taskman/wallet', icon: TrendingUp },
-  { name: 'Garage', path: '/taskman/garage', icon: Car },
-  { name: '3D', path: '/taskman/impresion-3d', icon: Printer },
-]
+const nav = computed(() => {
+  const items = [
+    { name: 'Dashboard', path: '/taskman', icon: LayoutDashboard },
+    { name: 'Briefing', path: '/taskman/briefing', icon: Sunrise },
+    { name: 'Actividades', path: '/taskman/activities', icon: CheckSquare },
+    { name: 'Proyectos', path: '/taskman/projects', icon: Target },
+    { name: 'Hábitos', path: '/taskman/habits', icon: Activity },
+    { name: 'Wallet', path: '/taskman/wallet', icon: TrendingUp },
+    { name: 'Garage', path: '/taskman/garage', icon: Car },
+  ]
+  if (isAdmin.value) {
+    items.push({ name: '3D', path: '/taskman/impresion-3d', icon: Printer })
+  }
+  return items
+})
 
 const handleLogoutEvent = () => {
   router.push('/login')
