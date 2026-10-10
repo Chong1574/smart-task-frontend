@@ -3,7 +3,7 @@ const SITE_URL = 'https://shongyi.com'
 
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
-  ssr: false,
+  ssr: true,
   devtools: { enabled: true },
   modules: [
     '@nuxtjs/tailwindcss',
