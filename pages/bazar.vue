@@ -411,6 +411,38 @@ const categorias = [
   'Gadgets'
 ];
 
-onMounted(() => load(''));
+const route = useRoute();
+const router = useRouter();
+
+watch(selected, (newVal) => {
+  if (newVal) {
+    router.replace({ query: { ...route.query, p: newVal.id } });
+  } else {
+    const newQuery = { ...route.query };
+    delete newQuery.p;
+    router.replace({ query: newQuery });
+  }
+});
+
+onMounted(async () => {
+  await load('');
+  if (route.query.p) {
+    const id = Number(route.query.p);
+    const found = products.value.find(p => p.id === id);
+    if (found) {
+      selected.value = found;
+    } else {
+      try {
+        const res = await fetch(`${apiBase}/products/${id}`);
+        if (res.ok) {
+          const prodData = await res.json();
+          if (prodData) {
+            selected.value = prodData;
+          }
+        }
+      } catch (e) {}
+    }
+  }
+});
 </script>
 
