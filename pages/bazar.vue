@@ -376,13 +376,18 @@ function priceLabel(p: Product): string {
   return hasVariants ? `desde ${fmt(n)}` : fmt(n);
 }
 
+const seoTitle = computed(() => selected.value ? `${selected.value.title} — El Bazar` : 'El Bazar — Productos en impresión 3D y accesorios');
+const seoDesc = computed(() => selected.value ? (selected.value.description || 'Producto en el bazar') : 'Galería de creaciones físicas: piezas en impresión 3D, accesorios de estilo de vida y electrónica diseñada con detalle.');
+const seoImage = computed(() => selected.value?.imageUrl ? imgProxy(selected.value.imageUrl, { width: 1200 }) : 'https://shongyi.com/logo.png');
+
 useSeoMeta({
-  title: 'El Bazar — Productos en impresión 3D y accesorios',
-  description: 'Galería de creaciones físicas: piezas en impresión 3D, accesorios de estilo de vida y electrónica diseñada con detalle.',
-  ogTitle: 'El Bazar — Crafted in 3D',
-  ogDescription: 'Productos físicos diseñados y fabricados a medida.',
+  title: seoTitle,
+  description: seoDesc,
+  ogTitle: seoTitle,
+  ogDescription: seoDesc,
+  ogImage: seoImage,
   ogType: 'website',
-  ogUrl: 'https://shongyi.com/bazar',
+  ogUrl: computed(() => selected.value ? `https://shongyi.com/bazar?p=${selected.value.id}` : 'https://shongyi.com/bazar'),
   twitterCard: 'summary_large_image'
 })
 
