@@ -37,6 +37,18 @@ n8n corre self-hosted en el Pi 5 en `/home/shongyi/n8n/` (compose separado del b
 
 **Estado por default:** `"active": false` — activar en la UI n8n después de importar.
 
+### `registro-bancos-macrodroid.json` — captura automática de gastos bancarios
+
+**Objetivo:** recibir notificaciones push de apps bancarias (BBVA, Nu, Santander, Banorte, Azteca, Hey Banco, Mercado Pago) desde Android vía MacroDroid y registrarlas de inmediato en Task-Manager.
+
+**Flujo:**
+1. `POST /webhook/banco-notificacion` disparado por MacroDroid.
+2. `Parsear Notificación` (JS Code) — filtra promociones y avisos administrativos, extrae monto numérico, comercio limpio, tipo (`expense` vs `income`), banco y sugiere categoría.
+3. `¿Es Transacción Válida?` (IF) — descarta eventos no monetarios.
+4. `Registrar en Task-Manager` (HTTP Request) → `POST http://host.docker.internal:3000/api/finance/sync-webhook` con header `Authorization: Bearer <SYNC_SECRET>`. El backend inserta la transacción, ajusta saldo y dispara push de confirmación.
+
+**Estado por default:** `"active": false` — activar en la UI n8n después de importar y configurar el Header Auth.
+
 ## Requisitos infra (Pi)
 
 - n8n container con `extra_hosts: - "host.docker.internal:host-gateway"` en su `docker-compose.yml` (Linux Docker no lo mapea por default). Alternativa: usar el nombre del container del backend en la red compartida (ver [[project_pi_tunnel_setup]] — cloudflared usa redes externas y ingress por nombre).

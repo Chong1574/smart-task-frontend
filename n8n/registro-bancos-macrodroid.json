@@ -1,0 +1,126 @@
+{
+  "name": "Registro Automático Bancos MacroDroid",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "banco-notificacion",
+        "options": {}
+      },
+      "id": "1a2b3c4d-0001-4000-8000-000000000001",
+      "name": "Webhook MacroDroid",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        200,
+        300
+      ],
+      "webhookId": "banco-notificacion-webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst results = [];\n\nfor (const entry of items) {\n    const body = entry.json.body || entry.json;\n    const rawApp = (body.app || '').toLowerCase();\n    const title = (body.title || '').trim();\n    const text = (body.text || '').trim();\n    const fullText = `${title} ${text}`.replace(/\\s+/g, ' ');\n\n    // 1. Filtrar spam o avisos administrativos\n    const ignoreKeywords = [\n        'preaprobado', 'crédito disponible', 'solicita', 'invita', 'actualiza',\n        'contraseña', 'código de seguridad', 'token', 'iniciaste sesión',\n        'bloqueada', 'desbloqueada', 'promoción', 'cashback disponible'\n    ];\n    if (ignoreKeywords.some(kw => fullText.toLowerCase().includes(kw))) {\n        results.push({ json: { isValid: false, reason: 'Aviso administrativo ignorado', fullText } });\n        continue;\n    }\n\n    // 2. Detectar Tipo (expense vs income)\n    let type = 'expense';\n    const isIncome = /(recibiste|recibida|abono|dep[oó]sito|te transfirieron|n[oó]mina)/i.test(fullText);\n    if (isIncome) {\n        type = 'income';\n    }\n\n    // 3. Extraer Monto\n    const amountRegex = /\\$\\s*([0-9]{1,3}(?:,[0-9]{3})*(?:\\.[0-9]{2})?)|([0-9]{1,3}(?:,[0-9]{3})*\\.[0-9]{2})\\s*(?:mn|mxn|pesos)?/i;\n    const amountMatch = fullText.match(amountRegex);\n    if (!amountMatch) {\n        results.push({ json: { isValid: false, reason: 'Sin monto detectable', fullText } });\n        continue;\n    }\n    const rawAmountStr = amountMatch[1] || amountMatch[2];\n    const amount = parseFloat(rawAmountStr.replace(/,/g, ''));\n    if (isNaN(amount) || amount <= 0) {\n        results.push({ json: { isValid: false, reason: 'Monto inválido', fullText } });\n        continue;\n    }\n\n    // 4. Identificar Banco\n    let bank = 'General';\n    if (rawApp.includes('bbva') || /bbva/i.test(fullText)) bank = 'BBVA';\n    else if (rawApp.includes('nu') || /\\bnu\\b/i.test(fullText)) bank = 'Nu';\n    else if (rawApp.includes('mercado') || /mercado pago/i.test(fullText)) bank = 'Mercado Pago';\n    else if (rawApp.includes('santander') || /santander/i.test(fullText)) bank = 'Santander';\n    else if (rawApp.includes('banorte') || /banorte/i.test(fullText)) bank = 'Banorte';\n    else if (rawApp.includes('azteca') || /banco azteca/i.test(fullText)) bank = 'Banco Azteca';\n    else if (rawApp.includes('hey') || /hey banco/i.test(fullText)) bank = 'Hey Banco';\n\n    // 5. Extraer Comercio / Descripción\n    let description = '';\n    const enMatch = fullText.match(/\\ben\\s+([A-Za-z0-9\\s\\.\\*\\-\\_\\&]{2,35}?)(?=\\s+(?:con|el|aprobada|T\\.|cuenta|\\*|\\.|\\,|$))/i);\n    if (enMatch && enMatch[1]) {\n        description = enMatch[1].trim();\n    }\n    if (!description && isIncome) {\n        const deMatch = fullText.match(/\\bde\\s+([A-Za-z0-9\\s\\.\\*\\-\\_\\&]{2,35}?)(?=\\s+(?:el|cuenta|\\*|\\.|\\,|$))/i);\n        if (deMatch && deMatch[1]) {\n            description = `De: ${deMatch[1].trim()}`;\n        }\n    }\n    if (!description || description.length < 3) {\n        description = `${bank}: ${text.slice(0, 45)}`;\n    }\n\n    // 6. Asignar Categoría\n    let category = 'Varios';\n    const descLower = description.toLowerCase();\n    if (/(walmart|soriana|heb|oxxo|chedraui|bodega|costco|sams|super|tienda|abarrotes)/i.test(descLower)) category = 'Super y Despensa';\n    else if (/(uber|didi|gasolina|pemex|bp|shell|g500|estacionamiento|peaje|tag)/i.test(descLower)) category = 'Transporte';\n    else if (/(cfe|telcel|telmex|izzi|agua|gas|naturgy|at&t|totalplay)/i.test(descLower)) category = 'Servicios';\n    else if (/(starbucks|mcdonalds|kfc|pizza|restaurante|cafe|tacos|comida|burger|sushi|subway|vips)/i.test(descLower)) category = 'Comida';\n    else if (/(netflix|spotify|disney|prime|youtube|apple|hbo|crunchyroll)/i.test(descLower)) category = 'Suscripciones';\n    else if (/(farmacia|guadalajara|ahorro|san pablo|benavides|medico|hospital|laboratorio)/i.test(descLower)) category = 'Salud';\n    else if (type === 'income') category = 'Ingresos';\n\n    results.push({\n        json: {\n            isValid: true,\n            bank,\n            amount,\n            type,\n            description,\n            category,\n            date: new Date().toISOString(),\n            originalText: fullText\n        }\n    });\n}\n\nreturn results;"
+      },
+      "id": "1a2b3c4d-0002-4000-8000-000000000002",
+      "name": "Parsear Notificación",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        420,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.isValid }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "1a2b3c4d-0003-4000-8000-000000000003",
+      "name": "¿Es Transacción Válida?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        640,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:3000/api/finance/sync-webhook",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer TU_SYNC_SECRET"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"bank\": {{ JSON.stringify($json.bank) }},\n  \"amount\": {{ $json.amount }},\n  \"type\": {{ JSON.stringify($json.type) }},\n  \"description\": {{ JSON.stringify($json.description) }},\n  \"category\": {{ JSON.stringify($json.category) }},\n  \"date\": {{ JSON.stringify($json.date) }}\n}",
+        "options": {}
+      },
+      "id": "1a2b3c4d-0004-4000-8000-000000000004",
+      "name": "Registrar en Task-Manager",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        880,
+        280
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook MacroDroid": {
+      "main": [
+        [
+          {
+            "node": "Parsear Notificación",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parsear Notificación": {
+      "main": [
+        [
+          {
+            "node": "¿Es Transacción Válida?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Es Transacción Válida?": {
+      "main": [
+        [
+          {
+            "node": "Registrar en Task-Manager",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "f7823ab2-4b2a-4c2d-9e1a-8c9b7a6d5c4c"
+}
