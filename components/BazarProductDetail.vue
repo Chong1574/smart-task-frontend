@@ -120,16 +120,16 @@
           </div>
 
           <p v-if="descriptionSafe" class="text-sm text-muted-foreground mb-6 whitespace-pre-line">{{ descriptionSafe }}</p>
-          <div v-if="product.tags && product.tags.length" class="flex flex-wrap gap-2 mb-6">
+          <div v-if="product.tags && product.tags.length" class="flex flex-wrap gap-1.5 mb-6">
             <button
               v-for="tag in product.tags"
               :key="tag"
               type="button"
               @click="$emit('select-tag', tag)"
-              class="px-2.5 py-1 bg-secondary hover:bg-primary hover:text-primary-foreground text-secondary-foreground text-xs rounded-md transition-colors cursor-pointer flex items-center gap-1"
+              class="px-2.5 py-1 bg-secondary/40 hover:bg-primary hover:text-primary-foreground text-foreground/80 text-xs rounded-full border border-border/60 transition-all cursor-pointer flex items-center gap-1"
               title="Filtrar catálogo por esta etiqueta"
             >
-              #{{ tag }}
+              {{ formatTag(tag) }}
             </button>
           </div>
 
@@ -235,6 +235,14 @@ const descriptionSafe = computed(() => {
   // Decodificar entidades
   return raw.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ').trim();
 });
+
+function formatTag(raw: string | null | undefined): string {
+  if (!raw) return '';
+  let clean = raw.trim().replace(/^#+/, '');
+  clean = clean.replace(/([a-z0-9])([A-Z])/g, '$1 $2');
+  clean = clean.replace(/[-_]+/g, ' ').replace(/\s+/g, ' ');
+  return clean;
+}
 
 import { useCartStore } from '~/stores/cart';
 import { toast } from 'vue-sonner';

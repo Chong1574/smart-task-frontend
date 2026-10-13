@@ -67,146 +67,177 @@
             </ul>
           </div>
 
-          <!-- Precio / Costo (Colocado arriba de etiquetas para visibilidad inmediata) -->
+          <!-- Precio / Rango Dinámico -->
           <div class="mb-5 pt-4 border-t border-border/60">
             <div class="flex items-center justify-between mb-2">
               <h3 class="font-semibold text-sm text-foreground">Precio</h3>
-              <button 
-                v-if="priceRange[0] > 0 || priceRange[1] < 1000" 
-                type="button"
-                @click="selectPricePreset(PRICE_PRESETS[0])" 
-                class="text-[11px] text-primary hover:underline font-medium"
-              >
-                Restablecer
-              </button>
+              <div class="flex items-center gap-1.5">
+                <span class="text-xs font-medium text-primary">
+                  {{ priceSummaryLabel }}
+                </span>
+                <button 
+                  v-if="priceRange[0] > 0 || priceRange[1] < 1000" 
+                  type="button"
+                  @click="selectPricePreset(PRICE_PRESETS[0])" 
+                  class="text-[11px] text-muted-foreground hover:text-primary transition-colors ml-0.5"
+                  title="Restablecer precio"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
 
-            <!-- Rangos rápidos -->
-            <ul class="space-y-1 mb-3">
-              <li v-for="preset in PRICE_PRESETS" :key="preset.id">
-                <button
-                  type="button"
-                  @click="selectPricePreset(preset)"
-                  class="text-xs w-full text-left transition-colors flex items-center justify-between py-1 group"
-                  :class="selectedPricePreset === preset.id ? 'text-primary font-bold' : 'text-muted-foreground hover:text-foreground'"
-                >
-                  <span>{{ preset.label }}</span>
-                  <div class="flex items-center gap-1.5 shrink-0">
-                    <span class="text-[11px] text-muted-foreground/70 font-normal">({{ getPresetCount(preset) }})</span>
-                    <span v-if="selectedPricePreset === preset.id" class="w-1.5 h-1.5 rounded-full bg-primary shrink-0"></span>
-                  </div>
-                </button>
-              </li>
-            </ul>
-
-            <!-- Inputs manuales Min y Max -->
-            <div class="pt-2 border-t border-border/40">
-              <div class="flex items-center gap-1.5 mb-2">
-                <div class="relative flex-1">
-                  <span class="absolute left-2 top-1.5 text-[11px] text-muted-foreground">$</span>
-                  <input 
-                    type="number" 
-                    v-model.number="minPriceInput" 
-                    placeholder="Mín" 
-                    min="0"
-                    class="w-full h-7 pl-5 pr-1.5 rounded-md border border-border bg-background text-xs focus:ring-1 focus:ring-primary focus:outline-none"
-                    @keydown.enter="applyCustomPrice"
-                  />
-                </div>
-                <span class="text-xs text-muted-foreground">-</span>
-                <div class="relative flex-1">
-                  <span class="absolute left-2 top-1.5 text-[11px] text-muted-foreground">$</span>
-                  <input 
-                    type="number" 
-                    v-model.number="maxPriceInput" 
-                    placeholder="Máx" 
-                    min="0"
-                    class="w-full h-7 pl-5 pr-1.5 rounded-md border border-border bg-background text-xs focus:ring-1 focus:ring-primary focus:outline-none"
-                    @keydown.enter="applyCustomPrice"
-                  />
-                </div>
-                <button 
-                  type="button" 
-                  @click="applyCustomPrice" 
-                  class="h-7 px-2.5 bg-secondary hover:bg-secondary/80 text-secondary-foreground text-xs font-medium rounded-md border border-border cursor-pointer transition-colors"
-                >
-                  Ir
-                </button>
-              </div>
-
-              <!-- Slider visual -->
-              <div class="flex justify-between items-center text-[10px] text-muted-foreground mb-1.5 px-0.5">
-                <span>{{ fmt(priceRange[0]) }}</span>
-                <span>{{ priceRange[1] >= 1000 ? 'Sin límite' : fmt(priceRange[1]) }}</span>
-              </div>
+            <!-- Slider interactivo -->
+            <div class="px-1 py-1.5">
               <Slider v-model="priceRange" :min="0" :max="1000" :step="10" class="w-full" />
             </div>
+
+            <!-- Indicadores Mín y Máx del slider -->
+            <div class="flex justify-between items-center text-[10px] text-muted-foreground/75 mb-2.5 px-0.5">
+              <span>$0</span>
+              <span>$1,000+</span>
+            </div>
+
+            <!-- Píldoras de selección rápida -->
+            <div class="flex flex-wrap gap-1">
+              <button
+                v-for="preset in PRICE_PRESETS"
+                :key="preset.id"
+                type="button"
+                @click="selectPricePreset(preset)"
+                class="text-[11px] px-2 py-0.5 rounded-lg border transition-all cursor-pointer"
+                :class="selectedPricePreset === preset.id
+                  ? 'bg-primary text-primary-foreground border-primary font-medium shadow-xs'
+                  : 'bg-secondary/40 text-muted-foreground border-border/60 hover:text-foreground hover:bg-secondary/70'"
+              >
+                {{ preset.shortLabel }}
+              </button>
+            </div>
           </div>
 
-          <!-- Etiquetas Populares (Con scroll propio y buscador) -->
+          <!-- Etiquetas Populares (Nube orgánica sin scroll anidado) -->
           <div v-if="popularTags.length > 0" class="mb-5 pt-4 border-t border-border/60">
-            <div class="flex items-center justify-between mb-2">
-              <h3 class="font-semibold text-sm text-foreground">Etiquetas</h3>
-              <button 
-                v-if="selectedTag" 
+            <div class="flex items-center justify-between mb-2.5">
+              <div class="flex items-center gap-1.5">
+                <h3 class="font-semibold text-sm text-foreground">Etiquetas</h3>
+                <span 
+                  v-if="selectedTag" 
+                  class="w-1.5 h-1.5 rounded-full bg-primary shrink-0"
+                ></span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button 
+                  type="button"
+                  @click="toggleTagSearch"
+                  class="text-muted-foreground hover:text-primary transition-colors p-1 rounded-md hover:bg-secondary/50 cursor-pointer"
+                  :title="showTagSearch ? 'Cerrar buscador' : 'Buscar etiqueta'"
+                >
+                  <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                  </svg>
+                </button>
+                <button 
+                  v-if="selectedTag" 
+                  type="button"
+                  @click="selectedTag = null" 
+                  class="text-[11px] text-primary hover:underline font-medium"
+                >
+                  Quitar
+                </button>
+              </div>
+            </div>
+
+            <!-- Mini buscador desplegable bajo demanda -->
+            <transition
+              enter-active-class="transition duration-150 ease-out"
+              enter-from-class="opacity-0 -translate-y-1"
+              enter-to-class="opacity-100 translate-y-0"
+              leave-active-class="transition duration-100 ease-in"
+              leave-from-class="opacity-100 translate-y-0"
+              leave-to-class="opacity-0 -translate-y-1"
+            >
+              <div v-if="showTagSearch" class="relative mb-2.5">
+                <input
+                  ref="tagSearchInputRef"
+                  type="text"
+                  v-model="tagSearchQuery"
+                  placeholder="Filtrar etiquetas..."
+                  class="w-full h-7 pl-7 pr-6 rounded-lg border border-border/80 bg-background text-xs placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+                <svg class="absolute left-2 top-2 text-muted-foreground/60 w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <button v-if="tagSearchQuery" @click="tagSearchQuery = ''" class="absolute right-2 top-1.5 text-muted-foreground hover:text-foreground text-xs">✕</button>
+              </div>
+            </transition>
+
+            <!-- Nube de etiquetas estilizada y aireada -->
+            <div class="flex flex-wrap gap-1.5">
+              <button
+                v-for="tag in visibleTags"
+                :key="tag.norm"
                 type="button"
-                @click="selectedTag = null" 
-                class="text-[11px] text-primary hover:underline font-medium"
+                @click="toggleTag(tag.display)"
+                class="group text-xs px-2.5 py-1 rounded-full border transition-all inline-flex items-center gap-1.5 cursor-pointer"
+                :class="isTagActive(tag.norm)
+                  ? 'bg-primary text-primary-foreground border-primary font-medium shadow-xs'
+                  : 'bg-secondary/35 text-foreground/80 hover:text-foreground border-border/60 hover:border-primary/40 hover:bg-secondary/70'"
               >
-                Quitar
+                <span>{{ formatTagDisplay(tag.display) }}</span>
+                <span 
+                  class="text-[10px] px-1.5 py-0.2 rounded-full font-normal transition-colors"
+                  :class="isTagActive(tag.norm) 
+                    ? 'bg-white/20 text-white' 
+                    : 'bg-secondary text-muted-foreground group-hover:text-foreground'"
+                >
+                  {{ tag.count }}
+                </span>
               </button>
             </div>
 
-            <!-- Mini buscador de etiquetas -->
-            <div class="relative mb-2">
-              <input
-                type="text"
-                v-model="tagSearchQuery"
-                placeholder="Buscar etiqueta..."
-                class="w-full h-7 pl-7 pr-6 rounded-md border border-border bg-background text-xs placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary"
-              />
-              <svg class="absolute left-2 top-1.5 text-muted-foreground/60 w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-              </svg>
-              <button v-if="tagSearchQuery" @click="tagSearchQuery = ''" class="absolute right-2 top-1 text-muted-foreground hover:text-foreground text-xs">✕</button>
-            </div>
+            <p v-if="filteredTags.length === 0" class="text-xs text-muted-foreground text-center py-3">
+              No hay etiquetas con "{{ tagSearchQuery }}"
+            </p>
 
-            <!-- Contenedor scrollable de etiquetas -->
-            <div class="max-h-48 overflow-y-auto pr-1 space-y-1">
-              <div class="flex flex-wrap gap-1.5">
-                <button
-                  v-for="tag in filteredTags"
-                  :key="tag.norm"
-                  type="button"
-                  @click="toggleTag(tag.display)"
-                  class="text-xs px-2.5 py-0.5 rounded-full border transition-all flex items-center gap-1 cursor-pointer"
-                  :class="isTagActive(tag.norm)
-                    ? 'bg-primary text-primary-foreground border-primary font-medium shadow-xs'
-                    : 'bg-secondary/40 text-muted-foreground hover:text-foreground border-border/50 hover:bg-secondary/70'"
-                >
-                  <span>#{{ tag.display }}</span>
-                  <span class="text-[10px] opacity-70">({{ tag.count }})</span>
-                </button>
-              </div>
-              <p v-if="filteredTags.length === 0" class="text-xs text-muted-foreground text-center py-3">
-                No hay etiquetas con "{{ tagSearchQuery }}"
-              </p>
+            <!-- Botón Ver Más / Ver Menos -->
+            <div v-if="!tagSearchQuery.trim() && filteredTags.length > 8" class="pt-2">
+              <button
+                type="button"
+                @click="isTagsExpanded = !isTagsExpanded"
+                class="text-xs text-primary hover:underline font-medium inline-flex items-center gap-1 cursor-pointer"
+              >
+                <span>{{ isTagsExpanded ? '− Ver menos' : `+ Ver ${filteredTags.length - 8} etiquetas más` }}</span>
+              </button>
             </div>
           </div>
 
-          <!-- Botón de Búsqueda Profunda (MakerWorld) -->
+          <!-- Tarjeta de Búsqueda Global (MakerWorld / Red) -->
           <div class="pt-4 border-t border-border/60">
-            <h3 class="font-semibold text-sm mb-1.5 text-foreground">¿No encuentras lo que buscas?</h3>
-            <p class="text-xs text-muted-foreground mb-3">Busca en toda la red y encuentra el modelo perfecto para hacerlo realidad.</p>
-            <button 
-              @click="triggerDeepSearch" 
-              class="w-full bg-secondary hover:bg-secondary/80 text-secondary-foreground text-xs font-medium py-2 px-3 rounded-xl transition-all border border-border flex items-center justify-center shadow-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-              :disabled="loadingDeep || !query.trim()"
-            >
-              <span v-if="loadingDeep" class="animate-pulse">{{ deepSearchPhrases[deepSearchStatusIndex] }}</span>
-              <span v-else>Traer de toda la Web</span>
-            </button>
-            <p v-if="!query.trim()" class="text-[10px] text-muted-foreground mt-1.5 text-center">Escribe algo en el buscador primero.</p>
+            <div class="bg-secondary/25 border border-border/70 rounded-xl p-3.5 space-y-2">
+              <div class="flex items-center gap-2">
+                <span class="p-1 rounded-md bg-primary/10 text-primary shrink-0">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
+                </span>
+                <h3 class="font-serif font-semibold text-xs text-foreground">Búsqueda Global 3D</h3>
+              </div>
+              <p class="text-[11px] text-muted-foreground leading-relaxed">
+                ¿Buscas un diseño específico? Explora millones de modelos en la web para fabricar a medida.
+              </p>
+              <button 
+                @click="handleDeepSearchClick" 
+                class="w-full text-xs font-medium py-2 px-3 rounded-lg transition-all flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+                :class="query.trim() 
+                  ? 'bg-primary hover:bg-primary/90 text-primary-foreground font-semibold' 
+                  : 'bg-secondary/70 hover:bg-secondary text-foreground border border-border/70'"
+                :disabled="loadingDeep"
+              >
+                <span v-if="loadingDeep" class="animate-pulse">{{ deepSearchPhrases[deepSearchStatusIndex] }}</span>
+                <template v-else>
+                  <span>{{ query.trim() ? 'Traer de toda la Web' : 'Explorar en la Web' }}</span>
+                  <svg class="w-3 h-3 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                </template>
+              </button>
+            </div>
           </div>
         </aside>
 
@@ -230,7 +261,7 @@
               v-if="selectedTag"
               class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 text-primary font-medium border border-primary/20"
             >
-              #{{ selectedTag }}
+              {{ formatTagDisplay(selectedTag) }}
               <button type="button" @click="selectedTag = null" class="hover:opacity-70 font-bold ml-0.5">✕</button>
             </span>
 
@@ -346,7 +377,7 @@
                     : 'bg-secondary/50 text-secondary-foreground hover:bg-primary/20 hover:text-primary'"
                   title="Filtrar por esta etiqueta"
                 >
-                  {{ tag }}
+                  {{ formatTagDisplay(tag) }}
                 </button>
                 <span v-if="product.tags.length > 3" class="text-[10px] text-muted-foreground self-center">
                   +{{ product.tags.length - 3 }}
@@ -579,16 +610,17 @@ const CATEGORY_DEFS: CategoryDef[] = [
 interface PricePreset {
   id: string;
   label: string;
+  shortLabel: string;
   min: number;
   max: number;
 }
 
 const PRICE_PRESETS: PricePreset[] = [
-  { id: 'all', label: 'Cualquier precio', min: 0, max: 1000 },
-  { id: 'under100', label: 'Hasta $100', min: 0, max: 100 },
-  { id: '100to250', label: '$100 a $250', min: 100, max: 250 },
-  { id: '250to500', label: '$250 a $500', min: 250, max: 500 },
-  { id: 'over500', label: 'Más de $500', min: 500, max: 1000 }
+  { id: 'all', label: 'Cualquier precio', shortLabel: 'Todos', min: 0, max: 1000 },
+  { id: 'under100', label: 'Hasta $100', shortLabel: '< $100', min: 0, max: 100 },
+  { id: '100to250', label: '$100 a $250', shortLabel: '$100 - $250', min: 100, max: 250 },
+  { id: '250to500', label: '$250 a $500', shortLabel: '$250 - $500', min: 250, max: 500 },
+  { id: 'over500', label: 'Más de $500', shortLabel: '> $500', min: 500, max: 1000 }
 ];
 
 const selectedCategory = ref('todos');
@@ -598,6 +630,27 @@ const priceRange = ref([0, 1000]);
 const minPriceInput = ref<number | null>(null);
 const maxPriceInput = ref<number | null>(null);
 const tagSearchQuery = ref('');
+const isTagsExpanded = ref(false);
+const showTagSearch = ref(false);
+const tagSearchInputRef = ref<HTMLInputElement | null>(null);
+
+const priceSummaryLabel = computed(() => {
+  if (priceRange.value[0] === 0 && priceRange.value[1] >= 1000) {
+    return 'Cualquier precio';
+  }
+  if (priceRange.value[1] >= 1000) {
+    return `Desde ${fmt(priceRange.value[0])}`;
+  }
+  return `${fmt(priceRange.value[0])} - ${fmt(priceRange.value[1])}`;
+});
+
+watch(priceRange, (newVal) => {
+  if (!Array.isArray(newVal) || newVal.length < 2) return;
+  const match = PRICE_PRESETS.find(p => p.min === newVal[0] && p.max === newVal[1]);
+  selectedPricePreset.value = match ? match.id : 'custom';
+  minPriceInput.value = newVal[0] === 0 ? null : newVal[0];
+  maxPriceInput.value = newVal[1] >= 1000 ? null : newVal[1];
+}, { deep: true });
 
 function selectPricePreset(preset: PricePreset) {
   selectedPricePreset.value = preset.id;
@@ -649,6 +702,14 @@ interface TagItem {
   count: number;
 }
 
+function formatTagDisplay(raw: string | null | undefined): string {
+  if (!raw) return '';
+  let clean = raw.trim().replace(/^#+/, '');
+  clean = clean.replace(/([a-z0-9])([A-Z])/g, '$1 $2');
+  clean = clean.replace(/[-_]+/g, ' ').replace(/\s+/g, ' ');
+  return clean;
+}
+
 const popularTags = computed<TagItem[]>(() => {
   const map = new Map<string, { norm: string; display: string; count: number }>();
   for (const p of products.value) {
@@ -681,6 +742,34 @@ const filteredTags = computed(() => {
   return popularTags.value.filter(t => t.norm.includes(q) || normalizeText(t.display).includes(q));
 });
 
+const visibleTags = computed(() => {
+  if (tagSearchQuery.value.trim() || isTagsExpanded.value) {
+    return filteredTags.value;
+  }
+  const top = filteredTags.value.slice(0, 8);
+  if (selectedTag.value) {
+    const activeNorm = normalizeText(selectedTag.value);
+    const inTop = top.some(t => t.norm === activeNorm);
+    if (!inTop) {
+      const activeItem = filteredTags.value.find(t => t.norm === activeNorm);
+      if (activeItem) return [...top, activeItem];
+    }
+  }
+  return top;
+});
+
+function toggleTagSearch() {
+  showTagSearch.value = !showTagSearch.value;
+  if (showTagSearch.value) {
+    isTagsExpanded.value = true;
+    nextTick(() => {
+      tagSearchInputRef.value?.focus();
+    });
+  } else {
+    tagSearchQuery.value = '';
+  }
+}
+
 function toggleTag(tag: string) {
   const norm = normalizeText(tag);
   if (selectedTag.value && normalizeText(selectedTag.value) === norm) {
@@ -700,6 +789,19 @@ function handleSelectTagFromDetail(tag: string) {
   toggleTag(tag);
 }
 
+function handleDeepSearchClick() {
+  if (!query.value.trim()) {
+    const searchEl = document.querySelector('input[type="search"]') as HTMLInputElement;
+    if (searchEl) {
+      searchEl.focus();
+      searchEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    toast.info('Buscador', { description: 'Escribe primero en el buscador qué modelo deseas encontrar.' });
+    return;
+  }
+  triggerDeepSearch();
+}
+
 const hasActiveFilters = computed(() => {
   return selectedCategory.value !== 'todos' ||
     selectedTag.value !== null ||
@@ -716,6 +818,8 @@ function resetFilters() {
   minPriceInput.value = null;
   maxPriceInput.value = null;
   tagSearchQuery.value = '';
+  showTagSearch.value = false;
+  isTagsExpanded.value = false;
   query.value = '';
 }
 
