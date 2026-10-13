@@ -121,9 +121,16 @@
 
           <p v-if="descriptionSafe" class="text-sm text-muted-foreground mb-6 whitespace-pre-line">{{ descriptionSafe }}</p>
           <div v-if="product.tags && product.tags.length" class="flex flex-wrap gap-2 mb-6">
-            <span v-for="tag in product.tags" :key="tag" class="px-2 py-1 bg-secondary text-secondary-foreground text-xs rounded-md">
-              {{ tag }}
-            </span>
+            <button
+              v-for="tag in product.tags"
+              :key="tag"
+              type="button"
+              @click="$emit('select-tag', tag)"
+              class="px-2.5 py-1 bg-secondary hover:bg-primary hover:text-primary-foreground text-secondary-foreground text-xs rounded-md transition-colors cursor-pointer flex items-center gap-1"
+              title="Filtrar catálogo por esta etiqueta"
+            >
+              #{{ tag }}
+            </button>
           </div>
 
 
@@ -159,7 +166,10 @@ interface Product {
 }
 
 const props = defineProps<{ product: Product }>();
-const emit = defineEmits<{ (e: 'close'): void }>();
+const emit = defineEmits<{
+  (e: 'close'): void;
+  (e: 'select-tag', tag: string): void;
+}>();
 
 const images = computed(() => {
   const arr = Array.isArray(props.product.images) ? props.product.images : [];

@@ -34,25 +34,79 @@
         
         <!-- Sidebar de Filtros -->
         <aside class="w-full md:w-64 flex-shrink-0 bg-card border border-border/60 rounded-2xl p-6 shadow-sm md:sticky md:top-24 md:z-10">
-          <h2 class="text-lg font-bold mb-4 font-serif">Filtros</h2>
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-bold font-serif">Filtros</h2>
+            <button 
+              v-if="hasActiveFilters" 
+              type="button"
+              @click="resetFilters" 
+              class="text-xs text-primary hover:underline font-medium"
+            >
+              Limpiar
+            </button>
+          </div>
           
-          <div class="mb-8">
+          <!-- Categorías -->
+          <div class="mb-6">
             <h3 class="font-semibold text-sm mb-3 text-foreground">Categorías</h3>
-            <ul class="space-y-2">
-              <li v-for="cat in categorias" :key="cat">
+            <ul class="space-y-1.5">
+              <li v-for="cat in categoriesWithCounts" :key="cat.id">
                 <button 
-                  @click="selectedCategory = cat"
-                  class="text-sm w-full text-left transition-colors flex items-center justify-between"
-                  :class="selectedCategory === cat ? 'text-primary font-bold' : 'text-muted-foreground hover:text-foreground'"
+                  type="button"
+                  @click="selectedCategory = cat.id"
+                  class="text-sm w-full text-left transition-colors flex items-center justify-between py-1 group"
+                  :class="selectedCategory === cat.id ? 'text-primary font-bold' : 'text-muted-foreground hover:text-foreground'"
                 >
-                  {{ cat }}
-                  <span v-if="selectedCategory === cat" class="w-2 h-2 rounded-full bg-primary"></span>
+                  <span class="truncate pr-2">{{ cat.label }}</span>
+                  <div class="flex items-center gap-1.5 shrink-0">
+                    <span class="text-[11px] text-muted-foreground/70 font-normal">({{ cat.count }})</span>
+                    <span v-if="selectedCategory === cat.id" class="w-2 h-2 rounded-full bg-primary shrink-0"></span>
+                  </div>
                 </button>
               </li>
             </ul>
           </div>
 
-          <div class="mb-6">
+          <!-- Etiquetas Populares -->
+          <div v-if="popularTags.length > 0" class="mb-6 pt-5 border-t border-border/60">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-semibold text-sm text-foreground">Etiquetas</h3>
+              <button 
+                v-if="selectedTag" 
+                type="button"
+                @click="selectedTag = null" 
+                class="text-[11px] text-primary hover:underline font-medium"
+              >
+                Quitar
+              </button>
+            </div>
+            <div class="flex flex-wrap gap-1.5">
+              <button
+                v-for="tag in visibleTags"
+                :key="tag.norm"
+                type="button"
+                @click="toggleTag(tag.display)"
+                class="text-xs px-2.5 py-1 rounded-full border transition-all flex items-center gap-1 cursor-pointer"
+                :class="isTagActive(tag.norm)
+                  ? 'bg-primary text-primary-foreground border-primary font-medium shadow-xs'
+                  : 'bg-secondary/40 text-muted-foreground hover:text-foreground border-border/50 hover:bg-secondary/70'"
+              >
+                <span>#{{ tag.display }}</span>
+                <span class="text-[10px] opacity-70">({{ tag.count }})</span>
+              </button>
+            </div>
+            <button 
+              v-if="popularTags.length > 12"
+              type="button"
+              @click="showAllTags = !showAllTags"
+              class="mt-2.5 text-xs text-primary hover:underline font-medium block"
+            >
+              {{ showAllTags ? 'Mostrar menos' : `+ Ver más etiquetas (${popularTags.length - 12})` }}
+            </button>
+          </div>
+
+          <!-- Precio -->
+          <div class="mb-6 pt-5 border-t border-border/60">
             <h3 class="font-semibold text-sm mb-3 text-foreground">Precio</h3>
             <div class="flex justify-between items-center mb-3">
               <span class="text-xs text-muted-foreground">{{ fmt(priceRange[0]) }}</span>
@@ -62,7 +116,7 @@
           </div>
 
           <!-- Botón de Búsqueda Profunda (MakerWorld) -->
-          <div class="mt-8 pt-6 border-t border-border">
+          <div class="pt-6 border-t border-border/60">
             <h3 class="font-semibold text-sm mb-2 text-foreground">¿No encuentras lo que buscas?</h3>
             <p class="text-xs text-muted-foreground mb-4">Busca en toda la red y encuentra el modelo perfecto para hacerlo realidad.</p>
             <button 
@@ -79,10 +133,87 @@
 
         <!-- Contenido Principal -->
         <main class="flex-1 w-full min-w-0">
+          <!-- Barra de Filtros Activos -->
+          <div v-if="hasActiveFilters" class="flex flex-wrap items-center gap-2 mb-4 p-3 rounded-xl bg-card border border-border/60 text-xs">
+            <span class="text-muted-foreground font-medium mr-1">Filtros:</span>
+
+            <!-- Categoría activa -->
+            <span 
+              v-if="selectedCategory !== 'todos'"
+              class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 text-primary font-medium border border-primary/20"
+            >
+              Categoría: {{ currentCategoryLabel }}
+              <button type="button" @click="selectedCategory = 'todos'" class="hover:opacity-70 font-bold ml-0.5">✕</button>
+            </span>
+
+            <!-- Etiqueta activa -->
+            <span 
+              v-if="selectedTag"
+              class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 text-primary font-medium border border-primary/20"
+            >
+              #{{ selectedTag }}
+              <button type="button" @click="selectedTag = null" class="hover:opacity-70 font-bold ml-0.5">✕</button>
+            </span>
+
+            <!-- Precio -->
+            <span 
+              v-if="priceRange[0] > 0 || priceRange[1] < 1000"
+              class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary text-secondary-foreground font-medium border border-border"
+            >
+              {{ fmt(priceRange[0]) }} - {{ priceRange[1] >= 1000 ? 'Sin límite' : fmt(priceRange[1]) }}
+              <button type="button" @click="priceRange = [0, 1000]" class="hover:opacity-70 font-bold ml-0.5">✕</button>
+            </span>
+
+            <!-- Búsqueda -->
+            <span 
+              v-if="query.trim()"
+              class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary text-secondary-foreground font-medium border border-border"
+            >
+              "{{ query.trim() }}"
+              <button type="button" @click="query = ''" class="hover:opacity-70 font-bold ml-0.5">✕</button>
+            </span>
+
+            <!-- Limpiar todo -->
+            <button 
+              type="button" 
+              @click="resetFilters" 
+              class="ml-auto text-primary hover:underline font-medium text-xs"
+            >
+              Limpiar todo
+            </button>
+          </div>
+
+          <!-- Contador de resultados -->
+          <div class="flex items-center justify-between mb-4 px-1">
+            <p class="text-xs text-muted-foreground">
+              Mostrando <span class="font-semibold text-foreground">{{ filteredProducts.length }}</span> productos
+              <span v-if="products.length > 0 && filteredProducts.length !== products.length">
+                (de {{ products.length }})
+              </span>
+            </p>
+          </div>
+
           <div v-if="error" class="text-center text-destructive py-8">{{ error }}</div>
-          <div v-else-if="filteredProducts.length === 0 && !loading && !isDeepSearching" class="text-center text-muted-foreground py-16 bg-card border border-border/60 rounded-2xl">
-            <p class="text-lg font-medium mb-2">No hay resultados locales.</p>
-            <p class="text-sm">Intenta ajustar los filtros o haz clic en "Traer de toda la Web".</p>
+          <div v-else-if="filteredProducts.length === 0 && !loading && !isDeepSearching" class="text-center text-muted-foreground py-16 bg-card border border-border/60 rounded-2xl px-6">
+            <p class="text-lg font-medium mb-2 text-foreground">No hay resultados con los filtros actuales.</p>
+            <p class="text-sm mb-6 max-w-md mx-auto">Prueba quitando algún filtro o ajustando el rango de precio para ver más opciones.</p>
+            <div class="flex flex-wrap gap-3 justify-center">
+              <button 
+                type="button" 
+                @click="resetFilters" 
+                class="bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium py-2 px-4 rounded-xl transition-all shadow-sm"
+              >
+                Limpiar filtros
+              </button>
+              <button 
+                v-if="query.trim()"
+                type="button"
+                @click="triggerDeepSearch" 
+                class="bg-secondary text-secondary-foreground hover:bg-secondary/80 text-sm font-medium py-2 px-4 rounded-xl transition-all border border-border"
+              >
+                Traer de toda la Web
+              </button>
+            </div>
           </div>
           <template v-else>
             <div v-if="isDeepSearching" class="flex items-center gap-3 mb-6 px-4 py-3 rounded-xl bg-card border border-border/60 text-sm text-muted-foreground shadow-sm">
@@ -125,9 +256,19 @@
             <h3 class="font-serif text-xl font-semibold mb-2 group-hover:text-primary transition-colors">{{ product.title }}</h3>
             <p class="text-muted-foreground text-sm mb-4 line-clamp-2">{{ product.description }}</p>
               <div v-if="product.tags && product.tags.length" class="flex flex-wrap gap-1 mb-4 mt-[-8px]">
-                <span v-for="tag in product.tags.slice(0, 3)" :key="tag" class="px-2 py-0.5 bg-secondary/50 text-secondary-foreground text-[10px] rounded uppercase tracking-wider">
+                <button
+                  v-for="tag in product.tags.slice(0, 3)"
+                  :key="tag"
+                  type="button"
+                  @click.stop="toggleTag(tag)"
+                  class="px-2 py-0.5 text-[10px] rounded uppercase tracking-wider transition-colors cursor-pointer"
+                  :class="isTagActive(tag)
+                    ? 'bg-primary text-primary-foreground font-semibold shadow-xs'
+                    : 'bg-secondary/50 text-secondary-foreground hover:bg-primary/20 hover:text-primary'"
+                  title="Filtrar por esta etiqueta"
+                >
                   {{ tag }}
-                </span>
+                </button>
                 <span v-if="product.tags.length > 3" class="text-[10px] text-muted-foreground self-center">
                   +{{ product.tags.length - 3 }}
                 </span>
@@ -179,7 +320,12 @@
       </div>
       </template>
 
-      <BazarProductDetail v-if="selected" :product="selected" @close="selected = null" />
+      <BazarProductDetail 
+        v-if="selected" 
+        :product="selected" 
+        @close="selected = null" 
+        @select-tag="handleSelectTagFromDetail" 
+      />
         </main>
       </div>
     </div>
@@ -248,29 +394,228 @@ const searchedLive = ref(false);
 const rateLimited = ref(false);
 const selected = ref<Product | null>(null);
 
-const selectedCategory = ref('Todos');
+function normalizeText(s: string | null | undefined): string {
+  if (!s) return '';
+  return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+}
+
+interface CategoryDef {
+  id: string;
+  label: string;
+  match: (p: Product) => boolean;
+}
+
+const CATEGORY_DEFS: CategoryDef[] = [
+  {
+    id: 'todos',
+    label: 'Todos',
+    match: () => true
+  },
+  {
+    id: 'decoracion',
+    label: 'Decoración',
+    match: (p: Product) => {
+      const cat = normalizeText(p.category);
+      const tags = (p.tags || []).map(normalizeText);
+      const title = normalizeText(p.title);
+      return cat.includes('decoraci') || cat.includes('adorno') ||
+        tags.some(t => t.includes('decorac') || t.includes('adorno') || t.includes('figura') || t.includes('lampara') || t.includes('cuadro')) ||
+        title.includes('decorat') || title.includes('adorno');
+    }
+  },
+  {
+    id: 'hogar_organizacion',
+    label: 'Hogar y Organización',
+    match: (p: Product) => {
+      const cat = normalizeText(p.category);
+      const tags = (p.tags || []).map(normalizeText);
+      const title = normalizeText(p.title);
+      return cat.includes('organiza') || cat.includes('hogar') || cat.includes('cocina') || cat.includes('bano') ||
+        tags.some(t => t.includes('organiza') || t.includes('hogar') || t.includes('cocina') || t.includes('soporte') || t.includes('estante') || t.includes('orden')) ||
+        title.includes('organiz') || title.includes('soporte') || title.includes('dispensador');
+    }
+  },
+  {
+    id: 'juguetes_figuras',
+    label: 'Juguetes y Figuras',
+    match: (p: Product) => {
+      const cat = normalizeText(p.category);
+      const tags = (p.tags || []).map(normalizeText);
+      const title = normalizeText(p.title);
+      return cat.includes('juguete') || cat.includes('juego') || cat.includes('figura') || cat.includes('coleccion') || cat.includes('fidget') ||
+        tags.some(t => t.includes('juguete') || t.includes('fidget') || t.includes('figura') || t.includes('coleccion') || t.includes('pokemon') || t.includes('articulado') || t.includes('antistres') || t.includes('antiestres')) ||
+        title.includes('articulad') || title.includes('toy') || title.includes('fidget');
+    }
+  },
+  {
+    id: 'temporada',
+    label: 'Temporada y Fiestas',
+    match: (p: Product) => {
+      const cat = normalizeText(p.category);
+      const tags = (p.tags || []).map(normalizeText);
+      const title = normalizeText(p.title);
+      return cat.includes('navid') || cat.includes('halloween') || cat.includes('otono') || cat.includes('muerto') ||
+        tags.some(t => t.includes('navid') || t.includes('halloween') || t.includes('otono') || t.includes('calavera') || t.includes('fantasma') || t.includes('bruja') || t.includes('pumpkin') || t.includes('calabaza')) ||
+        title.includes('halloween') || title.includes('navidad') || title.includes('naviden');
+    }
+  },
+  {
+    id: 'accesorios',
+    label: 'Accesorios y Estilo',
+    match: (p: Product) => {
+      const cat = normalizeText(p.category);
+      const tags = (p.tags || []).map(normalizeText);
+      const title = normalizeText(p.title);
+      return cat.includes('accesorio') || cat.includes('llavero') || cat.includes('cosplay') || cat.includes('joyer') ||
+        tags.some(t => t.includes('accesorio') || t.includes('llavero') || t.includes('llaveros') || t.includes('anillo') || t.includes('pulsera') || t.includes('cosplay')) ||
+        title.includes('llavero') || title.includes('collar') || title.includes('pulsera');
+    }
+  },
+  {
+    id: 'tecnologia_gadgets',
+    label: 'Tecnología y Gadgets',
+    match: (p: Product) => {
+      const cat = normalizeText(p.category);
+      const tags = (p.tags || []).map(normalizeText);
+      const title = normalizeText(p.title);
+      return cat.includes('electr') || cat.includes('gadget') || cat.includes('smart') || cat.includes('tech') || cat.includes('tecnolog') || cat.includes('robot') ||
+        tags.some(t => t.includes('smart') || t.includes('echo') || t.includes('gadget') || t.includes('tech') || t.includes('alexa') || t.includes('usb') || t.includes('cable') || t.includes('apple') || t.includes('magsafe')) ||
+        title.includes('echo') || title.includes('alexa') || title.includes('gadget') || title.includes('soporte para echo');
+    }
+  },
+  {
+    id: 'herramientas',
+    label: 'Herramientas y DIY',
+    match: (p: Product) => {
+      const cat = normalizeText(p.category);
+      const tags = (p.tags || []).map(normalizeText);
+      const title = normalizeText(p.title);
+      return cat.includes('herramienta') || cat.includes('taller') || cat.includes('diy') || cat.includes('impresion 3d') ||
+        tags.some(t => t.includes('herramienta') || t.includes('bricolaje') || t.includes('ferreteria') || t.includes('calibrador') || t.includes('medidor') || t.includes('taller')) ||
+        title.includes('tool') || title.includes('herramienta') || title.includes('gauge') || title.includes('calibrador');
+    }
+  }
+];
+
+const selectedCategory = ref('todos');
+const selectedTag = ref<string | null>(null);
 const priceRange = ref([0, 1000]);
+const showAllTags = ref(false);
+
+const categoriesWithCounts = computed(() => {
+  return CATEGORY_DEFS.map(catDef => {
+    const count = products.value.filter(catDef.match).length;
+    return {
+      id: catDef.id,
+      label: catDef.label,
+      count
+    };
+  });
+});
+
+const currentCategoryLabel = computed(() => {
+  const found = CATEGORY_DEFS.find(c => c.id === selectedCategory.value);
+  return found ? found.label : 'Todos';
+});
+
+interface TagItem {
+  norm: string;
+  display: string;
+  count: number;
+}
+
+const popularTags = computed<TagItem[]>(() => {
+  const map = new Map<string, { norm: string; display: string; count: number }>();
+  for (const p of products.value) {
+    if (!p.tags || !Array.isArray(p.tags)) continue;
+    const seen = new Set<string>();
+    for (const raw of p.tags) {
+      if (!raw || typeof raw !== 'string') continue;
+      const clean = raw.trim();
+      const norm = normalizeText(clean);
+      if (!norm || norm.length < 3 || seen.has(norm)) continue;
+      seen.add(norm);
+      if (!map.has(norm)) {
+        map.set(norm, { norm, display: clean, count: 0 });
+      }
+      const item = map.get(norm)!;
+      item.count++;
+      if (clean[0] === clean[0].toUpperCase() && item.display[0] !== item.display[0].toUpperCase()) {
+        item.display = clean;
+      }
+    }
+  }
+  return Array.from(map.values())
+    .filter(t => t.count >= 4)
+    .sort((a, b) => b.count - a.count);
+});
+
+const visibleTags = computed(() => {
+  return showAllTags.value ? popularTags.value.slice(0, 30) : popularTags.value.slice(0, 12);
+});
+
+function toggleTag(tag: string) {
+  const norm = normalizeText(tag);
+  if (selectedTag.value && normalizeText(selectedTag.value) === norm) {
+    selectedTag.value = null;
+  } else {
+    selectedTag.value = tag;
+  }
+}
+
+function isTagActive(tag: string | null | undefined): boolean {
+  if (!tag || !selectedTag.value) return false;
+  return normalizeText(tag) === normalizeText(selectedTag.value);
+}
+
+function handleSelectTagFromDetail(tag: string) {
+  selected.value = null;
+  toggleTag(tag);
+}
+
+const hasActiveFilters = computed(() => {
+  return selectedCategory.value !== 'todos' ||
+    selectedTag.value !== null ||
+    priceRange.value[0] > 0 ||
+    priceRange.value[1] < 1000 ||
+    query.value.trim().length > 0;
+});
+
+function resetFilters() {
+  selectedCategory.value = 'todos';
+  selectedTag.value = null;
+  priceRange.value = [0, 1000];
+  query.value = '';
+}
 
 const filteredProducts = computed(() => {
+  const currentCatDef = CATEGORY_DEFS.find(c => c.id === selectedCategory.value) || CATEGORY_DEFS[0];
+  const targetTagNorm = selectedTag.value ? normalizeText(selectedTag.value) : null;
+
   return products.value.filter(p => {
-    // Filtrar por categoría
-    if (selectedCategory.value !== 'Todos') {
-      const pCat = p.category || 'Gadgets & Utilidades';
-      if (pCat !== selectedCategory.value) {
+    // 1. Categoría
+    if (selectedCategory.value !== 'todos' && !currentCatDef.match(p)) {
+      return false;
+    }
+
+    // 2. Tag
+    if (targetTagNorm) {
+      const pTags = (p.tags || []).map(normalizeText);
+      if (!pTags.includes(targetTagNorm)) {
         return false;
       }
     }
-    
-    // Filtrar por precio
+
+    // 3. Precio
     const hasVariants = Array.isArray(p.variants) && p.variants.length > 1;
     const rawPrice = hasVariants ? p.priceFrom : (p.priceFrom ?? (typeof p.price === 'number' ? p.price : parseFloat(String(p.price ?? 0))));
     const price = typeof rawPrice === 'number' ? rawPrice : 0;
-    
+
     const maxLimit = priceRange.value[1] >= 1000 ? Infinity : priceRange.value[1];
     if (price < priceRange.value[0] || price > maxLimit) {
       return false;
     }
-    
+
     return true;
   });
 });
@@ -405,17 +750,6 @@ useHead({
   }]
 })
 
-const categorias = [
-  'Todos',
-  'Gadgets & Utilidades',
-  'Estilo de Vida y Equipamiento',
-  'Electrónica',
-  'Herramientas',
-  'Decoración',
-  'Juguetes',
-  'Gadgets'
-];
-
 const route = useRoute();
 const router = useRouter();
 
@@ -431,6 +765,14 @@ watch(selected, (newVal) => {
 
 onMounted(async () => {
   await load('');
+  if (route.query.cat && typeof route.query.cat === 'string') {
+    const targetCat = route.query.cat.toLowerCase();
+    const found = CATEGORY_DEFS.find(c => c.id === targetCat || normalizeText(c.label) === targetCat);
+    if (found) selectedCategory.value = found.id;
+  }
+  if (route.query.tag && typeof route.query.tag === 'string') {
+    selectedTag.value = route.query.tag;
+  }
   if (route.query.p) {
     const id = Number(route.query.p);
     const found = products.value.find(p => p.id === id);
