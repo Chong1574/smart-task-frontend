@@ -33,7 +33,7 @@
       <div class="flex flex-col md:flex-row gap-8 items-start">
         
         <!-- Sidebar de Filtros -->
-        <aside class="w-full md:w-64 flex-shrink-0 bg-card border border-border/60 rounded-2xl p-6 shadow-sm md:sticky md:top-24 md:z-10">
+        <aside class="w-full md:w-64 flex-shrink-0 bg-card border border-border/60 rounded-2xl p-5 shadow-sm md:sticky md:top-24 md:z-10 md:max-h-[calc(100vh-7rem)] md:overflow-y-auto">
           <div class="flex items-center justify-between mb-4">
             <h2 class="text-lg font-bold font-serif">Filtros</h2>
             <button 
@@ -47,29 +47,105 @@
           </div>
           
           <!-- Categorías -->
-          <div class="mb-6">
-            <h3 class="font-semibold text-sm mb-3 text-foreground">Categorías</h3>
-            <ul class="space-y-1.5">
+          <div class="mb-5">
+            <h3 class="font-semibold text-sm mb-2.5 text-foreground">Categorías</h3>
+            <ul class="space-y-1">
               <li v-for="cat in categoriesWithCounts" :key="cat.id">
                 <button 
                   type="button"
                   @click="selectedCategory = cat.id"
-                  class="text-sm w-full text-left transition-colors flex items-center justify-between py-1 group"
+                  class="text-xs w-full text-left transition-colors flex items-center justify-between py-1 group"
                   :class="selectedCategory === cat.id ? 'text-primary font-bold' : 'text-muted-foreground hover:text-foreground'"
                 >
                   <span class="truncate pr-2">{{ cat.label }}</span>
                   <div class="flex items-center gap-1.5 shrink-0">
                     <span class="text-[11px] text-muted-foreground/70 font-normal">({{ cat.count }})</span>
-                    <span v-if="selectedCategory === cat.id" class="w-2 h-2 rounded-full bg-primary shrink-0"></span>
+                    <span v-if="selectedCategory === cat.id" class="w-1.5 h-1.5 rounded-full bg-primary shrink-0"></span>
                   </div>
                 </button>
               </li>
             </ul>
           </div>
 
-          <!-- Etiquetas Populares -->
-          <div v-if="popularTags.length > 0" class="mb-6 pt-5 border-t border-border/60">
-            <div class="flex items-center justify-between mb-3">
+          <!-- Precio / Costo (Colocado arriba de etiquetas para visibilidad inmediata) -->
+          <div class="mb-5 pt-4 border-t border-border/60">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="font-semibold text-sm text-foreground">Precio</h3>
+              <button 
+                v-if="priceRange[0] > 0 || priceRange[1] < 1000" 
+                type="button"
+                @click="selectPricePreset(PRICE_PRESETS[0])" 
+                class="text-[11px] text-primary hover:underline font-medium"
+              >
+                Restablecer
+              </button>
+            </div>
+
+            <!-- Rangos rápidos -->
+            <ul class="space-y-1 mb-3">
+              <li v-for="preset in PRICE_PRESETS" :key="preset.id">
+                <button
+                  type="button"
+                  @click="selectPricePreset(preset)"
+                  class="text-xs w-full text-left transition-colors flex items-center justify-between py-1 group"
+                  :class="selectedPricePreset === preset.id ? 'text-primary font-bold' : 'text-muted-foreground hover:text-foreground'"
+                >
+                  <span>{{ preset.label }}</span>
+                  <div class="flex items-center gap-1.5 shrink-0">
+                    <span class="text-[11px] text-muted-foreground/70 font-normal">({{ getPresetCount(preset) }})</span>
+                    <span v-if="selectedPricePreset === preset.id" class="w-1.5 h-1.5 rounded-full bg-primary shrink-0"></span>
+                  </div>
+                </button>
+              </li>
+            </ul>
+
+            <!-- Inputs manuales Min y Max -->
+            <div class="pt-2 border-t border-border/40">
+              <div class="flex items-center gap-1.5 mb-2">
+                <div class="relative flex-1">
+                  <span class="absolute left-2 top-1.5 text-[11px] text-muted-foreground">$</span>
+                  <input 
+                    type="number" 
+                    v-model.number="minPriceInput" 
+                    placeholder="Mín" 
+                    min="0"
+                    class="w-full h-7 pl-5 pr-1.5 rounded-md border border-border bg-background text-xs focus:ring-1 focus:ring-primary focus:outline-none"
+                    @keydown.enter="applyCustomPrice"
+                  />
+                </div>
+                <span class="text-xs text-muted-foreground">-</span>
+                <div class="relative flex-1">
+                  <span class="absolute left-2 top-1.5 text-[11px] text-muted-foreground">$</span>
+                  <input 
+                    type="number" 
+                    v-model.number="maxPriceInput" 
+                    placeholder="Máx" 
+                    min="0"
+                    class="w-full h-7 pl-5 pr-1.5 rounded-md border border-border bg-background text-xs focus:ring-1 focus:ring-primary focus:outline-none"
+                    @keydown.enter="applyCustomPrice"
+                  />
+                </div>
+                <button 
+                  type="button" 
+                  @click="applyCustomPrice" 
+                  class="h-7 px-2.5 bg-secondary hover:bg-secondary/80 text-secondary-foreground text-xs font-medium rounded-md border border-border cursor-pointer transition-colors"
+                >
+                  Ir
+                </button>
+              </div>
+
+              <!-- Slider visual -->
+              <div class="flex justify-between items-center text-[10px] text-muted-foreground mb-1.5 px-0.5">
+                <span>{{ fmt(priceRange[0]) }}</span>
+                <span>{{ priceRange[1] >= 1000 ? 'Sin límite' : fmt(priceRange[1]) }}</span>
+              </div>
+              <Slider v-model="priceRange" :min="0" :max="1000" :step="10" class="w-full" />
+            </div>
+          </div>
+
+          <!-- Etiquetas Populares (Con scroll propio y buscador) -->
+          <div v-if="popularTags.length > 0" class="mb-5 pt-4 border-t border-border/60">
+            <div class="flex items-center justify-between mb-2">
               <h3 class="font-semibold text-sm text-foreground">Etiquetas</h3>
               <button 
                 v-if="selectedTag" 
@@ -80,54 +156,57 @@
                 Quitar
               </button>
             </div>
-            <div class="flex flex-wrap gap-1.5">
-              <button
-                v-for="tag in visibleTags"
-                :key="tag.norm"
-                type="button"
-                @click="toggleTag(tag.display)"
-                class="text-xs px-2.5 py-1 rounded-full border transition-all flex items-center gap-1 cursor-pointer"
-                :class="isTagActive(tag.norm)
-                  ? 'bg-primary text-primary-foreground border-primary font-medium shadow-xs'
-                  : 'bg-secondary/40 text-muted-foreground hover:text-foreground border-border/50 hover:bg-secondary/70'"
-              >
-                <span>#{{ tag.display }}</span>
-                <span class="text-[10px] opacity-70">({{ tag.count }})</span>
-              </button>
-            </div>
-            <button 
-              v-if="popularTags.length > 12"
-              type="button"
-              @click="showAllTags = !showAllTags"
-              class="mt-2.5 text-xs text-primary hover:underline font-medium block"
-            >
-              {{ showAllTags ? 'Mostrar menos' : `+ Ver más etiquetas (${popularTags.length - 12})` }}
-            </button>
-          </div>
 
-          <!-- Precio -->
-          <div class="mb-6 pt-5 border-t border-border/60">
-            <h3 class="font-semibold text-sm mb-3 text-foreground">Precio</h3>
-            <div class="flex justify-between items-center mb-3">
-              <span class="text-xs text-muted-foreground">{{ fmt(priceRange[0]) }}</span>
-              <span class="text-xs text-muted-foreground">{{ priceRange[1] >= 1000 ? 'Sin límite' : fmt(priceRange[1]) }}</span>
+            <!-- Mini buscador de etiquetas -->
+            <div class="relative mb-2">
+              <input
+                type="text"
+                v-model="tagSearchQuery"
+                placeholder="Buscar etiqueta..."
+                class="w-full h-7 pl-7 pr-6 rounded-md border border-border bg-background text-xs placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+              <svg class="absolute left-2 top-1.5 text-muted-foreground/60 w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
+              <button v-if="tagSearchQuery" @click="tagSearchQuery = ''" class="absolute right-2 top-1 text-muted-foreground hover:text-foreground text-xs">✕</button>
             </div>
-            <Slider v-model="priceRange" :min="0" :max="1000" :step="10" class="w-full" />
+
+            <!-- Contenedor scrollable de etiquetas -->
+            <div class="max-h-48 overflow-y-auto pr-1 space-y-1">
+              <div class="flex flex-wrap gap-1.5">
+                <button
+                  v-for="tag in filteredTags"
+                  :key="tag.norm"
+                  type="button"
+                  @click="toggleTag(tag.display)"
+                  class="text-xs px-2.5 py-0.5 rounded-full border transition-all flex items-center gap-1 cursor-pointer"
+                  :class="isTagActive(tag.norm)
+                    ? 'bg-primary text-primary-foreground border-primary font-medium shadow-xs'
+                    : 'bg-secondary/40 text-muted-foreground hover:text-foreground border-border/50 hover:bg-secondary/70'"
+                >
+                  <span>#{{ tag.display }}</span>
+                  <span class="text-[10px] opacity-70">({{ tag.count }})</span>
+                </button>
+              </div>
+              <p v-if="filteredTags.length === 0" class="text-xs text-muted-foreground text-center py-3">
+                No hay etiquetas con "{{ tagSearchQuery }}"
+              </p>
+            </div>
           </div>
 
           <!-- Botón de Búsqueda Profunda (MakerWorld) -->
-          <div class="pt-6 border-t border-border/60">
-            <h3 class="font-semibold text-sm mb-2 text-foreground">¿No encuentras lo que buscas?</h3>
-            <p class="text-xs text-muted-foreground mb-4">Busca en toda la red y encuentra el modelo perfecto para hacerlo realidad.</p>
+          <div class="pt-4 border-t border-border/60">
+            <h3 class="font-semibold text-sm mb-1.5 text-foreground">¿No encuentras lo que buscas?</h3>
+            <p class="text-xs text-muted-foreground mb-3">Busca en toda la red y encuentra el modelo perfecto para hacerlo realidad.</p>
             <button 
               @click="triggerDeepSearch" 
-              class="w-full bg-secondary hover:bg-secondary/80 text-secondary-foreground text-xs font-medium py-2.5 px-3 rounded-xl transition-all border border-border flex items-center justify-center shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              class="w-full bg-secondary hover:bg-secondary/80 text-secondary-foreground text-xs font-medium py-2 px-3 rounded-xl transition-all border border-border flex items-center justify-center shadow-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               :disabled="loadingDeep || !query.trim()"
             >
               <span v-if="loadingDeep" class="animate-pulse">{{ deepSearchPhrases[deepSearchStatusIndex] }}</span>
               <span v-else>Traer de toda la Web</span>
             </button>
-            <p v-if="!query.trim()" class="text-[10px] text-muted-foreground mt-2 text-center">Escribe algo en el buscador primero.</p>
+            <p v-if="!query.trim()" class="text-[10px] text-muted-foreground mt-1.5 text-center">Escribe algo en el buscador primero.</p>
           </div>
         </aside>
 
@@ -497,10 +576,56 @@ const CATEGORY_DEFS: CategoryDef[] = [
   }
 ];
 
+interface PricePreset {
+  id: string;
+  label: string;
+  min: number;
+  max: number;
+}
+
+const PRICE_PRESETS: PricePreset[] = [
+  { id: 'all', label: 'Cualquier precio', min: 0, max: 1000 },
+  { id: 'under100', label: 'Hasta $100', min: 0, max: 100 },
+  { id: '100to250', label: '$100 a $250', min: 100, max: 250 },
+  { id: '250to500', label: '$250 a $500', min: 250, max: 500 },
+  { id: 'over500', label: 'Más de $500', min: 500, max: 1000 }
+];
+
 const selectedCategory = ref('todos');
 const selectedTag = ref<string | null>(null);
+const selectedPricePreset = ref('all');
 const priceRange = ref([0, 1000]);
-const showAllTags = ref(false);
+const minPriceInput = ref<number | null>(null);
+const maxPriceInput = ref<number | null>(null);
+const tagSearchQuery = ref('');
+
+function selectPricePreset(preset: PricePreset) {
+  selectedPricePreset.value = preset.id;
+  priceRange.value = [preset.min, preset.max];
+  minPriceInput.value = preset.min === 0 ? null : preset.min;
+  maxPriceInput.value = preset.max >= 1000 ? null : preset.max;
+}
+
+function applyCustomPrice() {
+  selectedPricePreset.value = 'custom';
+  const min = typeof minPriceInput.value === 'number' && minPriceInput.value >= 0 ? minPriceInput.value : 0;
+  const max = typeof maxPriceInput.value === 'number' && maxPriceInput.value > 0 ? maxPriceInput.value : 1000;
+  priceRange.value = [min, max];
+}
+
+function getPresetCount(preset: PricePreset): number {
+  return products.value.filter(p => {
+    const hasVariants = Array.isArray(p.variants) && p.variants.length > 1;
+    const rawPrice = hasVariants ? p.priceFrom : (p.priceFrom ?? (typeof p.price === 'number' ? p.price : parseFloat(String(p.price ?? 0))));
+    const price = typeof rawPrice === 'number' ? rawPrice : 0;
+    if (preset.id === 'all') return true;
+    if (preset.id === 'under100') return price <= 100;
+    if (preset.id === '100to250') return price > 100 && price <= 250;
+    if (preset.id === '250to500') return price > 250 && price <= 500;
+    if (preset.id === 'over500') return price > 500;
+    return true;
+  }).length;
+}
 
 const categoriesWithCounts = computed(() => {
   return CATEGORY_DEFS.map(catDef => {
@@ -546,12 +671,14 @@ const popularTags = computed<TagItem[]>(() => {
     }
   }
   return Array.from(map.values())
-    .filter(t => t.count >= 4)
+    .filter(t => t.count >= 3)
     .sort((a, b) => b.count - a.count);
 });
 
-const visibleTags = computed(() => {
-  return showAllTags.value ? popularTags.value.slice(0, 30) : popularTags.value.slice(0, 12);
+const filteredTags = computed(() => {
+  if (!tagSearchQuery.value.trim()) return popularTags.value;
+  const q = normalizeText(tagSearchQuery.value.trim());
+  return popularTags.value.filter(t => t.norm.includes(q) || normalizeText(t.display).includes(q));
 });
 
 function toggleTag(tag: string) {
@@ -584,7 +711,11 @@ const hasActiveFilters = computed(() => {
 function resetFilters() {
   selectedCategory.value = 'todos';
   selectedTag.value = null;
+  selectedPricePreset.value = 'all';
   priceRange.value = [0, 1000];
+  minPriceInput.value = null;
+  maxPriceInput.value = null;
+  tagSearchQuery.value = '';
   query.value = '';
 }
 
