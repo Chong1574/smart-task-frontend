@@ -1,0 +1,244 @@
+{
+  "name": "mercadolibre-publisher",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "e98b030e-trigger",
+      "name": "Execute Workflow",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://host.docker.internal:3000/api/products?limit=10&syncMeli=pending",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SYNC_SECRET }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fetch-products",
+      "name": "Fetch pending products",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        640,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data",
+        "options": {}
+      },
+      "id": "split-products",
+      "name": "Item Lists",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 2.1,
+      "position": [
+        860,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "title",
+              "name": "title",
+              "value": "={{ $json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "category_id",
+              "name": "category_id",
+              "value": "MLM3530",
+              "type": "string"
+            },
+            {
+              "id": "price",
+              "name": "price",
+              "value": "={{ $json.price }}",
+              "type": "number"
+            },
+            {
+              "id": "currency_id",
+              "name": "currency_id",
+              "value": "MXN",
+              "type": "string"
+            },
+            {
+              "id": "available_quantity",
+              "name": "available_quantity",
+              "value": 10,
+              "type": "number"
+            },
+            {
+              "id": "buying_mode",
+              "name": "buying_mode",
+              "value": "buy_it_now",
+              "type": "string"
+            },
+            {
+              "id": "condition",
+              "name": "condition",
+              "value": "new",
+              "type": "string"
+            },
+            {
+              "id": "listing_type_id",
+              "name": "listing_type_id",
+              "value": "gold_special",
+              "type": "string"
+            },
+            {
+              "id": "pictures",
+              "name": "pictures",
+              "value": "=[{\"source\": \"{{ $json.imageUrl }}\"}]",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "map-to-meli",
+      "name": "Map to MELI format",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.2,
+      "position": [
+        1080,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mercadolibre.com/items",
+        "authentication": "none",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"title\": \"{{ $json.title }}\",\n  \"category_id\": \"{{ $json.category_id }}\",\n  \"price\": {{ $json.price }},\n  \"currency_id\": \"{{ $json.currency_id }}\",\n  \"available_quantity\": {{ $json.available_quantity }},\n  \"buying_mode\": \"{{ $json.buying_mode }}\",\n  \"condition\": \"{{ $json.condition }}\",\n  \"listing_type_id\": \"{{ $json.listing_type_id }}\",\n  \"pictures\": {{ JSON.stringify($json.pictures) }}\n}",
+        "options": {},
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Obtener Token MELI').first().json.accessToken }}"
+            }
+          ]
+        }
+      },
+      "id": "post-meli",
+      "name": "Post to Mercado Libre",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1300,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://host.docker.internal:3000/api/meli/token",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "meli-get-token",
+      "name": "Obtener Token MELI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        420,
+        300
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "notes": "Auth: seleccionar credencial Header Auth 'Taskman Sync' post-import. El backend refresca el token solo; si responde 409 (needsReauth) abrir /api/meli/auth?secret=<SYNC_SECRET> una vez."
+    }
+  ],
+  "connections": {
+    "Execute Workflow": {
+      "main": [
+        [
+          {
+            "node": "Obtener Token MELI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch pending products": {
+      "main": [
+        [
+          {
+            "node": "Item Lists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Item Lists": {
+      "main": [
+        [
+          {
+            "node": "Map to MELI format",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map to MELI format": {
+      "main": [
+        [
+          {
+            "node": "Post to Mercado Libre",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtener Token MELI": {
+      "main": [
+        [
+          {
+            "node": "Fetch pending products",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "f7d2e3b1-4c90-4a8a-b94f-123456789abc",
+  "triggerCount": 0,
+  "tags": []
+}
