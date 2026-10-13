@@ -340,7 +340,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $('Obtener Token MELI').first().json.accessToken }}"
+              "value": "=Bearer {{ $('POST /api/products/sync1').first().json.meliAccessToken || $('POST /api/products/sync').first().json.meliAccessToken }}"
             }
           ]
         }
@@ -350,36 +350,13 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        2540,
+        2320,
         300
       ]
-    },
-    {
-      "parameters": {
-        "method": "GET",
-        "url": "http://host.docker.internal:3000/api/meli/token",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "options": {
-          "timeout": 30000
-        }
-      },
-      "id": "meli-get-token",
-      "name": "Obtener Token MELI",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        2100,
-        300
-      ],
-      "retryOnFail": true,
-      "maxTries": 3,
-      "waitBetweenTries": 3000,
-      "notes": "Auth: seleccionar credencial Header Auth 'Taskman Sync' post-import. El backend refresca el token solo; si responde 409 (needsReauth) abrir /api/meli/auth?secret=<SYNC_SECRET> una vez."
     }
   ],
   "connections": {
-    "Cron 03:00 daily": {
+    "Cron 3x Week (Mon/Wed/Fri)": {
       "main": [
         [
           {
@@ -516,7 +493,7 @@
       "main": [
         [
           {
-            "node": "Obtener Token MELI",
+            "node": "Map to MELI format",
             "type": "main",
             "index": 0
           }
@@ -539,17 +516,6 @@
         [
           {
             "node": "Batch Loop",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Obtener Token MELI": {
-      "main": [
-        [
-          {
-            "node": "Map to MELI format",
             "type": "main",
             "index": 0
           }

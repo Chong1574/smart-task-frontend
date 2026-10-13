@@ -44,7 +44,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Seleccionamos un producto al azar para publicar hoy\nconst products = $input.all()[0].json;\nif (!products || products.length === 0) {\n  throw new Error(\"No hay productos en el Bazar\");\n}\n\n// Filtramos productos que tengan precio v\u00e1lido e imagen\nconst valid = products.filter(p => p.price > 0 && p.imageUrl);\nif (valid.length === 0) {\n  throw new Error(\"No hay productos v\u00e1lidos con precio/imagen\");\n}\n\n// Escoger uno al azar\nconst randomIndex = Math.floor(Math.random() * valid.length);\nconst selected = valid[randomIndex];\n\nreturn [{ json: selected }];"
+        "jsCode": "// Seleccionamos un producto al azar para publicar hoy\nconst products = $input.all().map(item => item.json);\nif (!products || products.length === 0) {\n  throw new Error(\"No hay productos en el Bazar\");\n}\n\n// Filtramos productos que tengan precio v\u00e1lido e imagen\nconst valid = products.filter(p => p.price > 0 && p.imageUrl);\nif (valid.length === 0) {\n  throw new Error(\"No hay productos v\u00e1lidos con precio/imagen\");\n}\n\n// Escoger uno al azar\nconst randomIndex = Math.floor(Math.random() * valid.length);\nconst selected = valid[randomIndex];\n\nreturn [{ json: selected }];"
       },
       "id": "pick-product",
       "name": "Pick Random Product",
