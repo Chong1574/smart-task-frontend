@@ -2,7 +2,35 @@
   <div class="container max-w-4xl mx-auto py-12 px-4">
     <h1 class="text-3xl font-serif font-bold mb-8">Finalizar Pedido</h1>
 
-    <div v-if="!orderSuccess" class="grid md:grid-cols-3 gap-8">
+    <!-- Estado de Verificación PayPal -->
+    <div v-if="isVerifyingPayPal" class="max-w-md mx-auto my-16 bg-card border border-border p-8 rounded-3xl text-center space-y-4 shadow-sm">
+      <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+      <h3 class="text-xl font-bold font-serif">Confirmando tu pago con PayPal...</h3>
+      <p class="text-sm text-muted-foreground">Estamos validando tu orden con PayPal. Por favor no cierres ni actualices esta ventana.</p>
+    </div>
+
+    <!-- Error de validación PayPal -->
+    <div v-else-if="paypalError" class="max-w-md mx-auto my-16 bg-card border border-destructive/30 p-8 rounded-3xl text-center space-y-4 shadow-sm">
+      <div class="w-16 h-16 bg-destructive/10 text-destructive rounded-full flex items-center justify-center mx-auto">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="15" y1="9" x2="9" y2="15"/>
+          <line x1="9" y1="9" x2="15" y2="15"/>
+        </svg>
+      </div>
+      <h3 class="text-xl font-bold font-serif text-destructive">No se pudo verificar el pago</h3>
+      <p class="text-sm text-muted-foreground">{{ paypalError }}</p>
+      <div class="pt-2 flex justify-center gap-3">
+        <button @click="paypalError = ''; step = 3;" class="px-5 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors">
+          Intentar de nuevo
+        </button>
+        <NuxtLink to="/bazar" class="px-5 py-2.5 bg-secondary text-secondary-foreground rounded-xl font-medium hover:bg-secondary/80 transition-colors">
+          Volver al Bazar
+        </NuxtLink>
+      </div>
+    </div>
+
+    <div v-else-if="!orderSuccess" class="grid md:grid-cols-3 gap-8">
       <!-- Columna Izquierda: Pasos de Checkout -->
       <div class="md:col-span-2 space-y-8">
 
@@ -271,9 +299,84 @@ const route = useRoute();
 const statusQuery = route.query.status;
 const orderSuccess = ref(statusQuery === 'success' || (Array.isArray(statusQuery) && statusQuery.includes('success')) || statusQuery === 'approved' || (Array.isArray(statusQuery) && statusQuery.includes('approved')));
 
-onMounted(() => {
-  // Solo regresamos al bazar si el carrito está vacío Y NO es la página de éxito de retorno
-  if (cart.items.length === 0 && !orderSuccess.value) {
+const isPayPalSuccess = computed(() => {
+  const s = route.query.status;
+  return s === 'paypal_success' || (Array.isArray(s) && s.includes('paypal_success'));
+});
+const isPayPalCancel = computed(() => {
+  const s = route.query.status;
+  return s === 'paypal_cancel' || (Array.isArray(s) && s.includes('paypal_cancel'));
+});
+const isVerifyingPayPal = ref(false);
+const paypalError = ref('');
+
+onMounted(async () => {
+  // Manejo de retorno de PayPal
+  if (isPayPalSuccess.value) {
+    const orderId = route.query.orderId;
+    const token = route.query.token;
+
+    if (!token || !orderId) {
+      paypalError.value = 'Falta información de la transacción de PayPal para validar tu pago.';
+      toast.error(paypalError.value);
+      return;
+    }
+
+    isVerifyingPayPal.value = true;
+    try {
+      const config = useRuntimeConfig();
+      const apiUrl = config.public.apiBase || 'https://taskapi.shongyi.com/api';
+
+      const captureRes = await fetch(`${apiUrl}/payment/paypal/capture`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId, token })
+      });
+      const captureData = await captureRes.json();
+
+      if (captureRes.ok && captureData.success) {
+        orderSuccess.value = true;
+        createdOrderId.value = orderId as string;
+        cart.clearCart();
+        toast.success('¡Pago con PayPal verificado y completado!');
+
+        if (typeof window !== 'undefined' && (window as any).gtag) {
+          (window as any).gtag('event', 'purchase', {
+            transaction_id: `ORD_PP_${orderId}`,
+            value: cart.totalPrice,
+            currency: 'MXN'
+          });
+        }
+      } else {
+        paypalError.value = captureData.error || 'No se pudo confirmar el cobro en PayPal.';
+        toast.error(paypalError.value);
+      }
+    } catch (err) {
+      console.error('Error al capturar orden PayPal:', err);
+      paypalError.value = 'Ocurrió un error de conexión al verificar tu pago con PayPal.';
+      toast.error(paypalError.value);
+    } finally {
+      isVerifyingPayPal.value = false;
+    }
+    return;
+  }
+
+  if (isPayPalCancel.value) {
+    toast.error('Cancelaste el pago en PayPal. Tu pedido no ha sido cobrado.');
+  }
+
+  // Manejo de orden aprobada previa o retorno de Mercado Pago
+  if (orderSuccess.value) {
+    cart.clearCart();
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'purchase', {
+        transaction_id: route.query.preference_id || `ORD_MP_${Date.now()}`,
+        value: cart.totalPrice,
+        currency: 'MXN'
+      });
+    }
+  } else if (!isPayPalSuccess.value && cart.items.length === 0) {
+    // Si el carrito está vacío y no estamos validando un pago, volver al bazar
     router.push('/bazar');
   } else if (!orderSuccess.value) {
     if (typeof window !== 'undefined' && (window as any).gtag) {
@@ -288,6 +391,12 @@ onMounted(() => {
         }))
       });
     }
+  }
+
+  if (statusQuery === 'failure' || (Array.isArray(statusQuery) && statusQuery.includes('failure')) || route.query.status === 'rejected') {
+    toast.error('Tu pago fue rechazado o no se pudo completar. Por favor intenta de nuevo con otro método de pago.');
+  } else if (statusQuery === 'pending' || (Array.isArray(statusQuery) && statusQuery.includes('pending'))) {
+    toast.info('Tu pago está pendiente. Te avisaremos en cuanto se acredite.');
   }
 });
 
@@ -395,7 +504,7 @@ const paymentMethods = [
   { 
     id: 'paypal', 
     name: 'PayPal', 
-    sub: ''
+    sub: '(Tarjetas de crédito/débito y saldo PayPal)'
   }
 ];
 
@@ -504,24 +613,6 @@ const waSupportUrl = computed(() => {
   return `https://wa.me/524421752026?text=${encodeURIComponent(msg)}`;
 });
 
-onMounted(() => {
-  if (orderSuccess.value) {
-    cart.clearCart();
-    
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-      (window as any).gtag('event', 'purchase', {
-        transaction_id: route.query.preference_id || `ORD_MP_${Date.now()}`,
-        value: cart.totalPrice,
-        currency: 'MXN'
-      });
-    }
-  } else if (statusQuery === 'failure' || (Array.isArray(statusQuery) && statusQuery.includes('failure')) || route.query.status === 'rejected') {
-    toast.error('Tu pago fue rechazado o no se pudo completar. Por favor intenta de nuevo con otro método de pago.');
-  } else if (statusQuery === 'pending' || (Array.isArray(statusQuery) && statusQuery.includes('pending'))) {
-    toast.info('Tu pago está pendiente. Te avisaremos en cuanto se acredite.');
-  }
-});
-
 async function confirmOrder() {
   isSubmitting.value = true;
   const config = useRuntimeConfig();
@@ -588,11 +679,20 @@ async function confirmOrder() {
         toast.error('Error al conectar con Mercado Pago');
       }
     } else if (selectedPayment.value === 'paypal' && data.orderId) {
-      toast.info('Conectando con PayPal...', { duration: 2000 });
-      // Aquí iría el redirect o flow de paypal
-      // Como placeholder, lo marcamos como success manual por ahora
-      cart.clearCart();
-      orderSuccess.value = true;
+      toast.info('Generando link de PayPal...', { duration: 2000 });
+      const ppResponse = await fetch(`${apiUrl}/payment/paypal/order`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId: data.orderId })
+      });
+      const ppData = await ppResponse.json();
+      if (ppData.success && ppData.approve_url) {
+        // Redirigir a PayPal Checkout (Opción B)
+        window.location.href = ppData.approve_url;
+        return;
+      } else {
+        toast.error(ppData.error || 'Error al conectar con PayPal');
+      }
     } else {
       cart.clearCart();
       orderSuccess.value = true;
