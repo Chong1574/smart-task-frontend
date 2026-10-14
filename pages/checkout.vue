@@ -237,7 +237,7 @@
         </div>
         <div class="flex justify-between border-b border-border pb-2">
           <span class="text-muted-foreground">Método de Pago:</span>
-          <span class="font-semibold">{{ selectedPayment === 'mp' ? 'Mercado Pago' : 'PayPal' }}</span>
+          <span class="font-semibold">{{ selectedPayment === 'paypal' ? 'PayPal' : (selectedPayment === 'transfer' ? 'Transferencia SPEI' : 'Mercado Pago') }}</span>
         </div>
         <div class="flex justify-between pt-1">
           <span class="text-muted-foreground">Total:</span>
@@ -291,6 +291,13 @@ const isVerifyingPayPal = ref(false);
 const paypalError = ref('');
 
 onMounted(async () => {
+  if (typeof window !== 'undefined') {
+    const savedTotal = sessionStorage.getItem('last_order_total');
+    if (savedTotal) finalTotal.value = Number(savedTotal);
+    const savedMethod = sessionStorage.getItem('last_payment_method');
+    if (savedMethod) selectedPayment.value = savedMethod;
+  }
+
   // Manejo de retorno de PayPal
   if (isPayPalSuccess.value) {
     const orderId = route.query.orderId;
@@ -317,6 +324,10 @@ onMounted(async () => {
       if (captureRes.ok && captureData.success) {
         orderSuccess.value = true;
         createdOrderId.value = orderId as string;
+        selectedPayment.value = 'paypal';
+        if (captureData.total) {
+          finalTotal.value = Number(captureData.total);
+        }
         cart.clearCart();
         toast.success('¡Pago con PayPal verificado y completado!');
 
@@ -593,6 +604,10 @@ async function confirmOrder() {
   try {
     const orderValue = cart.totalPrice + (selectedShipping.value?.price || 0);
     finalTotal.value = orderValue;
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('last_order_total', orderValue.toString());
+      sessionStorage.setItem('last_payment_method', selectedPayment.value);
+    }
     const orderItems = cart.items.map(i => ({
       item_id: i.id,
       item_name: i.title,
