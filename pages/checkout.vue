@@ -213,11 +213,15 @@
           </div>
           <div class="flex justify-between border-b border-border pb-2">
             <span class="text-muted-foreground">Beneficiario:</span>
-            <span class="font-bold">El RincÃ³n de Brandy</span>
+            <span class="font-bold">Paulo Alberto Chong</span>
           </div>
           <div class="flex justify-between border-b border-border pb-2">
             <span class="text-muted-foreground">CLABE:</span>
-            <span class="font-bold text-primary">{{ clabeInfo }}</span>
+            <span class="font-bold text-primary select-all">{{ clabeInfo || '012180001500800000' }}</span>
+          </div>
+          <div v-if="createdOrderId" class="flex justify-between border-b border-border pb-2">
+            <span class="text-muted-foreground">Referencia / Concepto:</span>
+            <span class="font-bold text-primary select-all">Pedido #{{ createdOrderId }}</span>
           </div>
           <div class="flex justify-between pt-1">
             <span class="text-muted-foreground">Monto exacto:</span>
@@ -228,12 +232,19 @@
         </div>
 
         <div class="mt-6 flex justify-center">
-          <a :href="`https://wa.me/5215555555555?text=Hola,%20acabo%20de%20realizar%20un%20pedido%20en%20el%20Bazar.%20Te%20env%C3%ADo%20el%20comprobante%20de%20pago.`" target="_blank" class="bg-green-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-green-700 transition-colors flex items-center gap-2 shadow-lg shadow-green-600/20">
+          <a :href="waTransferUrl" target="_blank" class="bg-green-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-green-700 transition-colors flex items-center gap-2 shadow-lg shadow-green-600/20">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21"/><path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1Z"/><path d="M14 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1Z"/><path d="M9 15a.5.5 0 0 0 1 0v-1a.5.5 0 0 0-1 0v1Z"/><path d="M14 15a.5.5 0 0 0 1 0v-1a.5.5 0 0 0-1 0v1Z"/></svg>
             Enviar Comprobante por WhatsApp
           </a>
         </div>
       </div>
+
+      <p class="text-xs text-muted-foreground mt-4">
+        ¿Tienes alguna duda sobre tu compra? 
+        <a :href="waSupportUrl" target="_blank" class="text-green-600 dark:text-green-400 font-semibold hover:underline">
+          Contáctanos por WhatsApp (442 175 2026)
+        </a>
+      </p>
 
       <div class="pt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
         <NuxtLink to="/rastreo" class="w-full sm:w-auto px-6 py-3 bg-primary text-primary-foreground rounded-xl font-bold hover:bg-primary/90 transition-colors">
@@ -431,17 +442,45 @@ async function calculateShipping() {
     }
 
     const data = await response.json();
-    
-    shippingOptions.value = data.options || [];
-    if (shippingOptions.value.length > 0) {
-      selectedShipping.value = shippingOptions.value[0];
-      step.value = 2;
-    } else {
-      toast.error('No hay opciones de envío disponibles para tu dirección.');
+    let options = data.options || [];
+    if (!options || options.length === 0) {
+      options = [
+        {
+          id: 'nacional_estandar',
+          name: 'Envío Nacional Estándar',
+          description: '3-5 días hábiles',
+          price: 150
+        },
+        {
+          id: 'nacional_express',
+          name: 'Envío Express',
+          description: '1-2 días hábiles',
+          price: 250
+        }
+      ];
     }
+    shippingOptions.value = options;
+    selectedShipping.value = options[0];
+    step.value = 2;
   } catch (error) {
-    console.error('Error calculando envío:', error);
-    toast.error('No pudimos calcular el envío. Revisa tu código postal e intenta de nuevo.');
+    console.warn('Cotización automática no disponible, aplicando opciones estándar de envío:', error);
+    const fallbackOptions = [
+      {
+        id: 'nacional_estandar',
+        name: 'Envío Nacional Estándar',
+        description: '3-5 días hábiles',
+        price: 150
+      },
+      {
+        id: 'nacional_express',
+        name: 'Envío Express',
+        description: '1-2 días hábiles',
+        price: 250
+      }
+    ];
+    shippingOptions.value = fallbackOptions;
+    selectedShipping.value = fallbackOptions[0];
+    step.value = 2;
   } finally {
     isCalculating.value = false;
   }
@@ -449,7 +488,21 @@ async function calculateShipping() {
 
 const isSubmitting = ref(false);
 const clabeInfo = ref('');
+const createdOrderId = ref<string | number>('');
 const finalTotal = ref(0);
+
+const waTransferUrl = computed(() => {
+  const orderRef = createdOrderId.value ? ` #${createdOrderId.value}` : '';
+  const totalStr = formatPrice(finalTotal.value);
+  const msg = `Hola, acabo de realizar el pedido${orderRef} en El Rincón de Brandy por ${totalStr}. Te comparto mi comprobante de pago.`;
+  return `https://wa.me/524421752026?text=${encodeURIComponent(msg)}`;
+});
+
+const waSupportUrl = computed(() => {
+  const orderRef = createdOrderId.value ? ` #${createdOrderId.value}` : '';
+  const msg = `Hola, tengo una pregunta sobre mi pedido${orderRef}.`;
+  return `https://wa.me/524421752026?text=${encodeURIComponent(msg)}`;
+});
 
 onMounted(() => {
   if (orderSuccess.value) {
@@ -501,6 +554,12 @@ async function confirmOrder() {
     }
 
     const data = await response.json();
+    if (data.orderId) {
+      createdOrderId.value = data.orderId;
+    }
+    if (data.clabe) {
+      clabeInfo.value = data.clabe;
+    }
     
     // Tracking
     if (typeof window !== 'undefined' && (window as any).gtag) {
