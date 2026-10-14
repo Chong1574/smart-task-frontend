@@ -340,8 +340,9 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $('POST /api/products/sync1').first().json.meliAccessToken || $('POST /api/products/sync').first().json.meliAccessToken }}"
+              "value": "=Bearer {{ $('POST /api/products/sync1').first().json.meliAccessToken || $('POST /api/products/sync3').first().json.meliAccessToken || $('POST /api/products/sync').first().json.meliAccessToken }}"
             }
+
           ]
         }
       },
