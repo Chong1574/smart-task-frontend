@@ -230,40 +230,20 @@
         Gracias por tu compra. Hemos registrado tu pedido con éxito.
       </p>
 
-      <div v-if="selectedPayment === 'transfer'" class="bg-secondary/30 p-6 rounded-2xl border border-border mt-6 text-left">
-        <h3 class="font-bold text-xl mb-4 text-center">Instrucciones para Transferencia</h3>
-        <p class="text-sm text-muted-foreground mb-4 text-center">Para que tu pedido comience a procesarse, realiza tu pago a la siguiente cuenta:</p>
-        
-        <div class="space-y-3 font-mono text-sm bg-background p-4 rounded-xl border border-border">
-          <div class="flex justify-between border-b border-border pb-2">
-            <span class="text-muted-foreground">Banco:</span>
-            <span class="font-bold">BBVA Bancomer</span>
-          </div>
-          <div class="flex justify-between border-b border-border pb-2">
-            <span class="text-muted-foreground">Beneficiario:</span>
-            <span class="font-bold">Paulo Alberto Chong</span>
-          </div>
-          <div class="flex justify-between border-b border-border pb-2">
-            <span class="text-muted-foreground">CLABE:</span>
-            <span class="font-bold text-primary select-all">{{ clabeInfo || '012180001500800000' }}</span>
-          </div>
-          <div v-if="createdOrderId" class="flex justify-between border-b border-border pb-2">
-            <span class="text-muted-foreground">Referencia / Concepto:</span>
-            <span class="font-bold text-primary select-all">Pedido #{{ createdOrderId }}</span>
-          </div>
-          <div class="flex justify-between pt-1">
-            <span class="text-muted-foreground">Monto exacto:</span>
-            <span class="font-bold text-lg text-green-600 dark:text-green-400">
-              {{ formatPrice(finalTotal) }}
-            </span>
-          </div>
+      <div v-if="createdOrderId" class="bg-secondary/30 p-6 rounded-2xl border border-border mt-6 text-left max-w-md mx-auto space-y-3 text-sm font-sans">
+        <div class="flex justify-between border-b border-border pb-2">
+          <span class="text-muted-foreground">Número de Pedido:</span>
+          <span class="font-bold text-primary">#{{ createdOrderId }}</span>
         </div>
-
-        <div class="mt-6 flex justify-center">
-          <a :href="waTransferUrl" target="_blank" class="bg-green-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-green-700 transition-colors flex items-center gap-2 shadow-lg shadow-green-600/20">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21"/><path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1Z"/><path d="M14 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1Z"/><path d="M9 15a.5.5 0 0 0 1 0v-1a.5.5 0 0 0-1 0v1Z"/><path d="M14 15a.5.5 0 0 0 1 0v-1a.5.5 0 0 0-1 0v1Z"/></svg>
-            Enviar Comprobante por WhatsApp
-          </a>
+        <div class="flex justify-between border-b border-border pb-2">
+          <span class="text-muted-foreground">Método de Pago:</span>
+          <span class="font-semibold">{{ selectedPayment === 'mp' ? 'Mercado Pago' : 'PayPal' }}</span>
+        </div>
+        <div class="flex justify-between pt-1">
+          <span class="text-muted-foreground">Total:</span>
+          <span class="font-bold text-lg text-green-600 dark:text-green-400">
+            {{ formatPrice(finalTotal) }}
+          </span>
         </div>
       </div>
 
@@ -596,16 +576,8 @@ async function calculateShipping() {
 }
 
 const isSubmitting = ref(false);
-const clabeInfo = ref('');
 const createdOrderId = ref<string | number>('');
 const finalTotal = ref(0);
-
-const waTransferUrl = computed(() => {
-  const orderRef = createdOrderId.value ? ` #${createdOrderId.value}` : '';
-  const totalStr = formatPrice(finalTotal.value);
-  const msg = `Hola, acabo de realizar el pedido${orderRef} en El Rincón de Brandy por ${totalStr}. Te comparto mi comprobante de pago.`;
-  return `https://wa.me/524421752026?text=${encodeURIComponent(msg)}`;
-});
 
 const waSupportUrl = computed(() => {
   const orderRef = createdOrderId.value ? ` #${createdOrderId.value}` : '';
@@ -647,9 +619,6 @@ async function confirmOrder() {
     const data = await response.json();
     if (data.orderId) {
       createdOrderId.value = data.orderId;
-    }
-    if (data.clabe) {
-      clabeInfo.value = data.clabe;
     }
     
     // Tracking
