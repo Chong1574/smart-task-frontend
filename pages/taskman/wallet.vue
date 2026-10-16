@@ -291,55 +291,133 @@
         </div>
       </div>
 
-      <!-- Próximos Pagos -->
+      <!-- Próximos Pagos & Radar de Liquidez -->
       <div class="bg-card border border-border/40 p-6 rounded-3xl shadow-sm mb-8 mt-6">
-        <div class="flex justify-between items-center mb-4">
-          <h3 class="font-bold text-lg flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></svg>
-            Próximos Pagos (15 Días)
-          </h3>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+          <div class="flex items-center gap-3">
+            <div class="p-2.5 rounded-2xl bg-primary/10 text-primary border border-primary/20 shrink-0">
+              <Calendar class="w-5 h-5" />
+            </div>
+            <div>
+              <h3 class="font-bold text-lg flex items-center gap-2">
+                Radar de Pagos & Liquidez
+                <span class="text-xs px-2 py-0.5 rounded-full bg-secondary font-mono text-muted-foreground">
+                  Próximos 15 días
+                </span>
+              </h3>
+              <p class="text-xs text-muted-foreground">Monitoreo de compromisos y cobertura financiera inmediata.</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 text-xs sm:text-sm">
+            <div class="bg-secondary/60 px-3 py-1.5 rounded-xl border border-border/30">
+              <span class="text-muted-foreground">Total a pagar:</span>
+              <span class="font-bold font-mono ml-1 text-foreground">{{ formatCurrency(totalUpcoming) }}</span>
+            </div>
+            <div v-if="totalUpcomingIncome > 0" class="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-3 py-1.5 rounded-xl border border-emerald-500/20">
+              <span>Ingresos est.:</span>
+              <span class="font-bold font-mono ml-1">+{{ formatCurrency(totalUpcomingIncome) }}</span>
+            </div>
+          </div>
         </div>
-        
-        <div v-if="financeStore.upcomingPayments.length === 0" class="text-sm text-muted-foreground">
-          No hay pagos próximos registrados.
-        </div>
-        <div v-else class="space-y-4">
-          <div class="flex flex-col md:flex-row justify-between text-sm mb-2 p-3 rounded-xl border border-border/40" :class="totalUpcoming > financeStore.totalBalance ? 'bg-red-500/10 text-red-600 border-red-500/20' : 'bg-green-500/10 text-green-700 border-green-500/20'">
-            <span class="font-medium">Total a Pagar Próximamente: {{ formatCurrency(totalUpcoming) }}</span>
-            <span class="font-medium" v-if="totalUpcoming > financeStore.totalBalance">⚠️ Liquidez Insuficiente en Balance Total</span>
-            <span class="font-medium" v-else>✅ Presupuesto Suficiente en Balance Total</span>
+
+        <!-- Barra Comparativa de Liquidez Inmediata -->
+        <div class="mb-6 p-4 rounded-2xl bg-secondary/30 border border-border/30 space-y-3">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+            <div class="flex items-center gap-2">
+              <span class="font-semibold text-foreground">Cobertura de Liquidez (Efectivo & Débito):</span>
+              <span class="font-medium" :class="liquidityCoverage.covered ? 'text-emerald-500' : 'text-rose-500'">
+                {{ liquidityCoverage.statusText }}
+              </span>
+            </div>
+            <div class="font-mono text-muted-foreground">
+              Disponible: <strong class="text-foreground">{{ formatCurrency(liquidCashBalance) }}</strong> / Necesario: <strong class="text-foreground">{{ formatCurrency(totalUpcoming) }}</strong>
+            </div>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div v-for="(payment, idx) in financeStore.upcomingPayments" :key="idx" class="flex justify-between items-center p-4 bg-secondary/30 rounded-2xl border border-border/20">
-              <div>
-                <p class="font-bold">{{ payment.name }}</p>
-                <div class="flex gap-2 text-xs text-muted-foreground mt-1">
-                  <span class="bg-primary/10 text-primary px-2 py-0.5 rounded">{{ payment.type }}</span>
-                  <span :class="payment.daysRemaining <= 3 ? 'text-red-500 font-bold' : ''">
-                    {{ payment.daysRemaining === 0 ? 'Hoy' : payment.daysRemaining === 1 ? 'Mañana' : payment.daysRemaining === -1 ? 'Ayer (Vencido)' : payment.daysRemaining < 0 ? `Vencido hace ${Math.abs(payment.daysRemaining)} días` : `En ${payment.daysRemaining} días` }}
-                  </span>
+          <!-- Progress Bar de Liquidez -->
+          <div class="h-2.5 w-full bg-secondary rounded-full overflow-hidden p-0.5 border border-border/20">
+            <div 
+              class="h-full rounded-full transition-all duration-700"
+              :class="liquidityCoverage.barColor"
+              :style="{ width: `${liquidityCoverage.ratio}%` }"
+            ></div>
+          </div>
+        </div>
+        
+        <div v-if="financeStore.upcomingPayments.length === 0" class="text-sm text-muted-foreground text-center py-8">
+          🎉 ¡Excelente! No tienes pagos ni vencimientos programados para los próximos 15 días.
+        </div>
+        
+        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div 
+            v-for="(payment, idx) in financeStore.upcomingPayments" 
+            :key="idx" 
+            class="p-4 bg-secondary/30 hover:bg-secondary/50 rounded-2xl border border-border/30 flex flex-col justify-between transition-all"
+          >
+            <div>
+              <div class="flex items-start justify-between gap-2 mb-2">
+                <div class="min-w-0 flex-1">
+                  <p class="font-bold text-sm truncate" :title="payment.name">{{ payment.name }}</p>
+                  <div class="flex items-center gap-1.5 mt-1 flex-wrap">
+                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-secondary font-medium border border-border/40 text-muted-foreground">
+                      {{ payment.type }}
+                    </span>
+                    <span class="text-[10px] px-2 py-0.5 rounded-full border flex items-center gap-1" :class="getPaymentUrgency(payment).class">
+                      <Clock class="w-2.5 h-2.5" />
+                      {{ getPaymentUrgency(payment).label }}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="text-right shrink-0">
+                  <p :class="['font-mono font-bold text-base', payment.type === 'Ingreso' ? 'text-emerald-500' : 'text-foreground']">
+                    {{ payment.type === 'Ingreso' ? '+' : '' }}{{ formatCurrency(payment.amount) }}
+                  </p>
+                  <p class="text-[10px] text-muted-foreground">
+                    {{ new Date(payment.date).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }) }}
+                  </p>
                 </div>
               </div>
-              <div class="text-right flex flex-col items-end gap-1">
-                <template v-if="payment.statementMinimum !== undefined && payment.statementNoInterest !== undefined && payment.statementNoInterest > 0">
-                  <div class="text-[10px] text-muted-foreground flex gap-2 mb-1">
-                    <span>Min: {{ formatCurrency(payment.statementMinimum) }}</span>
-                    <span>Sin Int: {{ formatCurrency(payment.statementNoInterest) }}</span>
-                  </div>
-                  <div class="flex gap-1">
-                    <button @click="markAsPaid(payment, payment.statementMinimum)" class="text-[10px] bg-secondary text-secondary-foreground hover:bg-secondary/80 px-2 py-1 rounded border border-border/50 transition-colors">Pagar Mín</button>
-                    <button @click="markAsPaid(payment, payment.statementNoInterest)" class="text-[10px] bg-primary/10 text-primary hover:bg-primary/20 px-2 py-1 rounded font-medium transition-colors">Sin Intereses</button>
-                  </div>
-                </template>
-                <template v-else>
-                  <p :class="['font-mono font-bold', payment.type === 'Ingreso' ? 'text-green-500' : 'text-red-500']">{{ formatCurrency(payment.amount) }}</p>
-                  <p class="text-xs text-muted-foreground">{{ new Date(payment.date).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }) }}</p>
-                  <button @click="markAsPaid(payment)" class="mt-1 text-xs bg-primary/10 text-primary hover:bg-primary/20 px-2 py-1 rounded font-medium transition-colors">
-                    {{ payment.type === 'Ingreso' ? 'Registrar Ingreso' : 'Registrar Pago' }}
-                  </button>
-                </template>
+
+              <!-- Si es tarjeta de crédito con desglose de corte -->
+              <div v-if="payment.statementMinimum !== undefined && payment.statementNoInterest !== undefined && payment.statementNoInterest > 0" class="mt-2.5 pt-2.5 border-t border-border/30 text-[11px] space-y-1">
+                <div class="flex justify-between text-muted-foreground">
+                  <span>Pago mín:</span>
+                  <span class="font-mono font-medium text-foreground">{{ formatCurrency(payment.statementMinimum) }}</span>
+                </div>
+                <div class="flex justify-between text-muted-foreground">
+                  <span>Sin intereses:</span>
+                  <span class="font-mono font-bold text-foreground">{{ formatCurrency(payment.statementNoInterest) }}</span>
+                </div>
               </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="mt-3 pt-2.5 border-t border-border/20 flex gap-2">
+              <template v-if="payment.statementMinimum !== undefined && payment.statementNoInterest !== undefined && payment.statementNoInterest > 0">
+                <button 
+                  @click="markAsPaid(payment, payment.statementMinimum)" 
+                  class="flex-1 text-[11px] bg-secondary hover:bg-secondary/80 py-1.5 rounded-xl border border-border/40 font-medium transition-colors"
+                >
+                  Pagar Mín
+                </button>
+                <button 
+                  @click="markAsPaid(payment, payment.statementNoInterest)" 
+                  class="flex-1 text-[11px] bg-primary text-primary-foreground hover:opacity-90 py-1.5 rounded-xl font-bold shadow-sm transition-opacity"
+                >
+                  Sin Intereses
+                </button>
+              </template>
+              <template v-else>
+                <button 
+                  @click="markAsPaid(payment)" 
+                  class="w-full text-xs py-1.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-1.5"
+                  :class="payment.type === 'Ingreso' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/25' : 'bg-primary/10 text-primary hover:bg-primary/20'"
+                >
+                  <component :is="payment.type === 'Ingreso' ? TrendingUp : ArrowUpRight" class="w-3.5 h-3.5" />
+                  <span>{{ payment.type === 'Ingreso' ? 'Registrar Ingreso' : 'Registrar Pago' }}</span>
+                </button>
+              </template>
             </div>
           </div>
         </div>
@@ -873,7 +951,8 @@ import {
   Sparkles,
   TrendingUp,
   Tag,
-  Search
+  Search,
+  ArrowUpRight
 } from 'lucide-vue-next'
 import { useFinanceStore } from '~/stores/finance'
 import type { Account, AccountType, TransactionType } from '~/stores/finance'
@@ -1124,6 +1203,75 @@ const totalUpcoming = computed(() => {
     .filter(p => p.type !== 'Ingreso')
     .reduce((sum, p) => sum + p.amount, 0)
 })
+
+const totalUpcomingIncome = computed(() => {
+  return financeStore.upcomingPayments
+    .filter(p => p.type === 'Ingreso')
+    .reduce((sum, p) => sum + p.amount, 0)
+})
+
+const liquidCashBalance = computed(() => {
+  return financeStore.accounts
+    .filter(acc => acc.type === 'cash' || (acc.type === 'card' && acc.sub_type !== 'credit') || acc.type === 'savings')
+    .reduce((sum, acc) => sum + Math.max(0, Number(acc.balance)), 0)
+})
+
+const liquidityCoverage = computed(() => {
+  const liquid = liquidCashBalance.value
+  const due = totalUpcoming.value
+  if (due <= 0) {
+    return {
+      ratio: 100,
+      covered: true,
+      diff: liquid,
+      statusText: 'Sin pagos pendientes en los próximos 15 días',
+      barColor: 'bg-emerald-500'
+    }
+  }
+  const ratio = Math.min(100, Math.round((liquid / due) * 100))
+  const diff = liquid - due
+  const covered = diff >= 0
+  return {
+    ratio,
+    covered,
+    diff,
+    statusText: covered 
+      ? `100% Cubierto (Margen favorable de ${formatCurrency(diff)})` 
+      : `Déficit de ${formatCurrency(Math.abs(diff))} para cubrir los próximos 15 días`,
+    barColor: covered ? 'bg-emerald-500' : ratio >= 50 ? 'bg-amber-500' : 'bg-rose-500'
+  }
+})
+
+function getPaymentUrgency(p: any) {
+  if (p.daysRemaining < 0) {
+    return {
+      label: `Vencido (${Math.abs(p.daysRemaining)}d)`,
+      class: 'bg-rose-500/15 text-rose-500 border-rose-500/30 animate-pulse font-bold'
+    }
+  }
+  if (p.daysRemaining === 0) {
+    return {
+      label: '¡Pagar Hoy!',
+      class: 'bg-rose-500/15 text-rose-500 border-rose-500/30 font-bold'
+    }
+  }
+  if (p.daysRemaining === 1) {
+    return {
+      label: 'Mañana',
+      class: 'bg-amber-500/15 text-amber-500 border-amber-500/30 font-semibold'
+    }
+  }
+  if (p.daysRemaining <= 3) {
+    return {
+      label: `En ${p.daysRemaining} días`,
+      class: 'bg-amber-500/10 text-amber-500 border-amber-500/20 font-medium'
+    }
+  }
+  return {
+    label: `En ${p.daysRemaining} días`,
+    class: 'bg-secondary text-muted-foreground border-border/30'
+  }
+}
 
 onMounted(async () => {
   await financeStore.initialize()
