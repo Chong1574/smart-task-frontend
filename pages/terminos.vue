@@ -7,10 +7,9 @@
 
       <h2 class="text-2xl font-serif font-bold text-[#8E5E44] mt-8">Identidad del Responsable</h2>
       <p>
-        Razón Social: Taskman Corp<br>
-        NIF/CIF: X0000000X<br>
-        Domicilio: Calle Falsa 123, Ciudad<br>
-        Email de contacto: soporte@taskman.com
+        Responsable: El Rincón de Brandy (Taskman)<br>
+        Email de contacto: <a href="mailto:contacto@shongyi.com" class="text-[#8E5E44] hover:underline">contacto@shongyi.com</a><br>
+        WhatsApp: <a href="https://wa.me/524421752026" target="_blank" rel="noopener noreferrer" class="text-[#8E5E44] hover:underline">442 175 2026</a>
       </p>
 
       <h2 class="text-2xl font-serif font-bold text-[#8E5E44] mt-8">1. Aceptación de los Términos</h2>
@@ -35,7 +34,7 @@
       <p>Nos reservamos el derecho, a nuestra sola discreción, de modificar o reemplazar estos Términos en cualquier momento. Al continuar accediendo o utilizando nuestro Servicio después de que esas revisiones entren en vigencia, aceptas estar sujeto a los términos revisados.</p>
 
       <div class="mt-12 pt-8 border-t border-gray-200">
-        <NuxtLink to="/login" class="text-[#8E5E44] hover:underline">&larr; Volver al inicio</NuxtLink>
+        <NuxtLink to="/" class="text-[#8E5E44] hover:underline">&larr; Volver al inicio</NuxtLink>
       </div>
     </div>
   </div>
