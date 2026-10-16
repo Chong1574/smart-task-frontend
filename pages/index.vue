@@ -78,7 +78,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
           
           <!-- 1. Manufactura y Diseño Físico -->
-          <div class="group relative overflow-hidden rounded-3xl bg-card border border-border/50 p-8 transition-all hover:shadow-2xl hover:border-primary/30 hover:-translate-y-1 cursor-default flex flex-col h-full">
+          <NuxtLink to="/estudio#manufactura" class="group relative overflow-hidden rounded-3xl bg-card border border-border/50 p-8 transition-all hover:shadow-2xl hover:border-primary/30 hover:-translate-y-1 cursor-pointer flex flex-col h-full">
             <div class="absolute top-0 right-0 p-8 opacity-5 transition-opacity duration-500 group-hover:opacity-10 group-hover:scale-110">
               <svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
             </div>
@@ -93,10 +93,10 @@
                 </p>
               </div>
             </div>
-          </div>
+          </NuxtLink>
 
           <!-- 2. Software y Control -->
-          <div class="group relative overflow-hidden rounded-3xl bg-card border border-border/50 p-8 transition-all hover:shadow-2xl hover:border-[#F2A65A]/30 hover:-translate-y-1 cursor-default flex flex-col h-full">
+          <NuxtLink to="/estudio#software" class="group relative overflow-hidden rounded-3xl bg-card border border-border/50 p-8 transition-all hover:shadow-2xl hover:border-[#F2A65A]/30 hover:-translate-y-1 cursor-pointer flex flex-col h-full">
             <div class="absolute top-0 right-0 p-8 opacity-5 transition-opacity duration-500 group-hover:opacity-10 group-hover:scale-110">
               <svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
             </div>
@@ -111,10 +111,10 @@
                 </p>
               </div>
             </div>
-          </div>
+          </NuxtLink>
 
           <!-- 3. Electrónica IoT -->
-          <div class="group relative overflow-hidden rounded-3xl bg-card border border-border/50 p-8 transition-all hover:shadow-2xl hover:border-foreground/30 hover:-translate-y-1 cursor-default flex flex-col h-full">
+          <NuxtLink to="/estudio#control" class="group relative overflow-hidden rounded-3xl bg-card border border-border/50 p-8 transition-all hover:shadow-2xl hover:border-foreground/30 hover:-translate-y-1 cursor-pointer flex flex-col h-full">
             <div class="absolute top-0 right-0 p-8 opacity-5 transition-opacity duration-500 group-hover:opacity-10 group-hover:scale-110">
               <svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg>
             </div>
@@ -129,10 +129,10 @@
                 </p>
               </div>
             </div>
-          </div>
+          </NuxtLink>
 
           <!-- 4. Taskman -->
-          <div class="group relative overflow-hidden rounded-3xl bg-card border border-border/50 p-8 transition-all hover:shadow-2xl hover:border-primary/30 hover:-translate-y-1 cursor-default flex flex-col h-full">
+          <NuxtLink to="/taskman" class="group relative overflow-hidden rounded-3xl bg-card border border-border/50 p-8 transition-all hover:shadow-2xl hover:border-primary/30 hover:-translate-y-1 cursor-pointer flex flex-col h-full">
             <div class="absolute top-0 right-0 p-8 opacity-5 transition-opacity duration-500 group-hover:opacity-10 group-hover:scale-110">
               <svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="m9 12 2 2 4-4"/></svg>
             </div>
@@ -147,7 +147,7 @@
                 </p>
               </div>
             </div>
-          </div>
+          </NuxtLink>
 
           <!-- 5. Protección (Arveck) -->
           <div class="lg:col-span-2 group relative overflow-hidden rounded-3xl bg-[#2A313C] text-white p-8 md:p-12 transition-all hover:shadow-2xl hover:-translate-y-1 cursor-default flex flex-col md:flex-row items-center gap-8 border border-[#3A4352]">
@@ -168,10 +168,16 @@
             </div>
             
             <div class="relative z-10 md:mt-0 mt-4">
-              <button class="px-6 py-3 bg-white text-[#2A313C] font-bold rounded-full hover:bg-gray-100 transition-colors whitespace-nowrap inline-flex items-center gap-2">
+              <a
+                href="https://wa.me/524421752026?text=Hola%2C%20me%20interesa%20una%20asesor%C3%ADa%20gratuita%20de%20seguros%20con%20Arveck."
+                target="_blank"
+                rel="noopener noreferrer"
+                @click="trackProjectLead('whatsapp_arveck', 'home_arveck')"
+                class="px-6 py-3 bg-white text-[#2A313C] font-bold rounded-full hover:bg-gray-100 transition-colors whitespace-nowrap inline-flex items-center gap-2"
+              >
                 Asesoría Gratuita
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-              </button>
+              </a>
             </div>
           </div>
 
@@ -244,12 +250,26 @@
         <p class="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
           Cuéntanos sobre tu idea. Ya sea una pieza de manufactura, una plataforma web o la protección de tus activos.
         </p>
+        <div class="flex flex-wrap justify-center gap-3 mb-8" role="radiogroup" aria-label="Tipo de proyecto">
+          <button
+            v-for="t in projectTypes"
+            :key="t.id"
+            type="button"
+            role="radio"
+            :aria-checked="selectedType === t.id"
+            @click="selectedType = t.id"
+            class="px-5 py-2.5 rounded-full border text-sm font-medium transition-all"
+            :class="selectedType === t.id ? 'bg-primary text-primary-foreground border-primary shadow-md' : 'bg-card border-border text-foreground hover:border-primary/50'"
+          >
+            {{ t.label }}
+          </button>
+        </div>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
-          <a href="mailto:contacto@shongyi.com" @click="trackProjectLead('email', 'home_contacto')" class="px-8 py-4 bg-primary text-primary-foreground rounded-full font-bold shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all flex items-center justify-center gap-2">
+          <a :href="emailHref" @click="trackProjectLead('email', 'home_contacto_' + selectedType)" class="px-8 py-4 bg-primary text-primary-foreground rounded-full font-bold shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all flex items-center justify-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
             Escríbenos un Correo
           </a>
-          <a href="https://wa.me/524421752026?text=Hola%2C%20me%20gustar%C3%ADa%20cotizar%20un%20proyecto%20y%20agendar%20una%20videollamada." target="_blank" rel="noopener noreferrer" @click="trackProjectLead('whatsapp_videocall', 'home_contacto')" class="px-8 py-4 bg-card border border-border text-foreground rounded-full font-bold shadow-sm hover:bg-secondary transition-all flex items-center justify-center gap-2">
+          <a :href="whatsappHref" target="_blank" rel="noopener noreferrer" @click="trackProjectLead('whatsapp_videocall', 'home_contacto_' + selectedType)" class="px-8 py-4 bg-card border border-border text-foreground rounded-full font-bold shadow-sm hover:bg-secondary transition-all flex items-center justify-center gap-2">
             Agendar Videollamada
           </a>
         </div>
@@ -304,7 +324,24 @@
 </style>
 
 <script setup>
+import { ref, computed } from 'vue'
 import { trackProjectLead, trackProjectContactIntent } from '~/utils/analytics'
+
+const projectTypes = [
+  { id: 'impresion3d', label: 'Impresión 3D', topic: 'una pieza de impresión 3D' },
+  { id: 'software', label: 'Software e IoT', topic: 'un proyecto de software / automatización / IoT' },
+  { id: 'arveck', label: 'Seguros (Arveck)', topic: 'una asesoría de seguros con Arveck' },
+  { id: 'otro', label: 'Otro', topic: 'un proyecto' }
+]
+const selectedType = ref('impresion3d')
+const selectedTopic = computed(() => projectTypes.find(t => t.id === selectedType.value)?.topic ?? 'un proyecto')
+
+const whatsappHref = computed(() =>
+  `https://wa.me/524421752026?text=${encodeURIComponent(`Hola, me gustaría cotizar ${selectedTopic.value} y agendar una videollamada.`)}`
+)
+const emailHref = computed(() =>
+  `mailto:contacto@shongyi.com?subject=${encodeURIComponent('Cotización: ' + selectedTopic.value)}`
+)
 
 useSeoMeta({
   title: 'Ingeniería, Automatización y Manufactura 3D | El Rincón de Brandy',
