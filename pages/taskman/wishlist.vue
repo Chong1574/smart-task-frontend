@@ -57,14 +57,14 @@
               </div>
 
               <div class="absolute top-2 right-2 flex gap-1 md:opacity-0 opacity-100 md:group-hover:opacity-100 transition-opacity">
-                <button @click.stop="markPurchased(item)" class="text-muted-foreground hover:text-green-500 p-1 bg-background rounded-md" title="Marcar como comprado">
-                  ✅
+                <button @click.stop="markPurchased(item)" class="text-muted-foreground hover:text-green-500 p-1.5 bg-background/80 hover:bg-background border border-border/40 rounded-lg transition-colors shadow-sm" title="Marcar como comprado">
+                  <CheckCircle2 class="w-4 h-4 text-green-500" />
                 </button>
-                <button @click.stop="openEdit(item)" class="text-muted-foreground hover:text-primary p-1 bg-background rounded-md" title="Editar">
-                  ✏️
+                <button @click.stop="openEdit(item)" class="text-muted-foreground hover:text-primary p-1.5 bg-background/80 hover:bg-background border border-border/40 rounded-lg transition-colors shadow-sm" title="Editar">
+                  <Pencil class="w-4 h-4" />
                 </button>
-                <button @click.stop="deleteItem(item.id)" class="text-muted-foreground hover:text-destructive p-1 bg-background rounded-md">
-                  🗑️
+                <button @click.stop="deleteItem(item.id)" class="text-muted-foreground hover:text-destructive p-1.5 bg-background/80 hover:bg-background border border-border/40 rounded-lg transition-colors shadow-sm" title="Eliminar">
+                  <Trash2 class="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -138,6 +138,7 @@
 definePageMeta({ layout: 'taskman' })
 
 import { ref, computed, onMounted, reactive } from 'vue'
+import { CheckCircle2, Pencil, Trash2 } from 'lucide-vue-next'
 import { useFinanceStore } from '~/stores/finance'
 import { useConfirmStore } from '~/stores/confirm'
 

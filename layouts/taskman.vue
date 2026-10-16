@@ -86,25 +86,20 @@
     <main class="flex-1 flex flex-col h-full overflow-hidden relative mb-16 md:mb-0">
       <!-- Topbar movil -->
       <header class="md:hidden h-14 border-b border-border/40 flex items-center justify-between px-4 bg-background/80 backdrop-blur-md z-10 sticky top-0">
-        <span class="font-serif text-lg font-bold flex items-center gap-2">
-          <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-primary to-orange-400 flex items-center justify-center">
+        <NuxtLink to="/taskman" class="font-serif text-lg font-bold flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-primary to-orange-400 flex items-center justify-center shadow-sm">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1-1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
           </div>
-          TaskMan
-        </span>
+          <span>TaskMan</span>
+        </NuxtLink>
         <div class="flex items-center gap-2">
           <NotificationBell popoverClass="fixed top-14 right-4" />
-          <NuxtLink v-if="isAdmin" to="/taskman/admin/ttlock" class="text-primary hover:text-primary/80 p-2">
-            <Lock class="w-5 h-5" />
-          </NuxtLink>
-          <NuxtLink v-if="isAdmin" to="/taskman/admin/bazar" class="text-primary hover:text-primary/80 p-2">
-            <ShieldAlert class="w-5 h-5" />
-          </NuxtLink>
-          <NuxtLink v-if="isAdmin" to="/taskman/admin/pedidos" class="text-primary hover:text-primary/80 p-2">
-            <Package class="w-5 h-5" />
-          </NuxtLink>
-          <button @click="handleLogout" class="text-muted-foreground hover:text-destructive p-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+          <button @click="toggleTheme" class="p-2 text-muted-foreground hover:text-foreground rounded-lg transition-colors" title="Cambiar tema">
+            <Moon v-if="colorMode.value === 'dark'" class="w-5 h-5" />
+            <Sun v-else class="w-5 h-5" />
+          </button>
+          <button @click="openProfile" class="w-8 h-8 rounded-full bg-gradient-to-tr from-primary to-orange-400 text-primary-foreground flex items-center justify-center text-xs font-bold uppercase ml-1 shadow-sm" title="Tu perfil">
+            {{ displayName.slice(0,1) }}
           </button>
         </div>
       </header>
@@ -141,23 +136,116 @@
     </div>
 
     <!-- Bottom Navigation Bar for Mobile -->
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-card/90 backdrop-blur-xl border-t border-border/40 flex items-center justify-around z-50 pb-[env(safe-area-inset-bottom)] px-2 shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
-      <NuxtLink v-for="item in nav" :key="item.path" :to="item.path"
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-card/95 backdrop-blur-xl border-t border-border/40 flex items-center justify-around z-40 pb-[env(safe-area-inset-bottom)] px-2 shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
+      <NuxtLink v-for="item in mobileNav" :key="item.path" :to="item.path"
         class="flex flex-col items-center justify-center w-full h-full text-muted-foreground transition-colors"
         active-class="text-primary font-medium"
       >
-        <div class="p-1.5 rounded-full transition-all" :class="{'bg-primary/10 text-primary': $route.path === item.path || ($route.path.startsWith(item.path) && item.path !== '/taskman')}">
+        <div class="p-1 rounded-full transition-all" :class="{'bg-primary/10 text-primary': $route.path === item.path || ($route.path.startsWith(item.path) && item.path !== '/taskman')}">
           <component :is="item.icon" class="w-5 h-5" />
         </div>
-        <span class="text-[10px] mt-1 truncate max-w-full px-1" :class="{'text-primary': $route.path === item.path || ($route.path.startsWith(item.path) && item.path !== '/taskman')}">{{ item.name }}</span>
+        <span class="text-[10px] mt-0.5 truncate max-w-full px-1" :class="{'text-primary font-bold': $route.path === item.path || ($route.path.startsWith(item.path) && item.path !== '/taskman')}">{{ item.name }}</span>
       </NuxtLink>
+      <!-- Botón Más -->
+      <button 
+        @click="showMobileMenu = !showMobileMenu" 
+        class="flex flex-col items-center justify-center w-full h-full text-muted-foreground transition-colors"
+        :class="{'text-primary': isMoreActive || showMobileMenu}"
+      >
+        <div class="p-1 rounded-full transition-all" :class="{'bg-primary/10 text-primary': isMoreActive || showMobileMenu}">
+          <MoreHorizontal class="w-5 h-5" />
+        </div>
+        <span class="text-[10px] mt-0.5 truncate max-w-full px-1" :class="{'text-primary font-bold': isMoreActive || showMobileMenu}">Más</span>
+      </button>
     </nav>
+
+    <!-- Sheet / Modal Menú "Más" Móvil -->
+    <div v-if="showMobileMenu" class="md:hidden fixed inset-0 z-50 flex flex-col justify-end bg-black/60 backdrop-blur-sm animate-in fade-in duration-200" @click.self="showMobileMenu = false">
+      <div class="bg-card border-t border-border/50 rounded-t-3xl p-6 shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto animate-in slide-in-from-bottom duration-300">
+        <!-- Handle bar -->
+        <div class="w-12 h-1 bg-muted-foreground/30 rounded-full mx-auto -mt-2 mb-1"></div>
+        
+        <div class="flex items-center justify-between pb-3 border-b border-border/40">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-orange-400 text-primary-foreground flex items-center justify-center font-bold text-sm uppercase shadow-sm">
+              {{ displayName.slice(0,1) }}
+            </div>
+            <div>
+              <p class="font-bold text-foreground text-sm">Hola, {{ displayName }}</p>
+              <p class="text-xs text-muted-foreground">{{ authStore.user?.email }}</p>
+            </div>
+          </div>
+          <button @click="showMobileMenu = false" class="p-2 text-muted-foreground hover:bg-secondary rounded-full">
+            <X class="w-5 h-5" />
+          </button>
+        </div>
+
+        <!-- Secciones adicionales -->
+        <div class="space-y-1">
+          <p class="text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-3 mb-1">Módulos</p>
+          <NuxtLink @click="showMobileMenu = false" to="/taskman/wallet" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-secondary text-foreground text-sm font-medium transition-colors" active-class="bg-primary/10 text-primary font-bold">
+            <TrendingUp class="w-5 h-5 text-emerald-500" />
+            <span>Wallet & Finanzas</span>
+          </NuxtLink>
+          <NuxtLink @click="showMobileMenu = false" to="/taskman/garage" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-secondary text-foreground text-sm font-medium transition-colors" active-class="bg-primary/10 text-primary font-bold">
+            <Car class="w-5 h-5 text-blue-500" />
+            <span>Garage</span>
+          </NuxtLink>
+          <NuxtLink @click="showMobileMenu = false" to="/taskman/briefing" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-secondary text-foreground text-sm font-medium transition-colors" active-class="bg-primary/10 text-primary font-bold">
+            <Sunrise class="w-5 h-5 text-amber-500" />
+            <span>Briefing Matutino</span>
+          </NuxtLink>
+          <NuxtLink v-if="isAdmin" @click="showMobileMenu = false" to="/taskman/impresion-3d" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-secondary text-foreground text-sm font-medium transition-colors" active-class="bg-primary/10 text-primary font-bold">
+            <Printer class="w-5 h-5 text-purple-500" />
+            <span>Impresión 3D</span>
+          </NuxtLink>
+        </div>
+
+        <div v-if="isAdmin" class="space-y-1 pt-2 border-t border-border/40">
+          <p class="text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-3 mb-1">Administración</p>
+          <NuxtLink @click="showMobileMenu = false" to="/taskman/admin/pedidos" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-secondary text-foreground text-sm font-medium transition-colors" active-class="bg-primary/10 text-primary font-bold">
+            <Package class="w-5 h-5 text-primary" />
+            <span>Pedidos Brandy</span>
+          </NuxtLink>
+          <NuxtLink @click="showMobileMenu = false" to="/taskman/admin/bazar" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-secondary text-foreground text-sm font-medium transition-colors" active-class="bg-primary/10 text-primary font-bold">
+            <ShieldAlert class="w-5 h-5 text-primary" />
+            <span>Bazar</span>
+          </NuxtLink>
+          <NuxtLink @click="showMobileMenu = false" to="/taskman/admin/ttlock" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-secondary text-foreground text-sm font-medium transition-colors" active-class="bg-primary/10 text-primary font-bold">
+            <Lock class="w-5 h-5 text-primary" />
+            <span>Chapa TTLock</span>
+          </NuxtLink>
+          <NuxtLink @click="showMobileMenu = false" to="/taskman/admin/audit" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-secondary text-foreground text-sm font-medium transition-colors" active-class="bg-primary/10 text-primary font-bold">
+            <ShieldAlert class="w-5 h-5 text-primary" />
+            <span>Auditoría</span>
+          </NuxtLink>
+        </div>
+
+        <!-- Acciones rápidas -->
+        <div class="pt-2 border-t border-border/40 grid grid-cols-2 gap-2">
+          <button @click="openProfile(); showMobileMenu = false" class="flex items-center justify-center gap-2 p-3 bg-secondary rounded-xl text-sm font-medium hover:bg-secondary/80 transition-colors">
+            <User class="w-4 h-4" />
+            <span>Perfil</span>
+          </button>
+          <button @click="toggleTheme" class="flex items-center justify-center gap-2 p-3 bg-secondary rounded-xl text-sm font-medium hover:bg-secondary/80 transition-colors">
+            <Moon v-if="colorMode.value === 'dark'" class="w-4 h-4" />
+            <Sun v-else class="w-4 h-4" />
+            <span>{{ colorMode.value === 'dark' ? 'Modo Claro' : 'Modo Oscuro' }}</span>
+          </button>
+        </div>
+
+        <button @click="handleLogout(); showMobileMenu = false" class="w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-destructive/10 text-destructive text-sm font-bold hover:bg-destructive hover:text-destructive-foreground transition-colors">
+          <LogOut class="w-4 h-4" />
+          <span>Cerrar Sesión</span>
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import {
   LayoutDashboard,
   CheckSquare,
@@ -176,15 +264,20 @@ import {
   Sunrise,
   ShieldAlert,
   Lock,
-  Package
+  Package,
+  MoreHorizontal,
+  User
 } from 'lucide-vue-next'
 import { useAuthStore } from '~/stores/auth'
+import { useConfirmStore } from '~/stores/confirm'
 
 const authStore = useAuthStore()
 const router = useRouter()
+const route = useRoute()
 const colorMode = useColorMode()
 
 const isSidebarOpen = ref(true)
+const showMobileMenu = ref(false)
 
 const isAdmin = computed(() => authStore.user?.role === 'admin')
 
@@ -206,6 +299,24 @@ const nav = computed(() => {
     items.push({ name: '3D', path: '/taskman/impresion-3d', icon: Printer })
   }
   return items
+})
+
+const mobileNav = [
+  { name: 'Inicio', path: '/taskman', icon: LayoutDashboard },
+  { name: 'Tareas', path: '/taskman/activities', icon: CheckSquare },
+  { name: 'Proyectos', path: '/taskman/projects', icon: Target },
+  { name: 'Hábitos', path: '/taskman/habits', icon: Activity },
+]
+
+const isMoreActive = computed(() => {
+  const morePaths = [
+    '/taskman/wallet',
+    '/taskman/garage',
+    '/taskman/briefing',
+    '/taskman/impresion-3d',
+    '/taskman/admin'
+  ]
+  return morePaths.some(p => route.path.startsWith(p))
 })
 
 const handleLogoutEvent = () => {
@@ -231,9 +342,17 @@ onUnmounted(() => {
   }
 })
 
-const handleLogout = () => {
-  authStore.logout()
-  router.push('/login')
+const handleLogout = async () => {
+  const confirmStore = useConfirmStore()
+  if (await confirmStore.ask({
+    title: 'Cerrar sesión',
+    message: '¿Estás seguro de que deseas salir de TaskMan?',
+    confirmLabel: 'Cerrar sesión',
+    destructive: true
+  })) {
+    authStore.logout()
+    router.push('/login')
+  }
 }
 
 // Perfil: nombre real editable (antes caía al prefijo del email).
