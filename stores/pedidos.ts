@@ -22,7 +22,7 @@ export const usePedidosStore = defineStore('pedidos', {
         pedidos: [] as PedidoImpresion[],
         loading: false,
         error: null as string | null,
-        useLocalFallback: false // Se activa si el backend no está disponible
+        useLocalFallback: false
     }),
     actions: {
         async fetchPedidos() {
@@ -32,39 +32,36 @@ export const usePedidosStore = defineStore('pedidos', {
                 if (res.data.success) {
                     this.pedidos = res.data.data;
                     this.useLocalFallback = false;
+                    this.saveToLocalStorage();
                 }
             } catch (err: any) {
                 console.warn("Backend no disponible para pedidos, usando LocalStorage.");
                 this.useLocalFallback = true;
                 this.loadFromLocalStorage();
+                toast.warning('Sin conexión con el servidor. Mostrando datos locales en caché.');
             } finally {
                 this.loading = false;
             }
         },
 
         async addPedido(newPedido: PedidoImpresion) {
-            const tempPedido = { ...newPedido, id: Date.now(), fechaCreacion: new Date().toISOString() };
-            this.pedidos.push(tempPedido);
-
-            if (this.useLocalFallback) {
-                this.saveToLocalStorage();
-                return true;
-            }
-
+            this.loading = true;
             try {
                 const res = await api.post('/pedidos', newPedido);
                 if (res.data.success) {
                     await this.fetchPedidos();
+                    toast.success('Pedido creado correctamente');
                     return true;
                 } else {
-                    this.pedidos = this.pedidos.filter(p => p.id !== tempPedido.id);
+                    toast.error(res.data.message || 'Error al crear el pedido');
                     return false;
                 }
             } catch (err) {
                 console.error("Error adding pedido:", err);
-                this.useLocalFallback = true;
-                this.saveToLocalStorage(); // fallback
-                return true;
+                toast.error('Error de conexión con el servidor al registrar el pedido');
+                return false;
+            } finally {
+                this.loading = false;
             }
         },
 
@@ -76,24 +73,20 @@ export const usePedidosStore = defineStore('pedidos', {
             pedido.estado = nuevoEstado;
             pedido.fechaActualizacion = new Date().toISOString();
 
-            if (this.useLocalFallback) {
-                this.saveToLocalStorage();
-                return true;
-            }
-
             try {
                 const res = await api.put(`/pedidos/${id}/status`, { estado: nuevoEstado });
                 if (res.data.success) {
+                    this.saveToLocalStorage();
                     return true;
                 }
-                // revert
                 pedido.estado = estadoAnterior;
+                toast.error(res.data.message || 'Error al actualizar estado');
                 return false;
             } catch (err) {
                 console.error("Error updating pedido:", err);
-                this.useLocalFallback = true;
-                this.saveToLocalStorage();
-                return true;
+                pedido.estado = estadoAnterior;
+                toast.error('Error de conexión al actualizar estado del pedido');
+                return false;
             }
         },
 
@@ -104,14 +97,10 @@ export const usePedidosStore = defineStore('pedidos', {
             const previousStatus = pedido.paymentStatus;
             pedido.paymentStatus = 'PAID';
 
-            if (this.useLocalFallback) {
-                this.saveToLocalStorage();
-                return true;
-            }
-
             try {
                 const res = await api.put(`/pedidos/${id}/payment`);
                 if (res.data.success) {
+                    this.saveToLocalStorage();
                     toast.success('Pago validado y correo enviado');
                     return true;
                 } else {
@@ -122,7 +111,7 @@ export const usePedidosStore = defineStore('pedidos', {
             } catch (err) {
                 console.error("Error validating payment:", err);
                 pedido.paymentStatus = previousStatus;
-                toast.error('Error de conexión');
+                toast.error('Error de conexión al validar pago');
                 return false;
             }
         },
@@ -134,24 +123,23 @@ export const usePedidosStore = defineStore('pedidos', {
             
             this.pedidos.splice(index, 1);
 
-            if (this.useLocalFallback) {
-                this.saveToLocalStorage();
-                return;
-            }
-
             try {
                 const res = await api.delete(`/pedidos/${id}`);
-                if (!res.data.success) {
-                    this.pedidos.splice(index, 0, pedidoBorrado); // revert
+                if (res.data.success) {
+                    this.saveToLocalStorage();
+                    toast.success('Pedido eliminado correctamente');
+                } else {
+                    this.pedidos.splice(index, 0, pedidoBorrado);
+                    toast.error(res.data.message || 'Error al eliminar pedido');
                 }
             } catch (err) {
                 console.error("Error deleting pedido:", err);
-                this.useLocalFallback = true;
-                this.saveToLocalStorage();
+                this.pedidos.splice(index, 0, pedidoBorrado);
+                toast.error('Error de conexión al eliminar el pedido');
             }
         },
 
-        // Métodos de LocalStorage para fallback
+        // Métodos de LocalStorage para caché de lectura
         loadFromLocalStorage() {
             if (typeof window !== 'undefined') {
                 const data = localStorage.getItem('pedidos_brandy_fallback');

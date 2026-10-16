@@ -1,14 +1,20 @@
 <template>
   <div class="h-full flex flex-col gap-6">
-    <header class="flex items-center justify-between">
+    <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
         <h1 class="text-3xl font-serif font-bold text-foreground">Pedidos de Impresión</h1>
         <p class="text-muted-foreground mt-1">CRM de producción El Rincón de Brandy</p>
       </div>
-      <button @click="showAddModal = true" class="bg-primary text-primary-foreground px-4 py-2 rounded-xl font-bold shadow-lg hover:opacity-90 transition-opacity flex items-center gap-2">
-        <Plus class="w-5 h-5" />
-        <span class="hidden md:inline">Nuevo Pedido</span>
-      </button>
+      <div class="flex items-center gap-3">
+        <div v-if="pedidosStore.useLocalFallback" class="bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs px-3 py-1.5 rounded-xl font-medium flex items-center gap-1.5">
+          <WifiOff class="w-4 h-4" />
+          <span>Modo offline (datos locales)</span>
+        </div>
+        <button @click="showAddModal = true" class="bg-primary text-primary-foreground px-4 py-2 rounded-xl font-bold shadow-lg hover:opacity-90 transition-opacity flex items-center gap-2">
+          <Plus class="w-5 h-5" />
+          <span class="hidden md:inline">Nuevo Pedido</span>
+        </button>
+      </div>
     </header>
 
     <!-- Board -->
@@ -171,7 +177,7 @@ import { ref, onMounted } from 'vue';
 import { usePedidosStore, type PedidoImpresion } from '~/stores/pedidos';
 import { useAuthStore } from '~/stores/auth';
 import { useRouter } from 'vue-router';
-import { Plus, X, ArrowRight, ArrowLeft, Clock, Printer, CheckCircle2, Truck, PackageCheck, Trash2 } from 'lucide-vue-next';
+import { Plus, X, ArrowRight, ArrowLeft, Clock, Printer, CheckCircle2, Truck, PackageCheck, Trash2, WifiOff } from 'lucide-vue-next';
 
 definePageMeta({
   layout: 'taskman',
