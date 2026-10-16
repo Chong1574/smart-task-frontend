@@ -22,34 +22,19 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { ensureAnalyticsQueues, loadAnalyticsScripts, GA_MEASUREMENT_ID } from '~/utils/analytics'
 
 const hasConsented = ref(true)
+const router = useRouter()
 
-const enableAnalytics = () => {
-  if (typeof window !== 'undefined') {
-    // Microsoft Clarity
-    (function(c,l,a,r,i,t,y){
-        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-    })(window, document, "clarity", "script", "ysm453nrza");
-
-    // Google Analytics
-    const script = document.createElement('script')
-    script.src = 'https://www.googletagmanager.com/gtag/js?id=G-T142ZNLG0C'
-    script.async = true
-    document.head.appendChild(script)
-
-    const inlineScript = document.createElement('script')
-    inlineScript.innerHTML = `
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-T142ZNLG0C');
-    `
-    document.head.appendChild(inlineScript)
+if (typeof window !== 'undefined') {
+  const consent = localStorage.getItem('cookie-consent')
+  if (consent === 'accepted') {
+    loadAnalyticsScripts()
+  } else if (consent !== 'rejected') {
+    ensureAnalyticsQueues()
   }
 }
 
@@ -57,22 +42,35 @@ onMounted(() => {
   const consent = localStorage.getItem('cookie-consent')
   if (consent === 'accepted') {
     hasConsented.value = true
-    enableAnalytics()
+    loadAnalyticsScripts()
   } else if (consent === 'rejected') {
     hasConsented.value = true
   } else {
     hasConsented.value = false
+    ensureAnalyticsQueues()
   }
+
+  router.afterEach((to) => {
+    if (localStorage.getItem('cookie-consent') !== 'rejected' && typeof window.gtag === 'function') {
+      window.gtag('config', GA_MEASUREMENT_ID, {
+        page_path: to.fullPath,
+        page_title: document.title
+      })
+    }
+  })
 })
 
 const acceptCookies = () => {
   localStorage.setItem('cookie-consent', 'accepted')
   hasConsented.value = true
-  enableAnalytics()
+  loadAnalyticsScripts()
 }
 
 const rejectCookies = () => {
   localStorage.setItem('cookie-consent', 'rejected')
   hasConsented.value = true
+  if (typeof window !== 'undefined') {
+    window.dataLayer = []
+  }
 }
 </script>

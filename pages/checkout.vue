@@ -143,7 +143,7 @@
               <span class="font-bold text-primary">{{ formatPrice(option.price) }}</span>
             </label>
 
-            <button v-if="step === 2 && selectedShipping" @click="step = 3" class="mt-6 bg-primary text-primary-foreground px-6 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors">
+            <button v-if="step === 2 && selectedShipping" @click="proceedToPayment" class="mt-6 bg-primary text-primary-foreground px-6 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors">
               Continuar a Pago
             </button>
           </div>
@@ -249,7 +249,7 @@
 
       <p class="text-xs text-muted-foreground mt-4">
         ¿Tienes alguna duda sobre tu compra? 
-        <a :href="waSupportUrl" target="_blank" class="text-green-600 dark:text-green-400 font-semibold hover:underline">
+        <a :href="waSupportUrl" target="_blank" @click="trackProjectLead('whatsapp_support', 'checkout_success')" class="text-green-600 dark:text-green-400 font-semibold hover:underline">
           Contáctanos por WhatsApp (442 175 2026)
         </a>
       </p>
@@ -272,6 +272,7 @@ import { useCartStore } from '~/stores/cart';
 import { useRouter } from 'vue-router';
 import { toast } from 'vue-sonner';
 import { useLocalStorage } from '@vueuse/core';
+import { trackEvent, trackProjectLead } from '~/utils/analytics';
 
 const cart = useCartStore();
 const router = useRouter();
@@ -290,12 +291,72 @@ const isPayPalCancel = computed(() => {
 const isVerifyingPayPal = ref(false);
 const paypalError = ref('');
 
+function getCurrentOrSavedItems() {
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = sessionStorage.getItem('last_order_items');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {
+      // ignore parse errors
+    }
+  }
+  return cart.items.map(i => ({
+    item_id: i.id,
+    item_name: i.title,
+    price: i.price,
+    quantity: i.quantity,
+    item_variant: i.variantName
+  }));
+}
+
+function recordPurchase(transactionId: string, explicitTotal?: number) {
+  const txId = String(transactionId);
+  if (typeof window !== 'undefined') {
+    const dedupKey = `tracked_purchase_${txId}`;
+    if (sessionStorage.getItem(dedupKey)) return;
+    sessionStorage.setItem(dedupKey, '1');
+  }
+
+  const savedShipping = typeof window !== 'undefined'
+    ? Number(sessionStorage.getItem('last_order_shipping') || 0)
+    : (selectedShipping.value?.price || 0);
+
+  const resolvedValue =
+    (typeof explicitTotal === 'number' && explicitTotal > 0 ? explicitTotal : 0) ||
+    finalTotal.value ||
+    (typeof window !== 'undefined' ? Number(sessionStorage.getItem('last_order_total') || 0) : 0) ||
+    cart.totalPrice;
+
+  const items = getCurrentOrSavedItems();
+
+  trackEvent(
+    'purchase',
+    {
+      transaction_id: txId,
+      value: resolvedValue,
+      shipping: savedShipping,
+      currency: 'MXN',
+      items
+    },
+    {
+      transaction_id: txId,
+      purchase_value: resolvedValue,
+      payment_method: selectedPayment.value
+    }
+  );
+}
+
 onMounted(async () => {
   if (typeof window !== 'undefined') {
     const savedTotal = sessionStorage.getItem('last_order_total');
     if (savedTotal) finalTotal.value = Number(savedTotal);
     const savedMethod = sessionStorage.getItem('last_payment_method');
     if (savedMethod) selectedPayment.value = savedMethod;
+    const savedOrderId = sessionStorage.getItem('last_order_id');
+    if (savedOrderId && !createdOrderId.value) createdOrderId.value = savedOrderId;
   }
 
   // Manejo de retorno de PayPal
@@ -328,16 +389,9 @@ onMounted(async () => {
         if (captureData.total) {
           finalTotal.value = Number(captureData.total);
         }
+        recordPurchase(`ORD_PP_${orderId}`, finalTotal.value);
         cart.clearCart();
         toast.success('¡Pago con PayPal verificado y completado!');
-
-        if (typeof window !== 'undefined' && (window as any).gtag) {
-          (window as any).gtag('event', 'purchase', {
-            transaction_id: `ORD_PP_${orderId}`,
-            value: cart.totalPrice,
-            currency: 'MXN'
-          });
-        }
       } else {
         paypalError.value = captureData.error || 'No se pudo confirmar el cobro en PayPal.';
         toast.error(paypalError.value);
@@ -358,30 +412,28 @@ onMounted(async () => {
 
   // Manejo de orden aprobada previa o retorno de Mercado Pago
   if (orderSuccess.value) {
+    const mpTxId = (route.query.external_reference || route.query.payment_id || createdOrderId.value || route.query.preference_id || `ORD_MP_${Date.now()}`) as string;
+    recordPurchase(String(mpTxId).startsWith('ORD_') ? String(mpTxId) : `ORD_MP_${mpTxId}`, finalTotal.value);
     cart.clearCart();
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-      (window as any).gtag('event', 'purchase', {
-        transaction_id: route.query.preference_id || `ORD_MP_${Date.now()}`,
-        value: cart.totalPrice,
-        currency: 'MXN'
-      });
-    }
   } else if (!isPayPalSuccess.value && cart.items.length === 0) {
     // Si el carrito está vacío y no estamos validando un pago, volver al bazar
     router.push('/bazar');
   } else if (!orderSuccess.value) {
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-      (window as any).gtag('event', 'begin_checkout', {
+    trackEvent(
+      'begin_checkout',
+      {
         currency: 'MXN',
         value: cart.totalPrice,
         items: cart.items.map(i => ({
           item_id: i.id,
           item_name: i.title,
           price: i.price,
-          quantity: i.quantity
+          quantity: i.quantity,
+          item_variant: i.variantName
         }))
-      });
-    }
+      },
+      { checkout_value: cart.totalPrice }
+    );
   }
 
   if (statusQuery === 'failure' || (Array.isArray(statusQuery) && statusQuery.includes('failure')) || route.query.status === 'rejected') {
@@ -590,6 +642,28 @@ const isSubmitting = ref(false);
 const createdOrderId = ref<string | number>('');
 const finalTotal = ref(0);
 
+function proceedToPayment() {
+  step.value = 3;
+  if (selectedShipping.value) {
+    trackEvent(
+      'add_shipping_info',
+      {
+        currency: 'MXN',
+        value: cart.totalPrice + selectedShipping.value.price,
+        shipping_tier: selectedShipping.value.name,
+        items: cart.items.map(i => ({
+          item_id: i.id,
+          item_name: i.title,
+          price: i.price,
+          quantity: i.quantity,
+          item_variant: i.variantName
+        }))
+      },
+      { shipping_tier: selectedShipping.value.name }
+    );
+  }
+}
+
 const waSupportUrl = computed(() => {
   const orderRef = createdOrderId.value ? ` #${createdOrderId.value}` : '';
   const msg = `Hola, tengo una pregunta sobre mi pedido${orderRef}.`;
@@ -602,18 +676,23 @@ async function confirmOrder() {
   const apiUrl = config.public.apiBase || 'https://taskapi.shongyi.com/api';
 
   try {
-    const orderValue = cart.totalPrice + (selectedShipping.value?.price || 0);
+    const shippingCost = selectedShipping.value?.price || 0;
+    const orderValue = cart.totalPrice + shippingCost;
     finalTotal.value = orderValue;
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('last_order_total', orderValue.toString());
-      sessionStorage.setItem('last_payment_method', selectedPayment.value);
-    }
     const orderItems = cart.items.map(i => ({
       item_id: i.id,
       item_name: i.title,
       price: i.price,
-      quantity: i.quantity
+      quantity: i.quantity,
+      item_variant: i.variantName
     }));
+
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('last_order_total', orderValue.toString());
+      sessionStorage.setItem('last_order_shipping', shippingCost.toString());
+      sessionStorage.setItem('last_order_items', JSON.stringify(orderItems));
+      sessionStorage.setItem('last_payment_method', selectedPayment.value);
+    }
 
     const response = await fetch(`${apiUrl}/checkout/process`, {
       method: 'POST',
@@ -634,17 +713,26 @@ async function confirmOrder() {
     const data = await response.json();
     if (data.orderId) {
       createdOrderId.value = data.orderId;
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('last_order_id', String(data.orderId));
+      }
     }
-    
-    // Tracking
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-      (window as any).gtag('event', 'purchase', {
-        transaction_id: data.orderId || `ORD_${Date.now()}`,
-        value: orderValue,
+
+    const paymentLabel = selectedPayment.value === 'paypal'
+      ? 'PayPal'
+      : (selectedPayment.value === 'transfer' ? 'Transferencia SPEI' : 'Mercado Pago');
+
+    // Evento de selección/confirmación de método de pago antes de redirigir a la pasarela
+    trackEvent(
+      'add_payment_info',
+      {
         currency: 'MXN',
+        value: orderValue,
+        payment_type: paymentLabel,
         items: orderItems
-      });
-    }
+      },
+      { payment_method: paymentLabel }
+    );
 
     if (selectedPayment.value === 'mp' && data.orderId) {
       toast.info('Generando link de Mercado Pago...', { duration: 2000 });
@@ -656,7 +744,7 @@ async function confirmOrder() {
       });
       const mpData = await mpResponse.json();
       if (mpData.success && mpData.init_point) {
-        // NO vaciar carrito aquí — se vacía al regresar con ?status=success
+        // NO vaciar carrito aquí — se vacía y registra purchase al regresar con ?status=success
         window.location.href = mpData.init_point;
         return;
       } else {
@@ -671,13 +759,14 @@ async function confirmOrder() {
       });
       const ppData = await ppResponse.json();
       if (ppData.success && ppData.approve_url) {
-        // Redirigir a PayPal Checkout (Opción B)
+        // Redirigir a PayPal Checkout (se registra purchase al capturar el pago en el retorno)
         window.location.href = ppData.approve_url;
         return;
       } else {
         toast.error(ppData.error || 'Error al conectar con PayPal');
       }
     } else {
+      recordPurchase(String(data.orderId || `ORD_${Date.now()}`), orderValue);
       cart.clearCart();
       orderSuccess.value = true;
     }

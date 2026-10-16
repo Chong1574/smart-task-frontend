@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { useLocalStorage } from '@vueuse/core';
+import { trackEvent } from '~/utils/analytics';
 
 export interface CartItem {
   id: string; // Unique ID for the cart item (e.g. productId + variantIdx)
@@ -21,18 +22,21 @@ export const useCartStore = defineStore('cart', () => {
   const totalPrice = computed(() => items.value.reduce((acc, item) => acc + (item.price * item.quantity), 0));
 
   function trackViewCart() {
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-      (window as any).gtag('event', 'view_cart', {
+    trackEvent(
+      'view_cart',
+      {
         currency: 'MXN',
         value: totalPrice.value,
         items: items.value.map(i => ({
           item_id: i.id,
           item_name: i.title,
           price: i.price,
-          quantity: i.quantity
+          quantity: i.quantity,
+          item_variant: i.variantName
         }))
-      });
-    }
+      },
+      { cart_value: totalPrice.value }
+    );
   }
 
   function toggleCart() {
@@ -85,8 +89,9 @@ export const useCartStore = defineStore('cart', () => {
       });
     }
 
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-      (window as any).gtag('event', 'add_to_cart', {
+    trackEvent(
+      'add_to_cart',
+      {
         currency: 'MXN',
         value: resolvedPrice * quantity,
         items: [
@@ -94,17 +99,19 @@ export const useCartStore = defineStore('cart', () => {
             item_id: cartItemId,
             item_name: product.title,
             price: resolvedPrice,
-            quantity: quantity
+            quantity,
+            item_variant: variant ? variant.name : undefined
           }
         ]
-      });
-    }
+      },
+      { added_item: product.title }
+    );
   }
 
   function removeItem(cartItemId: string) {
     const item = items.value.find(item => item.id === cartItemId);
-    if (item && typeof window !== 'undefined' && (window as any).gtag) {
-      (window as any).gtag('event', 'remove_from_cart', {
+    if (item) {
+      trackEvent('remove_from_cart', {
         currency: 'MXN',
         value: item.price * item.quantity,
         items: [
@@ -112,7 +119,8 @@ export const useCartStore = defineStore('cart', () => {
             item_id: item.id,
             item_name: item.title,
             price: item.price,
-            quantity: item.quantity
+            quantity: item.quantity,
+            item_variant: item.variantName
           }
         ]
       });

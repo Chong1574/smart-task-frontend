@@ -201,6 +201,7 @@
 import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, h } from 'vue'
 import defaultPrinters from '~/data/printers-3d.json'
 import api from '~/utils/api'
+import { trackEvent } from '~/utils/analytics'
 
 interface Printer { id: string; brand: string; model: string; watts: number; maintenanceCost?: number; maintenanceHours?: number; custom?: boolean }
 interface MakerworldProfile {
@@ -294,16 +295,18 @@ async function fetchFromN8n() {
     selectedProfileId.value = pick.id
     applyProfile(pick)
 
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-      (window as any).gtag('event', 'view_item', {
+    trackEvent(
+      'view_item',
+      {
         item_list_id: 'makerworld_calculator',
         item_list_name: 'MakerWorld Calculator',
         items: [{
           item_id: link,
           item_name: `Makerworld Model - ${pick.id}`,
         }]
-      });
-    }
+      },
+      { calculator_model: String(pick.id) }
+    );
   } catch (err: any) {
     n8nError.value = err?.response?.data?.error || err?.message || 'Error desconocido'
   } finally {

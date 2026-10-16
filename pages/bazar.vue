@@ -448,6 +448,7 @@ import CartDrawer from '~/components/CartDrawer.vue';
 import { imgProxy, imgProxySrcSet } from '~/utils/imgProxy';
 import { useCartStore } from '~/stores/cart';
 import { toast } from 'vue-sonner';
+import { trackEvent } from '~/utils/analytics';
 
 const cart = useCartStore();
 
@@ -857,6 +858,7 @@ const filteredProducts = computed(() => {
 
 async function triggerDeepSearch() {
   if (!query.value.trim()) return;
+  trackEvent('search', { search_term: query.value.trim(), search_type: 'deep_makerworld' }, { search_term: query.value.trim() });
   loadingDeep.value = true;
   isDeepSearching.value = true;
   error.value = null;
@@ -911,6 +913,9 @@ async function load(q: string) {
   error.value = null;
   searchedLive.value = false;
   rateLimited.value = false;
+  if (q) {
+    trackEvent('search', { search_term: q, search_type: 'catalog' }, { search_term: q });
+  }
   try {
     const url = q ? `${apiBase}/products?q=${encodeURIComponent(q)}` : `${apiBase}/products`;
     const r = await fetch(url);

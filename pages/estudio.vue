@@ -144,7 +144,7 @@
       <div class="text-center pb-12">
         <h3 class="text-3xl font-serif font-bold mb-6">¿Quieres construir algo en nuestro estudio?</h3>
         <p class="text-muted-foreground mb-8 max-w-lg mx-auto">Ya sea desarrollo de software, integración IoT o prototipado físico, nuestras estaciones están listas.</p>
-        <NuxtLink to="/#contacto" class="inline-flex px-8 py-4 bg-primary text-primary-foreground rounded-full font-bold shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all">
+        <NuxtLink to="/#contacto" @click="trackProjectContactIntent('estudio_cta')" class="inline-flex px-8 py-4 bg-primary text-primary-foreground rounded-full font-bold shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all">
           Cotizar un Proyecto
         </NuxtLink>
       </div>
@@ -154,6 +154,8 @@
 </template>
 
 <script setup>
+import { trackProjectContactIntent } from '~/utils/analytics'
+
 useSeoMeta({
   title: 'El Estudio — Taller de Software, Automatización y Manufactura 3D',
   description: 'Da un recorrido por nuestras estaciones de trabajo: incubadora de software (Taskman), laboratorio de control con Python/C++, y taller de manufactura 3D.',

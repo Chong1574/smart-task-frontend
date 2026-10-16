@@ -32,7 +32,7 @@
         </p>
 
         <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <a href="#contacto" class="group relative px-8 py-4 bg-primary text-primary-foreground rounded-full overflow-hidden transition-all hover:shadow-[0_0_30px_rgba(224,122,95,0.4)] hover:-translate-y-0.5">
+          <a href="#contacto" @click="trackProjectContactIntent('hero_home')" class="group relative px-8 py-4 bg-primary text-primary-foreground rounded-full overflow-hidden transition-all hover:shadow-[0_0_30px_rgba(224,122,95,0.4)] hover:-translate-y-0.5">
             <span class="absolute inset-0 w-full h-full bg-gradient-to-tr from-[#F2A65A] to-[#E07A5F] opacity-0 group-hover:opacity-100 transition-opacity duration-500 ease-out"></span>
             <span class="relative flex items-center gap-2 font-medium text-lg">
               Cotizar mi Proyecto
@@ -245,12 +245,11 @@
           Cuéntanos sobre tu idea. Ya sea una pieza de manufactura, una plataforma web o la protección de tus activos.
         </p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
-          <a href="mailto:contacto@shongyi.com" class="px-8 py-4 bg-primary text-primary-foreground rounded-full font-bold shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all flex items-center justify-center gap-2">
+          <a href="mailto:contacto@shongyi.com" @click="trackProjectLead('email', 'home_contacto')" class="px-8 py-4 bg-primary text-primary-foreground rounded-full font-bold shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all flex items-center justify-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
             Escríbenos un Correo
           </a>
-          <!-- Si hay un número de WhatsApp, se puede poner aquí -->
-          <a href="#" class="px-8 py-4 bg-card border border-border text-foreground rounded-full font-bold shadow-sm hover:bg-secondary transition-all flex items-center justify-center gap-2">
+          <a href="https://wa.me/524421752026?text=Hola%2C%20me%20gustar%C3%ADa%20cotizar%20un%20proyecto%20y%20agendar%20una%20videollamada." target="_blank" rel="noopener noreferrer" @click="trackProjectLead('whatsapp_videocall', 'home_contacto')" class="px-8 py-4 bg-card border border-border text-foreground rounded-full font-bold shadow-sm hover:bg-secondary transition-all flex items-center justify-center gap-2">
             Agendar Videollamada
           </a>
         </div>
@@ -305,6 +304,8 @@
 </style>
 
 <script setup>
+import { trackProjectLead, trackProjectContactIntent } from '~/utils/analytics'
+
 useSeoMeta({
   title: 'Ingeniería, Automatización y Manufactura 3D | El Rincón de Brandy',
   description: 'Agencia de innovación y tecnología. Impresión 3D, ingeniería de software, automatización, control con Python/C++ y respaldo patrimonial.',
