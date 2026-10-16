@@ -33,7 +33,6 @@
             :target="item.external ? '_blank' : undefined"
             :rel="item.external ? 'noopener noreferrer' : undefined"
             class="text-sm font-medium tracking-wide transition-colors hover:text-primary relative group"
-            :class="{ 'hidden lg:inline-block': item.lgOnly }"
             active-class="text-primary font-semibold"
           >
             {{ item.name }}
@@ -124,7 +123,6 @@
       <div class="container flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
         <p>© 2026 El Rincón de Brandy. La semilla de tu idea.</p>
         <div class="flex flex-wrap justify-center gap-6">
-          <NuxtLink to="/calculadora-3d" class="hover:text-primary transition-colors">Calculadora 3D</NuxtLink>
           <NuxtLink to="/rastreo" class="hover:text-primary transition-colors">Rastrear Pedido</NuxtLink>
           <NuxtLink to="/privacidad" class="hover:text-primary transition-colors">Aviso de Privacidad</NuxtLink>
           <NuxtLink to="/terminos" class="hover:text-primary transition-colors">Términos y Condiciones</NuxtLink>
@@ -155,7 +153,6 @@ const navItems = computed(() => {
     { name: 'Inicio', path: '/' },
     { name: 'El Bazar', path: '/bazar' },
     { name: 'El Estudio', path: '/estudio' },
-    { name: 'Calculadora 3D', path: '/calculadora-3d', lgOnly: true },
     { name: 'Protección', path: '/proteccion' },
     { name: 'Task-man', path: '/taskman' },
   ]

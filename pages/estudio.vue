@@ -166,8 +166,8 @@
                 <span class="px-3 py-1 bg-background border border-border rounded-md text-xs font-medium">Impresión FDM (PLA/ABS)</span>
               </div>
               <div class="flex flex-wrap gap-3 pt-2">
-                <NuxtLink to="/calculadora-3d" class="inline-flex px-6 py-3 bg-primary text-primary-foreground rounded-full font-bold text-sm shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all">
-                  Calcular costo de impresión
+                <NuxtLink to="/#contacto" @click="trackProjectContactIntent('estudio_manufactura')" class="inline-flex px-6 py-3 bg-primary text-primary-foreground rounded-full font-bold text-sm shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all">
+                  Cotizar pieza a medida
                 </NuxtLink>
                 <NuxtLink to="/bazar" class="inline-flex px-6 py-3 border border-border bg-card rounded-full font-bold text-sm hover:bg-secondary transition-all">
                   Ver el Bazar
