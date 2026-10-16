@@ -45,30 +45,104 @@
           <div v-else-if="financeStore.accounts.length === 0" class="text-sm text-muted-foreground">
              No hay cuentas registradas.
           </div>
-          <div v-else class="flex gap-4 overflow-x-auto pb-2">
-            <div v-for="account in financeStore.accounts" :key="account.id" @click="openHistory(account)" class="bg-secondary/50 p-4 rounded-2xl min-w-[200px] border border-border/30 relative group flex flex-col justify-between cursor-pointer hover:bg-secondary/70 transition-colors">
+          <div v-else class="flex gap-4 overflow-x-auto pb-3 pt-1">
+            <div 
+              v-for="account in financeStore.accounts" 
+              :key="account.id" 
+              @click="openHistory(account)" 
+              class="bg-secondary/40 hover:bg-secondary/60 border border-border/40 hover:border-border/80 p-4 rounded-2xl min-w-[270px] sm:min-w-[290px] relative group flex flex-col justify-between cursor-pointer transition-all shadow-sm hover:shadow-md"
+            >
               <div>
-                <p class="text-muted-foreground text-sm">{{ account.name }}</p>
-                <p class="text-xl font-bold font-mono">{{ formatCurrency(account.balance) }}</p>
-                <div v-if="account.statement" class="mt-2 space-y-1 relative group/statement">
-                  <p class="text-xs text-muted-foreground">Pago min: <span class="text-foreground font-mono font-medium">{{ formatCurrency(account.statement.minimumPayment) }}</span></p>
-                  <p class="text-xs text-muted-foreground">Para no generar intereses: <span class="text-foreground font-mono font-medium">{{ formatCurrency(account.statement.noInterestPayment) }}</span></p>
-                  <p v-if="account.statement.paymentDueDate" class="text-xs text-muted-foreground">Límite: <span class="text-foreground font-medium">{{ new Date(account.statement.paymentDueDate).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }) }}</span></p>
-                  
-                  <button @click.stop="openCalibrateModal(account)" class="absolute -right-2 top-0 md:opacity-0 md:group-hover/statement:opacity-100 transition-opacity bg-secondary/80 text-primary hover:bg-primary/20 p-1.5 rounded-lg text-[10px] flex items-center gap-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-                    Corregir
+                <!-- Header con Icono, Tipo y Acciones -->
+                <div class="flex items-start justify-between gap-2 mb-2.5">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="p-2 rounded-xl bg-background/80 text-foreground shrink-0 border border-border/30">
+                      <component :is="getAccountIcon(account)" class="w-4 h-4 text-primary" />
+                    </div>
+                    <div class="min-w-0">
+                      <p class="font-semibold text-sm truncate" :title="account.name">{{ account.name }}</p>
+                      <span class="inline-block text-[10px] px-2 py-0.5 border rounded-full font-medium mt-0.5" :class="getAccountBadge(account).class">
+                        {{ getAccountBadge(account).label }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- Botones de Acción -->
+                  <div class="flex items-center gap-1 opacity-90 md:opacity-0 md:group-hover:opacity-100 transition-opacity shrink-0">
+                    <button @click.stop="openEditAccount(account)" class="text-muted-foreground hover:text-primary p-1.5 bg-background/80 hover:bg-background rounded-lg transition-colors border border-border/30" title="Editar Cuenta">
+                      <Pencil class="w-3.5 h-3.5" />
+                    </button>
+                    <button @click.stop="deleteAccountWithConfirm(account.id)" class="text-muted-foreground hover:text-destructive p-1.5 bg-background/80 hover:bg-background rounded-lg transition-colors border border-border/30" title="Eliminar Cuenta">
+                      <Trash2 class="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Balance -->
+                <div class="mt-2">
+                  <p class="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">
+                    {{ account.type === 'card' && account.sub_type === 'credit' ? 'Deuda Actual' : 'Saldo Disponible' }}
+                  </p>
+                  <p class="text-xl font-bold font-mono text-foreground">
+                    {{ formatCurrency(account.balance) }}
+                  </p>
+                </div>
+
+                <!-- Barra de Utilización de Crédito para TDC -->
+                <div v-if="account.type === 'card' && account.sub_type === 'credit' && getCreditUtilization(account)" class="mt-3 p-2.5 rounded-xl bg-background/60 border border-border/30 space-y-1.5">
+                  <div class="flex justify-between items-center text-[11px]">
+                    <span class="text-muted-foreground">Uso de línea</span>
+                    <span class="font-mono font-medium" :class="getCreditUtilization(account)?.textClass">
+                      {{ getCreditUtilization(account)?.percentage }}% ({{ getCreditUtilization(account)?.label }})
+                    </span>
+                  </div>
+                  <!-- Progress bar -->
+                  <div class="h-1.5 w-full bg-secondary rounded-full overflow-hidden">
+                    <div 
+                      class="h-full rounded-full transition-all duration-500" 
+                      :class="getCreditUtilization(account)?.bgClass"
+                      :style="{ width: `${getCreditUtilization(account)?.percentage}%` }"
+                    ></div>
+                  </div>
+                  <div class="flex justify-between items-center text-[10px] text-muted-foreground font-mono">
+                    <span>Disp: {{ formatCurrency(getCreditUtilization(account)?.available || 0) }}</span>
+                    <span>Lím: {{ formatCurrency(getCreditUtilization(account)?.limit || 0) }}</span>
+                  </div>
+                </div>
+
+                <!-- Badges de Corte y Pago -->
+                <div v-if="account.type === 'card' && account.sub_type === 'credit'" class="mt-2.5 flex flex-wrap gap-1.5">
+                  <span v-if="getCutoffBadge(account)" class="text-[10px] px-2 py-0.5 rounded-md border flex items-center gap-1" :class="getCutoffBadge(account)?.class">
+                    <Clock class="w-2.5 h-2.5" />
+                    {{ getCutoffBadge(account)?.label }}
+                  </span>
+                  <span v-if="getPaymentDueBadge(account)" class="text-[10px] px-2 py-0.5 rounded-md border flex items-center gap-1" :class="getPaymentDueBadge(account)?.class">
+                    <Calendar class="w-2.5 h-2.5" />
+                    {{ getPaymentDueBadge(account)?.label }}
+                  </span>
+                </div>
+
+                <!-- Estado de Cuenta / Pagos recomendados -->
+                <div v-if="account.statement" class="mt-3 p-2.5 rounded-xl bg-background/50 border border-border/30 space-y-1 relative group/statement">
+                  <div class="flex items-center justify-between">
+                    <p class="text-[11px] text-muted-foreground">No generar intereses:</p>
+                    <span class="text-foreground font-mono text-[11px] font-bold">{{ formatCurrency(account.statement.noInterestPayment) }}</span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <p class="text-[11px] text-muted-foreground">Pago mínimo:</p>
+                    <span class="text-foreground font-mono text-[11px] font-medium">{{ formatCurrency(account.statement.minimumPayment) }}</span>
+                  </div>
+                  <button @click.stop="openCalibrateModal(account)" class="mt-1 w-full bg-secondary/80 text-primary hover:bg-primary/10 py-1 rounded-lg text-[10px] font-medium flex items-center justify-center gap-1 transition-colors">
+                    <Pencil class="w-2.5 h-2.5" />
+                    Corregir Estado de Cuenta
                   </button>
                 </div>
-                <p class="text-[10px] text-muted-foreground/70 mt-2 group-hover:text-primary transition-colors">Ver movimientos →</p>
               </div>
-              <div class="absolute top-2 right-2 flex gap-1 md:opacity-0 opacity-100 md:group-hover:opacity-100 transition-opacity">
-                <button @click.stop="openEditAccount(account)" class="text-muted-foreground hover:text-primary p-1 bg-background/50 rounded-md" title="Editar Cuenta">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-                </button>
-                <button @click.stop="deleteAccountWithConfirm(account.id)" class="text-muted-foreground hover:text-destructive p-1 bg-background/50 rounded-md" title="Eliminar Cuenta">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-                </button>
+
+              <!-- Footer link -->
+              <div class="pt-3 mt-3 border-t border-border/30 flex items-center justify-between text-[11px] text-muted-foreground group-hover:text-primary transition-colors">
+                <span>Ver movimientos</span>
+                <ChevronRight class="w-3.5 h-3.5 transform group-hover:translate-x-0.5 transition-transform" />
               </div>
             </div>
           </div>
@@ -736,6 +810,18 @@ definePageMeta({ layout: 'taskman' })
 
 import { ref, onMounted, reactive, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import {
+  CreditCard,
+  Wallet,
+  PiggyBank,
+  Landmark,
+  Coins,
+  Calendar,
+  Clock,
+  Pencil,
+  Trash2,
+  ChevronRight
+} from 'lucide-vue-next'
 import { useFinanceStore } from '~/stores/finance'
 import type { Account, AccountType, TransactionType } from '~/stores/finance'
 
@@ -1339,5 +1425,95 @@ const isNegative = (tx: any) => {
     return true;
   }
   return false;
+}
+
+function getAccountIcon(acc: Account) {
+  if (acc.type === 'card') return CreditCard
+  if (acc.type === 'savings' || acc.type === 'investment') return PiggyBank
+  if (acc.type === 'loan') return Landmark
+  if (acc.type === 'cash') return Coins
+  return Wallet
+}
+
+function getAccountBadge(acc: Account) {
+  if (acc.type === 'card') {
+    if (acc.sub_type === 'credit') return { label: 'Crédito', class: 'bg-purple-500/10 text-purple-500 border-purple-500/20' }
+    if (acc.sub_type === 'payroll') return { label: 'Nómina', class: 'bg-blue-500/10 text-blue-500 border-blue-500/20' }
+    return { label: 'Débito', class: 'bg-cyan-500/10 text-cyan-500 border-cyan-500/20' }
+  }
+  if (acc.type === 'savings') return { label: 'Ahorro', class: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' }
+  if (acc.type === 'investment') return { label: 'Inversión', class: 'bg-amber-500/10 text-amber-500 border-amber-500/20' }
+  if (acc.type === 'loan') return { label: 'Préstamo', class: 'bg-rose-500/10 text-rose-500 border-rose-500/20' }
+  return { label: 'Efectivo', class: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' }
+}
+
+function getCreditUtilization(acc: Account) {
+  const limit = Number(acc.credit_limit) || 0
+  if (limit <= 0) return null
+  const used = Math.max(0, Math.abs(Number(acc.balance)))
+  const percentage = Math.min(100, Math.round((used / limit) * 100))
+  let bgClass = 'bg-emerald-500'
+  let textClass = 'text-emerald-500'
+  let label = 'Saludable'
+  if (percentage >= 70) {
+    bgClass = 'bg-rose-500'
+    textClass = 'text-rose-500'
+    label = 'Alto'
+  } else if (percentage >= 30) {
+    bgClass = 'bg-amber-500'
+    textClass = 'text-amber-500'
+    label = 'Moderado'
+  }
+  return {
+    limit,
+    used,
+    percentage,
+    available: Math.max(0, limit - used),
+    bgClass,
+    textClass,
+    label
+  }
+}
+
+function getDaysUntilDayOfMonth(day: number): number {
+  if (!day || day < 1 || day > 31) return -1
+  const today = new Date()
+  const currentDay = today.getDate()
+  if (day === currentDay) return 0
+  if (day > currentDay) return day - currentDay
+  const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, day)
+  const diffTime = nextMonth.getTime() - today.getTime()
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+}
+
+function getPaymentDueBadge(acc: Account): { label: string; class: string } | null {
+  if (acc.statement?.paymentDueDate) {
+    const due = new Date(acc.statement.paymentDueDate)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    due.setHours(0, 0, 0, 0)
+    const diff = Math.ceil((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+    if (diff < 0) return { label: `Vencido (${Math.abs(diff)}d)`, class: 'bg-red-500/15 text-red-500 border-red-500/30 font-bold animate-pulse' }
+    if (diff === 0) return { label: 'Pagar hoy', class: 'bg-red-500/15 text-red-500 border-red-500/30 font-bold' }
+    if (diff === 1) return { label: 'Pagar mañana', class: 'bg-amber-500/15 text-amber-500 border-amber-500/30 font-medium' }
+    if (diff <= 3) return { label: `Pagar en ${diff}d`, class: 'bg-amber-500/15 text-amber-500 border-amber-500/30' }
+    return { label: `Pagar en ${diff}d`, class: 'bg-secondary text-muted-foreground border-border/40' }
+  }
+  if (acc.payment_day) {
+    const diff = getDaysUntilDayOfMonth(acc.payment_day)
+    if (diff === 0) return { label: 'Pagar hoy', class: 'bg-red-500/15 text-red-500 border-red-500/30 font-bold' }
+    if (diff === 1) return { label: 'Pagar mañana', class: 'bg-amber-500/15 text-amber-500 border-amber-500/30 font-medium' }
+    if (diff <= 5) return { label: `Pagar en ${diff}d`, class: 'bg-amber-500/15 text-amber-500 border-amber-500/30' }
+    return { label: `Pagar en ${diff}d`, class: 'bg-secondary text-muted-foreground border-border/40' }
+  }
+  return null
+}
+
+function getCutoffBadge(acc: Account): { label: string; class: string } | null {
+  if (!acc.cutoff_day) return null
+  const diff = getDaysUntilDayOfMonth(acc.cutoff_day)
+  if (diff === 0) return { label: 'Corte hoy', class: 'bg-blue-500/15 text-blue-500 border-blue-500/30 font-medium' }
+  if (diff === 1) return { label: 'Corte mañana', class: 'bg-blue-500/10 text-blue-500 border-blue-500/20' }
+  return { label: `Corte en ${diff}d`, class: 'bg-secondary/80 text-muted-foreground border-border/30' }
 }
 </script>
