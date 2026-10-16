@@ -1,135 +1,154 @@
 <template>
-  <div class="min-h-screen bg-background text-foreground flex flex-col items-center justify-center animate-in fade-in duration-1000 p-4 md:p-8 relative">
+  <div class="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-4 md:p-8 relative">
     
     <!-- Volver -->
-    <NuxtLink to="/taskman" class="absolute top-8 left-8 text-muted-foreground hover:text-foreground flex items-center gap-2 transition-colors">
+    <NuxtLink to="/taskman" class="absolute top-8 left-8 text-muted-foreground hover:text-foreground flex items-center gap-2 transition-colors z-10">
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
       <span class="font-medium hidden md:inline">Volver a Taskman</span>
     </NuxtLink>
 
-    <!-- Header / Reloj y Saludo -->
-    <div class="text-center mb-12 mt-8 md:mt-0">
-      <h1 class="text-7xl md:text-[10rem] leading-none font-serif font-bold bg-clip-text text-transparent bg-gradient-to-br from-primary to-orange-400 tracking-tighter mb-6">
-        {{ currentTime }}
-      </h1>
-      <h2 class="text-3xl md:text-5xl font-medium text-foreground tracking-tight mb-2">
-        {{ greeting }}<span v-if="firstName">, {{ firstName }}</span>
-      </h2>
-      <p class="text-xl md:text-2xl text-muted-foreground font-serif">
-        {{ currentDate }}
-      </p>
-    </div>
-
-    <!-- Contenido Principal -->
-    <div class="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12">
-      
-      <!-- Columna 1: Pendientes de Hoy (Calendario) -->
-      <div class="bg-card/30 backdrop-blur-xl border border-border/40 rounded-3xl p-6 shadow-2xl relative overflow-hidden">
-        <h3 class="text-2xl font-bold mb-6 flex items-center gap-3">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-          Agenda del Día
-        </h3>
-        
-        <div v-if="taskStore.loading || calendarLoading" class="space-y-4">
-           <div v-for="i in 3" :key="i" class="h-14 bg-muted/50 rounded-2xl animate-pulse"></div>
-        </div>
-        <div v-else-if="agendaItems.length === 0" class="text-center py-8 text-muted-foreground">
-          <p>No tienes tareas ni eventos agendados para hoy.</p>
-        </div>
-        <ul v-else class="space-y-3">
-          <NuxtLink v-for="item in agendaItems.slice(0, 6)" :key="item.key" :to="item.href" class="block p-4 rounded-2xl bg-background/50 border border-border/50 hover:border-primary/50 transition-colors">
-            <div class="flex items-start justify-between gap-2">
-              <h4 class="font-medium leading-tight" :class="item.kind === 'event' ? 'text-blue-500' : 'text-primary'">
-                <span v-if="item.kind === 'event'" class="text-[10px] uppercase tracking-wider text-blue-500/70 mr-1">GCal</span>
-                {{ item.title }}
-              </h4>
-              <span v-if="item.time" class="text-xs text-muted-foreground whitespace-nowrap">{{ item.time }}</span>
-            </div>
-            <div v-if="item.kind === 'task'" class="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-              <span v-if="item.durationMin">{{ item.durationMin }} min</span>
-              <span v-if="item.priority" :class="{'text-destructive': item.priority === 'high', 'text-orange-500': item.priority === 'medium', 'text-green-500': item.priority === 'low'}" class="capitalize">
-                {{ item.priority }}
-              </span>
-            </div>
-          </NuxtLink>
-          <NuxtLink v-if="agendaItems.length > 6" to="/taskman/activities" class="block text-center text-muted-foreground pt-2 text-sm font-medium hover:text-primary transition-colors">
-            + {{ agendaItems.length - 6 }} más...
-          </NuxtLink>
-        </ul>
-      </div>
-
-      <!-- Columna 2: Foco General y Hábitos -->
-      <div class="space-y-8 md:space-y-12">
-        <div class="bg-card/30 backdrop-blur-xl border border-border/40 rounded-3xl p-6 shadow-2xl">
-          <h3 class="text-2xl font-bold mb-6 flex items-center gap-3">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>
-            Foco (Prioridades)
-          </h3>
-          
-          <ul class="space-y-3">
-            <NuxtLink v-for="task in priorityTasks.slice(0, 7)" :key="task.id" to="/taskman/activities" class="block p-3 rounded-xl bg-background/50 border border-border/50 hover:border-primary/50 transition-colors">
-              <h4 class="font-medium text-sm leading-tight">{{ task.title }}</h4>
-            </NuxtLink>
-          </ul>
-          <div v-if="priorityTasks.length === 0" class="text-muted-foreground text-sm text-center py-4">Todo limpio.</div>
-        </div>
-
-        <div class="bg-card/30 backdrop-blur-xl border border-border/40 rounded-3xl p-6 shadow-2xl">
-          <h3 class="text-2xl font-bold mb-4 flex items-center gap-3">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-            Hábitos
-          </h3>
-          <div v-if="activeHabits.length === 0" class="text-sm text-muted-foreground py-2">
-             Sin hábitos activos.
-          </div>
-          <div v-else class="flex flex-wrap gap-2">
-            <NuxtLink v-for="habit in activeHabits" :key="habit.id" to="/taskman/habits" class="px-4 py-2 rounded-full border border-border/50 bg-background/50 font-medium text-xs hover:border-primary/50 transition-colors">
-              {{ habit.name }}
-            </NuxtLink>
-          </div>
-        </div>
-      </div>
-
-      <!-- Columna 3: Pagos Próximos y Motivación -->
-      <div class="space-y-8 md:space-y-12">
-        <div class="bg-card/30 backdrop-blur-xl border border-border/40 rounded-3xl p-6 shadow-2xl">
-          <h3 class="text-2xl font-bold mb-6 flex items-center gap-3">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
-            Próximos Pagos
-          </h3>
-          <ul class="space-y-3">
-            <NuxtLink v-for="(payment, idx) in upcomingPayments" :key="payment.sourceType + '-' + payment.sourceId + '-' + idx" to="/taskman/wallet" class="flex justify-between items-center p-3 rounded-xl bg-background/50 border border-border/50 hover:border-primary/50 transition-colors">
-              <div>
-                <h4 class="font-medium text-sm">{{ payment.name }}</h4>
-                <p class="text-xs text-muted-foreground">Día {{ new Date(payment.date).getDate() }}</p>
-              </div>
-              <span class="font-bold text-sm" :class="payment.type === 'Ingreso' ? 'text-green-500' : 'text-destructive'">${{ payment.amount.toFixed(2) }}</span>
-            </NuxtLink>
-          </ul>
-          <div v-if="upcomingPayments.length === 0" class="text-muted-foreground text-sm text-center py-4">No hay pagos cercanos.</div>
-        </div>
-
-        <div class="bg-card/30 backdrop-blur-xl border border-border/40 rounded-3xl p-6 shadow-2xl">
-          <h3 class="text-2xl font-bold mb-4 flex items-center gap-3">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-            Proyectos Activos
-          </h3>
-          <ul class="space-y-3">
-            <NuxtLink v-for="project in activeProjects.slice(0, 3)" :key="project.id" to="/taskman/projects" class="block p-3 rounded-xl bg-background/50 border border-border/50 hover:border-primary/50 transition-colors">
-              <h4 class="font-medium text-sm leading-tight">{{ project.name }}</h4>
-            </NuxtLink>
-          </ul>
-          <div v-if="activeProjects.length === 0" class="text-muted-foreground text-sm text-center py-4">Sin proyectos activos.</div>
-        </div>
-
-        <div class="bg-gradient-to-br from-primary/10 to-orange-500/10 border border-primary/20 rounded-3xl p-6 text-center shadow-lg">
-          <p class="text-lg md:text-xl font-serif font-medium text-foreground italic">
-            "{{ dailyQuote }}"
+    <ClientOnly>
+      <div class="w-full flex flex-col items-center justify-center animate-in fade-in duration-500">
+        <!-- Header / Reloj y Saludo -->
+        <div class="text-center mb-12 mt-8 md:mt-0">
+          <h1 class="text-7xl md:text-[10rem] leading-none font-serif font-bold bg-clip-text text-transparent bg-gradient-to-br from-primary to-orange-400 tracking-tighter mb-6">
+            {{ currentTime || '--:--' }}
+          </h1>
+          <h2 class="text-3xl md:text-5xl font-medium text-foreground tracking-tight mb-2">
+            {{ greeting }}<span v-if="firstName">, {{ firstName }}</span>
+          </h2>
+          <p class="text-xl md:text-2xl text-muted-foreground font-serif">
+            {{ currentDate }}
           </p>
         </div>
+
+        <!-- Contenido Principal -->
+        <div class="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12">
+          
+          <!-- Columna 1: Pendientes de Hoy (Calendario) -->
+          <div class="bg-card/30 backdrop-blur-xl border border-border/40 rounded-3xl p-6 shadow-2xl relative overflow-hidden">
+            <h3 class="text-2xl font-bold mb-6 flex items-center gap-3">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+              Agenda del Día
+            </h3>
+            
+            <div v-if="taskStore.loading || calendarLoading" class="space-y-4">
+               <div v-for="i in 3" :key="i" class="h-14 bg-muted/50 rounded-2xl animate-pulse"></div>
+            </div>
+            <div v-else-if="agendaItems.length === 0" class="text-center py-8 text-muted-foreground">
+              <p>No tienes tareas ni eventos agendados para hoy.</p>
+            </div>
+            <div v-else class="space-y-3">
+              <NuxtLink v-for="item in agendaItems.slice(0, 6)" :key="item.key" :to="item.href" class="block p-4 rounded-2xl bg-background/50 border border-border/50 hover:border-primary/50 transition-colors">
+                <div class="flex items-start justify-between gap-2">
+                  <h4 class="font-medium leading-tight" :class="item.kind === 'event' ? 'text-blue-500' : 'text-primary'">
+                    <span v-if="item.kind === 'event'" class="text-[10px] uppercase tracking-wider text-blue-500/70 mr-1">GCal</span>
+                    {{ item.title }}
+                  </h4>
+                  <span v-if="item.time" class="text-xs text-muted-foreground whitespace-nowrap">{{ item.time }}</span>
+                </div>
+                <div v-if="item.kind === 'task'" class="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                  <span v-if="item.durationMin">{{ item.durationMin }} min</span>
+                  <span v-if="item.priority" :class="{'text-destructive': item.priority === 'high', 'text-orange-500': item.priority === 'medium', 'text-green-500': item.priority === 'low'}" class="capitalize">
+                    {{ item.priority }}
+                  </span>
+                </div>
+              </NuxtLink>
+              <NuxtLink v-if="agendaItems.length > 6" to="/taskman/activities" class="block text-center text-muted-foreground pt-2 text-sm font-medium hover:text-primary transition-colors">
+                + {{ agendaItems.length - 6 }} más...
+              </NuxtLink>
+            </div>
+          </div>
+
+          <!-- Columna 2: Foco General y Hábitos -->
+          <div class="space-y-8 md:space-y-12">
+            <div class="bg-card/30 backdrop-blur-xl border border-border/40 rounded-3xl p-6 shadow-2xl">
+              <h3 class="text-2xl font-bold mb-6 flex items-center gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>
+                Foco (Prioridades)
+              </h3>
+              
+              <div v-if="priorityTasks.length > 0" class="space-y-3">
+                <NuxtLink v-for="task in priorityTasks.slice(0, 7)" :key="task.id" to="/taskman/activities" class="block p-3 rounded-xl bg-background/50 border border-border/50 hover:border-primary/50 transition-colors">
+                  <h4 class="font-medium text-sm leading-tight">{{ task.title }}</h4>
+                </NuxtLink>
+              </div>
+              <div v-else class="text-muted-foreground text-sm text-center py-4">Todo limpio.</div>
+            </div>
+
+            <div class="bg-card/30 backdrop-blur-xl border border-border/40 rounded-3xl p-6 shadow-2xl">
+              <h3 class="text-2xl font-bold mb-4 flex items-center gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                Hábitos
+              </h3>
+              <div v-if="activeHabits.length === 0" class="text-sm text-muted-foreground py-2">
+                 Sin hábitos activos.
+              </div>
+              <div v-else class="flex flex-wrap gap-2">
+                <NuxtLink v-for="habit in activeHabits" :key="habit.id" to="/taskman/habits" class="px-4 py-2 rounded-full border border-border/50 bg-background/50 font-medium text-xs hover:border-primary/50 transition-colors">
+                  {{ habit.name }}
+                </NuxtLink>
+              </div>
+            </div>
+          </div>
+
+          <!-- Columna 3: Pagos Próximos y Motivación -->
+          <div class="space-y-8 md:space-y-12">
+            <div class="bg-card/30 backdrop-blur-xl border border-border/40 rounded-3xl p-6 shadow-2xl">
+              <h3 class="text-2xl font-bold mb-6 flex items-center gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+                Próximos Pagos
+              </h3>
+              <div v-if="upcomingPayments.length > 0" class="space-y-3">
+                <NuxtLink v-for="(payment, idx) in upcomingPayments" :key="payment.sourceType + '-' + payment.sourceId + '-' + idx" to="/taskman/wallet" class="flex justify-between items-center p-3 rounded-xl bg-background/50 border border-border/50 hover:border-primary/50 transition-colors">
+                  <div>
+                    <h4 class="font-medium text-sm">{{ payment.name }}</h4>
+                    <p class="text-xs text-muted-foreground">Día {{ new Date(payment.date).getDate() }}</p>
+                  </div>
+                  <span class="font-bold text-sm" :class="payment.type === 'Ingreso' ? 'text-green-500' : 'text-destructive'">${{ Number(payment.amount || 0).toFixed(2) }}</span>
+                </NuxtLink>
+              </div>
+              <div v-else class="text-muted-foreground text-sm text-center py-4">No hay pagos cercanos.</div>
+            </div>
+
+            <div class="bg-card/30 backdrop-blur-xl border border-border/40 rounded-3xl p-6 shadow-2xl">
+              <h3 class="text-2xl font-bold mb-4 flex items-center gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                Proyectos Activos
+              </h3>
+              <div v-if="activeProjects.length > 0" class="space-y-3">
+                <NuxtLink v-for="project in activeProjects.slice(0, 3)" :key="project.id" to="/taskman/projects" class="block p-3 rounded-xl bg-background/50 border border-border/50 hover:border-primary/50 transition-colors">
+                  <h4 class="font-medium text-sm leading-tight">{{ project.name }}</h4>
+                </NuxtLink>
+              </div>
+              <div v-else class="text-muted-foreground text-sm text-center py-4">Sin proyectos activos.</div>
+            </div>
+
+            <div class="bg-gradient-to-br from-primary/10 to-orange-500/10 border border-primary/20 rounded-3xl p-6 text-center shadow-lg">
+              <p class="text-lg md:text-xl font-serif font-medium text-foreground italic">
+                "{{ dailyQuote }}"
+              </p>
+            </div>
+          </div>
+
+        </div>
       </div>
 
-    </div>
+      <template #fallback>
+        <div class="w-full max-w-7xl flex flex-col items-center justify-center p-8 space-y-12">
+          <div class="space-y-4 flex flex-col items-center">
+            <div class="h-24 md:h-36 w-72 md:w-96 bg-muted/40 rounded-3xl animate-pulse"></div>
+            <div class="h-8 w-48 bg-muted/30 rounded-xl animate-pulse"></div>
+          </div>
+          <div class="w-full grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="h-80 bg-muted/20 border border-border/30 rounded-3xl animate-pulse"></div>
+            <div class="h-80 bg-muted/20 border border-border/30 rounded-3xl animate-pulse"></div>
+            <div class="h-80 bg-muted/20 border border-border/30 rounded-3xl animate-pulse"></div>
+          </div>
+        </div>
+      </template>
+    </ClientOnly>
+
   </div>
 </template>
 
@@ -363,6 +382,7 @@ const upcomingPayments = computed(() => {
 })
 
 onMounted(async () => {
+  await authStore.init()
   updateTime()
   timer = setInterval(updateTime, 1000)
   
@@ -372,7 +392,7 @@ onMounted(async () => {
   if (taskStore.projects.length === 0) taskStore.fetchProjects()
   if (financeStore.subscriptions.length === 0) financeStore.fetchSubscriptions()
   if (financeStore.wishlistItems.length === 0) financeStore.fetchWishlistItems()
-  fetchTodayEvents()
+  await fetchTodayEvents()
 })
 
 onUnmounted(() => {
