@@ -40,6 +40,27 @@
           </div>
         </div>
 
+        <!-- Línea de tiempo del pedido -->
+        <div v-if="currentStepIndex >= 0" class="mb-8">
+          <ol class="flex items-start justify-between">
+            <li v-for="(s, i) in progressSteps" :key="s.key" class="flex-1 flex flex-col items-center text-center relative">
+              <div
+                v-if="i > 0"
+                class="absolute top-4 right-1/2 w-full h-0.5 -z-0"
+                :class="i <= currentStepIndex ? 'bg-primary' : 'bg-border'"
+              ></div>
+              <div
+                class="relative z-10 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-colors"
+                :class="i < currentStepIndex ? 'bg-primary border-primary text-primary-foreground' : (i === currentStepIndex ? 'bg-background border-primary text-primary ring-4 ring-primary/20' : 'bg-background border-border text-muted-foreground')"
+              >
+                <span v-if="i < currentStepIndex">✓</span>
+                <span v-else>{{ i + 1 }}</span>
+              </div>
+              <span class="mt-2 text-[11px] md:text-xs leading-tight" :class="i <= currentStepIndex ? 'font-semibold text-foreground' : 'text-muted-foreground'">{{ s.label }}</span>
+            </li>
+          </ol>
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div>
             <h3 class="font-bold mb-4 uppercase text-xs tracking-wider text-muted-foreground">Artículos</h3>
@@ -106,7 +127,25 @@ onMounted(() => {
   if (route.query.id) {
     form.value.id = route.query.id as string;
   }
+  if (route.query.email) {
+    form.value.email = route.query.email as string;
+  }
+  if (form.value.id && form.value.email) {
+    trackOrder();
+  }
 });
+
+const progressSteps = [
+  { key: 'PENDING', label: 'Recibido' },
+  { key: 'PRINTING', label: 'En producción' },
+  { key: 'COMPLETED', label: 'Empacando' },
+  { key: 'SHIPPED', label: 'Enviado' },
+  { key: 'DELIVERED', label: 'Entregado' }
+];
+
+const currentStepIndex = computed(() =>
+  progressSteps.findIndex(s => s.key === order.value?.status)
+);
 
 const statusConfig: Record<string, any> = {
   'PENDING': { label: 'Recibido / Pendiente', bg: 'bg-yellow-100 dark:bg-yellow-900/30', text: 'text-yellow-700 dark:text-yellow-400', dot: 'bg-yellow-500' },

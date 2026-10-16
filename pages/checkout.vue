@@ -255,7 +255,7 @@
       </p>
 
       <div class="pt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-        <NuxtLink to="/rastreo" class="w-full sm:w-auto px-6 py-3 bg-primary text-primary-foreground rounded-xl font-bold hover:bg-primary/90 transition-colors">
+        <NuxtLink :to="{ path: '/rastreo', query: createdOrderId ? { id: String(createdOrderId), email: form.email || undefined } : {} }" class="w-full sm:w-auto px-6 py-3 bg-primary text-primary-foreground rounded-xl font-bold hover:bg-primary/90 transition-colors">
           Rastrear mi pedido
         </NuxtLink>
         <NuxtLink to="/bazar" class="text-primary font-medium hover:underline px-4 py-2">
