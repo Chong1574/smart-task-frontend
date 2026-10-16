@@ -88,8 +88,8 @@
       "parameters": {
         "operation": "update",
         "fileId": { "__rl": true, "value": "", "mode": "id" },
-        "binaryData": true,
-        "binaryPropertyName": "data"
+        "changeFileContent": true,
+        "inputDataFieldName": "data"
       },
       "id": "google-drive-txt",
       "name": "Google Drive (Sobrescribir TXT)",
@@ -118,8 +118,8 @@
       "parameters": {
         "operation": "update",
         "fileId": { "__rl": true, "value": "", "mode": "id" },
-        "binaryData": true,
-        "binaryPropertyName": "data"
+        "changeFileContent": true,
+        "inputDataFieldName": "data"
       },
       "id": "google-drive-image",
       "name": "Google Drive (Sobrescribir Imagen)",
