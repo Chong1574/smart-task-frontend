@@ -252,6 +252,35 @@ export const useTaskStore = defineStore('tasks', {
             }
         },
 
+        async unlogHabit(habitId: number) {
+            const today = new Date();
+            const localDateStr = new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+
+            const habit = this.habits.find(h => h.id === habitId);
+            const originalLogs = habit?.logs ? [...habit.logs] : [];
+            if (habit && habit.logs) {
+                habit.logs = habit.logs.filter(l => {
+                    const d = l.completedAt ? l.completedAt.split('T')[0] : (l as any).date ? (l as any).date.split('T')[0] : '';
+                    return d !== localDateStr;
+                });
+            }
+
+            try {
+                const res = await api.delete(`/habits/${habitId}/log?date=${encodeURIComponent(localDateStr)}`);
+                if (res.data.success) {
+                    await this.fetchHabits();
+                    return true;
+                } else {
+                    if (habit) habit.logs = originalLogs;
+                    return false;
+                }
+            } catch (err) {
+                console.error("Error unlogging habit:", err);
+                if (habit) habit.logs = originalLogs;
+                return false;
+            }
+        },
+
         async updateHabit(id: number, updates: Partial<Habit>) {
             try {
                 const res = await api.put(`/habits/${id}`, updates);

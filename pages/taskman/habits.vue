@@ -59,28 +59,29 @@
               </div>
 
               <!-- Botón de Completar (Derecha) -->
+              <!-- Botón de Completar (Derecha) -->
               <div class="flex items-center gap-2">
-                <!-- Acciones Rápidas (Editar/Eliminar) - Visibles al hover -->
-                <div class="hidden md:flex items-center gap-2 mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <button @click.stop="openEditHabit(habit)" class="w-10 h-10 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center hover:bg-primary hover:text-white transition-colors shadow-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                <!-- Acciones Rápidas (Editar/Eliminar) - Visibles siempre en móvil, hover en desktop -->
+                <div class="flex items-center gap-1.5 mr-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
+                  <button @click.stop="openEditHabit(habit)" class="w-9 h-9 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center hover:bg-primary hover:text-white transition-colors shadow-sm" title="Editar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
                   </button>
-                  <button @click.stop="taskStore.deleteHabit(habit.id!)" class="w-10 h-10 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center hover:bg-destructive hover:text-white transition-colors shadow-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-                  </button>
-                </div>
-
-                <!-- En mobile, siempre visibles los botones si el usuario quiere editar, pero como pedimos modernidad, mejor lo dejamos limpio. Usamos d-flex en mobile si hace falta. Para no romper en movil, los dejamos ocultos y usamos un menu, pero por ahora asi esta bien. -->
-                <div class="flex items-center gap-2 md:hidden mr-2">
-                   <button @click.stop="openEditHabit(habit)" class="w-10 h-10 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center hover:bg-primary hover:text-white transition-colors shadow-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                  <button @click.stop="deleteHabit(habit)" class="w-9 h-9 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center hover:bg-destructive hover:text-white transition-colors shadow-sm" title="Eliminar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                   </button>
                 </div>
 
-                <div v-if="isHabitCompletedToday(habit)" class="w-14 h-14 rounded-full bg-emerald-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/40 animate-in zoom-in duration-300">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                </div>
-                <button v-else @click="handleComplete(habit, $event)" class="w-14 h-14 flex-shrink-0 rounded-full border-4 border-border flex items-center justify-center hover:border-primary hover:bg-primary/10 hover:scale-110 transition-all duration-300 text-transparent hover:text-primary relative group/btn">
+                <!-- Botón de Completado / Desmarcar -->
+                <button 
+                  v-if="isHabitCompletedToday(habit)" 
+                  @click.stop="handleUncomplete(habit)" 
+                  class="w-14 h-14 rounded-full bg-emerald-500 hover:bg-amber-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/40 hover:shadow-amber-500/40 hover:scale-105 transition-all duration-300 group/undo relative cursor-pointer"
+                  title="Completado hoy. Clic para desmarcar."
+                >
+                  <svg class="group-hover/undo:hidden" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  <svg class="hidden group-hover/undo:block" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                </button>
+                <button v-else @click.stop="handleComplete(habit, $event)" class="w-14 h-14 flex-shrink-0 rounded-full border-4 border-border flex items-center justify-center hover:border-primary hover:bg-primary/10 hover:scale-110 transition-all duration-300 text-transparent hover:text-primary relative group/btn">
                   <div class="absolute inset-0 rounded-full bg-primary/20 scale-0 group-hover/btn:scale-100 transition-transform duration-300"></div>
                   <svg class="relative z-10" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                 </button>
@@ -139,6 +140,7 @@
 definePageMeta({ layout: 'taskman' })
 
 import { ref, onMounted } from 'vue'
+import { toast } from 'vue-sonner'
 import { useTaskStore, type Habit } from '~/stores/tasks'
 import confetti from 'canvas-confetti'
 
@@ -257,6 +259,28 @@ const handleComplete = async (habit: Habit, event: MouseEvent) => {
       gravity: 1.2,
       scalar: 1.2
     });
+  }
+}
+
+const handleUncomplete = async (habit: Habit) => {
+  const ok = await taskStore.unlogHabit(habit.id!)
+  if (ok) {
+    toast.info(`Hábito "${habit.name}" desmarcado de hoy`)
+  } else {
+    toast.error('No se pudo desmarcar el hábito')
+  }
+}
+
+const deleteHabit = async (habit: Habit) => {
+  const confirmStore = useConfirmStore()
+  if (await confirmStore.ask({
+    title: 'Eliminar hábito',
+    message: `¿Estás seguro de que deseas eliminar el hábito "${habit.name}" y su historial?`,
+    confirmLabel: 'Eliminar',
+    destructive: true
+  })) {
+    await taskStore.deleteHabit(habit.id!)
+    toast.success('Hábito eliminado')
   }
 }
 </script>

@@ -162,9 +162,9 @@
             <button v-if="task.status === 'pending'" @click="markComplete(task)" class="bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white p-2 rounded-full transition-colors flex-shrink-0" title="Completar Tarea">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
             </button>
-            <div class="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+            <div class="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex gap-1">
               <button @click="openEditTask(task)" class="text-muted-foreground hover:text-primary p-2" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>
-              <button @click="taskStore.deleteTask(task.id!)" class="text-muted-foreground hover:text-destructive p-2" title="Eliminar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></button>
+              <button @click="deleteTask(task)" class="text-muted-foreground hover:text-destructive p-2" title="Eliminar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></button>
             </div>
           </div>
         </div>
@@ -308,12 +308,12 @@ const showRoulette = ref(false)
 const selectedTask = ref<Task | null>(null)
 const selectedProjectIds = ref<number[]>([])
 
-// Preseleccionar todos los proyectos
-onMounted(() => {
-  if (activeProjects.value.length > 0) {
-    selectedProjectIds.value = activeProjects.value.map(p => p.id!)
+// Preseleccionar todos los proyectos de forma reactiva
+watch(activeProjects, (projects) => {
+  if (selectedProjectIds.value.length === 0 && projects.length > 0) {
+    selectedProjectIds.value = projects.map(p => p.id!)
   }
-})
+}, { immediate: true })
 
 const showTaskModal = ref(false)
 const isEditingTask = ref(false)
@@ -414,8 +414,20 @@ const spin = async () => {
   if (result) {
     selectedTask.value = result
   } else {
-    // Si la ruleta no devolvió nada (ej. no hay tareas para esos proyectos)
-    alert('No se encontró ninguna tarea pendiente para los proyectos seleccionados.')
+    toast.info('No se encontró ninguna tarea pendiente para los proyectos seleccionados.')
+  }
+}
+
+const deleteTask = async (task: Task) => {
+  const confirmStore = useConfirmStore()
+  if (await confirmStore.ask({
+    title: 'Eliminar tarea',
+    message: `¿Estás seguro de que deseas eliminar la tarea "${task.title}"?`,
+    confirmLabel: 'Eliminar',
+    destructive: true
+  })) {
+    await taskStore.deleteTask(task.id!)
+    toast.success('Tarea eliminada correctamente')
   }
 }
 
