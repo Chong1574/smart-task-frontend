@@ -378,15 +378,18 @@ const submitTask = async () => {
   // Normalizar deadline: '' → null, 'YYYY-MM-DD' → ISO 8601 fin-de-día local
   if (!payload.deadline) {
     payload.deadline = null;
-    payload.auto_distribute = false;
+    if (payload.auto_distribute) {
+      toast.info('Para agendar automáticamente en calendario, asigna una fecha límite.');
+      payload.auto_distribute = false;
+    }
   } else if (!payload.deadline.includes('T')) {
     payload.deadline = new Date(`${payload.deadline}T23:59:59`).toISOString();
   }
 
   let ok: boolean;
   if (isEditingTask.value && editingTaskId.value) {
-    const { title, status, category, priority, description, deadline, budget, projectId, goalId, auto_distribute } = payload;
-    ok = await taskStore.updateTask(editingTaskId.value, { title, status, category, priority, description, deadline, budget, projectId, goalId, auto_distribute });
+    const { title, status, category, priority, description, deadline, budget, projectId, goalId, auto_distribute, duration_minutes } = payload;
+    ok = await taskStore.updateTask(editingTaskId.value, { title, status, category, priority, description, deadline, budget, projectId, goalId, auto_distribute, duration_minutes });
   } else {
     ok = await taskStore.addTask(payload as Task);
   }
