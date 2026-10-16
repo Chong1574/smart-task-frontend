@@ -33,6 +33,7 @@
             :target="item.external ? '_blank' : undefined"
             :rel="item.external ? 'noopener noreferrer' : undefined"
             class="text-sm font-medium tracking-wide transition-colors hover:text-primary relative group"
+            :class="{ 'hidden lg:inline-block': item.lgOnly }"
             active-class="text-primary font-semibold"
           >
             {{ item.name }}
@@ -73,8 +74,44 @@
           >
             Empezar un Proyecto
           </NuxtLink>
+
+          <!-- Botón menú móvil -->
+          <button
+            class="md:hidden p-2 rounded-full hover:bg-accent transition-colors flex items-center justify-center"
+            :aria-label="mobileMenuOpen ? 'Cerrar menú' : 'Abrir menú'"
+            :aria-expanded="mobileMenuOpen"
+            @click="mobileMenuOpen = !mobileMenuOpen"
+          >
+            <svg v-if="!mobileMenuOpen" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+            <svg v-else xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
         </div>
       </div>
+
+      <!-- Panel de navegación móvil -->
+      <nav v-if="mobileMenuOpen" class="md:hidden border-t border-border/40 bg-background/95 backdrop-blur-md">
+        <div class="container flex flex-col py-4 gap-1">
+          <NuxtLink
+            v-for="item in navItems"
+            :key="item.path"
+            :to="item.path"
+            :target="item.external ? '_blank' : undefined"
+            :rel="item.external ? 'noopener noreferrer' : undefined"
+            class="px-2 py-3 text-base font-medium rounded-lg hover:bg-accent hover:text-primary transition-colors"
+            active-class="text-primary font-semibold"
+            @click="mobileMenuOpen = false"
+          >
+            {{ item.name }}
+          </NuxtLink>
+          <NuxtLink
+            to="/#contacto"
+            class="mt-2 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground px-6 py-3 text-sm font-medium"
+            @click="trackProjectContactIntent('header_cta_mobile'); mobileMenuOpen = false"
+          >
+            Empezar un Proyecto
+          </NuxtLink>
+        </div>
+      </nav>
     </header>
 
     <!-- Main Content -->
@@ -86,7 +123,9 @@
     <footer class="border-t border-border/40 py-12 mt-20">
       <div class="container flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
         <p>© 2026 El Rincón de Brandy. La semilla de tu idea.</p>
-        <div class="flex gap-6">
+        <div class="flex flex-wrap justify-center gap-6">
+          <NuxtLink to="/calculadora-3d" class="hover:text-primary transition-colors">Calculadora 3D</NuxtLink>
+          <NuxtLink to="/rastreo" class="hover:text-primary transition-colors">Rastrear Pedido</NuxtLink>
           <NuxtLink to="/privacidad" class="hover:text-primary transition-colors">Aviso de Privacidad</NuxtLink>
           <NuxtLink to="/terminos" class="hover:text-primary transition-colors">Términos y Condiciones</NuxtLink>
         </div>
@@ -98,7 +137,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 import { useCartStore } from '~/stores/cart'
 import CartDrawer from '~/components/CartDrawer.vue'
@@ -106,12 +145,17 @@ import { trackProjectContactIntent } from '~/utils/analytics'
 
 const authStore = useAuthStore()
 const cartStore = useCartStore()
+const route = useRoute()
+
+const mobileMenuOpen = ref(false)
+watch(() => route.fullPath, () => { mobileMenuOpen.value = false })
 
 const navItems = computed(() => {
   const items = [
     { name: 'Inicio', path: '/' },
     { name: 'El Bazar', path: '/bazar' },
     { name: 'El Estudio', path: '/estudio' },
+    { name: 'Calculadora 3D', path: '/calculadora-3d', lgOnly: true },
     { name: 'Protección', path: 'https://arveck.com', external: true },
     { name: 'Task-man', path: '/taskman' },
   ]
