@@ -156,7 +156,7 @@ const navItems = computed(() => {
     { name: 'El Bazar', path: '/bazar' },
     { name: 'El Estudio', path: '/estudio' },
     { name: 'Calculadora 3D', path: '/calculadora-3d', lgOnly: true },
-    { name: 'Protección', path: 'https://arveck.com', external: true },
+    { name: 'Protección', path: '/proteccion' },
     { name: 'Task-man', path: '/taskman' },
   ]
   return items

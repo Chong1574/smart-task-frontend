@@ -45,10 +45,24 @@
           </div>
         </div>
 
-        <div class="mt-12 flex justify-center">
-          <button class="px-8 py-3 bg-white text-[#1C232B] font-semibold rounded-full hover:bg-white/90 transition-colors shadow-lg shadow-white/5">
+        <div class="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <a
+            href="https://wa.me/524421752026?text=Hola%2C%20me%20interesa%20una%20asesor%C3%ADa%20de%20seguros%20con%20Arveck."
+            target="_blank"
+            rel="noopener noreferrer"
+            @click="trackProjectLead('whatsapp_arveck', 'proteccion_page')"
+            class="px-8 py-3 bg-white text-[#1C232B] font-semibold rounded-full hover:bg-white/90 transition-colors shadow-lg shadow-white/5"
+          >
             Solicitar Asesoría
-          </button>
+          </a>
+          <a
+            href="https://arveck.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="px-8 py-3 border border-white/30 text-white font-semibold rounded-full hover:bg-white/10 transition-colors"
+          >
+            Visitar arveck.com
+          </a>
         </div>
       </div>
       
@@ -57,6 +71,8 @@
 </template>
 
 <script setup>
+import { trackProjectLead } from '~/utils/analytics'
+
 useSeoMeta({
   title: 'Arveck — Respaldo patrimonial y seguros',
   description: 'Arveck es la división de respaldo patrimonial de El Rincón de Brandy. Seguros y protección para que tus ideas y bienes se mantengan firmes.',
