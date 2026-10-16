@@ -9,20 +9,7 @@
       </div>
 
       <!-- Navigation Tabs -->
-      <div class="flex space-x-1 border-b border-border/40 pb-px overflow-x-auto">
-        <NuxtLink to="/taskman/wallet" class="px-4 py-2 border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap">
-          Billetera
-        </NuxtLink>
-        <NuxtLink to="/taskman/budget" class="px-4 py-2 border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap">
-          Presupuesto & Proyecciones
-        </NuxtLink>
-        <NuxtLink to="/taskman/wishlist" class="px-4 py-2 border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap">
-          Wishlist
-        </NuxtLink>
-        <NuxtLink to="/taskman/dashboard" class="px-4 py-2 border-b-2 border-primary text-primary font-medium transition-colors whitespace-nowrap">
-          Dashboard y Salud
-        </NuxtLink>
-      </div>
+      <FinanceNavigation />
 
       <!-- Skeleton mientras carga -->
       <div v-if="financeStore.loading && !financeStore.accounts.length" class="space-y-6">
