@@ -19,7 +19,7 @@
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div v-for="(project, index) in taskStore.projects" :key="project.id" class="bg-card border border-border/40 rounded-3xl p-6 shadow-sm hover:shadow-md transition-shadow group relative overflow-hidden">
-          <div :class="['absolute top-0 left-0 w-full h-2', getProjectColor(index)]"></div>
+          <div :class="['absolute top-0 left-0 w-full h-2', getProjectColor(project, index)]"></div>
           <div class="flex justify-between items-start mb-4">
             <h3 class="font-bold text-xl">{{ project.name }}</h3>
             <div class="flex items-center gap-2">
@@ -47,7 +47,7 @@
               <span>{{ getProgress(project.id!) }}%</span>
             </div>
             <div class="w-full h-2 bg-secondary rounded-full overflow-hidden">
-              <div :class="['h-full rounded-full', getProjectColor(index)]" :style="{ width: getProgress(project.id!) + '%' }"></div>
+              <div :class="['h-full rounded-full', getProjectColor(project, index)]" :style="{ width: getProgress(project.id!) + '%' }"></div>
             </div>
           </div>
 
@@ -103,6 +103,25 @@
               <option value="completed">Completado</option>
               <option value="archived">Archivado</option>
             </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium mb-2">Color Distintivo</label>
+            <div class="flex items-center gap-2 flex-wrap">
+              <button
+                v-for="c in PROJECT_COLORS"
+                :key="c.id"
+                type="button"
+                :title="c.name"
+                @click="newProject.color = c.id"
+                class="w-7 h-7 rounded-full transition-all flex items-center justify-center relative hover:scale-110"
+                :class="[c.bgClass, newProject.color === c.id ? 'ring-2 ring-offset-2 ring-foreground scale-110 shadow-sm' : 'opacity-80 hover:opacity-100']"
+              >
+                <svg v-if="newProject.color === c.id" class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                </svg>
+              </button>
+            </div>
           </div>
 
           <div class="grid grid-cols-2 gap-4 mt-6">
@@ -187,6 +206,23 @@ import { useTaskStore, type Task } from '~/stores/tasks'
 
 const taskStore = useTaskStore()
 
+interface ProjectColorDef {
+  id: string;
+  name: string;
+  bgClass: string;
+}
+
+const PROJECT_COLORS: ProjectColorDef[] = [
+  { id: 'blue', name: 'Azul', bgClass: 'bg-blue-500' },
+  { id: 'purple', name: 'Púrpura', bgClass: 'bg-purple-500' },
+  { id: 'emerald', name: 'Esmeralda', bgClass: 'bg-emerald-500' },
+  { id: 'orange', name: 'Naranja', bgClass: 'bg-orange-500' },
+  { id: 'pink', name: 'Rosa', bgClass: 'bg-pink-500' },
+  { id: 'cyan', name: 'Cian', bgClass: 'bg-cyan-500' },
+  { id: 'amber', name: 'Ámbar', bgClass: 'bg-amber-500' },
+  { id: 'indigo', name: 'Índigo', bgClass: 'bg-indigo-500' }
+]
+
 const showProjectModal = ref(false)
 const isEditingProject = ref(false)
 const editingProjectId = ref<number | null>(null)
@@ -194,13 +230,14 @@ const editingProjectId = ref<number | null>(null)
 const newProject = ref({
   name: '',
   description: '',
-  status: 'active' as 'active' | 'completed' | 'archived'
+  status: 'active' as 'active' | 'completed' | 'archived',
+  color: 'blue'
 })
 
 const openNewProject = () => {
   isEditingProject.value = false
   editingProjectId.value = null
-  newProject.value = { name: '', description: '', status: 'active' }
+  newProject.value = { name: '', description: '', status: 'active', color: 'blue' }
   showProjectModal.value = true
 }
 
@@ -210,7 +247,8 @@ const openEditProject = (project: any) => {
   newProject.value = {
     name: project.name,
     description: project.description || '',
-    status: project.status
+    status: project.status,
+    color: project.color || 'blue'
   }
   showProjectModal.value = true
 }
@@ -222,7 +260,7 @@ const submitProject = async () => {
     await taskStore.addProject({ ...newProject.value })
   }
   showProjectModal.value = false
-  newProject.value = { name: '', description: '', status: 'active' }
+  newProject.value = { name: '', description: '', status: 'active', color: 'blue' }
 }
 
 const deleteProject = async (id: number) => {
@@ -295,16 +333,14 @@ onMounted(() => {
   taskStore.fetchTasks() // Para calcular el progreso
 })
 
-const getProjectColor = (index: number) => {
-  const colors = [
-    'bg-blue-500',
-    'bg-purple-500',
-    'bg-emerald-500',
-    'bg-orange-500',
-    'bg-pink-500',
-    'bg-cyan-500'
-  ]
-  return colors[index % colors.length]
+const getProjectColor = (project: any, index: number) => {
+  if (project?.color) {
+    const found = PROJECT_COLORS.find(c => c.id === project.color || c.bgClass === project.color)
+    if (found) return found.bgClass
+    if (typeof project.color === 'string' && project.color.startsWith('bg-')) return project.color
+  }
+  const fallbackIndex = project?.id ? Math.abs(project.id) % PROJECT_COLORS.length : index % PROJECT_COLORS.length
+  return PROJECT_COLORS[fallbackIndex].bgClass
 }
 
 const getTotalTasks = (projectId: number) => {
