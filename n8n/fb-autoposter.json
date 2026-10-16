@@ -58,7 +58,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=TU_API_KEY_GEMINI_AQUI",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={{ $env.GEMINI_API_KEY }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -107,8 +107,8 @@
           "mode": "list"
         },
         "additionalFields": {
-          "url": "={{ .imageUrl }}",
-          "message": "={{ .message }}"
+          "url": "={{ $json.imageUrl }}",
+          "message": "={{ $json.message }}"
         }
       },
       "id": "fb-publish",

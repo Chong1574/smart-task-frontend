@@ -48,7 +48,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=TU_API_KEY_GEMINI_AQUI",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={{ $env.GEMINI_API_KEY }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [ { "name": "Content-Type", "value": "application/json" } ]
@@ -126,9 +126,26 @@
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
       "position": [ 1520, 400 ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "manual-post-trigger",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "manual-post-trigger-uuid",
+      "name": "Manual Post Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [ -16, 520 ],
+      "webhookId": "manual-post-trigger-wh"
     }
   ],
   "connections": {
+    "Manual Post Trigger": {
+      "main": [ [ { "node": "Fetch Bazar Products", "type": "main", "index": 0 } ] ]
+    },
     "Schedule (4 times/week)": {
       "main": [ [ { "node": "Fetch Bazar Products", "type": "main", "index": 0 } ] ]
     },
