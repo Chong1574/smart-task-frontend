@@ -152,55 +152,97 @@
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Tabla Transacciones -->
         <div class="bg-card border border-border/40 rounded-3xl shadow-sm overflow-hidden flex flex-col max-h-[600px]">
-          <div class="p-6 border-b border-border/40 flex justify-between items-center">
-            <h3 class="font-bold text-lg">Transacciones</h3>
-            <select v-model="selectedMonth" class="bg-secondary text-sm border-0 rounded-lg px-3 py-1.5 focus:ring-0 cursor-pointer outline-none">
-              <option value="all">Todo el Historial</option>
-              <option v-for="month in availableMonths" :key="month.value" :value="month.value">
-                {{ month.label.charAt(0).toUpperCase() + month.label.slice(1) }}
-              </option>
-            </select>
-          </div>
-          <div class="hidden md:grid p-4 grid-cols-12 gap-4 text-sm font-medium text-muted-foreground bg-secondary/20 shrink-0">
-            <div class="col-span-3">Fecha</div>
-            <div class="col-span-6">Descripción</div>
-            <div class="col-span-3 text-right">Monto</div>
-          </div>
-          
-          <div class="overflow-y-auto flex-1">
-            <div v-if="filteredTransactions.length === 0" class="p-6 text-center text-muted-foreground text-sm">
-               No hay transacciones registradas para este periodo.
+          <div class="p-5 border-b border-border/40 space-y-3">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div class="flex items-center gap-2">
+                <h3 class="font-bold text-lg">Transacciones</h3>
+                <span class="text-xs px-2 py-0.5 rounded-full bg-secondary font-mono text-muted-foreground">
+                  {{ filteredTransactions.length }}
+                </span>
+              </div>
+              <div class="flex items-center gap-2">
+                <select v-model="selectedMonth" class="bg-secondary text-xs sm:text-sm border border-border/40 rounded-xl px-3 py-1.5 focus:ring-1 focus:ring-primary/50 cursor-pointer outline-none">
+                  <option value="all">Todo el Historial</option>
+                  <option v-for="month in availableMonths" :key="month.value" :value="month.value">
+                    {{ month.label.charAt(0).toUpperCase() + month.label.slice(1) }}
+                  </option>
+                </select>
+              </div>
             </div>
 
-            <div v-for="tx in filteredTransactions" :key="tx.id" class="p-4 flex flex-col md:grid md:grid-cols-12 gap-2 md:gap-4 items-start md:items-center border-b border-border/40 text-sm hover:bg-secondary/10 transition-colors group">
-              <div class="md:col-span-3 text-muted-foreground flex justify-between w-full md:block">
-                <span>{{ formatDate(tx.date) }}</span>
-                <span class="md:hidden font-mono font-bold" :class="isNegative(tx) ? 'text-red-500' : 'text-green-500'">
-                  {{ isNegative(tx) ? '-' : '+' }}{{ formatCurrency(tx.amount) }}
-                </span>
-              </div>
-              <div class="md:col-span-6 flex flex-col w-full min-w-0">
-                <span class="font-medium truncate" :title="formatDescription(tx.description)">{{ formatDescription(tx.description) }}</span>
-                <div class="flex items-center gap-2 mt-1">
-                  <span class="text-[10px] px-2 py-0.5 rounded font-medium" 
-                        :class="isNegative(tx) ? 'bg-red-500/10 text-red-500' : 'bg-emerald-500/10 text-emerald-500'">
-                    {{ isNegative(tx) ? 'Pago / Salida' : 'Abono / Entrada' }}
-                  </span>
-                  <span v-if="tx.category" class="text-[10px] text-muted-foreground border border-border/50 px-2 py-0.5 rounded truncate max-w-[120px]" :title="tx.category">
-                    {{ tx.category }}
-                  </span>
+            <!-- Buscador rápido en tiempo real -->
+            <div class="relative">
+              <Search class="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input 
+                v-model="searchQuery" 
+                type="text" 
+                placeholder="Buscar por descripción, categoría o monto..." 
+                class="w-full bg-secondary/40 border border-border/40 rounded-xl pl-9 pr-8 py-1.5 text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 placeholder:text-muted-foreground"
+              />
+              <button 
+                v-if="searchQuery" 
+                @click="searchQuery = ''" 
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+          
+          <div class="overflow-y-auto flex-1 divide-y divide-border/30">
+            <div v-if="filteredTransactions.length === 0" class="p-8 text-center text-muted-foreground text-sm space-y-2">
+              <p>No se encontraron transacciones con los filtros seleccionados.</p>
+              <button v-if="searchQuery" @click="searchQuery = ''" class="text-primary text-xs hover:underline">
+                Limpiar búsqueda
+              </button>
+            </div>
+
+            <div 
+              v-for="tx in filteredTransactions" 
+              :key="tx.id" 
+              class="p-4 flex items-center justify-between gap-3 text-sm hover:bg-secondary/20 transition-colors group"
+            >
+              <!-- Icono y Detalle -->
+              <div class="flex items-center gap-3.5 min-w-0 flex-1">
+                <div 
+                  class="p-2.5 rounded-2xl shrink-0 flex items-center justify-center border border-border/20"
+                  :class="getCategoryVisual(tx.category, tx.type).bg"
+                >
+                  <component :is="getCategoryVisual(tx.category, tx.type).icon" class="w-4 h-4 shrink-0" />
+                </div>
+                <div class="min-w-0 flex-1">
+                  <p class="font-medium text-foreground truncate text-sm" :title="formatDescription(tx.description)">
+                    {{ formatDescription(tx.description) }}
+                  </p>
+                  <div class="flex items-center flex-wrap gap-1.5 mt-1 text-[11px] text-muted-foreground">
+                    <span>{{ formatDate(tx.date) }}</span>
+                    <span>•</span>
+                    <span 
+                      class="px-1.5 py-0.2 rounded font-medium text-[10px]"
+                      :class="isNegative(tx) ? 'bg-red-500/10 text-red-500' : 'bg-emerald-500/10 text-emerald-500'"
+                    >
+                      {{ isNegative(tx) ? 'Salida' : 'Entrada' }}
+                    </span>
+                    <span v-if="tx.category" class="bg-secondary px-1.5 py-0.2 rounded border border-border/40 text-[10px] text-muted-foreground truncate max-w-[120px]">
+                      {{ tx.category }}
+                    </span>
+                  </div>
                 </div>
               </div>
-              <div class="md:col-span-3 w-full text-right font-mono font-bold flex items-center justify-end gap-3 mt-2 md:mt-0">
-                <span class="hidden md:inline" :class="isNegative(tx) ? 'text-red-500' : 'text-green-500'">
+
+              <!-- Monto y Acciones -->
+              <div class="flex items-center gap-2 text-right shrink-0">
+                <div class="font-mono font-bold text-sm sm:text-base" :class="isNegative(tx) ? 'text-red-500' : 'text-emerald-500'">
                   {{ isNegative(tx) ? '-' : '+' }}{{ formatCurrency(tx.amount) }}
-                </span>
-                <button @click="openEditTransaction(tx)" class="text-muted-foreground hover:text-primary md:opacity-0 md:group-hover:opacity-100 transition-opacity p-2 md:p-0 bg-secondary/50 md:bg-transparent rounded-md md:rounded-none" title="Editar transacción">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-                </button>
-                <button @click="handleDeleteTransaction(tx)" class="text-muted-foreground hover:text-red-500 md:opacity-0 md:group-hover:opacity-100 transition-opacity p-2 md:p-0 bg-secondary/50 md:bg-transparent rounded-md md:rounded-none" title="Eliminar transacción">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
-                </button>
+                </div>
+                <div class="flex items-center gap-1 opacity-90 md:opacity-0 md:group-hover:opacity-100 transition-opacity ml-1">
+                  <button @click="openEditTransaction(tx)" class="text-muted-foreground hover:text-primary p-1.5 bg-secondary/80 hover:bg-secondary rounded-lg transition-colors border border-border/30" title="Editar transacción">
+                    <Pencil class="w-3.5 h-3.5" />
+                  </button>
+                  <button @click="handleDeleteTransaction(tx)" class="text-muted-foreground hover:text-destructive p-1.5 bg-secondary/80 hover:bg-secondary rounded-lg transition-colors border border-border/30" title="Eliminar transacción">
+                    <Trash2 class="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -820,7 +862,18 @@ import {
   Clock,
   Pencil,
   Trash2,
-  ChevronRight
+  ChevronRight,
+  Utensils,
+  Car,
+  ShoppingBag,
+  Laptop,
+  HeartPulse,
+  Home,
+  GraduationCap,
+  Sparkles,
+  TrendingUp,
+  Tag,
+  Search
 } from 'lucide-vue-next'
 import { useFinanceStore } from '~/stores/finance'
 import type { Account, AccountType, TransactionType } from '~/stores/finance'
@@ -845,6 +898,7 @@ const calibrateForm = reactive({
 })
 
 const selectedMonth = ref<string>('all')
+const searchQuery = ref<string>('')
 
 const availableMonths = computed(() => {
   const months = new Set<string>()
@@ -864,10 +918,20 @@ const availableMonths = computed(() => {
 })
 
 const filteredTransactions = computed(() => {
-  if (selectedMonth.value === 'all') {
-    return financeStore.transactions
+  let list = financeStore.transactions
+  if (selectedMonth.value !== 'all') {
+    list = list.filter(tx => tx.date && tx.date.startsWith(selectedMonth.value))
   }
-  return financeStore.transactions.filter(tx => tx.date && tx.date.startsWith(selectedMonth.value))
+  if (searchQuery.value.trim()) {
+    const q = searchQuery.value.toLowerCase().trim()
+    list = list.filter(tx => {
+      const desc = (tx.description || '').toLowerCase()
+      const cat = (tx.category || '').toLowerCase()
+      const amt = String(tx.amount || '')
+      return desc.includes(q) || cat.includes(q) || amt.includes(q)
+    })
+  }
+  return list
 })
 
 // Historial por cuenta — pide al backend todos los mov de esa cuenta (no solo los 50
@@ -1515,5 +1579,40 @@ function getCutoffBadge(acc: Account): { label: string; class: string } | null {
   if (diff === 0) return { label: 'Corte hoy', class: 'bg-blue-500/15 text-blue-500 border-blue-500/30 font-medium' }
   if (diff === 1) return { label: 'Corte mañana', class: 'bg-blue-500/10 text-blue-500 border-blue-500/20' }
   return { label: `Corte en ${diff}d`, class: 'bg-secondary/80 text-muted-foreground border-border/30' }
+}
+
+function getCategoryVisual(cat: string, type: TransactionType) {
+  const c = (cat || '').toLowerCase()
+  if (type === 'income' || c.includes('salario') || c.includes('nómina') || c.includes('nomina') || c.includes('ingreso')) {
+    return { icon: TrendingUp, bg: 'bg-emerald-500/15 text-emerald-500' }
+  }
+  if (c.includes('comida') || c.includes('alimento') || c.includes('restaurante') || c.includes('super') || c.includes('despensa')) {
+    return { icon: Utensils, bg: 'bg-orange-500/15 text-orange-500' }
+  }
+  if (c.includes('transporte') || c.includes('gasolina') || c.includes('uber') || c.includes('auto') || c.includes('coche') || c.includes('peaje')) {
+    return { icon: Car, bg: 'bg-blue-500/15 text-blue-500' }
+  }
+  if (c.includes('compra') || c.includes('ropa') || c.includes('tienda') || c.includes('amazon') || c.includes('mercado')) {
+    return { icon: ShoppingBag, bg: 'bg-pink-500/15 text-pink-500' }
+  }
+  if (c.includes('tec') || c.includes('software') || c.includes('suscrip') || c.includes('internet') || c.includes('streaming')) {
+    return { icon: Laptop, bg: 'bg-purple-500/15 text-purple-500' }
+  }
+  if (c.includes('salud') || c.includes('med') || c.includes('farmacia') || c.includes('doctor') || c.includes('hospital')) {
+    return { icon: HeartPulse, bg: 'bg-rose-500/15 text-rose-500' }
+  }
+  if (c.includes('hogar') || c.includes('casa') || c.includes('renta') || c.includes('luz') || c.includes('agua') || c.includes('gas') || c.includes('servicio')) {
+    return { icon: Home, bg: 'bg-teal-500/15 text-teal-500' }
+  }
+  if (c.includes('educa') || c.includes('curso') || c.includes('libro') || c.includes('escuela')) {
+    return { icon: GraduationCap, bg: 'bg-indigo-500/15 text-indigo-500' }
+  }
+  if (c.includes('ocio') || c.includes('viaje') || c.includes('fiesta') || c.includes('cine') || c.includes('entretenimiento')) {
+    return { icon: Sparkles, bg: 'bg-amber-500/15 text-amber-500' }
+  }
+  if (['transfer', 'credit_payment', 'loan_payment'].includes(type)) {
+    return { icon: Landmark, bg: 'bg-violet-500/15 text-violet-500' }
+  }
+  return { icon: Tag, bg: 'bg-primary/10 text-primary' }
 }
 </script>
