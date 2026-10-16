@@ -149,8 +149,40 @@
              </div>
           </div>
           <div class="col-span-5">
-            <div class="font-medium">{{ task.title }}</div>
+            <div class="font-medium text-foreground flex items-center gap-2 flex-wrap">
+              <span>{{ task.title }}</span>
+              <span v-if="task.duration_minutes" class="text-[10px] font-normal text-muted-foreground bg-secondary px-1.5 py-0.5 rounded border border-border/40">
+                {{ task.duration_minutes }}m
+              </span>
+            </div>
             <div v-if="task.description" class="text-xs text-muted-foreground mt-0.5 line-clamp-2 whitespace-pre-line" :title="task.description">{{ task.description }}</div>
+            
+            <!-- Deadline info -->
+            <div v-if="task.deadline" class="text-[11px] text-muted-foreground flex items-center gap-1 mt-1">
+              <Calendar class="w-3 h-3 text-muted-foreground shrink-0" />
+              <span>Vence:</span>
+              <span class="font-medium text-foreground/80">{{ formatDeadline(task.deadline) }}</span>
+            </div>
+
+            <!-- Bloques agendados del auto-scheduler -->
+            <div v-if="task.blocks && task.blocks.length > 0" class="mt-2 flex flex-wrap gap-1.5 items-center">
+              <span class="text-[10px] font-semibold text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded flex items-center gap-1">
+                <Sparkles class="w-3 h-3 text-primary shrink-0" />
+                {{ task.blocks.length }} {{ task.blocks.length === 1 ? 'bloque' : 'bloques' }}
+              </span>
+              <span 
+                v-for="(block, bIdx) in task.blocks.slice(0, 3)" 
+                :key="block.id || bIdx"
+                class="text-[10px] bg-secondary/80 text-foreground border border-border/50 px-1.5 py-0.5 rounded flex items-center gap-1"
+                :title="formatBlockFull(block)"
+              >
+                <Clock class="w-3 h-3 text-muted-foreground shrink-0" />
+                {{ formatBlockBrief(block) }}
+              </span>
+              <span v-if="task.blocks.length > 3" class="text-[10px] text-muted-foreground">
+                +{{ task.blocks.length - 3 }} más
+              </span>
+            </div>
           </div>
           <div class="col-span-3 text-sm text-muted-foreground">{{ getProjectName(task.projectId) || task.category || '-' }}</div>
           <div class="col-span-2">
@@ -255,6 +287,7 @@ definePageMeta({ layout: 'taskman' })
 
 import { ref, computed, onMounted, watch } from 'vue'
 import { toast } from 'vue-sonner'
+import { Calendar, Clock, Sparkles } from 'lucide-vue-next'
 import { useTaskStore, type Task } from '~/stores/tasks'
 import { useAuthStore } from '~/stores/auth'
 import api from '~/utils/api'
@@ -490,6 +523,27 @@ const connectGoogleCalendar = async () => {
 
 const markComplete = async (task: Task) => {
   if(task.id) await taskStore.updateTask(task.id, { status: 'completed' })
+}
+
+const formatBlockBrief = (block: any) => {
+  if (!block.start) return ''
+  const s = new Date(block.start)
+  const e = block.end ? new Date(block.end) : null
+  const day = s.toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' })
+  const startTime = s.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
+  const endTime = e ? e.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) : ''
+  return `${day} ${startTime}${endTime ? ' - ' + endTime : ''}`
+}
+
+const formatBlockFull = (block: any) => {
+  if (!block.start) return ''
+  return `Bloque programado: ${formatBlockBrief(block)} (${block.status || 'pendiente'})`
+}
+
+const formatDeadline = (deadlineStr: string) => {
+  if (!deadlineStr) return ''
+  const d = new Date(deadlineStr)
+  return d.toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
 }
 </script>
 
