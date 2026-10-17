@@ -62,3 +62,8 @@ Checklist en orden de probabilidad:
 2. **`host.docker.internal:3000` no resuelve** desde el container de n8n. Prueba desde n8n container: `docker exec -it n8n curl -v http://host.docker.internal:3000/api/health`. Si falla, agrega `extra_hosts` al compose de n8n o cambia a nombre de container.
 3. **D1 credentials del backend mal:** el backend recibe 200 pero cae al warn "Cloudflare D1 credentials missing" (después del fix, ahora tira 500 explícito — hasta el fix, respondía silencioso con `success:true`). Verifica `CLOUDFLARE_ACCOUNT_ID` / `CLOUDFLARE_DATABASE_ID` / `CLOUDFLARE_D1_TOKEN` en el `.env` del Pi.
 4. **Workflow desactivado:** `active:false` en el JSON. Activar en la UI de n8n.
+
+### `makerworld-batch-importer.json` — importador por lotes desde Taskman Admin
+
+**Objetivo:** recibir el JSON `{ busquedas_makerworld: [...], limitPerConcept: 3 }` enviado desde `/taskman/admin/bazar` (`POST /api/products/batch-import` → `POST /webhook/makerworld-batch-import`), buscar en MakerWorld cada concepto usando `query_principal_ingles` (y `query_alternativa_ingles` como respaldo), filtrar licencias comerciales (`CC-BY`, `CC-BY-SA`, `CC0`, `Standard Digital File License`), calcular costos/variantes por gramos y horas, enriquecer títulos/descripciones con Gemini Multimodal (`gemini-flash-latest`), sincronizar al Bazar de El Rincón de Brandy (`/api/products/sync`) y publicar en Mercado Libre (`POST https://api.mercadolibre.com/items`).
+
