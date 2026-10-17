@@ -1109,11 +1109,18 @@ function resetFilters() {
   query.value = '';
 }
 
+const ALLOWED_BAZAR_LICENSES = new Set(['CC-BY', 'CC-BY-SA', 'CC0', 'custom']);
+
 const filteredProducts = computed(() => {
   const currentCatDef = CATEGORY_DEFS.find(c => c.id === selectedCategory.value) || CATEGORY_DEFS[0];
   const targetTagNorm = selectedTag.value ? normalizeText(selectedTag.value) : null;
 
   return products.value.filter(p => {
+    // 0. Licencia comercial libre (sin requerir suscripción/permiso de creador)
+    if (!p.isCustom && p.licenseType && !ALLOWED_BAZAR_LICENSES.has(p.licenseType)) {
+      return false;
+    }
+
     // 1. Categoría
     if (selectedCategory.value !== 'todos' && !currentCatDef.match(p)) {
       return false;

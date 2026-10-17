@@ -253,11 +253,17 @@
                     >
                       Ver en MELI ↗
                     </a>
-                    <span v-else class="text-amber-600" :title="getMeliStatusForProduct(prod.externalId)?.error">
+                    <span v-else class="text-amber-600 font-medium" :title="getMeliStatusForProduct(prod.externalId)?.error">
                       MELI: {{ getMeliStatusForProduct(prod.externalId)?.status }}
                     </span>
                   </template>
                 </div>
+                <p
+                  v-if="getMeliStatusForProduct(prod.externalId)?.error"
+                  class="text-[10px] text-amber-600/90 bg-amber-500/10 border border-amber-500/20 rounded px-2 py-1 mt-1 break-words"
+                >
+                  Detalle MELI: {{ getMeliStatusForProduct(prod.externalId).error }}
+                </p>
               </div>
             </div>
           </div>
