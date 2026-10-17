@@ -385,7 +385,7 @@
           @mouseleave="hoveredProductId = null"
           @click="openProductDetail(product)"
         >
-          <!-- Cabecera Visual Interactiva -->
+          <!-- Cabecera Visual Limpia -->
           <div class="aspect-square bg-secondary/40 overflow-hidden relative">
             <img
               v-if="getCardCurrentImage(product)"
@@ -403,13 +403,10 @@
               [ Imagen del Producto ]
             </div>
 
-            <!-- Gradiente sutil superior e inferior para legibilidad de badges -->
-            <div class="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/35 to-transparent pointer-events-none"></div>
-            <div class="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/40 to-transparent pointer-events-none"></div>
-
-            <!-- Badge Superior Izquierdo: Categoría / Personalizable -->
+            <!-- Único Badge Superior Izquierdo: Categoría o Personalizable -->
             <div
-              class="absolute top-3 left-3 backdrop-blur-md px-2.5 py-1 text-[11px] font-semibold rounded-full border shadow-xs flex items-center gap-1 max-w-[62%] truncate"
+              v-if="isProductPersonalized(product) || product.source === 'CUSTOM' || product.isCustom || product.category"
+              class="absolute top-3 left-3 backdrop-blur-md px-2.5 py-1 text-[11px] font-semibold rounded-full border shadow-xs flex items-center gap-1 max-w-[75%] truncate"
               :class="isProductPersonalized(product)
                 ? 'bg-amber-500/95 text-white border-amber-400/50'
                 : (product.source === 'CUSTOM' || product.isCustom)
@@ -418,15 +415,10 @@
             >
               <span v-if="isProductPersonalized(product)">✨ Personalizable</span>
               <span v-else-if="product.source === 'CUSTOM' || product.isCustom">⭐ Diseño Exclusivo</span>
-              <span v-else class="truncate">{{ product.category || 'Impresión 3D' }}</span>
+              <span v-else class="truncate">{{ product.category }}</span>
             </div>
 
-            <!-- Badge Superior Derecho: Certeza de Producto Físico -->
-            <div class="absolute top-3 right-3 bg-foreground/85 text-background backdrop-blur-md px-2.5 py-1 text-[10px] font-semibold rounded-full shadow-xs flex items-center gap-1">
-              <span>📦 Pieza Física</span>
-            </div>
-
-            <!-- Flechas para explorar fotos reales sin salir de la tarjeta -->
+            <!-- Flechas en hover para explorar fotos sin saturar la imagen -->
             <template v-if="getProductImages(product).length > 1">
               <button
                 type="button"
@@ -447,42 +439,29 @@
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
               </button>
 
-              <!-- Contador de fotos en esquina inferior derecha -->
+              <!-- Contador discreto de fotos -->
               <button
                 type="button"
                 @click.stop="stepCardImage(product, 1)"
-                class="absolute bottom-2.5 right-2.5 bg-background/85 hover:bg-background text-foreground backdrop-blur-md px-2 py-0.5 rounded-full text-[10px] font-medium border border-border/50 shadow-xs flex items-center gap-1 cursor-pointer transition-colors"
-                title="Clic para ver más ángulos"
+                class="absolute bottom-2.5 right-2.5 bg-background/85 hover:bg-background text-foreground backdrop-blur-md px-2 py-0.5 rounded-full text-[10px] font-medium border border-border/50 shadow-xs cursor-pointer transition-colors"
+                title="Ver siguiente foto"
               >
-                <span>📷 {{ getCurrentImageDisplayIndex(product) }}/{{ getProductImages(product).length }}</span>
+                {{ getCurrentImageDisplayIndex(product) }}/{{ getProductImages(product).length }}
               </button>
             </template>
-
-            <!-- Indicador de disponibilidad en esquina inferior izquierda -->
-            <div class="absolute bottom-2.5 left-2.5 bg-background/85 backdrop-blur-md px-2 py-0.5 rounded-full text-[10px] font-medium text-emerald-600 dark:text-emerald-400 border border-border/50 shadow-xs flex items-center gap-1">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-              <span>Listo para fabricar</span>
-            </div>
           </div>
 
-          <!-- Cuerpo de la Tarjeta -->
+          <!-- Cuerpo de la Tarjeta (Limpio y enfocado a conversión) -->
           <div class="p-5 flex flex-col flex-grow">
-            <!-- Título y Descripción Gancho -->
             <h3 class="font-serif text-lg font-bold leading-snug mb-1.5 text-foreground group-hover:text-primary transition-colors line-clamp-2">
               {{ product.title }}
             </h3>
-            <p class="text-muted-foreground text-xs leading-relaxed mb-3 line-clamp-2">
-              {{ product.description || 'Pieza impresa en 3D con acabado de alta precisión, fabricada bajo pedido y lista para usar.' }}
+            <p v-if="product.description" class="text-muted-foreground text-xs leading-relaxed mb-3 line-clamp-2">
+              {{ product.description }}
             </p>
 
-            <!-- Selector Interactivo de Variantes / Qué incluye (Resuelve la duda #1 de precio/contenido) -->
+            <!-- Variantes interactivas SOLO cuando hay más de 1 opción (con gramos como referencia de tamaño) -->
             <div v-if="product.variants && product.variants.length > 1" class="mb-3">
-              <div class="flex items-center justify-between text-[11px] mb-1.5">
-                <span class="font-semibold text-foreground/90">
-                  Elige versión ({{ product.variants.length }}):
-                </span>
-                <span class="text-[10px] text-muted-foreground">Cambia precio y foto</span>
-              </div>
               <div class="flex flex-wrap gap-1.5">
                 <button
                   v-for="(v, vIdx) in product.variants.slice(0, 3)"
@@ -493,10 +472,10 @@
                   :class="getActiveVariantIdx(product) === Number(vIdx)
                     ? 'bg-primary/15 border-primary text-primary font-semibold shadow-2xs'
                     : 'bg-secondary/35 border-border/60 text-muted-foreground hover:text-foreground hover:border-primary/40'"
-                  :title="`${v.name} — ${fmt(v.price)} (${v.grams}g)`"
+                  :title="v.grams ? `${v.name} (~${v.grams}g) — ${fmt(v.price)}` : `${v.name} — ${fmt(v.price)}`"
                 >
-                  <span class="truncate max-w-[115px]">{{ v.name }}</span>
-                  <span class="opacity-75 shrink-0">· {{ fmt(v.price) }}</span>
+                  <span class="truncate max-w-[120px]">{{ v.name }}</span>
+                  <span v-if="v.grams" class="opacity-70 text-[10px] shrink-0">~{{ v.grams }}g</span>
                 </button>
                 <button
                   v-if="product.variants.length > 3"
@@ -504,41 +483,13 @@
                   @click.stop="openProductDetail(product)"
                   class="text-[10px] px-2 py-1 rounded-lg border border-border/60 bg-secondary/25 text-primary font-medium hover:bg-primary/10 transition-colors cursor-pointer"
                 >
-                  +{{ product.variants.length - 3 }} más
+                  +{{ product.variants.length - 3 }}
                 </button>
-              </div>
-            </div>
-            <div v-else-if="product.variants && product.variants.length === 1" class="mb-3">
-              <div class="flex items-center gap-1.5 text-[11px] text-foreground/85 bg-secondary/35 border border-border/50 rounded-lg px-2.5 py-1.5">
-                <span class="text-emerald-600 dark:text-emerald-400 font-bold shrink-0">✓</span>
-                <span class="truncate"><strong class="font-semibold">Incluye:</strong> {{ product.variants[0].name }}</span>
-              </div>
-            </div>
-            <div v-else class="mb-3">
-              <div class="flex items-center gap-1.5 text-[11px] text-foreground/85 bg-secondary/35 border border-border/50 rounded-lg px-2.5 py-1.5">
-                <span class="text-emerald-600 dark:text-emerald-400 font-bold shrink-0">✓</span>
-                <span class="truncate"><strong class="font-semibold">Incluye:</strong> Pieza física lista para usar</span>
-              </div>
-            </div>
-
-            <!-- Micro-Ficha Técnica para Resolver Dudas (Peso sólido, Manufactura, Personalización de color) -->
-            <div class="grid grid-cols-3 gap-1.5 py-1.5 px-2 rounded-xl bg-secondary/25 border border-border/50 text-[10px] text-muted-foreground mb-3 text-center">
-              <div class="truncate" title="Peso real en filamento sólido de alta densidad">
-                <span class="font-semibold text-foreground/85">⚖️ {{ getActiveVariant(product)?.grams ? `${getActiveVariant(product)?.grams}g` : 'PLA+' }}</span>
-                <span class="block text-[9px] opacity-80">Material sólido</span>
-              </div>
-              <div class="truncate border-x border-border/50 px-1" title="Tiempo dedicado de impresión 3D de alta precisión">
-                <span class="font-semibold text-foreground/85">⏱️ {{ formatPrintHours(getActiveVariant(product)?.hours) }}</span>
-                <span class="block text-[9px] opacity-80">Manufactura</span>
-              </div>
-              <div class="truncate" title="Puedes elegir el color de tu pieza sin costo adicional">
-                <span class="font-semibold text-foreground/85">🎨 Color</span>
-                <span class="block text-[9px] opacity-80">A tu elección</span>
               </div>
             </div>
 
             <!-- Etiquetas clicables -->
-            <div v-if="product.tags && product.tags.length" class="flex flex-wrap gap-1 mb-3">
+            <div v-if="product.tags && product.tags.length" class="flex flex-wrap gap-1 mb-4">
               <button
                 v-for="tag in product.tags.slice(0, 3)"
                 :key="tag"
@@ -557,69 +508,62 @@
               </span>
             </div>
 
-            <!-- Footer Gancho de Compra: Precio Claro + CTA Directo -->
-            <div class="mt-auto pt-3 border-t border-border/50">
-              <div class="flex items-end justify-between gap-2">
-                <div>
-                  <span class="block text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
-                    {{ getPriceCaption(product) }}
+            <!-- Footer Directo: Precio + Botón de Compra Juntos (Cero fricción ni textos solapados) -->
+            <div class="mt-auto pt-3 border-t border-border/50 flex items-center justify-between gap-3">
+              <div class="min-w-0">
+                <span
+                  v-if="product.variants && product.variants.length > 1"
+                  class="block text-[10px] text-muted-foreground truncate"
+                >
+                  {{ getActiveVariant(product)?.name }}
+                </span>
+                <div class="flex items-baseline gap-1">
+                  <span class="text-2xl font-extrabold text-foreground tracking-tight">
+                    {{ getFormattedActivePrice(product) }}
                   </span>
-                  <div class="flex items-baseline gap-1">
-                    <span class="text-2xl font-extrabold text-foreground tracking-tight">
-                      {{ getFormattedActivePrice(product) }}
-                    </span>
-                    <span v-if="getActivePrice(product) > 0" class="text-[10px] font-semibold text-muted-foreground">
-                      MXN
-                    </span>
-                  </div>
+                  <span v-if="getActivePrice(product) > 0" class="text-[10px] font-semibold text-muted-foreground">
+                    MXN
+                  </span>
                 </div>
-
-                <!-- Botón Principal de Conversión -->
-                <button
-                  type="button"
-                  @click.stop="handleCardQuickAction(product)"
-                  class="px-3.5 py-2.5 rounded-xl font-semibold text-xs transition-all inline-flex items-center gap-1.5 shadow-sm cursor-pointer shrink-0"
-                  :class="justAddedId === product.id
-                    ? 'bg-emerald-600 text-white shadow-emerald-500/20'
-                    : 'bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-md hover:shadow-primary/20 active:scale-[0.98]'"
-                  :aria-label="isActiveVariantPersonalized(product) ? 'Personalizar pieza' : 'Agregar al carrito'"
-                >
-                  <template v-if="justAddedId === product.id">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-                    <span>¡Agregado!</span>
-                  </template>
-                  <template v-else-if="isActiveVariantPersonalized(product)">
-                    <span>✨ Personalizar</span>
-                  </template>
-                  <template v-else>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-                    <span>Agregar</span>
-                  </template>
-                </button>
               </div>
 
-              <!-- Sub-barra de confianza + Gancho para abrir detalle completo -->
-              <div class="mt-2.5 pt-2 border-t border-border/40 flex items-center justify-between text-[11px]">
-                <a
-                  v-if="product.fileUrl"
-                  :href="`${apiBase}/products/${product.id}/download`"
-                  class="inline-flex items-center gap-1 text-xs text-primary hover:underline font-medium"
-                  target="_blank"
-                  @click.stop
-                >
-                  Descargar archivo
-                  <span v-if="product.fileSizeBytes" class="text-muted-foreground">
-                    ({{ formatSize(product.fileSizeBytes) }})
-                  </span>
-                </a>
-                <span v-else class="text-muted-foreground inline-flex items-center gap-1 truncate">
-                  <span>🚚 Envío seguro a todo MX</span>
-                </span>
+              <!-- Botón Principal de Conversión -->
+              <button
+                type="button"
+                @click.stop="handleCardQuickAction(product)"
+                class="px-3.5 py-2.5 rounded-xl font-semibold text-xs transition-all inline-flex items-center gap-1.5 shadow-sm cursor-pointer shrink-0"
+                :class="justAddedId === product.id
+                  ? 'bg-emerald-600 text-white shadow-emerald-500/20'
+                  : 'bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-md hover:shadow-primary/20 active:scale-[0.98]'"
+                :aria-label="isActiveVariantPersonalized(product) ? 'Personalizar pieza' : 'Agregar al carrito'"
+              >
+                <template v-if="justAddedId === product.id">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                  <span>¡Listo!</span>
+                </template>
+                <template v-else-if="isActiveVariantPersonalized(product)">
+                  <span>✨ Personalizar</span>
+                </template>
+                <template v-else>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                  <span>Agregar</span>
+                </template>
+              </button>
+            </div>
 
-                <span class="text-primary font-semibold group-hover:translate-x-0.5 transition-transform inline-flex items-center gap-0.5 shrink-0">
-                  Resolver dudas / Ver más →
+            <!-- Enlace de descarga sólo si el producto tiene archivo adjunto -->
+            <div v-if="product.fileUrl" class="mt-2 pt-2 border-t border-border/40">
+              <a
+                :href="`${apiBase}/products/${product.id}/download`"
+                class="inline-flex items-center gap-1 text-xs text-primary hover:underline font-medium"
+                target="_blank"
+                @click.stop
+              >
+                Descargar archivo
+                <span v-if="product.fileSizeBytes" class="text-muted-foreground">
+                  ({{ formatSize(product.fileSizeBytes) }})
                 </span>
-              </div>
+              </a>
             </div>
           </div>
         </div>
@@ -672,7 +616,7 @@ useHead({
   ]
 });
 
-interface Variant { name: string; grams: number; hours: number; price: number; imageIndex?: number; imageUrl?: string }
+interface Variant { name: string; grams: number; hours: number; price: number; imageIndex?: number; imageUrl?: string; filament?: string }
 interface Product {
   id: number;
   title: string;
@@ -801,12 +745,6 @@ function isActiveVariantPersonalized(p: Product): boolean {
   return Boolean(v?.name && /personalizada|personalizado|custom|nombre/i.test(v.name));
 }
 
-function formatPrintHours(hours?: number): string {
-  if (!hours) return 'Alta precisión';
-  if (hours < 1) return `${Math.max(15, Math.round(hours * 60))}m`;
-  return `~${hours < 3 ? hours.toFixed(1) : Math.round(hours)}h`;
-}
-
 function getActivePrice(p: Product): number {
   const v = getActiveVariant(p);
   if (v && typeof v.price === 'number') return v.price;
@@ -818,14 +756,6 @@ function getFormattedActivePrice(p: Product): string {
   const n = getActivePrice(p);
   if (!n || isNaN(n)) return 'Gratis';
   return fmt(n);
-}
-
-function getPriceCaption(p: Product): string {
-  if (Array.isArray(p.variants) && p.variants.length > 1) {
-    const v = getActiveVariant(p);
-    return v?.name ? `Precio · ${v.name}` : 'Precio versión elegida';
-  }
-  return 'Precio final · IVA incluido';
 }
 
 function openProductDetail(product: Product) {

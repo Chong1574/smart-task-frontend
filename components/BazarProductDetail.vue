@@ -16,24 +16,18 @@
             Volver al catálogo
           </button>
 
-          <div class="flex items-center gap-2">
-            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              Disponible para fabricar
-            </span>
-            <button
-              type="button"
-              class="p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
-              aria-label="Cerrar"
-              @click="$emit('close')"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-            </button>
-          </div>
+          <button
+            type="button"
+            class="p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
+            aria-label="Cerrar"
+            @click="$emit('close')"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
         </div>
 
         <div class="p-6 md:p-8 grid md:grid-cols-12 gap-8">
-          <!-- Columna Izquierda: Galería + Garantías rápidas -->
+          <!-- Columna Izquierda: Galería + ¿Qué incluye tu pedido? -->
           <div class="md:col-span-6 space-y-4">
             <div class="aspect-square bg-secondary/40 rounded-2xl overflow-hidden relative group border border-border/50">
               <img
@@ -49,13 +43,10 @@
                 [ Imagen del Producto ]
               </div>
 
-              <!-- Badges sobre la imagen -->
-              <div class="absolute top-3 left-3 flex flex-wrap gap-1.5">
-                <span v-if="product.category" class="bg-background/90 backdrop-blur-md text-foreground text-xs font-semibold px-3 py-1 rounded-full border border-border/60 shadow-sm">
+              <!-- Único badge limpio sobre la imagen -->
+              <div v-if="product.category" class="absolute top-3 left-3">
+                <span class="bg-background/90 backdrop-blur-md text-foreground text-xs font-semibold px-3 py-1 rounded-full border border-border/60 shadow-sm">
                   {{ product.category }}
-                </span>
-                <span class="bg-foreground/85 text-background backdrop-blur-md text-[11px] font-semibold px-2.5 py-1 rounded-full shadow-sm inline-flex items-center gap-1">
-                  📦 Pieza Física 3D
                 </span>
               </div>
 
@@ -78,7 +69,7 @@
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
                 </button>
                 <div class="absolute bottom-3 right-3 bg-background/85 backdrop-blur-md text-foreground text-xs font-medium px-2.5 py-1 rounded-full border border-border/60 shadow-sm">
-                  📷 {{ imgIdx + 1 }} / {{ images.length }}
+                  {{ imgIdx + 1 }} / {{ images.length }}
                 </div>
               </template>
             </div>
@@ -97,48 +88,49 @@
               </button>
             </div>
 
-            <!-- Tarjeta de Respaldo y Garantías (Resuelve dudas de compra) -->
-            <div class="bg-secondary/30 border border-border/60 rounded-2xl p-4 space-y-3 text-xs">
+            <!-- ¿Qué incluye tu pedido? (Con filamento dinámico según el modelo/impresión) -->
+            <div class="bg-secondary/25 border border-border/60 rounded-2xl p-4 space-y-3 text-xs">
               <h4 class="font-semibold text-foreground text-xs uppercase tracking-wider flex items-center gap-1.5">
                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>
-                Compra segura — ¿Qué incluye tu pedido?
+                ¿Qué incluye tu pedido?
               </h4>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-muted-foreground">
                 <div class="flex items-start gap-2 bg-card/70 p-2.5 rounded-xl border border-border/40">
-                  <span class="text-base leading-none mt-0.5">📦</span>
+                  <span class="text-base leading-none mt-0.5">✨</span>
                   <div>
-                    <p class="font-semibold text-foreground">Pieza Física Lista</p>
-                    <p class="text-[11px] leading-snug">No es solo un archivo: recibes el producto físico impreso en 3D y revisado a mano.</p>
-                  </div>
-                </div>
-                <div class="flex items-start gap-2 bg-card/70 p-2.5 rounded-xl border border-border/40">
-                  <span class="text-base leading-none mt-0.5">🎨</span>
-                  <div>
-                    <p class="font-semibold text-foreground">Color a tu Elección</p>
-                    <p class="text-[11px] leading-snug">Se fabrica en el tono de la foto o puedes pedirnos otro color sin costo extra.</p>
+                    <p class="font-semibold text-foreground">Acabado Limpio y Detallado</p>
+                    <p class="text-[11px] leading-snug">Pieza revisada, libre de soportes y lista para usar desde que abres tu caja.</p>
                   </div>
                 </div>
                 <div class="flex items-start gap-2 bg-card/70 p-2.5 rounded-xl border border-border/40">
                   <span class="text-base leading-none mt-0.5">🛡️</span>
                   <div>
-                    <p class="font-semibold text-foreground">Material de Ingeniería</p>
-                    <p class="text-[11px] leading-snug">Impreso en PLA+ / PETG sólido de alta densidad, durable y con acabado limpio.</p>
+                    <p class="font-semibold text-foreground">{{ recommendedFilamentInfo.title }}</p>
+                    <p class="text-[11px] leading-snug">{{ recommendedFilamentInfo.description }}</p>
+                  </div>
+                </div>
+                <div class="flex items-start gap-2 bg-card/70 p-2.5 rounded-xl border border-border/40">
+                  <span class="text-base leading-none mt-0.5">🎨</span>
+                  <div>
+                    <p class="font-semibold text-foreground">Tono de Referencia o Base</p>
+                    <p class="text-[11px] leading-snug">Se fabrica en el tono del modelo o en el color de la paleta base que elijas.</p>
                   </div>
                 </div>
                 <div class="flex items-start gap-2 bg-card/70 p-2.5 rounded-xl border border-border/40">
                   <span class="text-base leading-none mt-0.5">🚚</span>
                   <div>
-                    <p class="font-semibold text-foreground">Garantía de Envío</p>
-                    <p class="text-[11px] leading-snug">Envío con rastreo a todo México. Si llega dañado por paquetería, lo reponemos gratis.</p>
+                    <p class="font-semibold text-foreground">Envío Protegido a todo MX</p>
+                    <p class="text-[11px] leading-snug">Empaque seguro con garantía de reposición sin costo ante cualquier daño.</p>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Columna Derecha: Info, Variantes, CTA y Especificaciones -->
+          <!-- Columna Derecha: Flujo de Compra de Baja Fricción -->
           <div class="md:col-span-6 flex flex-col">
-            <div class="mb-4">
+            <!-- 1. Título y Descripción -->
+            <div class="mb-5">
               <h1 class="text-2xl md:text-3xl font-serif font-bold text-foreground leading-tight mb-2">
                 {{ product.title }}
               </h1>
@@ -147,169 +139,154 @@
               </p>
             </div>
 
-            <!-- Bloque de Precio y Especificación Rápida de la Variante Activa -->
-            <div class="bg-secondary/35 border border-border/60 rounded-2xl p-4 mb-5 flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <span class="block text-[11px] uppercase tracking-wider text-muted-foreground font-medium">
-                  {{ activeVariant ? `Precio — ${activeVariant.name}` : 'Precio final' }}
-                </span>
-                <div class="flex items-baseline gap-1.5">
-                  <span class="text-3xl font-extrabold text-primary tracking-tight">{{ priceLabel }}</span>
-                  <span v-if="currentPrice > 0" class="text-xs font-semibold text-muted-foreground">MXN · IVA incluido</span>
-                </div>
-              </div>
-
-              <div v-if="activeVariant" class="flex items-center gap-3 text-xs">
-                <div v-if="activeVariant.grams" class="bg-card px-3 py-1.5 rounded-xl border border-border/60 text-center">
-                  <span class="block text-[10px] text-muted-foreground">Peso sólido</span>
-                  <span class="font-bold text-foreground">⚖️ {{ activeVariant.grams }}g</span>
-                </div>
-                <div v-if="activeVariant.hours" class="bg-card px-3 py-1.5 rounded-xl border border-border/60 text-center">
-                  <span class="block text-[10px] text-muted-foreground">Manufactura</span>
-                  <span class="font-bold text-foreground">⏱️ {{ formatHours(activeVariant.hours) }}</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Selector de Variantes (con especificaciones claras para resolver dudas) -->
-            <div v-if="variants.length > 1" class="mb-5">
-              <div class="flex items-center justify-between mb-2">
-                <p class="text-xs font-semibold uppercase tracking-wider text-foreground">
-                  Elige la versión o tamaño ({{ variants.length }} disponibles):
-                </p>
-              </div>
-              <div class="space-y-2">
-                <label
-                  v-for="(v, i) in variants"
-                  :key="i"
-                  class="flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all"
-                  :class="variantIdx === i ? 'border-primary bg-primary/10 shadow-xs ring-1 ring-primary/30' : 'border-border/70 bg-card hover:border-primary/50'"
-                >
-                  <div class="flex items-center gap-3 min-w-0 pr-2">
-                    <input type="radio" :value="i" v-model="variantIdx" class="accent-primary shrink-0" />
-                    <div class="min-w-0">
-                      <p class="text-sm font-semibold text-foreground truncate">{{ v.name }}</p>
-                      <p class="text-[11px] text-muted-foreground flex items-center gap-2 mt-0.5">
-                        <span v-if="v.grams">⚖️ {{ v.grams }}g de material</span>
-                        <span v-if="v.grams && v.hours">·</span>
-                        <span v-if="v.hours">🖨️ {{ formatHours(v.hours) }} de impresión</span>
-                      </p>
-                    </div>
+            <!-- 2. Bloque Principal de Conversión: Precio y Botón de Compra JUNTOS (Cero fricción visual) -->
+            <div class="bg-secondary/35 border border-primary/25 rounded-2xl p-4 mb-5 space-y-3 shadow-xs">
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <span class="block text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                    {{ activeVariant && variants.length > 1 ? `Precio · ${activeVariant.name}` : 'Precio final · IVA incluido' }}
+                  </span>
+                  <div class="flex items-baseline gap-1.5">
+                    <span class="text-3xl md:text-4xl font-extrabold text-primary tracking-tight">{{ priceLabel }}</span>
+                    <span v-if="currentPrice > 0" class="text-xs font-semibold text-muted-foreground">MXN</span>
                   </div>
-                  <span class="font-bold text-sm text-foreground shrink-0">{{ fmt(v.price) }}</span>
-                </label>
-              </div>
-            </div>
-            <div v-else-if="variants.length === 1" class="mb-5">
-              <div class="p-3 rounded-xl border border-border/70 bg-secondary/20 flex items-center justify-between text-xs">
-                <div class="flex items-center gap-2">
-                  <span class="text-emerald-600 dark:text-emerald-400 font-bold">✓</span>
-                  <span><strong class="text-foreground">Versión incluida:</strong> {{ variants[0].name }}</span>
-                </div>
-                <span v-if="variants[0].grams" class="text-muted-foreground font-medium">{{ variants[0].grams }}g · {{ formatHours(variants[0].hours) }}</span>
-              </div>
-            </div>
-
-            <!-- Campo de Personalización o Nota de Color -->
-            <div v-if="isPersonalized" class="mb-5 animate-in fade-in slide-in-from-top-2">
-              <label class="block text-sm font-semibold mb-1.5 text-foreground">
-                Texto o detalle para personalizar <span class="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                v-model="customText"
-                placeholder="Ej. Nombre, color preferido, URL para código QR..."
-                class="w-full h-11 px-4 rounded-xl border border-primary/50 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-              <p class="text-[11px] text-muted-foreground mt-1">Fabricaremos tu pieza exactamente con esta indicación.</p>
-            </div>
-            <div v-else class="mb-5">
-              <label class="block text-xs font-medium text-muted-foreground mb-1.5">
-                ¿Prefieres algún color en especial? <span class="text-[11px] opacity-75">(Opcional)</span>
-              </label>
-              <input
-                type="text"
-                v-model="customText"
-                placeholder="Ej. Color como en la foto, Negro mate, Blanco, Rojo..."
-                class="w-full h-10 px-3.5 rounded-xl border border-border bg-background text-xs focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-            </div>
-
-            <!-- Cantidad + Botones de Conversión -->
-            <div class="flex flex-col gap-3 mb-6">
-              <div class="flex items-center gap-3">
-                <!-- Selector de Cantidad -->
-                <div class="flex items-center border border-border rounded-xl bg-secondary/30 h-12 px-1 shrink-0">
-                  <button
-                    type="button"
-                    class="w-9 h-10 text-muted-foreground hover:text-foreground disabled:opacity-40 font-bold text-base cursor-pointer"
-                    @click="quantity > 1 ? quantity-- : null"
-                    :disabled="quantity <= 1"
-                  >
-                    −
-                  </button>
-                  <span class="px-2 text-sm font-bold w-8 text-center">{{ quantity }}</span>
-                  <button
-                    type="button"
-                    class="w-9 h-10 text-muted-foreground hover:text-foreground font-bold text-base cursor-pointer"
-                    @click="quantity++"
-                  >
-                    +
-                  </button>
                 </div>
 
-                <!-- Comprar Ahora -->
-                <button
-                  type="button"
-                  @click="buyNow"
-                  class="flex-1 h-12 bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-sm px-6 rounded-xl transition-all shadow-lg shadow-primary/20 hover:shadow-primary/30 flex justify-center items-center gap-2 cursor-pointer"
-                >
-                  <span>Comprar ahora</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                </button>
+                <!-- Cantidad + Comprar Ahora inmediatamente al lado del precio -->
+                <div class="flex items-center gap-2 flex-1 sm:flex-initial justify-end">
+                  <div class="flex items-center border border-border rounded-xl bg-card h-11 px-1 shrink-0">
+                    <button
+                      type="button"
+                      class="w-7 h-9 text-muted-foreground hover:text-foreground disabled:opacity-40 font-bold text-sm cursor-pointer"
+                      @click="quantity > 1 ? quantity-- : null"
+                      :disabled="quantity <= 1"
+                    >
+                      −
+                    </button>
+                    <span class="px-1.5 text-sm font-bold w-6 text-center">{{ quantity }}</span>
+                    <button
+                      type="button"
+                      class="w-7 h-9 text-muted-foreground hover:text-foreground font-bold text-sm cursor-pointer"
+                      @click="quantity++"
+                    >
+                      +
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    @click="buyNow"
+                    class="flex-1 sm:flex-initial h-11 bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-sm px-5 rounded-xl transition-all shadow-md shadow-primary/20 hover:shadow-primary/30 flex justify-center items-center gap-2 cursor-pointer whitespace-nowrap"
+                  >
+                    <span>Comprar ahora</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                  </button>
+                </div>
               </div>
 
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <!-- Acciones secundarias integradas -->
+              <div class="grid grid-cols-2 gap-2 pt-2 border-t border-border/50">
                 <button
                   type="button"
                   @click="addToCartOnly"
-                  class="h-11 bg-secondary text-secondary-foreground hover:bg-secondary/80 font-semibold text-xs px-4 rounded-xl transition-all flex justify-center items-center gap-2 border border-border cursor-pointer"
+                  class="h-9 bg-card hover:bg-secondary text-foreground font-semibold text-xs px-3 rounded-xl transition-all flex justify-center items-center gap-1.5 border border-border/80 cursor-pointer"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
                   Agregar al carrito
                 </button>
 
-                <!-- Botón para resolver dudas por WhatsApp -->
                 <a
                   :href="whatsappInquiryUrl"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="h-11 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 font-semibold text-xs px-4 rounded-xl transition-all flex justify-center items-center gap-1.5"
+                  class="h-9 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 font-semibold text-xs px-3 rounded-xl transition-all flex justify-center items-center gap-1.5"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-                  ¿Dudas de medidas o color?
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                  Resolver duda por WhatsApp
                 </a>
               </div>
             </div>
 
+            <!-- 3. Selector de Variantes (Solo gramos como referencia de proporción cuando hay >1 variante) -->
+            <div v-if="variants.length > 1" class="mb-5">
+              <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                Versión o tamaño ({{ variants.length }} opciones):
+              </p>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <label
+                  v-for="(v, i) in variants"
+                  :key="i"
+                  class="flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all"
+                  :class="variantIdx === i ? 'border-primary bg-primary/10 shadow-2xs ring-1 ring-primary/30' : 'border-border/70 bg-card hover:border-primary/40'"
+                >
+                  <div class="flex items-center gap-2.5 min-w-0 pr-2">
+                    <input type="radio" :value="i" v-model="variantIdx" class="accent-primary shrink-0" />
+                    <div class="min-w-0">
+                      <p class="text-xs font-semibold text-foreground truncate">{{ v.name }}</p>
+                      <p v-if="v.grams" class="text-[11px] text-muted-foreground">
+                        Ref. ~{{ v.grams }}g
+                      </p>
+                    </div>
+                  </div>
+                  <span class="font-bold text-xs text-foreground shrink-0">{{ fmt(v.price) }}</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- 4. Paleta Base Controlada (Sin input de texto abierto para color) -->
+            <div class="mb-5">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tono de la pieza:</span>
+                <span class="text-xs font-medium text-foreground">{{ selectedBaseColor }}</span>
+              </div>
+              <div class="flex flex-wrap gap-2">
+                <button
+                  v-for="tone in BASE_COLOR_PALETTE"
+                  :key="tone.id"
+                  type="button"
+                  @click="selectedBaseColor = tone.label"
+                  class="px-3 py-1.5 rounded-xl border text-xs font-medium inline-flex items-center gap-2 transition-all cursor-pointer"
+                  :class="selectedBaseColor === tone.label
+                    ? 'border-primary bg-primary/10 text-primary font-semibold shadow-2xs'
+                    : 'border-border/70 bg-card text-muted-foreground hover:text-foreground'"
+                >
+                  <span class="w-3 h-3 rounded-full border border-border/80 shrink-0" :style="{ background: tone.swatch }"></span>
+                  <span>{{ tone.label }}</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- 5. Campo de Personalización (ÚNICAMENTE si el producto lleva nombre/QR personalizado) -->
+            <div v-if="isPersonalized" class="mb-5 animate-in fade-in slide-in-from-top-2">
+              <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5 text-foreground">
+                Texto o enlace a personalizar <span class="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                v-model="customText"
+                placeholder="Ej. Nombre a grabar o enlace para código QR..."
+                class="w-full h-10 px-3.5 rounded-xl border border-primary/50 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            </div>
+
             <!-- Detalles adicionales del modelo (si existen en descriptionHtml) -->
             <div v-if="extraDetailsSafe" class="mb-5 p-4 rounded-2xl bg-secondary/20 border border-border/50">
-              <h4 class="text-xs font-bold uppercase tracking-wider text-foreground mb-2">
-                Detalles adicionales del diseño
+              <h4 class="text-xs font-bold uppercase tracking-wider text-foreground mb-1.5">
+                Acerca del diseño
               </h4>
-              <p class="text-xs text-muted-foreground whitespace-pre-line leading-relaxed max-h-44 overflow-y-auto pr-1">
+              <p class="text-xs text-muted-foreground whitespace-pre-line leading-relaxed max-h-36 overflow-y-auto pr-1">
                 {{ extraDetailsSafe }}
               </p>
             </div>
 
             <!-- Etiquetas -->
-            <div v-if="product.tags && product.tags.length" class="flex flex-wrap gap-1.5 mb-5">
+            <div v-if="product.tags && product.tags.length" class="flex flex-wrap gap-1.5 mb-4">
               <button
-                v-for="tag in product.tags"
+                v-for="tag in product.tags.slice(0, 6)"
                 :key="tag"
                 type="button"
                 @click="$emit('select-tag', tag)"
-                class="px-2.5 py-1 bg-secondary/40 hover:bg-primary hover:text-primary-foreground text-foreground/80 text-xs rounded-full border border-border/60 transition-all cursor-pointer flex items-center gap-1"
+                class="px-2.5 py-1 bg-secondary/40 hover:bg-primary hover:text-primary-foreground text-foreground/80 text-[11px] rounded-full border border-border/60 transition-all cursor-pointer"
                 title="Filtrar catálogo por esta etiqueta"
               >
                 #{{ formatTag(tag) }}
@@ -343,7 +320,16 @@ import { useCartStore } from '~/stores/cart';
 import { toast } from 'vue-sonner';
 import { trackEvent } from '~/utils/analytics';
 
-interface Variant { name: string; grams: number; hours: number; price: number; imageIndex?: number; imageUrl?: string }
+interface Variant {
+  name: string;
+  grams: number;
+  hours: number;
+  price: number;
+  imageIndex?: number;
+  imageUrl?: string;
+  filament?: string;
+}
+
 interface Product {
   id?: number | string;
   title: string;
@@ -371,6 +357,14 @@ const emit = defineEmits<{
   (e: 'close'): void;
   (e: 'select-tag', tag: string): void;
 }>();
+
+const BASE_COLOR_PALETTE = [
+  { id: 'reference', label: 'Como en la foto', swatch: 'linear-gradient(135deg, #E07A5F 0%, #F2CC8F 50%, #81B29A 100%)' },
+  { id: 'black', label: 'Negro Mate', swatch: '#1F2421' },
+  { id: 'white', label: 'Blanco', swatch: '#F4F4F6' },
+  { id: 'gray', label: 'Gris / Plata', swatch: '#9CA3AF' },
+];
+const selectedBaseColor = ref(BASE_COLOR_PALETTE[0].label);
 
 const images = computed(() => {
   const set = new Set<string>();
@@ -404,6 +398,39 @@ function nextImage() {
 const variants = computed(() => Array.isArray(props.product.variants) ? props.product.variants : []);
 const variantIdx = ref(props.initialVariantIdx ?? 0);
 const activeVariant = computed(() => variants.value[variantIdx.value] || null);
+
+// Detecta el filamento recomendado de la variante activa o de los metadatos del modelo
+const recommendedFilamentInfo = computed(() => {
+  const explicitFilament = activeVariant.value?.filament || '';
+  const searchCorpus = `${explicitFilament} ${props.product.title || ''} ${props.product.description || ''} ${props.product.descriptionHtml || ''} ${(props.product.tags || []).join(' ')}`;
+
+  if (/\bpetg\b/i.test(searchCorpus)) {
+    return {
+      code: 'PETG',
+      title: 'Impreso en PETG Técnico',
+      description: 'Polímero de alta resistencia mecánica, térmica y a la humedad para uso exigente.'
+    };
+  }
+  if (/\btpu\b/i.test(searchCorpus)) {
+    return {
+      code: 'TPU',
+      title: 'Impreso en TPU Flexible',
+      description: 'Material elástico de alta absorción de impactos y gran durabilidad.'
+    };
+  }
+  if (/\b(abs|asa)\b/i.test(searchCorpus)) {
+    return {
+      code: 'ABS/ASA',
+      title: 'Impreso en ABS/ASA Estructural',
+      description: 'Grado industrial con resistencia superior a temperatura e intemperie.'
+    };
+  }
+  return {
+    code: 'PLA+',
+    title: 'Impreso en PLA+ de Alta Definición',
+    description: 'Acabado rígido, superficie detallada y gran solidez estructural.'
+  };
+});
 
 function syncVariantImage(idx: number) {
   const v = variants.value[idx];
@@ -445,17 +472,10 @@ function fmt(n: number): string {
   return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(n);
 }
 
-function formatHours(h?: number): string {
-  if (!h) return 'Estándar';
-  if (h < 1) return `${Math.max(15, Math.round(h * 60))} min`;
-  return `~${h < 3 ? h.toFixed(1) : Math.round(h)} h`;
-}
-
 const extraDetailsSafe = computed(() => {
   let raw = props.product.descriptionHtml || '';
   if (!raw) return '';
 
-  // Decodificar entidades HTML primero por si vienen escapadas (&lt;boostme&gt;)
   raw = raw
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
@@ -464,21 +484,15 @@ const extraDetailsSafe = computed(() => {
     .replace(/&#39;/g, "'")
     .replace(/&quot;/g, '"');
 
-  // Eliminar bloques <boostme>...</boostme> de MakerWorld
   raw = raw.replace(/<boostme[\s\S]*?<\/boostme>/gi, '');
-
-  // Convertir tags de bloque a saltos de línea
   raw = raw.replace(/<br\s*\/?>/gi, '\n');
   raw = raw.replace(/<\/p>/gi, '\n\n');
   raw = raw.replace(/<\/h[1-6]>/gi, '\n');
   raw = raw.replace(/<\/li>/gi, '\n');
   raw = raw.replace(/<li>/gi, '• ');
-
-  // Limpiar resto de HTML
   raw = raw.replace(/<[^>]+>/g, '');
   raw = raw.replace(/\n{3,}/g, '\n\n').trim();
 
-  // Si es idéntico a description, no duplicar
   if (raw === (props.product.description || '').trim()) return '';
   return raw;
 });
@@ -493,7 +507,7 @@ function formatTag(raw: string | null | undefined): string {
 
 const whatsappInquiryUrl = computed(() => {
   const vName = activeVariant.value ? ` (${activeVariant.value.name})` : '';
-  const msg = `Hola, vi el modelo "${props.product.title}"${vName} en El Bazar (${priceLabel.value}) y me gustaría resolver una duda sobre medidas/colores.`;
+  const msg = `Hola, vi el modelo "${props.product.title}"${vName} en El Bazar (${priceLabel.value}) y tengo una duda.`;
   return `https://wa.me/524421752026?text=${encodeURIComponent(msg)}`;
 });
 
@@ -523,12 +537,23 @@ onMounted(() => {
 const cart = useCartStore();
 const quantity = ref(1);
 
+function resolveOrderNote(): string {
+  const parts: string[] = [];
+  if (selectedBaseColor.value && selectedBaseColor.value !== 'Como en la foto') {
+    parts.push(`Tono: ${selectedBaseColor.value}`);
+  }
+  if (customText.value.trim()) {
+    parts.push(customText.value.trim());
+  }
+  return parts.join(' | ');
+}
+
 function buyNow() {
   if (isPersonalized.value && !customText.value.trim()) {
     toast.error('Atención', { description: 'Por favor, ingresa el texto a personalizar.' });
     return;
   }
-  cart.addItem(props.product, variantIdx.value, quantity.value, customText.value.trim());
+  cart.addItem(props.product, variantIdx.value, quantity.value, resolveOrderNote());
   cart.openCart();
   emit('close');
 }
@@ -538,7 +563,7 @@ function addToCartOnly() {
     toast.error('Atención', { description: 'Por favor, ingresa el texto a personalizar.' });
     return;
   }
-  cart.addItem(props.product, variantIdx.value, quantity.value, customText.value.trim());
+  cart.addItem(props.product, variantIdx.value, quantity.value, resolveOrderNote());
   toast.success('Agregado al carrito', {
     description: `${quantity.value}x ${props.product.title}`,
     duration: 3000
