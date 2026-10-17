@@ -150,7 +150,7 @@
         <div class="flex items-center justify-between gap-4 pt-2">
           <p class="text-xs text-muted-foreground">
             <span v-if="batchRunning" class="text-primary font-medium animate-pulse">
-              Procesando en n8n (FlareSolverr + Gemini + Bazar + Mercado Libre)… Esto puede tardar entre 45 s y 3 min según el número de conceptos.
+              {{ batchProgress || 'Procesando en n8n (FlareSolverr + Gemini + Bazar + Mercado Libre + Drive)…' }}
             </span>
             <span v-else>
               Listo para ejecutar el pipeline completo en n8n.
@@ -482,26 +482,79 @@ async function fetchMeliStatus() {
   }
 }
 
+const batchProgress = ref('');
+
 async function runBatchImport() {
-  if (parsedConceptsPreview.value.length === 0) return;
+  const concepts = parsedConceptsPreview.value;
+  if (concepts.length === 0) return;
   batchRunning.value = true;
   batchError.value = null;
-  batchResult.value = null;
+  batchProgress.value = '';
+
+  const aggregated = {
+    success: true,
+    summary: {
+      conceptsProcessed: 0,
+      candidatesFound: 0,
+      enrichedCount: 0,
+      bazar: { created: 0, updated: 0, skipped: 0, errors: [] as any[] },
+      meliConnected: false,
+      meliPublished: 0,
+      meliErrors: 0,
+      driveUploadedCount: 0,
+      driveFolderUrl: 'https://drive.google.com/drive/folders/1YQMXeP7h3s53_8RxPs4C7lAK4XxwU_Do',
+    },
+    conceptReports: [] as any[],
+    meliResults: [] as any[],
+    products: [] as any[],
+    driveFiles: [] as any[],
+  };
+  batchResult.value = aggregated;
+
   try {
-    const { data } = await api.post(
-      '/products/batch-import',
-      {
-        busquedas_makerworld: parsedConceptsPreview.value,
-        limitPerConcept: limitPerConcept.value,
-      },
-      { timeout: 300_000 }
-    );
-    batchResult.value = data;
+    for (let i = 0; i < concepts.length; i++) {
+      const c = concepts[i];
+      batchProgress.value = `Procesando concepto ${i + 1} de ${concepts.length}: "${c.nombre_concepto || c.query_principal_ingles}"…`;
+
+      const { data } = await api.post(
+        '/products/batch-import',
+        {
+          busquedas_makerworld: [c],
+          limitPerConcept: limitPerConcept.value,
+        },
+        { timeout: 180_000 }
+      );
+
+      if (data?.summary) {
+        aggregated.summary.conceptsProcessed += Number(data.summary.conceptsProcessed || 1);
+        aggregated.summary.candidatesFound += Number(data.summary.candidatesFound || 0);
+        aggregated.summary.enrichedCount += Number(data.summary.enrichedCount || 0);
+        aggregated.summary.bazar.created += Number(data.summary.bazar?.created || 0);
+        aggregated.summary.bazar.updated += Number(data.summary.bazar?.updated || 0);
+        aggregated.summary.bazar.skipped += Number(data.summary.bazar?.skipped || 0);
+        if (Array.isArray(data.summary.bazar?.errors)) {
+          aggregated.summary.bazar.errors.push(...data.summary.bazar.errors);
+        }
+        if (data.summary.meliConnected) aggregated.summary.meliConnected = true;
+        aggregated.summary.meliPublished += Number(data.summary.meliPublished || 0);
+        aggregated.summary.meliErrors += Number(data.summary.meliErrors || 0);
+        aggregated.summary.driveUploadedCount += Number(data.summary.driveUploadedCount || 0);
+        if (data.summary.driveFolderUrl) aggregated.summary.driveFolderUrl = data.summary.driveFolderUrl;
+      }
+      if (Array.isArray(data?.conceptReports)) aggregated.conceptReports.push(...data.conceptReports);
+      if (Array.isArray(data?.meliResults)) aggregated.meliResults.push(...data.meliResults);
+      if (Array.isArray(data?.products)) aggregated.products.push(...data.products);
+      if (Array.isArray(data?.driveFiles)) aggregated.driveFiles.push(...data.driveFiles);
+
+      // Trigger reactivity update after each concept
+      batchResult.value = { ...aggregated, summary: { ...aggregated.summary, bazar: { ...aggregated.summary.bazar } } };
+    }
     await fetchMeliStatus();
   } catch (e: any) {
     batchError.value = e.response?.data?.error || e.message || 'Error al ejecutar el proceso en n8n';
   } finally {
     batchRunning.value = false;
+    batchProgress.value = '';
   }
 }
 
