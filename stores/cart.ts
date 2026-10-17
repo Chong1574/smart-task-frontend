@@ -63,9 +63,9 @@ export const useCartStore = defineStore('cart', () => {
 
     const resolvedPrice = typeof price === 'number' ? price : 0;
 
-    const image = (product.images && product.images.length > 0) 
-      ? product.images[0] 
-      : product.imageUrl;
+    const image = variant?.imageUrl
+      || product.imageUrl
+      || ((product.images && product.images.length > 0) ? product.images[0] : undefined);
 
     let cartItemId = variant ? `${product.id}-${variantIdx}` : `${product.id}-default`;
     if (customText) {

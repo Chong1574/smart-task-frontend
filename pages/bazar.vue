@@ -3,29 +3,70 @@
     <div class="container max-w-6xl px-4">
 
       <!-- Cabecera -->
-      <div class="mb-16 text-center">
+      <div class="mb-10 text-center">
+        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary mb-4 text-xs font-semibold tracking-wide">
+          <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+          Manufactura 3D Bajo Demanda · Piezas Físicas Listas para Usar
+        </div>
         <h1 class="text-4xl md:text-5xl font-serif font-bold tracking-tight mb-4 text-foreground">
           El Bazar
         </h1>
-        <p class="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Una galería cuidadosamente seleccionada. Aquí encontrarás nuestras creaciones físicas, desde herramientas tecnológicas hasta accesorios que te acompañan.
+        <p class="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
+          Creaciones físicas fabricadas con precisión en nuestro estudio: desde organizadores e ingeniería práctica hasta decoración y regalos únicos.
         </p>
       </div>
 
       <!-- Buscador -->
-      <div class="max-w-xl mx-auto mb-8">
-        <input
-          v-model="query"
-          type="search"
-          placeholder="Buscar en el bazar (ej. portapapel, dinosaurio)"
-          class="w-full h-11 px-4 rounded-full border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-        />
+      <div class="max-w-xl mx-auto mb-6">
+        <div class="relative">
+          <input
+            v-model="query"
+            type="search"
+            placeholder="Buscar en el bazar (ej. portavasos, organizador, dinosaurio, soporte...)"
+            class="w-full h-12 pl-11 pr-4 rounded-full border border-border bg-card text-sm shadow-xs focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+          <svg class="w-4 h-4 text-muted-foreground absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+        </div>
         <div v-if="loading" class="text-center text-xs text-muted-foreground mt-2">Buscando…</div>
         <div v-else-if="searchedLive" class="text-center text-xs text-primary mt-2">
           Búsqueda extendida a MakerWorld — nuevos modelos añadidos al bazar.
         </div>
         <div v-else-if="rateLimited" class="text-center text-xs text-amber-600 mt-2">
           Muchas búsquedas recientes. Mostrando sólo el catálogo local.
+        </div>
+      </div>
+
+      <!-- Barra de Confianza (Resuelve dudas clave antes de explorar) -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 mb-8">
+        <div class="flex items-center gap-2.5 bg-card border border-border/60 rounded-xl px-3.5 py-2.5 shadow-2xs">
+          <span class="text-lg shrink-0">📦</span>
+          <div class="min-w-0">
+            <p class="text-xs font-bold text-foreground truncate">Pieza Física Lista</p>
+            <p class="text-[11px] text-muted-foreground truncate">Impresa en 3D y revisada a mano</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2.5 bg-card border border-border/60 rounded-xl px-3.5 py-2.5 shadow-2xs">
+          <span class="text-lg shrink-0">🎨</span>
+          <div class="min-w-0">
+            <p class="text-xs font-bold text-foreground truncate">Color Personalizable</p>
+            <p class="text-[11px] text-muted-foreground truncate">Elige tono sin costo extra</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2.5 bg-card border border-border/60 rounded-xl px-3.5 py-2.5 shadow-2xs">
+          <span class="text-lg shrink-0">🛡️</span>
+          <div class="min-w-0">
+            <p class="text-xs font-bold text-foreground truncate">Material Sólido PLA+</p>
+            <p class="text-[11px] text-muted-foreground truncate">Alta densidad y durabilidad</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2.5 bg-card border border-border/60 rounded-xl px-3.5 py-2.5 shadow-2xs">
+          <span class="text-lg shrink-0">🚚</span>
+          <div class="min-w-0">
+            <p class="text-xs font-bold text-foreground truncate">Envío a Todo México</p>
+            <p class="text-[11px] text-muted-foreground truncate">Empaque protegido con rastreo</p>
+          </div>
         </div>
       </div>
 
@@ -339,14 +380,17 @@
         <div
           v-for="product in filteredProducts"
           :key="product.id"
-          class="group flex flex-col bg-card rounded-2xl overflow-hidden border border-border/60 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-300 cursor-pointer"
-          @click="selected = product"
+          class="group flex flex-col bg-card rounded-2xl overflow-hidden border border-border/60 hover:border-primary/40 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-300 cursor-pointer"
+          @mouseenter="hoveredProductId = product.id"
+          @mouseleave="hoveredProductId = null"
+          @click="openProductDetail(product)"
         >
-          <div class="aspect-square bg-secondary/50 overflow-hidden relative">
+          <!-- Cabecera Visual Interactiva -->
+          <div class="aspect-square bg-secondary/40 overflow-hidden relative">
             <img
-              v-if="product.imageUrl"
-              :src="imgProxy(product.imageUrl, { width: 600 })"
-              :srcset="imgProxySrcSet(product.imageUrl, 600)"
+              v-if="getCardCurrentImage(product)"
+              :src="imgProxy(getCardCurrentImage(product), { width: 600 })"
+              :srcset="imgProxySrcSet(getCardCurrentImage(product), 600)"
               sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
               :alt="product.title"
               loading="lazy"
@@ -358,57 +402,223 @@
             <div v-else class="absolute inset-0 flex items-center justify-center text-muted-foreground/30 font-serif italic">
               [ Imagen del Producto ]
             </div>
-            <div class="absolute top-4 left-4 bg-background/80 backdrop-blur-sm px-3 py-1 text-xs font-semibold rounded-full border border-border/50 text-foreground">
-              {{ product.origin || 'Crafted' }}
+
+            <!-- Gradiente sutil superior e inferior para legibilidad de badges -->
+            <div class="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/35 to-transparent pointer-events-none"></div>
+            <div class="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/40 to-transparent pointer-events-none"></div>
+
+            <!-- Badge Superior Izquierdo: Categoría / Personalizable -->
+            <div
+              class="absolute top-3 left-3 backdrop-blur-md px-2.5 py-1 text-[11px] font-semibold rounded-full border shadow-xs flex items-center gap-1 max-w-[62%] truncate"
+              :class="isProductPersonalized(product)
+                ? 'bg-amber-500/95 text-white border-amber-400/50'
+                : (product.source === 'CUSTOM' || product.isCustom)
+                  ? 'bg-primary/95 text-primary-foreground border-primary/40'
+                  : 'bg-background/90 text-foreground border-border/60'"
+            >
+              <span v-if="isProductPersonalized(product)">✨ Personalizable</span>
+              <span v-else-if="product.source === 'CUSTOM' || product.isCustom">⭐ Diseño Exclusivo</span>
+              <span v-else class="truncate">{{ product.category || 'Impresión 3D' }}</span>
+            </div>
+
+            <!-- Badge Superior Derecho: Certeza de Producto Físico -->
+            <div class="absolute top-3 right-3 bg-foreground/85 text-background backdrop-blur-md px-2.5 py-1 text-[10px] font-semibold rounded-full shadow-xs flex items-center gap-1">
+              <span>📦 Pieza Física</span>
+            </div>
+
+            <!-- Flechas para explorar fotos reales sin salir de la tarjeta -->
+            <template v-if="getProductImages(product).length > 1">
+              <button
+                type="button"
+                @click.stop="stepCardImage(product, -1)"
+                class="absolute left-2.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-background/85 hover:bg-background text-foreground border border-border/60 shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity cursor-pointer"
+                title="Foto anterior"
+                aria-label="Foto anterior"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+              </button>
+              <button
+                type="button"
+                @click.stop="stepCardImage(product, 1)"
+                class="absolute right-2.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-background/85 hover:bg-background text-foreground border border-border/60 shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity cursor-pointer"
+                title="Siguiente foto"
+                aria-label="Siguiente foto"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+              </button>
+
+              <!-- Contador de fotos en esquina inferior derecha -->
+              <button
+                type="button"
+                @click.stop="stepCardImage(product, 1)"
+                class="absolute bottom-2.5 right-2.5 bg-background/85 hover:bg-background text-foreground backdrop-blur-md px-2 py-0.5 rounded-full text-[10px] font-medium border border-border/50 shadow-xs flex items-center gap-1 cursor-pointer transition-colors"
+                title="Clic para ver más ángulos"
+              >
+                <span>📷 {{ getCurrentImageDisplayIndex(product) }}/{{ getProductImages(product).length }}</span>
+              </button>
+            </template>
+
+            <!-- Indicador de disponibilidad en esquina inferior izquierda -->
+            <div class="absolute bottom-2.5 left-2.5 bg-background/85 backdrop-blur-md px-2 py-0.5 rounded-full text-[10px] font-medium text-emerald-600 dark:text-emerald-400 border border-border/50 shadow-xs flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              <span>Listo para fabricar</span>
             </div>
           </div>
-          <div class="p-6 flex flex-col flex-grow">
-            <h3 class="font-serif text-xl font-semibold mb-2 group-hover:text-primary transition-colors">{{ product.title }}</h3>
-            <p class="text-muted-foreground text-sm mb-4 line-clamp-2">{{ product.description }}</p>
-              <div v-if="product.tags && product.tags.length" class="flex flex-wrap gap-1 mb-4 mt-[-8px]">
-                <button
-                  v-for="tag in product.tags.slice(0, 3)"
-                  :key="tag"
-                  type="button"
-                  @click.stop="toggleTag(tag)"
-                  class="px-2 py-0.5 text-[10px] rounded uppercase tracking-wider transition-colors cursor-pointer"
-                  :class="isTagActive(tag)
-                    ? 'bg-primary text-primary-foreground font-semibold shadow-xs'
-                    : 'bg-secondary/50 text-secondary-foreground hover:bg-primary/20 hover:text-primary'"
-                  title="Filtrar por esta etiqueta"
-                >
-                  {{ formatTagDisplay(tag) }}
-                </button>
-                <span v-if="product.tags.length > 3" class="text-[10px] text-muted-foreground self-center">
-                  +{{ product.tags.length - 3 }}
+
+          <!-- Cuerpo de la Tarjeta -->
+          <div class="p-5 flex flex-col flex-grow">
+            <!-- Título y Descripción Gancho -->
+            <h3 class="font-serif text-lg font-bold leading-snug mb-1.5 text-foreground group-hover:text-primary transition-colors line-clamp-2">
+              {{ product.title }}
+            </h3>
+            <p class="text-muted-foreground text-xs leading-relaxed mb-3 line-clamp-2">
+              {{ product.description || 'Pieza impresa en 3D con acabado de alta precisión, fabricada bajo pedido y lista para usar.' }}
+            </p>
+
+            <!-- Selector Interactivo de Variantes / Qué incluye (Resuelve la duda #1 de precio/contenido) -->
+            <div v-if="product.variants && product.variants.length > 1" class="mb-3">
+              <div class="flex items-center justify-between text-[11px] mb-1.5">
+                <span class="font-semibold text-foreground/90">
+                  Elige versión ({{ product.variants.length }}):
                 </span>
+                <span class="text-[10px] text-muted-foreground">Cambia precio y foto</span>
+              </div>
+              <div class="flex flex-wrap gap-1.5">
+                <button
+                  v-for="(v, vIdx) in product.variants.slice(0, 3)"
+                  :key="vIdx"
+                  type="button"
+                  @click.stop="selectCardVariant(product, Number(vIdx))"
+                  class="text-[11px] px-2.5 py-1 rounded-lg border transition-all inline-flex items-center gap-1 cursor-pointer max-w-full"
+                  :class="getActiveVariantIdx(product) === Number(vIdx)
+                    ? 'bg-primary/15 border-primary text-primary font-semibold shadow-2xs'
+                    : 'bg-secondary/35 border-border/60 text-muted-foreground hover:text-foreground hover:border-primary/40'"
+                  :title="`${v.name} — ${fmt(v.price)} (${v.grams}g)`"
+                >
+                  <span class="truncate max-w-[115px]">{{ v.name }}</span>
+                  <span class="opacity-75 shrink-0">· {{ fmt(v.price) }}</span>
+                </button>
+                <button
+                  v-if="product.variants.length > 3"
+                  type="button"
+                  @click.stop="openProductDetail(product)"
+                  class="text-[10px] px-2 py-1 rounded-lg border border-border/60 bg-secondary/25 text-primary font-medium hover:bg-primary/10 transition-colors cursor-pointer"
+                >
+                  +{{ product.variants.length - 3 }} más
+                </button>
+              </div>
+            </div>
+            <div v-else-if="product.variants && product.variants.length === 1" class="mb-3">
+              <div class="flex items-center gap-1.5 text-[11px] text-foreground/85 bg-secondary/35 border border-border/50 rounded-lg px-2.5 py-1.5">
+                <span class="text-emerald-600 dark:text-emerald-400 font-bold shrink-0">✓</span>
+                <span class="truncate"><strong class="font-semibold">Incluye:</strong> {{ product.variants[0].name }}</span>
+              </div>
+            </div>
+            <div v-else class="mb-3">
+              <div class="flex items-center gap-1.5 text-[11px] text-foreground/85 bg-secondary/35 border border-border/50 rounded-lg px-2.5 py-1.5">
+                <span class="text-emerald-600 dark:text-emerald-400 font-bold shrink-0">✓</span>
+                <span class="truncate"><strong class="font-semibold">Incluye:</strong> Pieza física lista para usar</span>
+              </div>
+            </div>
+
+            <!-- Micro-Ficha Técnica para Resolver Dudas (Peso sólido, Manufactura, Personalización de color) -->
+            <div class="grid grid-cols-3 gap-1.5 py-1.5 px-2 rounded-xl bg-secondary/25 border border-border/50 text-[10px] text-muted-foreground mb-3 text-center">
+              <div class="truncate" title="Peso real en filamento sólido de alta densidad">
+                <span class="font-semibold text-foreground/85">⚖️ {{ getActiveVariant(product)?.grams ? `${getActiveVariant(product)?.grams}g` : 'PLA+' }}</span>
+                <span class="block text-[9px] opacity-80">Material sólido</span>
+              </div>
+              <div class="truncate border-x border-border/50 px-1" title="Tiempo dedicado de impresión 3D de alta precisión">
+                <span class="font-semibold text-foreground/85">⏱️ {{ formatPrintHours(getActiveVariant(product)?.hours) }}</span>
+                <span class="block text-[9px] opacity-80">Manufactura</span>
+              </div>
+              <div class="truncate" title="Puedes elegir el color de tu pieza sin costo adicional">
+                <span class="font-semibold text-foreground/85">🎨 Color</span>
+                <span class="block text-[9px] opacity-80">A tu elección</span>
+              </div>
+            </div>
+
+            <!-- Etiquetas clicables -->
+            <div v-if="product.tags && product.tags.length" class="flex flex-wrap gap-1 mb-3">
+              <button
+                v-for="tag in product.tags.slice(0, 3)"
+                :key="tag"
+                type="button"
+                @click.stop="toggleTag(tag)"
+                class="px-2 py-0.5 text-[10px] rounded-md transition-colors cursor-pointer"
+                :class="isTagActive(tag)
+                  ? 'bg-primary text-primary-foreground font-semibold shadow-xs'
+                  : 'bg-secondary/45 text-muted-foreground hover:bg-primary/15 hover:text-primary'"
+                title="Filtrar por esta etiqueta"
+              >
+                #{{ formatTagDisplay(tag) }}
+              </button>
+              <span v-if="product.tags.length > 3" class="text-[10px] text-muted-foreground self-center">
+                +{{ product.tags.length - 3 }}
+              </span>
+            </div>
+
+            <!-- Footer Gancho de Compra: Precio Claro + CTA Directo -->
+            <div class="mt-auto pt-3 border-t border-border/50">
+              <div class="flex items-end justify-between gap-2">
+                <div>
+                  <span class="block text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+                    {{ getPriceCaption(product) }}
+                  </span>
+                  <div class="flex items-baseline gap-1">
+                    <span class="text-2xl font-extrabold text-foreground tracking-tight">
+                      {{ getFormattedActivePrice(product) }}
+                    </span>
+                    <span v-if="getActivePrice(product) > 0" class="text-[10px] font-semibold text-muted-foreground">
+                      MXN
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Botón Principal de Conversión -->
+                <button
+                  type="button"
+                  @click.stop="handleCardQuickAction(product)"
+                  class="px-3.5 py-2.5 rounded-xl font-semibold text-xs transition-all inline-flex items-center gap-1.5 shadow-sm cursor-pointer shrink-0"
+                  :class="justAddedId === product.id
+                    ? 'bg-emerald-600 text-white shadow-emerald-500/20'
+                    : 'bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-md hover:shadow-primary/20 active:scale-[0.98]'"
+                  :aria-label="isActiveVariantPersonalized(product) ? 'Personalizar pieza' : 'Agregar al carrito'"
+                >
+                  <template v-if="justAddedId === product.id">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                    <span>¡Agregado!</span>
+                  </template>
+                  <template v-else-if="isActiveVariantPersonalized(product)">
+                    <span>✨ Personalizar</span>
+                  </template>
+                  <template v-else>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                    <span>Agregar</span>
+                  </template>
+                </button>
               </div>
 
-            <div class="mt-auto space-y-3">
-              <div class="flex items-center justify-between">
-                <span class="font-sans font-medium text-foreground">{{ priceLabel(product) }}</span>
-              </div>
-              <div class="flex items-center justify-between">
+              <!-- Sub-barra de confianza + Gancho para abrir detalle completo -->
+              <div class="mt-2.5 pt-2 border-t border-border/40 flex items-center justify-between text-[11px]">
                 <a
                   v-if="product.fileUrl"
                   :href="`${apiBase}/products/${product.id}/download`"
-                  class="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                  class="inline-flex items-center gap-1 text-xs text-primary hover:underline font-medium"
                   target="_blank"
                   @click.stop
                 >
-                  Descargar
+                  Descargar archivo
                   <span v-if="product.fileSizeBytes" class="text-muted-foreground">
                     ({{ formatSize(product.fileSizeBytes) }})
                   </span>
                 </a>
-                <button
-                  type="button"
-                  class="rounded-md p-2 hover:bg-accent hover:text-primary transition-colors"
-                  aria-label="Agregar al carrito"
-                  @click.stop="addToCartFromGrid(product)"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-                </button>
+                <span v-else class="text-muted-foreground inline-flex items-center gap-1 truncate">
+                  <span>🚚 Envío seguro a todo MX</span>
+                </span>
+
+                <span class="text-primary font-semibold group-hover:translate-x-0.5 transition-transform inline-flex items-center gap-0.5 shrink-0">
+                  Resolver dudas / Ver más →
+                </span>
               </div>
             </div>
           </div>
@@ -432,7 +642,8 @@
 
       <BazarProductDetail 
         v-if="selected" 
-        :product="selected" 
+        :product="selected"
+        :initial-variant-idx="selectedInitialVariantIdx"
         @close="selected = null" 
         @select-tag="handleSelectTagFromDetail" 
       />
@@ -443,6 +654,7 @@
 </template>
 
 <script setup lang="ts">
+import { reactive } from 'vue';
 import BazarProductDetail from '~/components/BazarProductDetail.vue';
 import CartDrawer from '~/components/CartDrawer.vue';
 import { imgProxy, imgProxySrcSet } from '~/utils/imgProxy';
@@ -452,14 +664,6 @@ import { trackEvent } from '~/utils/analytics';
 
 const cart = useCartStore();
 
-function addToCartFromGrid(product: Product) {
-  cart.addItem(product);
-  toast.success('Agregado al carrito', {
-    description: `1x ${product.title}`,
-    duration: 3000
-  });
-}
-
 // Preconnect al proxy de imágenes — evita el hit de handshake TLS en el primer render.
 useHead({
   link: [
@@ -468,7 +672,7 @@ useHead({
   ]
 });
 
-interface Variant { name: string; grams: number; hours: number; price: number }
+interface Variant { name: string; grams: number; hours: number; price: number; imageIndex?: number; imageUrl?: string }
 interface Product {
   id: number;
   title: string;
@@ -489,6 +693,8 @@ interface Product {
   category?: string;
   descriptionHtml?: string | null;
   tags?: string[] | null;
+  trendScore?: number | null;
+  isCustom?: boolean | null;
 }
 
 import { API_URL as apiBase } from '~/utils/apiUrl';
@@ -500,10 +706,159 @@ const loadingDeep = ref(false);
 const isDeepSearching = ref(false);
 const deepSearchPhrases = ['Buscando en la web...', 'Filtrando opciones...', 'Escogiendo los mejores modelos para ti...', 'Traduciendo y optimizando detalles...', 'Casi listo...'];
 const deepSearchStatusIndex = ref(0);
-let deepSearchStatusInterval = null;
+let deepSearchStatusInterval: any = null;
 const searchedLive = ref(false);
 const rateLimited = ref(false);
 const selected = ref<Product | null>(null);
+const selectedInitialVariantIdx = ref<number>(0);
+
+// Estado interactivo por tarjeta para previsualizar variantes, fotos y feedback de compra
+const selectedCardVariant = reactive<Record<number, number>>({});
+const cardImageIdx = reactive<Record<number, number>>({});
+const hoveredProductId = ref<number | null>(null);
+const justAddedId = ref<number | null>(null);
+let justAddedTimer: any = null;
+
+function getProductImages(p: Product): string[] {
+  const set = new Set<string>();
+  if (p.imageUrl) set.add(p.imageUrl);
+  if (Array.isArray(p.images)) {
+    for (const img of p.images) {
+      if (img) set.add(img);
+    }
+  }
+  if (Array.isArray(p.variants)) {
+    for (const v of p.variants) {
+      if (v?.imageUrl) set.add(v.imageUrl);
+    }
+  }
+  return Array.from(set);
+}
+
+function getActiveVariantIdx(p: Product): number {
+  const idx = selectedCardVariant[p.id] ?? 0;
+  if (!Array.isArray(p.variants) || idx >= p.variants.length) return 0;
+  return idx;
+}
+
+function getActiveVariant(p: Product): Variant | null {
+  if (!Array.isArray(p.variants) || p.variants.length === 0) return null;
+  return p.variants[getActiveVariantIdx(p)] || p.variants[0] || null;
+}
+
+function selectCardVariant(p: Product, vIdx: number) {
+  selectedCardVariant[p.id] = vIdx;
+  const v = Array.isArray(p.variants) ? p.variants[vIdx] : null;
+  if (v?.imageUrl) {
+    const imgs = getProductImages(p);
+    const foundIdx = imgs.indexOf(v.imageUrl);
+    if (foundIdx !== -1) {
+      cardImageIdx[p.id] = foundIdx;
+    }
+  }
+}
+
+function getCardCurrentImage(p: Product): string {
+  const imgs = getProductImages(p);
+  if (imgs.length === 0) return '';
+  if (cardImageIdx[p.id] !== undefined) {
+    return imgs[cardImageIdx[p.id]] || imgs[0];
+  }
+  if (hoveredProductId.value === p.id && imgs.length > 1) {
+    return imgs[1];
+  }
+  return imgs[0];
+}
+
+function getCurrentImageDisplayIndex(p: Product): number {
+  const imgs = getProductImages(p);
+  if (imgs.length <= 1) return 1;
+  if (cardImageIdx[p.id] !== undefined) {
+    return (cardImageIdx[p.id] % imgs.length) + 1;
+  }
+  if (hoveredProductId.value === p.id) {
+    return 2;
+  }
+  return 1;
+}
+
+function stepCardImage(p: Product, delta: number) {
+  const imgs = getProductImages(p);
+  if (imgs.length <= 1) return;
+  const current = cardImageIdx[p.id] ?? (hoveredProductId.value === p.id ? 1 : 0);
+  cardImageIdx[p.id] = (current + delta + imgs.length) % imgs.length;
+}
+
+function isProductPersonalized(p: Product): boolean {
+  if (/personaliz|custom|nombre|qr/i.test(p.title || '')) return true;
+  if (!Array.isArray(p.variants)) return false;
+  return p.variants.some(v => v?.name && /personalizada|personalizado|custom|nombre/i.test(v.name));
+}
+
+function isActiveVariantPersonalized(p: Product): boolean {
+  if (/personaliz|custom|nombre|qr/i.test(p.title || '')) return true;
+  const v = getActiveVariant(p);
+  return Boolean(v?.name && /personalizada|personalizado|custom|nombre/i.test(v.name));
+}
+
+function formatPrintHours(hours?: number): string {
+  if (!hours) return 'Alta precisión';
+  if (hours < 1) return `${Math.max(15, Math.round(hours * 60))}m`;
+  return `~${hours < 3 ? hours.toFixed(1) : Math.round(hours)}h`;
+}
+
+function getActivePrice(p: Product): number {
+  const v = getActiveVariant(p);
+  if (v && typeof v.price === 'number') return v.price;
+  const rawPrice = p.priceFrom ?? (typeof p.price === 'number' ? p.price : parseFloat(String(p.price ?? 0)));
+  return typeof rawPrice === 'number' && !isNaN(rawPrice) ? rawPrice : 0;
+}
+
+function getFormattedActivePrice(p: Product): string {
+  const n = getActivePrice(p);
+  if (!n || isNaN(n)) return 'Gratis';
+  return fmt(n);
+}
+
+function getPriceCaption(p: Product): string {
+  if (Array.isArray(p.variants) && p.variants.length > 1) {
+    const v = getActiveVariant(p);
+    return v?.name ? `Precio · ${v.name}` : 'Precio versión elegida';
+  }
+  return 'Precio final · IVA incluido';
+}
+
+function openProductDetail(product: Product) {
+  selectedInitialVariantIdx.value = getActiveVariantIdx(product);
+  selected.value = product;
+}
+
+function handleCardQuickAction(product: Product) {
+  if (isActiveVariantPersonalized(product)) {
+    openProductDetail(product);
+    toast.info('Personaliza tu pieza', {
+      description: 'Escribe el nombre o detalle que deseas grabar antes de agregar al carrito.'
+    });
+    return;
+  }
+  const vIdx = getActiveVariantIdx(product);
+  const v = getActiveVariant(product);
+  cart.addItem(product, vIdx, 1);
+  justAddedId.value = product.id;
+  clearTimeout(justAddedTimer);
+  justAddedTimer = setTimeout(() => {
+    if (justAddedId.value === product.id) justAddedId.value = null;
+  }, 1600);
+
+  toast.success('Agregado al carrito', {
+    description: v ? `1x ${product.title} (${v.name})` : `1x ${product.title}`,
+    duration: 3500,
+    action: {
+      label: 'Ver carrito',
+      onClick: () => cart.openCart()
+    }
+  });
+}
 
 function normalizeText(s: string | null | undefined): string {
   if (!s) return '';
