@@ -112,8 +112,8 @@
                 <div class="flex items-start gap-2 bg-card/70 p-2.5 rounded-xl border border-border/40">
                   <span class="text-base leading-none mt-0.5">🎨</span>
                   <div>
-                    <p class="font-semibold text-foreground">Tono de Referencia o Base</p>
-                    <p class="text-[11px] leading-snug">Se fabrica en el tono del modelo o en el color de la paleta base que elijas.</p>
+                    <p class="font-semibold text-foreground">Color a tu Elección</p>
+                    <p class="text-[11px] leading-snug">En los tonos originales del modelo o en cualquiera de nuestros colores Sunlu / Bambu PLA.</p>
                   </div>
                 </div>
                 <div class="flex items-start gap-2 bg-card/70 p-2.5 rounded-xl border border-border/40">
@@ -233,26 +233,82 @@
               </div>
             </div>
 
-            <!-- 4. Paleta Base Controlada (Sin input de texto abierto para color) -->
-            <div class="mb-5">
-              <div class="flex items-center justify-between mb-2">
-                <span class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tono de la pieza:</span>
-                <span class="text-xs font-medium text-foreground">{{ selectedBaseColor }}</span>
+            <!-- 4. Selector de Color Mejorado (Paleta Sunlu PLA & Bambu PLA Lite) -->
+            <div class="mb-5 bg-card/60 border border-border/70 rounded-2xl p-3.5 space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold uppercase tracking-wider text-foreground">Color del filamento:</span>
+                <div class="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-secondary/70 border border-border/60">
+                  <span
+                    class="w-3 h-3 rounded-full border border-black/20 dark:border-white/20 shrink-0"
+                    :style="{ background: currentColorSwatch }"
+                  ></span>
+                  <span class="text-foreground truncate max-w-[170px]">{{ selectedColorObj.label }}</span>
+                </div>
               </div>
-              <div class="flex flex-wrap gap-2">
-                <button
-                  v-for="tone in BASE_COLOR_PALETTE"
-                  :key="tone.id"
-                  type="button"
-                  @click="selectedBaseColor = tone.label"
-                  class="px-3 py-1.5 rounded-xl border text-xs font-medium inline-flex items-center gap-2 transition-all cursor-pointer"
-                  :class="selectedBaseColor === tone.label
-                    ? 'border-primary bg-primary/10 text-primary font-semibold shadow-2xs'
-                    : 'border-border/70 bg-card text-muted-foreground hover:text-foreground'"
-                >
-                  <span class="w-3 h-3 rounded-full border border-border/80 shrink-0" :style="{ background: tone.swatch }"></span>
-                  <span>{{ tone.label }}</span>
-                </button>
+
+              <!-- Opción destacada: Tono original / Como en la foto -->
+              <button
+                type="button"
+                @click="selectedColorId = 'original'"
+                class="w-full text-left p-2.5 rounded-xl border transition-all flex items-center justify-between cursor-pointer"
+                :class="selectedColorId === 'original'
+                  ? 'border-primary bg-primary/10 shadow-xs ring-1 ring-primary/30'
+                  : 'border-border/60 bg-background/60 hover:bg-secondary/40 text-muted-foreground hover:text-foreground'"
+              >
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <div class="w-6 h-6 rounded-lg shadow-xs flex items-center justify-center shrink-0 border border-white/20" style="background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 50%, #FFE66D 100%);">
+                    <span class="text-[11px]">✨</span>
+                  </div>
+                  <div class="min-w-0">
+                    <p class="text-xs font-semibold text-foreground truncate">Como en el modelo (Recomendado)</p>
+                    <p class="text-[10px] text-muted-foreground truncate">Acabado y combinaciones fieles a la foto original</p>
+                  </div>
+                </div>
+                <span v-if="selectedColorId === 'original'" class="text-primary font-bold text-xs shrink-0">✓ Activo</span>
+              </button>
+
+              <!-- Swatches de colores reales Sunlu / Bambu PLA -->
+              <div>
+                <div class="flex items-center justify-between text-[11px] text-muted-foreground mb-1.5">
+                  <span>O elige un color sólido (Paleta Sunlu / Bambu PLA):</span>
+                  <span class="text-[10px] opacity-75">16 tonos</span>
+                </div>
+                <div class="grid grid-cols-8 gap-1.5 sm:gap-2">
+                  <button
+                    v-for="color in SUNLU_BAMBU_COLORS"
+                    :key="color.id"
+                    type="button"
+                    @click="selectedColorId = color.id"
+                    class="group relative aspect-square rounded-xl flex items-center justify-center transition-all cursor-pointer focus:outline-none"
+                    :class="selectedColorId === color.id
+                      ? 'ring-2 ring-primary ring-offset-2 scale-105 shadow-md z-10'
+                      : 'hover:scale-105 hover:shadow-xs opacity-90 hover:opacity-100'"
+                    :style="{ backgroundColor: color.hex }"
+                    :title="`${color.label} — ${color.brand}`"
+                    :aria-label="color.label"
+                  >
+                    <!-- Borde sutil para contraste -->
+                    <div class="absolute inset-0 rounded-xl border border-black/15 dark:border-white/15 pointer-events-none"></div>
+
+                    <!-- Checkmark cuando está seleccionado -->
+                    <svg
+                      v-if="selectedColorId === color.id"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      :style="{ color: color.textColor }"
+                      class="drop-shadow-xs"
+                    >
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -267,16 +323,6 @@
                 placeholder="Ej. Nombre a grabar o enlace para código QR..."
                 class="w-full h-10 px-3.5 rounded-xl border border-primary/50 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
-            </div>
-
-            <!-- Detalles adicionales del modelo (si existen en descriptionHtml) -->
-            <div v-if="extraDetailsSafe" class="mb-5 p-4 rounded-2xl bg-secondary/20 border border-border/50">
-              <h4 class="text-xs font-bold uppercase tracking-wider text-foreground mb-1.5">
-                Acerca del diseño
-              </h4>
-              <p class="text-xs text-muted-foreground whitespace-pre-line leading-relaxed max-h-36 overflow-y-auto pr-1">
-                {{ extraDetailsSafe }}
-              </p>
             </div>
 
             <!-- Etiquetas -->
@@ -358,13 +404,54 @@ const emit = defineEmits<{
   (e: 'select-tag', tag: string): void;
 }>();
 
-const BASE_COLOR_PALETTE = [
-  { id: 'reference', label: 'Como en la foto', swatch: 'linear-gradient(135deg, #E07A5F 0%, #F2CC8F 50%, #81B29A 100%)' },
-  { id: 'black', label: 'Negro Mate', swatch: '#1F2421' },
-  { id: 'white', label: 'Blanco', swatch: '#F4F4F6' },
-  { id: 'gray', label: 'Gris / Plata', swatch: '#9CA3AF' },
+interface FilamentColor {
+  id: string;
+  label: string;
+  brand: string;
+  hex: string;
+  textColor: string;
+}
+
+const ORIGINAL_COLOR_OPTION = {
+  id: 'original',
+  label: 'Como en el modelo',
+  brand: 'Referencia visual del modelo',
+  swatch: 'linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 50%, #FFE66D 100%)',
+};
+
+const SUNLU_BAMBU_COLORS: FilamentColor[] = [
+  // Neutros & Metálicos
+  { id: 'white', label: 'Blanco Puro', brand: 'Bambu Jade / Sunlu White', hex: '#FFFFFF', textColor: '#18181B' },
+  { id: 'black', label: 'Negro Mate', brand: 'Bambu Black / Sunlu Black', hex: '#18181B', textColor: '#FFFFFF' },
+  { id: 'gray', label: 'Gris Ceniza', brand: 'Bambu Gray / Sunlu Grey', hex: '#71717A', textColor: '#FFFFFF' },
+  { id: 'silver', label: 'Plata / Silver', brand: 'Sunlu Silk Silver', hex: '#9CA3AF', textColor: '#18181B' },
+  { id: 'beige', label: 'Beige / Hueso', brand: 'Bambu Desert / Sunlu Bone', hex: '#E4D5B7', textColor: '#18181B' },
+  { id: 'brown', label: 'Café / Marrón', brand: 'Bambu Brown / Sunlu Brown', hex: '#5C3A21', textColor: '#FFFFFF' },
+  // Colores Vivos
+  { id: 'red', label: 'Rojo Carmesí', brand: 'Bambu Red / Sunlu Red', hex: '#DC2626', textColor: '#FFFFFF' },
+  { id: 'orange', label: 'Naranja', brand: 'Bambu Orange / Sunlu Orange', hex: '#EA580C', textColor: '#FFFFFF' },
+  { id: 'yellow', label: 'Amarillo', brand: 'Bambu Yellow / Sunlu Yellow', hex: '#EAB308', textColor: '#18181B' },
+  { id: 'bambu_green', label: 'Verde Bambú', brand: 'Bambu Green / Sunlu Grass', hex: '#16A34A', textColor: '#FFFFFF' },
+  { id: 'forest_green', label: 'Verde Bosque', brand: 'Sunlu Dark Green', hex: '#14532D', textColor: '#FFFFFF' },
+  { id: 'cyan', label: 'Azul Cielo / Cian', brand: 'Bambu Cyan / Sunlu Cyan', hex: '#06B6D4', textColor: '#FFFFFF' },
+  { id: 'blue', label: 'Azul Rey', brand: 'Bambu Blue / Sunlu Royal', hex: '#2563EB', textColor: '#FFFFFF' },
+  { id: 'navy', label: 'Azul Marino', brand: 'Sunlu Dark Blue', hex: '#1E3A8A', textColor: '#FFFFFF' },
+  { id: 'purple', label: 'Púrpura / Morado', brand: 'Bambu Purple / Sunlu Purple', hex: '#7C3AED', textColor: '#FFFFFF' },
+  { id: 'pink', label: 'Rosa Sakura', brand: 'Bambu Magenta / Sunlu Pink', hex: '#F472B6', textColor: '#18181B' },
 ];
-const selectedBaseColor = ref(BASE_COLOR_PALETTE[0].label);
+
+const selectedColorId = ref<string>('original');
+
+const selectedColorObj = computed(() => {
+  if (selectedColorId.value === 'original') return ORIGINAL_COLOR_OPTION;
+  return SUNLU_BAMBU_COLORS.find(c => c.id === selectedColorId.value) || ORIGINAL_COLOR_OPTION;
+});
+
+const currentColorSwatch = computed(() => {
+  if (selectedColorId.value === 'original') return ORIGINAL_COLOR_OPTION.swatch;
+  const found = SUNLU_BAMBU_COLORS.find(c => c.id === selectedColorId.value);
+  return found ? found.hex : '#18181B';
+});
 
 const images = computed(() => {
   const set = new Set<string>();
@@ -472,31 +559,6 @@ function fmt(n: number): string {
   return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(n);
 }
 
-const extraDetailsSafe = computed(() => {
-  let raw = props.product.descriptionHtml || '';
-  if (!raw) return '';
-
-  raw = raw
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&amp;/g, '&')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&#39;/g, "'")
-    .replace(/&quot;/g, '"');
-
-  raw = raw.replace(/<boostme[\s\S]*?<\/boostme>/gi, '');
-  raw = raw.replace(/<br\s*\/?>/gi, '\n');
-  raw = raw.replace(/<\/p>/gi, '\n\n');
-  raw = raw.replace(/<\/h[1-6]>/gi, '\n');
-  raw = raw.replace(/<\/li>/gi, '\n');
-  raw = raw.replace(/<li>/gi, '• ');
-  raw = raw.replace(/<[^>]+>/g, '');
-  raw = raw.replace(/\n{3,}/g, '\n\n').trim();
-
-  if (raw === (props.product.description || '').trim()) return '';
-  return raw;
-});
-
 function formatTag(raw: string | null | undefined): string {
   if (!raw) return '';
   let clean = raw.trim().replace(/^#+/, '');
@@ -507,7 +569,8 @@ function formatTag(raw: string | null | undefined): string {
 
 const whatsappInquiryUrl = computed(() => {
   const vName = activeVariant.value ? ` (${activeVariant.value.name})` : '';
-  const msg = `Hola, vi el modelo "${props.product.title}"${vName} en El Bazar (${priceLabel.value}) y tengo una duda.`;
+  const colorNote = selectedColorId.value !== 'original' ? ` en color ${selectedColorObj.value.label}` : '';
+  const msg = `Hola, vi el modelo "${props.product.title}"${vName}${colorNote} en El Bazar (${priceLabel.value}) y tengo una duda.`;
   return `https://wa.me/524421752026?text=${encodeURIComponent(msg)}`;
 });
 
@@ -539,11 +602,11 @@ const quantity = ref(1);
 
 function resolveOrderNote(): string {
   const parts: string[] = [];
-  if (selectedBaseColor.value && selectedBaseColor.value !== 'Como en la foto') {
-    parts.push(`Tono: ${selectedBaseColor.value}`);
+  if (selectedColorId.value !== 'original') {
+    parts.push(`Color: ${selectedColorObj.value.label} (${selectedColorObj.value.brand})`);
   }
   if (customText.value.trim()) {
-    parts.push(customText.value.trim());
+    parts.push(`Personalizado: ${customText.value.trim()}`);
   }
   return parts.join(' | ');
 }
