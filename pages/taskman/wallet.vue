@@ -696,9 +696,13 @@
             </div>
             <div v-else>
               <label class="block text-sm font-medium mb-1">
-                Próximo Pago (Fecha)
+                {{ subForm.id ? 'Próximo Pago (Fecha)' : 'Fecha de Inicio o Próximo Pago' }}
               </label>
               <input v-model="subForm.nextPaymentDate" type="date" required class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
+              <div v-if="computedNextPaymentPreview" class="mt-2 text-xs flex items-center gap-1.5 p-2.5 rounded-xl border" :class="computedNextPaymentPreview.isPast ? 'bg-primary/10 border-primary/20 text-primary' : 'bg-secondary/40 border-border/40 text-muted-foreground'">
+                <Clock class="w-3.5 h-3.5 shrink-0" />
+                <span>{{ computedNextPaymentPreview.text }}</span>
+              </div>
             </div>
             <div>
               <label class="block text-sm font-medium mb-1">{{ subForm.type === 'INCOME' ? 'Depósito a Cuenta (Opcional)' : 'Domiciliar a Cuenta (Opcional)' }}</label>
@@ -1097,6 +1101,34 @@ const subForm = reactive({
   nextPaymentDate: null as string | null
 })
 
+const computedNextPaymentPreview = computed(() => {
+  if (!subForm.nextPaymentDate) return null
+  if (['WEEKLY', 'MONTHLY', 'SEMIMONTHLY'].includes(subForm.frequency)) return null
+
+  const now = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const parts = subForm.nextPaymentDate.split('-')
+  if (parts.length !== 3) return null
+
+  const inputDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]))
+  if (isNaN(inputDate.getTime())) return null
+
+  const nextDate = computeUpcomingPaymentDate(subForm.nextPaymentDate, subForm.frequency, today)
+  const isPast = inputDate < today
+  const diffDays = Math.ceil((nextDate.getTime() - today.getTime()) / (1000 * 3600 * 24))
+
+  const formattedDate = nextDate.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })
+  const daysText = diffDays === 0 ? 'hoy' : diffDays === 1 ? 'mañana' : `en ${diffDays} días`
+
+  return {
+    isPast,
+    date: nextDate,
+    text: isPast
+      ? `Fecha en el pasado. Próximo cobro calculado: ${formattedDate} (${daysText})`
+      : `Próximo cobro: ${formattedDate} (${daysText})`
+  }
+})
+
 const txForm = reactive({
   type: 'expense' as TransactionType,
   amount: 0,
@@ -1445,8 +1477,9 @@ const submitSubscription = async () => {
 
   if (['BIWEEKLY', 'BIMONTHLY', 'QUARTERLY', 'SEMIANNUAL', 'YEARLY'].includes(subForm.frequency)) {
     if (subForm.nextPaymentDate) {
-      data.nextPaymentDate = new Date(subForm.nextPaymentDate + 'T12:00:00Z').toISOString()
-      data.paymentDay = new Date(subForm.nextPaymentDate + 'T12:00:00Z').getDate()
+      const targetDate = computeUpcomingPaymentDate(subForm.nextPaymentDate, subForm.frequency)
+      data.nextPaymentDate = new Date(Date.UTC(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 12, 0, 0)).toISOString()
+      data.paymentDay = targetDate.getDate()
     } else {
       data.nextPaymentDate = null
     }
