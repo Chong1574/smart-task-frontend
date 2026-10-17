@@ -347,7 +347,12 @@ export const useFinanceStore = defineStore('finance', {
                 if (sub.nextPaymentDate) {
                     // Evitar desfase de zona horaria al parsear fechas UTC
                     const dateParts = sub.nextPaymentDate.split('T')[0].split('-');
-                    const billDate = new Date(Number(dateParts[0]), Number(dateParts[1]) - 1, Number(dateParts[2]));
+                    let billDate = new Date(Number(dateParts[0]), Number(dateParts[1]) - 1, Number(dateParts[2]));
+
+                    // Si la fecha configurada o de inicio quedó en el pasado, proyectar la recurrencia al ciclo actual/próximo
+                    if (billDate < today) {
+                        billDate = computeUpcomingPaymentDate(billDate, sub.frequency, today);
+                    }
                     const billMonth = billDate.getMonth();
                     const billYear = billDate.getFullYear();
                     const paymentDay = billDate.getDate();
