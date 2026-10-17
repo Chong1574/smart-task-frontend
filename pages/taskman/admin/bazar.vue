@@ -187,6 +187,15 @@
             <span class="px-3 py-1 rounded-full bg-blue-500/15 text-blue-600 font-semibold">
               MELI Publicados: {{ batchResult.summary?.meliPublished ?? 0 }}
             </span>
+            <a
+              v-if="batchResult.summary?.driveUploadedCount !== undefined"
+              :href="batchResult.summary?.driveFolderUrl || 'https://drive.google.com/drive/folders/1YQMXeP7h3s53_8RxPs4C7lAK4XxwU_Do'"
+              target="_blank"
+              rel="noopener"
+              class="px-3 py-1 rounded-full bg-amber-500/15 text-amber-600 font-semibold hover:underline"
+            >
+              Drive (Posts + Imágenes): {{ batchResult.summary?.driveUploadedCount ?? 0 }} archivos ↗
+            </a>
           </div>
         </div>
 
