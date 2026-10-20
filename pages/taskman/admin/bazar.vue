@@ -242,6 +242,7 @@
                 <div class="flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground pt-1">
                   <span class="px-1.5 py-0.5 rounded bg-secondary">{{ prod.licenseType }}</span>
                   <span>{{ prod.variantsCount }} variantes</span>
+                  <a :href="`/bazar?p=${prod.externalId}`" target="_blank" rel="noopener" class="text-primary font-semibold hover:underline">Ver en Bazar ↗</a>
                   <a v-if="prod.sourceUrl" :href="prod.sourceUrl" target="_blank" rel="noopener" class="text-primary hover:underline">MakerWorld ↗</a>
                   <template v-if="getMeliStatusForProduct(prod.externalId)">
                     <a

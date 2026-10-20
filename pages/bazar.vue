@@ -639,6 +639,7 @@ interface Product {
   tags?: string[] | null;
   trendScore?: number | null;
   isCustom?: boolean | null;
+  externalId?: string | null;
 }
 
 import { API_URL as apiBase } from '~/utils/apiUrl';
@@ -1306,13 +1307,16 @@ onMounted(async () => {
     selectedTag.value = route.query.tag;
   }
   if (route.query.p) {
-    const id = Number(route.query.p);
-    const found = products.value.find(p => p.id === id);
+    const rawP = String(route.query.p).trim();
+    const numId = Number(rawP);
+    const found = products.value.find(
+      p => (Number.isFinite(numId) && p.id === numId) || (p.externalId && String(p.externalId) === rawP)
+    );
     if (found) {
       selected.value = found;
-    } else {
+    } else if (rawP) {
       try {
-        const res = await fetch(`${apiBase}/products/${id}`);
+        const res = await fetch(`${apiBase}/products/${encodeURIComponent(rawP)}`);
         if (res.ok) {
           const prodData = await res.json();
           if (prodData) {

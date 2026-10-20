@@ -20,7 +20,7 @@
         200,
         300
       ],
-      "notes": "Lunes, Mi\u00e9rcoles, Viernes y S\u00e1bado a las 12:00 PM"
+      "notes": "Lunes, Miércoles, Viernes y Sábado a las 12:00 PM"
     },
     {
       "parameters": {
@@ -44,7 +44,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Seleccionamos un producto al azar para publicar hoy\nconst products = $input.all().map(item => item.json);\nif (!products || products.length === 0) {\n  throw new Error(\"No hay productos en el Bazar\");\n}\n\n// Filtramos productos que tengan precio v\u00e1lido e imagen\nconst valid = products.filter(p => p.price > 0 && p.imageUrl);\nif (valid.length === 0) {\n  throw new Error(\"No hay productos v\u00e1lidos con precio/imagen\");\n}\n\n// Escoger uno al azar\nconst randomIndex = Math.floor(Math.random() * valid.length);\nconst selected = valid[randomIndex];\n\nreturn [{ json: selected }];"
+        "jsCode": "// Seleccionamos un producto al azar para publicar hoy\nconst products = $input.all().map(item => item.json);\nif (!products || products.length === 0) {\n  throw new Error(\"No hay productos en el Bazar\");\n}\n\n// Filtramos productos que tengan precio válido e imagen\nconst valid = products.filter(p => p.price > 0 && p.imageUrl);\nif (valid.length === 0) {\n  throw new Error(\"No hay productos válidos con precio/imagen\");\n}\n\n// Escoger uno al azar\nconst randomIndex = Math.floor(Math.random() * valid.length);\nconst selected = valid[randomIndex];\n\nreturn [{ json: selected }];"
       },
       "id": "pick-product",
       "name": "Pick Random Product",
@@ -70,7 +70,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"contents\": [\n    {\n      \"parts\": [\n        {\n          \"text\": \"Act\u00faa como el community manager experto en ventas de 'El Rinc\u00f3n de Brandy', nuestra tienda de impresi\u00f3n 3D y tecnolog\u00eda. Escribe un post para Facebook promocionando este producto:\\n\\nT\u00edtulo: {{ $json.title }}\\nDescripci\u00f3n: {{ $json.description }}\\nCategor\u00eda: {{ $json.category }}\\nPrecio: ${{ $json.price }} MXN\\n\\nReglas:\\n- Usa un tono amigable, entusiasta y persuasivo.\\n- Menciona que pueden comprarlo o ver m\u00e1s detalles en nuestra tienda en l\u00ednea: shongyi.com/bazar\\n- Incluye emojis relevantes.\\n- Redacta m\u00e1ximo 3 p\u00e1rrafos cortos.\\n- Agrega 3-4 hashtags relevantes al final.\\n- Devuelve \u00daNICAMENTE el texto final del post, sin explicaciones extras.\"\n        }\n      ]\n    }\n  ]\n}",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"parts\": [\n        {\n          \"text\": \"Actúa como el community manager experto en ventas de 'El Rincón de Brandy', nuestra tienda online de productos físicos y accesorios. Escribe un post altamente atractivo y persuasivo para Facebook/Instagram promocionando este producto:\\n\\nTítulo: {{ $json.title }}\\nDescripción: {{ $json.description }}\\nCategoría: {{ $json.category }}\\nPrecio: ${{ $json.price }} MXN\\nEnlace directo: https://shongyi.com/bazar?p={{ $json.externalId || $json.id }}\\n\\nEstructura obligatoria:\\n1. GANCHO (Hook): Primera línea magnética y con emojis que atrape la atención.\\n2. BENEFICIOS: Explica por qué es genial e incluye bullets:\\n   - ✨ Pieza física lista para usar con acabados de alta calidad\\n   - 🎨 Personalizable en tu color favorito sin costo extra\\n   - 💰 Desde solo ${{ $json.price }} MXN con envíos a todo México 🚚\\n3. LLAMADO A LA ACCIÓN (CTA) + LINK DIRECTO:\\n   🔥 ¡Pídelo directo en nuestra tienda y elige tu color favorito! 👇\\n   👉 https://shongyi.com/bazar?p={{ $json.externalId || $json.id }}\\n4. HASHTAGS: 3-4 hashtags incluyendo #ElRinconDeBrandy.\\n\\nDevuelve ÚNICAMENTE el texto final del post, sin explicaciones extras.\"\n        }\n      ]\n    }\n  ]\n}",
         "options": {}
       },
       "id": "gemini-post",
@@ -85,7 +85,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const product = $('Pick Random Product').first().json;\nconst geminiRes = $input.all()[0].json;\n\nconst postText = geminiRes.candidates?.[0]?.content?.parts?.[0]?.text || \"Descubre nuestro nuevo producto en shongyi.com/bazar\";\n\nreturn [{\n  json: {\n    message: postText,\n    link: product.sourceUrl || \"https://shongyi.com/bazar\",\n    imageUrl: product.imageUrl\n  }\n}];"
+        "jsCode": "const product = $('Pick Random Product').first().json;\nconst geminiRes = $input.all()[0].json;\nconst directUrl = \"https://shongyi.com/bazar?p=\" + (product.externalId || product.id);\n\nlet postText = geminiRes.candidates?.[0]?.content?.parts?.[0]?.text || \"\";\nif (!postText) {\n  postText = `✨ ¡Descubre \"${product.title}\" en El Rincón de Brandy! ✨\\n\\n${product.description || ''}\\n\\n✅ Pieza física lista para usar\\n🎨 Personalizable en tu color favorito\\n💰 Desde solo $${product.price} MXN\\n\\n👉 Pídelo directo aquí: ${directUrl}\\n\\n#ElRinconDeBrandy #Bazar #Gadgets`;\n} else {\n  // Asegurar que el post contenga el link directo limpio\n  postText = postText.replace(/https?:\\/\\/(?:www\\.)?shongyi\\.com\\/bazar(?:\\?p=[a-zA-Z0-9_-]+)?[!.?,;:)\"]*/gi, directUrl);\n  if (!postText.includes(directUrl)) {\n    postText += `\\n\\n👉 ¡Pídelo directo aquí!: ${directUrl}`;\n  }\n}\n\nreturn [{\n  json: {\n    message: postText,\n    link: directUrl,\n    imageUrl: product.imageUrl\n  }\n}];"
       },
       "id": "format-post",
       "name": "Format Post Data",
@@ -119,7 +119,7 @@
         1300,
         300
       ],
-      "notes": "Conecta tu cuenta y selecciona tu p\u00e1gina"
+      "notes": "Conecta tu cuenta y selecciona tu página"
     }
   ],
   "connections": {

@@ -16,7 +16,10 @@
       "name": "Schedule (4 times/week)",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.1,
-      "position": [ 200, 300 ]
+      "position": [
+        200,
+        300
+      ]
     },
     {
       "parameters": {
@@ -33,7 +36,10 @@
       "name": "Fetch Bazar Products",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [ 420, 300 ]
+      "position": [
+        420,
+        300
+      ]
     },
     {
       "parameters": {
@@ -43,7 +49,10 @@
       "name": "Pick Random Product",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [ 640, 300 ]
+      "position": [
+        640,
+        300
+      ]
     },
     {
       "parameters": {
@@ -51,43 +60,61 @@
         "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={{ $env.GEMINI_API_KEY }}",
         "sendHeaders": true,
         "headerParameters": {
-          "parameters": [ { "name": "Content-Type", "value": "application/json" } ]
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"contents\": [\n    {\n      \"parts\": [\n        {\n          \"text\": \"Actúa como el community manager experto en ventas de 'El Rincón de Brandy', nuestra tienda de impresión 3D y tecnología. Escribe un post para Facebook promocionando este producto:\\n\\nTítulo: {{ $json.title }}\\nDescripción: {{ $json.description }}\\nCategoría: {{ $json.category }}\\nPrecio: ${{ $json.price }} MXN\\n\\nReglas:\\n- Usa un tono amigable, entusiasta y persuasivo.\\n- Menciona que pueden comprarlo o ver más detalles en nuestra tienda en línea: shongyi.com/bazar?p={{ $json.id }}\\n- Incluye emojis relevantes.\\n- Redacta máximo 3 párrafos cortos.\\n- Agrega 3-4 hashtags relevantes al final.\\n- Devuelve ÚNICAMENTE el texto final del post, sin explicaciones extras.\"\n        }\n      ]\n    }\n  ]\n}",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"parts\": [\n        {\n          \"text\": \"Actúa como el community manager experto en ventas de 'El Rincón de Brandy', nuestra tienda online de productos físicos y accesorios. Escribe un post altamente atractivo y persuasivo para Facebook/Instagram promocionando este producto:\\n\\nTítulo: {{ $json.title }}\\nDescripción: {{ $json.description }}\\nCategoría: {{ $json.category }}\\nPrecio: ${{ $json.price }} MXN\\nEnlace directo: https://shongyi.com/bazar?p={{ $json.externalId || $json.id }}\\n\\nEstructura obligatoria:\\n1. GANCHO (Hook): Primera línea magnética y con emojis que atrape la atención.\\n2. BENEFICIOS: Explica por qué es genial e incluye bullets:\\n   - ✨ Pieza física lista para usar con acabados de alta calidad\\n   - 🎨 Personalizable en tu color favorito sin costo extra\\n   - 💰 Desde solo ${{ $json.price }} MXN con envíos a todo México 🚚\\n3. LLAMADO A LA ACCIÓN (CTA) + LINK DIRECTO:\\n   🔥 ¡Pídelo directo en nuestra tienda y elige tu color favorito! 👇\\n   👉 https://shongyi.com/bazar?p={{ $json.externalId || $json.id }}\\n4. HASHTAGS: 3-4 hashtags incluyendo #ElRinconDeBrandy.\\n\\nDevuelve ÚNICAMENTE el texto final del post, sin explicaciones extras.\"\n        }\n      ]\n    }\n  ]\n}",
         "options": {}
       },
       "id": "gemini-post",
       "name": "Gemini: Generate Post Text",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [ 860, 300 ]
+      "position": [
+        860,
+        300
+      ]
     },
     {
       "parameters": {
-        "jsCode": "const product = $('Pick Random Product').first().json;\nconst geminiRes = $input.all()[0].json;\nconst postText = geminiRes.candidates?.[0]?.content?.parts?.[0]?.text || \"Descubre nuestro nuevo producto en shongyi.com/bazar?p=\" + product.id;\nreturn [{\n  json: {\n    message: postText,\n    link: \"https://shongyi.com/bazar?p=\" + product.id,\n    imageUrl: product.imageUrl\n  }\n}];"
+        "jsCode": "const product = $('Pick Random Product').first().json;\nconst geminiRes = $input.all()[0].json;\nconst directUrl = \"https://shongyi.com/bazar?p=\" + (product.externalId || product.id);\n\nlet postText = geminiRes.candidates?.[0]?.content?.parts?.[0]?.text || \"\";\nif (!postText) {\n  postText = `✨ ¡Descubre \"${product.title}\" en El Rincón de Brandy! ✨\\n\\n${product.description || ''}\\n\\n✅ Pieza física lista para usar\\n🎨 Personalizable en tu color favorito\\n💰 Desde solo $${product.price} MXN\\n\\n👉 Pídelo directo aquí: ${directUrl}\\n\\n#ElRinconDeBrandy #Bazar #Gadgets`;\n} else {\n  // Asegurar que el post contenga el link directo limpio\n  postText = postText.replace(/https?:\\/\\/(?:www\\.)?shongyi\\.com\\/bazar(?:\\?p=[a-zA-Z0-9_-]+)?[!.?,;:)\"]*/gi, directUrl);\n  if (!postText.includes(directUrl)) {\n    postText += `\\n\\n👉 ¡Pídelo directo aquí!: ${directUrl}`;\n  }\n}\n\nreturn [{\n  json: {\n    message: postText,\n    link: directUrl,\n    imageUrl: product.imageUrl\n  }\n}];"
       },
       "id": "format-post",
       "name": "Format Post Data",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [ 1080, 300 ]
+      "position": [
+        1080,
+        300
+      ]
     },
     {
       "parameters": {
-        "jsCode": "const item = $input.all()[0];\nconst textContent = `IMAGEN:\\n${item.json.imageUrl}\\n\\nTEXTO DEL POST:\\n${item.json.message}`;\n\nitem.binary = {\n  data: {\n    data: Buffer.from(textContent).toString('base64'),\n    mimeType: 'text/plain',\n    fileName: 'post_para_facebook.txt'\n  }\n};\nreturn [item];"
+        "jsCode": "const item = $input.all()[0];\nconst product = $('Pick Random Product').first().json;\nconst directUrl = \"https://shongyi.com/bazar?p=\" + (product.externalId || product.id);\n\nconst textContent = [\n  `PRODUCTO: ${product.title}`,\n  `CATEGORÍA: ${product.category || ''}`,\n  `PRECIO DESDE: $${product.price} MXN`,\n  `LINK DIRECTO BAZAR: ${directUrl}`,\n  `IMAGEN: ${item.json.imageUrl || ''}`,\n  ``,\n  `--- TEXTO DEL POST PARA FACEBOOK / INSTAGRAM ---`,\n  item.json.message\n].join('\\n');\n\nitem.binary = {\n  data: {\n    data: Buffer.from(textContent).toString('base64'),\n    mimeType: 'text/plain',\n    fileName: `${product.externalId || product.id}_POST.txt`\n  }\n};\nreturn [item];"
       },
       "id": "create-txt",
       "name": "Convertir a archivo TXT",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [ 1300, 200 ]
+      "position": [
+        1300,
+        200
+      ]
     },
     {
       "parameters": {
         "operation": "update",
-        "fileId": { "__rl": true, "value": "", "mode": "id" },
+        "fileId": {
+          "__rl": true,
+          "value": "",
+          "mode": "id"
+        },
         "changeFileContent": true,
         "inputDataFieldName": "data"
       },
@@ -95,7 +122,10 @@
       "name": "Google Drive (Sobrescribir TXT)",
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
-      "position": [ 1520, 200 ]
+      "position": [
+        1520,
+        200
+      ]
     },
     {
       "parameters": {
@@ -112,12 +142,19 @@
       "name": "Descargar Imagen",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [ 1300, 400 ]
+      "position": [
+        1300,
+        400
+      ]
     },
     {
       "parameters": {
         "operation": "update",
-        "fileId": { "__rl": true, "value": "", "mode": "id" },
+        "fileId": {
+          "__rl": true,
+          "value": "",
+          "mode": "id"
+        },
         "changeFileContent": true,
         "inputDataFieldName": "data"
       },
@@ -125,7 +162,10 @@
       "name": "Google Drive (Sobrescribir Imagen)",
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
-      "position": [ 1520, 400 ]
+      "position": [
+        1520,
+        400
+      ]
     },
     {
       "parameters": {
@@ -138,41 +178,110 @@
       "name": "Manual Post Trigger",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [ -16, 520 ],
+      "position": [
+        -16,
+        520
+      ],
       "webhookId": "manual-post-trigger-wh"
     }
   ],
   "connections": {
     "Manual Post Trigger": {
-      "main": [ [ { "node": "Fetch Bazar Products", "type": "main", "index": 0 } ] ]
+      "main": [
+        [
+          {
+            "node": "Fetch Bazar Products",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Schedule (4 times/week)": {
-      "main": [ [ { "node": "Fetch Bazar Products", "type": "main", "index": 0 } ] ]
+      "main": [
+        [
+          {
+            "node": "Fetch Bazar Products",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Fetch Bazar Products": {
-      "main": [ [ { "node": "Pick Random Product", "type": "main", "index": 0 } ] ]
+      "main": [
+        [
+          {
+            "node": "Pick Random Product",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Pick Random Product": {
-      "main": [ [ { "node": "Gemini: Generate Post Text", "type": "main", "index": 0 } ] ]
+      "main": [
+        [
+          {
+            "node": "Gemini: Generate Post Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Gemini: Generate Post Text": {
-      "main": [ [ { "node": "Format Post Data", "type": "main", "index": 0 } ] ]
+      "main": [
+        [
+          {
+            "node": "Format Post Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Format Post Data": {
-      "main": [ 
-        [ 
-          { "node": "Convertir a archivo TXT", "type": "main", "index": 0 },
-          { "node": "Descargar Imagen", "type": "main", "index": 0 }
-        ] 
+      "main": [
+        [
+          {
+            "node": "Convertir a archivo TXT",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Descargar Imagen",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Convertir a archivo TXT": {
-      "main": [ [ { "node": "Google Drive (Sobrescribir TXT)", "type": "main", "index": 0 } ] ]
+      "main": [
+        [
+          {
+            "node": "Google Drive (Sobrescribir TXT)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Descargar Imagen": {
-      "main": [ [ { "node": "Google Drive (Sobrescribir Imagen)", "type": "main", "index": 0 } ] ]
+      "main": [
+        [
+          {
+            "node": "Google Drive (Sobrescribir Imagen)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "settings": { "executionOrder": "v1" },
+  "settings": {
+    "executionOrder": "v1"
+  },
   "active": false
 }
