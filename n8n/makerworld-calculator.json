@@ -16,7 +16,7 @@
         200,
         300
       ],
-      "notes": "URL de producci\u00f3n: https://n8n.shongyi.com/webhook/makerworld-calc"
+      "notes": "URL de producción: https://n8n.shongyi.com/webhook/makerworld-calc"
     },
     {
       "parameters": {
@@ -30,11 +30,11 @@
         340,
         300
       ],
-      "notes": "$env.SYNC_SECRET aqu\u00ed es aceptable \u2014 validaci\u00f3n runtime del container, no se serializa al JSON exportado."
+      "notes": "$env.SYNC_SECRET aquí es aceptable — validación runtime del container, no se serializa al JSON exportado."
     },
     {
       "parameters": {
-        "jsCode": "const urlOrId = String($input.item.json.url || '').trim();\nlet id = '';\nif (/^\\d+$/.test(urlOrId)) {\n  id = urlOrId;\n} else {\n  const match = urlOrId.match(/models\\/(\\d+)/);\n  if (!match) throw new Error('Entrada no v\u01edlida. Pon ID o URL.');\n  id = match[1];\n}\nreturn { json: { externalId: id } };"
+        "jsCode": "const urlOrId = String($input.item.json.url || '').trim();\nlet id = '';\nconst numMatch = urlOrId.match(/^#?(\\d+)$/);\nif (numMatch) {\n  id = numMatch[1];\n} else {\n  const match = urlOrId.match(/models\\/(\\d+)/i) || urlOrId.match(/(\\d+)/);\n  if (!match) throw new Error('Entrada no válida. Pon ID o URL.');\n  id = match[1];\n}\nreturn { json: { externalId: id } };"
       },
       "id": "extract-id",
       "name": "Extract ID",
@@ -72,7 +72,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const htmlStr = $input.item.json?.solution?.response || \"\";\nconst match = htmlStr.match(/<body[^>]*>(.*?)<\\/body>/is);\nlet rawJson = match ? match[1] : htmlStr;\ntry {\n    rawJson = rawJson.replace(/^<pre[^>]*>/i, '').replace(/<\\/pre>$/i, '').trim();\n    const data = JSON.parse(rawJson);\n    const instances = data.instances || [];\n    if (!instances.length) throw new Error('No instances found.');\n    const profiles = instances.map(ins => {\n      const plates = ((ins.extention || {}).modelInfo || {}).plates || [];\n      const platesGrams = plates.reduce((s, p) => s + (Number(p.weight) || 0), 0);\n      const platesSeconds = plates.reduce((s, p) => s + (Number(p.prediction) || 0), 0);\n      const grams = Number(ins.weight) || platesGrams;\n      const seconds = Number(ins.prediction) || platesSeconds;\n      return {\n        id: String(ins.id || ins.profileId || ''),\n        title: ins.title || ins.titleTranslated || 'Perfil sin nombre',\n        name: ins.name || '',\n        grams: Number.isFinite(grams) ? Number(grams.toFixed(2)) : 0,\n        hours: Number.isFinite(seconds) ? Number((seconds / 3600).toFixed(3)) : 0,\n        plateCount: plates.length || 1,\n        isDefault: !!ins.isDefault,\n        needAms: !!ins.needAms,\n        colorCount: Number(ins.materialColorCnt) || Number(ins.materialCnt) || 1,\n        cover: ins.cover || null,\n      };\n    }).filter(p => p.grams > 0 || p.hours > 0);\n    if (!profiles.length) throw new Error('No stats.');\n    return { json: { profiles } };\n} catch (e) {\n    throw new Error(\"Parse error: \" + e.message);\n}"
+        "jsCode": "const htmlStr = $input.item.json?.solution?.response || \"\";\nconst preMatch = htmlStr.match(/<pre[^>]*>([\\s\\S]*?)<\\/pre>/i);\nlet rawJson = preMatch ? preMatch[1] : (htmlStr.match(/<body[^>]*>(.*?)<\\/body>/is)?.[1] || htmlStr);\nrawJson = rawJson.replace(/<[^>]*>?/gm, '').trim();\ntry {\n    const data = JSON.parse(rawJson);\n    const instances = data.instances || [];\n    if (!instances.length) throw new Error('No instances found.');\n    const profiles = instances.map(ins => {\n      const plates = ((ins.extention || {}).modelInfo || {}).plates || [];\n      const platesGrams = plates.reduce((s, p) => s + (Number(p.weight) || 0), 0);\n      const platesSeconds = plates.reduce((s, p) => s + (Number(p.prediction) || 0), 0);\n      const grams = Number(ins.weight) || platesGrams;\n      const seconds = Number(ins.prediction) || platesSeconds;\n      return {\n        id: String(ins.id || ins.profileId || ''),\n        title: ins.title || ins.titleTranslated || 'Perfil sin nombre',\n        name: ins.name || '',\n        grams: Number.isFinite(grams) ? Number(grams.toFixed(2)) : 0,\n        hours: Number.isFinite(seconds) ? Number((seconds / 3600).toFixed(3)) : 0,\n        plateCount: plates.length || 1,\n        isDefault: !!ins.isDefault,\n        needAms: !!ins.needAms,\n        colorCount: Number(ins.materialColorCnt) || Number(ins.materialCnt) || 1,\n        cover: ins.cover || null,\n      };\n    }).filter(p => p.grams > 0 || p.hours > 0);\n    if (!profiles.length) throw new Error('No stats.');\n    return { json: { profiles } };\n} catch (e) {\n    throw new Error(\"Parse error: \" + e.message);\n}"
       },
       "id": "extract-stats",
       "name": "Extract Stats",

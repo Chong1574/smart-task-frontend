@@ -52,7 +52,7 @@
         <div class="border border-border/60 rounded-xl p-4 bg-secondary/10 space-y-3">
           <label class="text-sm font-medium mb-1.5 block">Importar de MakerWorld (vía n8n)</label>
           <div class="flex flex-col sm:flex-row gap-2">
-            <input v-model="n8nLink" type="url" placeholder="https://makerworld.com/..." class="flex-1 h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+            <input v-model="n8nLink" type="text" placeholder="ID (ej. 95181) o URL de MakerWorld" class="flex-1 h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
             <button type="button" @click="fetchFromN8n" :disabled="isFetching" class="h-10 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity">
               {{ isFetching ? 'Cargando...' : 'Obtener' }}
             </button>
@@ -210,7 +210,14 @@ interface MakerworldProfile {
 }
 
 const STORAGE_KEY = 'printcost3d:v1'
-const MAKERWORLD_URL_RE = /^https?:\/\/[^\s]*makerworld\.com\/[^\s]*\/models\/\d+/i
+function extractMakerworldId(input: string): string | null {
+  const clean = input.trim()
+  const idMatch = clean.match(/^#?(\d+)$/)
+  if (idMatch) return idMatch[1]
+  const urlMatch = clean.match(/(?:makerworld\.com\/[^\s]*\/models\/|models\/)(\d+)/i)
+  if (urlMatch) return urlMatch[1]
+  return null
+}
 
 const printers = ref<Printer[]>([...defaultPrinters])
 const printerSearch = ref('')
@@ -275,8 +282,9 @@ const result = computed(() => {
 async function fetchFromN8n() {
   const link = n8nLink.value.trim()
   if (!link) return
-  if (!MAKERWORLD_URL_RE.test(link)) {
-    n8nError.value = 'URL inválida. Debe ser https://makerworld.com/…/models/<id>'
+  const modelId = extractMakerworldId(link)
+  if (!modelId) {
+    n8nError.value = 'Entrada inválida. Debe ser un ID (ej. 95181) o enlace de MakerWorld (https://makerworld.com/…/models/<id>)'
     return
   }
   if (successTimer) { clearTimeout(successTimer); successTimer = null }
@@ -301,7 +309,7 @@ async function fetchFromN8n() {
         item_list_id: 'makerworld_calculator',
         item_list_name: 'MakerWorld Calculator',
         items: [{
-          item_id: link,
+          item_id: modelId,
           item_name: `Makerworld Model - ${pick.id}`,
         }]
       },
