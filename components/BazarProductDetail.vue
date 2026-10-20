@@ -80,7 +80,7 @@
                 v-for="(img, i) in images"
                 :key="i"
                 type="button"
-                @click="imgIdx = i"
+                @click="selectImage(i)"
                 class="aspect-square rounded-xl overflow-hidden border-2 transition-all cursor-pointer"
                 :class="imgIdx === i ? 'border-primary ring-2 ring-primary/20 scale-[1.02]' : 'border-border/40 opacity-70 hover:opacity-100'"
               >
@@ -221,6 +221,7 @@
                 >
                   <div class="flex items-center gap-2.5 min-w-0 pr-2">
                     <input type="radio" :value="i" v-model="variantIdx" class="accent-primary shrink-0" />
+                    <img v-if="v.imageUrl" :src="imgProxy(v.imageUrl, { width: 64 })" loading="lazy" class="w-7 h-7 rounded-lg object-cover shrink-0 border border-border/60" />
                     <div class="min-w-0">
                       <p class="text-xs font-semibold text-foreground truncate">{{ v.name }}</p>
                       <p v-if="v.grams" class="text-[11px] text-muted-foreground">
@@ -524,10 +525,41 @@ function syncVariantImage(idx: number) {
   if (!v) return;
   if (v.imageIndex !== undefined && v.imageIndex >= 0 && v.imageIndex < images.value.length) {
     imgIdx.value = v.imageIndex;
-  } else if (v.imageUrl) {
-    const existingIdx = images.value.findIndex(img => img === v.imageUrl);
+    return;
+  }
+  if (v.imageUrl) {
+    const cleanTarget = v.imageUrl.split('?')[0].toLowerCase();
+    // 1. Direct match or clean URL match
+    let existingIdx = images.value.findIndex(img => img === v.imageUrl || (img && img.split('?')[0].toLowerCase() === cleanTarget));
+    
+    // 2. Match by basename/filename if exists
+    if (existingIdx === -1) {
+      const targetName = cleanTarget.split('/').pop();
+      if (targetName && targetName.length > 5) {
+        existingIdx = images.value.findIndex(img => img && img.toLowerCase().includes(targetName));
+      }
+    }
     if (existingIdx !== -1) {
       imgIdx.value = existingIdx;
+      return;
+    }
+  }
+}
+
+function selectImage(i: number) {
+  imgIdx.value = i;
+  const currentImg = images.value[i];
+  if (currentImg && variants.value.length > 1) {
+    const cleanCurrent = currentImg.split('?')[0].toLowerCase();
+    const matchingVarIdx = variants.value.findIndex(v => {
+      if (!v?.imageUrl) return false;
+      const cleanV = v.imageUrl.split('?')[0].toLowerCase();
+      if (cleanV === cleanCurrent) return true;
+      const targetName = cleanV.split('/').pop();
+      return Boolean(targetName && targetName.length > 5 && cleanCurrent.includes(targetName));
+    });
+    if (matchingVarIdx !== -1 && matchingVarIdx !== variantIdx.value) {
+      variantIdx.value = matchingVarIdx;
     }
   }
 }
