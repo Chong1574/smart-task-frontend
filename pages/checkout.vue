@@ -143,6 +143,12 @@
               <span class="font-bold text-primary">{{ formatPrice(option.price) }}</span>
             </label>
 
+            <!-- Leyenda especial para Punto de Encuentro -->
+            <div v-if="selectedShipping?.id === 'punto_medio'" class="p-3 bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-200 rounded-xl text-xs flex items-center gap-2.5">
+              <span class="text-base">📍</span>
+              <p>Nosotros nos pondremos en contacto contigo para acordar zona de entrega.</p>
+            </div>
+
             <button v-if="step === 2 && selectedShipping" @click="proceedToPayment" class="mt-6 bg-primary text-primary-foreground px-6 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors">
               Continuar a Pago
             </button>
@@ -208,6 +214,9 @@
               <span class="text-muted-foreground">Envío ({{ selectedShipping.name }})</span>
               <span class="font-medium">{{ formatPrice(selectedShipping.price) }}</span>
             </div>
+            <p v-if="selectedShipping?.id === 'punto_medio'" class="text-[11px] text-amber-600 dark:text-amber-400 italic">
+              * Nosotros nos pondremos en contacto contigo para acordar zona de entrega
+            </p>
             <div class="border-t border-border pt-2 flex justify-between font-bold text-lg mt-2">
               <span>Total</span>
               <span class="text-primary">{{ formatPrice(cart.totalPrice + (selectedShipping?.price || 0)) }}</span>
@@ -244,6 +253,14 @@
           <span class="font-bold text-lg text-green-600 dark:text-green-400">
             {{ formatPrice(finalTotal) }}
           </span>
+        </div>
+      </div>
+
+      <div v-if="selectedShipping?.id === 'punto_medio'" class="bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-200 p-4 rounded-2xl text-xs max-w-md mx-auto text-left flex items-start gap-2.5 mt-4">
+        <span class="text-base shrink-0">📍</span>
+        <div>
+          <p class="font-semibold text-sm">Punto de Encuentro</p>
+          <p class="mt-0.5">Nosotros nos pondremos en contacto contigo para acordar zona de entrega.</p>
         </div>
       </div>
 
@@ -463,22 +480,115 @@ const form = useLocalStorage('checkout-form', {
 const neighborhoodOptions = ref<string[]>([]);
 
 const stateMap: Record<string, string> = {
-  "Queretaro De Arteaga": "Querétaro",
-  "Queretaro": "Querétaro",
-  "Qro.": "Querétaro",
-  "Qro": "Querétaro",
-  "qro.": "Querétaro",
+  // Querétaro
+  "queretaro de arteaga": "Querétaro",
+  "queretaro": "Querétaro",
+  "querétaro": "Querétaro",
   "qro": "Querétaro",
-  "Michoacan De Ocampo": "Michoacán",
-  "Veracruz-Llave": "Veracruz",
-  "Coahuila De Zaragoza": "Coahuila",
-  "Estado De Mexico": "Estado de México",
-  "Distrito Federal": "Ciudad de México",
-  "Ciudad De Mexico": "Ciudad de México",
-  "Nuevo Leon": "Nuevo León",
-  "San Luis Potosi": "San Luis Potosí",
-  "Yucatan": "Yucatán"
+  "que": "Querétaro",
+  // CDMX
+  "cdmx": "Ciudad de México",
+  "df": "Ciudad de México",
+  "distrito federal": "Ciudad de México",
+  "ciudad de mexico": "Ciudad de México",
+  "ciudad de méxico": "Ciudad de México",
+  // Estado de México
+  "edomex": "Estado de México",
+  "edo mex": "Estado de México",
+  "edo. mex": "Estado de México",
+  "estado de mexico": "Estado de México",
+  "estado de méxico": "Estado de México",
+  "mex": "Estado de México",
+  // Jalisco
+  "jal": "Jalisco",
+  "jalisco": "Jalisco",
+  // Nuevo León
+  "nl": "Nuevo León",
+  "nuevo leon": "Nuevo León",
+  "nuevo león": "Nuevo León",
+  // Puebla
+  "pue": "Puebla",
+  "puebla": "Puebla",
+  // Guanajuato
+  "gto": "Guanajuato",
+  "guanajuato": "Guanajuato",
+  // Michoacán
+  "mich": "Michoacán",
+  "michoacan": "Michoacán",
+  "michoacan de ocampo": "Michoacán",
+  // Veracruz
+  "ver": "Veracruz",
+  "veracruz": "Veracruz",
+  "veracruz-llave": "Veracruz",
+  // Coahuila
+  "coah": "Coahuila",
+  "coahuila": "Coahuila",
+  "coahuila de zaragoza": "Coahuila",
+  // San Luis Potosí
+  "slp": "San Luis Potosí",
+  "san luis potosi": "San Luis Potosí",
+  "san luis potosí": "San Luis Potosí",
+  // Yucatán
+  "yuc": "Yucatán",
+  "yucatan": "Yucatán",
+  "yucatán": "Yucatán",
+  // Chihuahua
+  "chih": "Chihuahua",
+  "chihuahua": "Chihuahua",
+  // Sonora
+  "son": "Sonora",
+  "sonora": "Sonora",
+  // Sinaloa
+  "sin": "Sinaloa",
+  "sinaloa": "Sinaloa",
+  // Tamaulipas
+  "tamps": "Tamaulipas",
+  "tamaulipas": "Tamaulipas",
+  // Quintana Roo
+  "qr": "Quintana Roo",
+  "q.roo": "Quintana Roo",
+  "q roo": "Quintana Roo",
+  "quintana roo": "Quintana Roo",
+  // Baja California
+  "bc": "Baja California",
+  "baja california": "Baja California",
+  "bcs": "Baja California Sur",
+  "baja california sur": "Baja California Sur",
+  // Aguascalientes
+  "ags": "Aguascalientes",
+  "aguascalientes": "Aguascalientes",
+  "camp": "Campeche",
+  "campeche": "Campeche",
+  "chis": "Chiapas",
+  "chiapas": "Chiapas",
+  "col": "Colima",
+  "colima": "Colima",
+  "dgo": "Durango",
+  "durango": "Durango",
+  "gro": "Guerrero",
+  "guerrero": "Guerrero",
+  "hgo": "Hidalgo",
+  "hidalgo": "Hidalgo",
+  "mor": "Morelos",
+  "morelos": "Morelos",
+  "nay": "Nayarit",
+  "nayarit": "Nayarit",
+  "oax": "Oaxaca",
+  "oaxaca": "Oaxaca",
+  "tab": "Tabasco",
+  "tabasco": "Tabasco",
+  "tlax": "Tlaxcala",
+  "tlaxcala": "Tlaxcala",
+  "zac": "Zacatecas",
+  "zacatecas": "Zacatecas"
 };
+
+function normalizeState(val: string): string {
+  if (!val) return '';
+  const clean = val.trim();
+  const lower = clean.toLowerCase().replace(/\.$/, '');
+  return stateMap[lower] || stateMap[clean] || clean;
+}
 
 watch(() => form.value.zip, async (newZip) => {
   if (newZip.length === 5) {
@@ -495,7 +605,7 @@ watch(() => form.value.zip, async (newZip) => {
       if (backendRes.status === 'fulfilled' && backendRes.value.ok) {
         const addrData = await backendRes.value.json();
         if (addrData.city) form.value.city = addrData.city;
-        if (addrData.state) form.value.state = stateMap[addrData.state] || addrData.state;
+        if (addrData.state) form.value.state = normalizeState(addrData.state);
       }
 
       // 2. Obtener lista de Colonias desde Zippopotamus
@@ -509,7 +619,7 @@ watch(() => form.value.zip, async (newZip) => {
           // Fallback por si nuestro backend falló, usamos el estado de Zippopotam
           if (!form.value.state) {
             const rawState = data.places[0].state;
-            form.value.state = stateMap[rawState] || rawState;
+            form.value.state = normalizeState(rawState);
             if (form.value.state === 'Ciudad de México' && !form.value.city) {
               form.value.city = 'Ciudad de México';
             }
@@ -579,13 +689,12 @@ async function calculateShipping() {
     return;
   }
 
-  // Normalizar estado Querétaro o abreviaturas comunes
+  // Normalizar estado Querétaro o abreviaturas comunes de cualquier estado de México
   const trimmedZip = (form.value.zip || '').trim();
-  const trimmedState = (form.value.state || '').trim();
-  if (/^76\d{3}$/.test(trimmedZip) || /^qro\.?$|^que\.?$/i.test(trimmedState)) {
+  if (/^76\d{3}$/.test(trimmedZip)) {
     form.value.state = 'Querétaro';
-  } else if (stateMap[trimmedState]) {
-    form.value.state = stateMap[trimmedState];
+  } else {
+    form.value.state = normalizeState(form.value.state);
   }
 
   isCalculating.value = true;
