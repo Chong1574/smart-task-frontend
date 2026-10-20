@@ -146,7 +146,7 @@
             <!-- Leyenda especial para Punto de Encuentro -->
             <div v-if="selectedShipping?.id === 'punto_medio'" class="p-3 bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-200 rounded-xl text-xs flex items-center gap-2.5">
               <span class="text-base">📍</span>
-              <p>Nosotros nos pondremos en contacto contigo para acordar zona de entrega.</p>
+              <p>Punto medio dentro de Querétaro: nosotros nos pondremos en contacto contigo para acordar la zona de entrega.</p>
             </div>
 
             <button v-if="step === 2 && selectedShipping" @click="proceedToPayment" class="mt-6 bg-primary text-primary-foreground px-6 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors">
@@ -215,7 +215,7 @@
               <span class="font-medium">{{ formatPrice(selectedShipping.price) }}</span>
             </div>
             <p v-if="selectedShipping?.id === 'punto_medio'" class="text-[11px] text-amber-600 dark:text-amber-400 italic">
-              * Nosotros nos pondremos en contacto contigo para acordar zona de entrega
+              * Punto medio dentro de Querétaro: nos pondremos en contacto contigo para acordar zona de entrega
             </p>
             <div class="border-t border-border pt-2 flex justify-between font-bold text-lg mt-2">
               <span>Total</span>
@@ -259,8 +259,8 @@
       <div v-if="selectedShipping?.id === 'punto_medio'" class="bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-200 p-4 rounded-2xl text-xs max-w-md mx-auto text-left flex items-start gap-2.5 mt-4">
         <span class="text-base shrink-0">📍</span>
         <div>
-          <p class="font-semibold text-sm">Punto de Encuentro</p>
-          <p class="mt-0.5">Nosotros nos pondremos en contacto contigo para acordar zona de entrega.</p>
+          <p class="font-semibold text-sm">Punto de Encuentro (Querétaro)</p>
+          <p class="mt-0.5">Punto medio dentro de Querétaro: nosotros nos pondremos en contacto contigo para acordar la zona de entrega.</p>
         </div>
       </div>
 
