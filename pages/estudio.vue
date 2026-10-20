@@ -292,7 +292,14 @@ useSeoMeta({
   ogDescription: 'Conoce nuestras áreas de ingeniería: desarrollo de SaaS, domótica e IoT, y diseño paramétrico 3D.',
   ogType: 'website',
   ogUrl: 'https://shongyi.com/estudio',
-  twitterCard: 'summary_large_image'
+  ogImage: 'https://shongyi.com/og-cover.jpg',
+  ogImageType: 'image/jpeg',
+  ogImageWidth: 2528,
+  ogImageHeight: 1696,
+  twitterCard: 'summary_large_image',
+  twitterTitle: 'El Estudio — Taller de Innovación Tecnológica',
+  twitterDescription: 'Conoce nuestras áreas de ingeniería: desarrollo de SaaS, domótica e IoT, y diseño paramétrico 3D.',
+  twitterImage: 'https://shongyi.com/og-cover.jpg'
 })
 
 useHead({

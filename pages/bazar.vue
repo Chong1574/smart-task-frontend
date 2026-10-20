@@ -1286,6 +1286,21 @@ useHead({
 const route = useRoute();
 const router = useRouter();
 
+// Precargar producto en SSR para que los rastreadores (WhatsApp, Facebook, Twitter) vean la foto y título del producto
+if (route.query.p) {
+  const rawP = String(route.query.p).trim();
+  const { data: ssrProduct } = await useAsyncData('ssr-prod-' + rawP, async () => {
+    try {
+      return await <Product>(apiBase + '/products/' + encodeURIComponent(rawP));
+    } catch {
+      return null;
+    }
+  });
+  if (ssrProduct.value) {
+    selected.value = ssrProduct.value;
+  }
+}
+
 watch(selected, (newVal) => {
   if (newVal) {
     router.replace({ query: { ...route.query, p: newVal.id } });

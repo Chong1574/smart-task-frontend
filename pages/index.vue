@@ -350,7 +350,14 @@ useSeoMeta({
   ogDescription: 'Transformamos ideas abstractas en realidades tangibles. Desarrollo Full-Stack, Control, IoT y prototipado 3D.',
   ogType: 'website',
   ogUrl: 'https://shongyi.com/',
-  twitterCard: 'summary_large_image'
+  ogImage: 'https://shongyi.com/og-cover.jpg',
+  ogImageType: 'image/jpeg',
+  ogImageWidth: 2528,
+  ogImageHeight: 1696,
+  twitterCard: 'summary_large_image',
+  twitterTitle: 'Ingeniería, Automatización y Manufactura 3D | El Rincón de Brandy',
+  twitterDescription: 'Transformamos ideas abstractas en realidades tangibles. Desarrollo Full-Stack, Control, IoT y prototipado 3D.',
+  twitterImage: 'https://shongyi.com/og-cover.jpg'
 })
 
 useHead({
