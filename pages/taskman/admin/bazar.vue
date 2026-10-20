@@ -256,6 +256,13 @@
                     <span v-else class="text-amber-600 font-medium" :title="getMeliStatusForProduct(prod.externalId)?.error">
                       MELI: {{ getMeliStatusForProduct(prod.externalId)?.status }}
                     </span>
+                    <span
+                      v-if="getMeliStatusForProduct(prod.externalId)?.categoryName"
+                      class="text-[9px] px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20"
+                      :title="`Categoría MELI: ${getMeliStatusForProduct(prod.externalId)?.categoryId}`"
+                    >
+                      📁 {{ getMeliStatusForProduct(prod.externalId)?.categoryName }}
+                    </span>
                   </template>
                 </div>
                 <p
