@@ -74,7 +74,7 @@
         "method": "POST",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ \"cmd\": \"request.get\", \"url\": \"https://makerworld.com/api/v1/search-service/select/design2?orderBy=score&designType=0&isFromSearchList=false&limit=40&offset=\" + $json.offset, \"maxTimeout\": 60000 }) }}"
+        "jsonBody": "={{ JSON.stringify({ \"cmd\": \"request.get\", \"url\": \"https://makerworld.com/api/v1/search-service/select/design2?orderBy=score&designType=0&isFromSearchList=false&limit=40&offset=\" + $json.offset + \"&licenses=BY,BY-SA,BY-ND,CC0\", \"maxTimeout\": 60000 }) }}"
       },
       "id": "http-search",
       "name": "MakerWorld: search",
