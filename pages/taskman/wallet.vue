@@ -22,12 +22,56 @@
       <FinanceNavigation />
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- Tarjeta Balance -->
-        <div :class="['p-6 rounded-3xl text-white shadow-xl relative overflow-hidden md:col-span-1 transition-all', financeStore.totalBalance < 0 ? 'bg-gradient-to-br from-red-500 to-rose-700 shadow-red-500/20' : 'bg-gradient-to-br from-green-500 to-emerald-700 shadow-green-500/20']">
+        <!-- Tarjeta Balance + Presupuesto Diario Seguro (Safe-to-Spend) -->
+        <div :class="['p-6 rounded-3xl text-white shadow-xl relative overflow-hidden md:col-span-1 transition-all flex flex-col justify-between', financeStore.totalBalance < 0 ? 'bg-gradient-to-br from-red-500 to-rose-700 shadow-red-500/20' : 'bg-gradient-to-br from-green-500 to-emerald-700 shadow-green-500/20']">
           <div class="relative z-10">
-            <h3 class="font-medium opacity-90 mb-1">Balance Total</h3>
-            <p class="text-4xl font-bold font-mono">{{ formatCurrency(financeStore.totalBalance) }}</p>
+            <div class="flex items-center justify-between mb-1">
+              <h3 class="font-medium opacity-90 text-sm">Balance Total Neto</h3>
+              <span class="text-[10px] bg-white/15 backdrop-blur-md px-2 py-0.5 rounded-full font-mono">
+                Líquido: {{ formatCurrency(liquidCashBalance) }}
+              </span>
+            </div>
+            <p class="text-3xl sm:text-4xl font-bold font-mono tracking-tight">{{ formatCurrency(financeStore.totalBalance) }}</p>
           </div>
+
+          <!-- Widget Algoritmo 1: Safe-to-Spend (Presupuesto Diario Seguro) -->
+          <div class="relative z-10 mt-5 pt-4 border-t border-white/20 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold uppercase tracking-wider opacity-90 flex items-center gap-1.5">
+                <Sparkles class="w-3.5 h-3.5" />
+                Gasto Diario Seguro
+              </span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full font-bold" :class="safeToSpendMetrics.badgeClass">
+                {{ safeToSpendMetrics.statusLabel }}
+              </span>
+            </div>
+
+            <div class="flex items-baseline justify-between">
+              <div>
+                <span class="text-2xl font-bold font-mono">{{ formatCurrency(safeToSpendMetrics.dailyAllowance) }}</span>
+                <span class="text-xs opacity-80"> / día</span>
+              </div>
+              <div class="text-right text-[11px] opacity-90 font-mono">
+                Hoy: {{ formatCurrency(safeToSpendMetrics.spentToday) }}
+              </div>
+            </div>
+
+            <!-- Velocímetro / Pacing Bar de cuota de hoy -->
+            <div class="space-y-1">
+              <div class="h-2 w-full bg-black/25 rounded-full overflow-hidden p-0.5">
+                <div 
+                  class="h-full rounded-full transition-all duration-500"
+                  :class="safeToSpendMetrics.barClass"
+                  :style="{ width: `${safeToSpendMetrics.todayUsedPct}%` }"
+                ></div>
+              </div>
+              <div class="flex justify-between text-[10px] opacity-85">
+                <span>Libre quincena: {{ formatCurrency(safeToSpendMetrics.freePool) }}</span>
+                <span>Próximo ingreso en {{ safeToSpendMetrics.daysToPayday }}d</span>
+              </div>
+            </div>
+          </div>
+
           <div class="absolute -right-4 -top-4 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
         </div>
 
@@ -161,13 +205,76 @@
                 </span>
               </div>
               <div class="flex items-center gap-2">
-                <select v-model="selectedMonth" class="bg-secondary text-xs sm:text-sm border border-border/40 rounded-xl px-3 py-1.5 focus:ring-1 focus:ring-primary/50 cursor-pointer outline-none">
+                <select v-model="selectedMonth" @change="selectedDateFilter = null" class="bg-secondary text-xs sm:text-sm border border-border/40 rounded-xl px-3 py-1.5 focus:ring-1 focus:ring-primary/50 cursor-pointer outline-none">
                   <option value="all">Todo el Historial</option>
                   <option v-for="month in availableMonths" :key="month.value" :value="month.value">
                     {{ month.label.charAt(0).toUpperCase() + month.label.slice(1) }}
                   </option>
                 </select>
               </div>
+            </div>
+
+            <!-- Algoritmo 2: Detector de Gastos Hormiga & Distribución Rápida -->
+            <div v-if="microSpendingInsights.totalExpenses > 0" class="p-3 rounded-2xl bg-secondary/30 border border-border/40 space-y-2.5">
+              <!-- Barra apilada Top Categorías -->
+              <div class="space-y-1.5">
+                <div class="flex items-center justify-between text-[11px]">
+                  <span class="font-semibold text-foreground flex items-center gap-1">
+                    <Tag class="w-3 h-3 text-primary" />
+                    Distribución de Salidas ({{ formatCurrency(microSpendingInsights.totalExpenses) }})
+                  </span>
+                  <span v-if="microSpendingInsights.velocityAlert" class="text-[10px] font-medium px-1.5 py-0.5 rounded" :class="microSpendingInsights.velocityAlert.isHigher ? 'bg-amber-500/15 text-amber-500' : 'bg-emerald-500/15 text-emerald-500'">
+                    {{ microSpendingInsights.velocityAlert.text }}
+                  </span>
+                </div>
+                <div class="h-2 w-full bg-secondary rounded-full overflow-hidden flex gap-0.5">
+                  <div 
+                    v-for="cat in microSpendingInsights.topCategories" 
+                    :key="cat.name"
+                    :class="cat.colorClass"
+                    class="h-full first:rounded-l-full last:rounded-r-full transition-all duration-500"
+                    :style="{ width: `${cat.pct}%` }"
+                    :title="`${cat.name}: ${formatCurrency(cat.amount)} (${cat.pct}%)`"
+                  ></div>
+                </div>
+                <div class="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-muted-foreground">
+                  <button 
+                    v-for="cat in microSpendingInsights.topCategories" 
+                    :key="cat.name"
+                    @click="searchQuery = searchQuery === cat.name ? '' : cat.name"
+                    class="flex items-center gap-1 hover:text-foreground transition-colors"
+                  >
+                    <span class="w-2 h-2 rounded-full" :class="cat.colorClass"></span>
+                    <span class="font-medium text-foreground/90">{{ cat.name }}</span>
+                    <span class="font-mono">{{ cat.pct }}%</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Alerta de Gastos Hormiga -->
+              <div v-if="microSpendingInsights.antCount > 0" class="pt-2 border-t border-border/30 flex items-center justify-between gap-2 text-[11px]">
+                <div class="flex items-center gap-1.5 text-muted-foreground">
+                  <span class="text-sm">🐜</span>
+                  <span>
+                    <strong class="text-foreground">{{ microSpendingInsights.antCount }} gastos hormiga</strong> (&le; $180): 
+                    <strong class="font-mono text-amber-500">{{ formatCurrency(microSpendingInsights.antTotal) }}</strong>
+                    ({{ microSpendingInsights.antPct }}% del gasto)
+                  </span>
+                </div>
+                <button 
+                  @click="filterOnlyAntExpenses = !filterOnlyAntExpenses" 
+                  class="text-[10px] px-2 py-0.5 rounded-lg border transition-colors shrink-0 font-medium"
+                  :class="filterOnlyAntExpenses ? 'bg-amber-500 text-white border-amber-500' : 'bg-background/80 text-muted-foreground hover:text-foreground border-border/50'"
+                >
+                  {{ filterOnlyAntExpenses ? 'Ver todos' : 'Filtrar 🐜' }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Filtro activo por Día del Heatmap -->
+            <div v-if="selectedDateFilter" class="flex items-center justify-between bg-primary/10 border border-primary/20 text-primary px-3 py-1.5 rounded-xl text-xs">
+              <span>📅 Filtrando movimientos del día: <strong class="font-mono">{{ selectedDateFilter }}</strong></span>
+              <button @click="selectedDateFilter = null" class="hover:underline font-semibold">Quitar filtro ✕</button>
             </div>
 
             <!-- Buscador rápido en tiempo real -->
@@ -419,6 +526,130 @@
                 </button>
               </template>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Algoritmo 4 y 6: Mapa de Calor de Gastos (Heatmap) + Optimizador de Jineteo Inteligente de TDC -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- 4. Calendario Heatmap de Gastos Mensual -->
+        <div class="bg-card border border-border/40 p-6 rounded-3xl shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between gap-2 mb-4">
+              <div>
+                <h3 class="font-bold text-lg flex items-center gap-2">
+                  <span>🔥 Mapa de Calor de Gastos</span>
+                </h3>
+                <p class="text-xs text-muted-foreground">Haz clic en cualquier día para filtrar las transacciones de esa fecha.</p>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button @click="changeHeatmapMonth(-1)" class="p-1.5 rounded-lg bg-secondary hover:bg-secondary/80 text-muted-foreground hover:text-foreground transition-colors" title="Mes anterior">
+                  ‹
+                </button>
+                <span class="text-xs font-semibold px-2 capitalize min-w-[110px] text-center">{{ heatmapData.monthLabel }}</span>
+                <button @click="changeHeatmapMonth(1)" class="p-1.5 rounded-lg bg-secondary hover:bg-secondary/80 text-muted-foreground hover:text-foreground transition-colors" title="Mes siguiente">
+                  ›
+                </button>
+              </div>
+            </div>
+
+            <!-- Cabecera días de la semana -->
+            <div class="grid grid-cols-7 gap-1.5 text-center text-[10px] font-semibold text-muted-foreground mb-1.5">
+              <span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span><span>Dom</span>
+            </div>
+
+            <!-- Cuadrícula del mes -->
+            <div class="grid grid-cols-7 gap-1.5">
+              <div v-for="blank in heatmapData.leadingBlanks" :key="`b-${blank}`" class="h-10 rounded-xl bg-transparent"></div>
+              <button
+                v-for="day in heatmapData.days"
+                :key="day.dateStr"
+                @click="toggleDateFilter(day.dateStr)"
+                class="h-10 rounded-xl border flex flex-col items-center justify-center transition-all relative group"
+                :class="[
+                  day.bgClass,
+                  selectedDateFilter === day.dateStr ? 'ring-2 ring-primary scale-105 z-10' : 'hover:scale-105'
+                ]"
+                :title="`${day.dateStr}: ${formatCurrency(day.amount)} (${day.txCount} movs)`"
+              >
+                <span class="text-[11px] font-bold leading-none">{{ day.dayNum }}</span>
+                <span v-if="day.amount > 0" class="text-[9px] font-mono opacity-90 leading-tight mt-0.5 truncate max-w-full px-0.5">
+                  ${{ day.amount >= 1000 ? `${(day.amount / 1000).toFixed(1)}k` : Math.round(day.amount) }}
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Leyenda e Insights de Día Pico -->
+          <div class="mt-4 pt-3 border-t border-border/30 flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
+            <div class="flex items-center gap-1.5">
+              <span>Menos</span>
+              <span class="w-3 h-3 rounded bg-emerald-500/15 border border-emerald-500/30" title="$0 (Día sin gastos)"></span>
+              <span class="w-3 h-3 rounded bg-amber-500/20 border border-amber-500/30" title="Gasto bajo/moderado"></span>
+              <span class="w-3 h-3 rounded bg-orange-500/30 border border-orange-500/40" title="Gasto alto"></span>
+              <span class="w-3 h-3 rounded bg-rose-500/40 border border-rose-500/50" title="Pico de gasto"></span>
+              <span>Más</span>
+            </div>
+            <div>
+              <span class="text-emerald-500 font-semibold">{{ heatmapData.zeroSpendDays }} días $0</span>
+              <span v-if="heatmapData.peakDay" class="ml-2">· Pico: <strong class="text-foreground">{{ heatmapData.peakDay.dayNum }}</strong> ({{ formatCurrency(heatmapData.peakDay.amount) }})</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6. Algoritmo 6 (Extra): Optimizador de Tarjetas & "Jineteo Inteligente" (Float Optimizer) -->
+        <div class="bg-card border border-border/40 p-6 rounded-3xl shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="flex items-start justify-between gap-3 mb-4">
+              <div>
+                <h3 class="font-bold text-lg flex items-center gap-2">
+                  <span>💳 Optimizador de Tarjetas (Float)</span>
+                </h3>
+                <p class="text-xs text-muted-foreground">Algoritmo que calcula qué tarjeta te da más días de financiamiento sin intereses si compras hoy.</p>
+              </div>
+              <span v-if="creditCardOptimizer.length > 0" class="text-[10px] px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-500 border border-emerald-500/30 font-bold shrink-0">
+                Mejor hoy: {{ creditCardOptimizer[0].name }}
+              </span>
+            </div>
+
+            <div v-if="creditCardOptimizer.length === 0" class="text-sm text-muted-foreground text-center py-10">
+              Agrega al menos una tarjeta de crédito con su día de corte y día de pago para activar el recomendador inteligente.
+            </div>
+
+            <div v-else class="space-y-3">
+              <div 
+                v-for="(card, idx) in creditCardOptimizer" 
+                :key="card.id"
+                class="p-3.5 rounded-2xl border transition-all"
+                :class="idx === 0 ? 'bg-emerald-500/10 border-emerald-500/30 shadow-sm' : 'bg-secondary/30 border-border/30'"
+              >
+                <div class="flex items-center justify-between gap-2">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span 
+                      class="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0"
+                      :class="idx === 0 ? 'bg-emerald-500 text-white' : 'bg-secondary text-muted-foreground'"
+                    >
+                      {{ idx === 0 ? '⭐ #1 Usar Hoy' : `#${idx + 1}` }}
+                    </span>
+                    <p class="font-bold text-sm truncate">{{ card.name }}</p>
+                  </div>
+                  <div class="text-right shrink-0">
+                    <span class="font-mono font-bold text-sm" :class="idx === 0 ? 'text-emerald-500' : 'text-foreground'">
+                      {{ card.floatDays }} días libres
+                    </span>
+                  </div>
+                </div>
+
+                <div class="mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
+                  <span>{{ card.explanation }}</span>
+                  <span class="font-mono">Disp: <strong class="text-foreground">{{ formatCurrency(card.availableCredit) }}</strong> ({{ 100 - card.utilizationPct }}% libre)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="creditCardOptimizer.length > 0" class="mt-4 pt-3 border-t border-border/30 text-[11px] text-muted-foreground flex items-center justify-between">
+            <span>💡 Comprar justo el día después del corte te regala hasta ~45-50 días para pagar sin intereses.</span>
           </div>
         </div>
       </div>
@@ -982,6 +1213,9 @@ const calibrateForm = reactive({
 
 const selectedMonth = ref<string>('all')
 const searchQuery = ref<string>('')
+const filterOnlyAntExpenses = ref<boolean>(false)
+const selectedDateFilter = ref<string | null>(null)
+const heatmapMonthOffset = ref<number>(0)
 
 const availableMonths = computed(() => {
   const months = new Set<string>()
@@ -1002,8 +1236,13 @@ const availableMonths = computed(() => {
 
 const filteredTransactions = computed(() => {
   let list = financeStore.transactions
-  if (selectedMonth.value !== 'all') {
+  if (selectedDateFilter.value) {
+    list = list.filter(tx => tx.date && tx.date.startsWith(selectedDateFilter.value!))
+  } else if (selectedMonth.value !== 'all') {
     list = list.filter(tx => tx.date && tx.date.startsWith(selectedMonth.value))
+  }
+  if (filterOnlyAntExpenses.value) {
+    list = list.filter(tx => tx.type === 'expense' && Number(tx.amount) > 0 && Number(tx.amount) <= 180 && !tx.subscriptionId)
   }
   if (searchQuery.value.trim()) {
     const q = searchQuery.value.toLowerCase().trim()
@@ -1015,6 +1254,273 @@ const filteredTransactions = computed(() => {
     })
   }
   return list
+})
+
+// --- Algoritmo 1: Presupuesto Diario Seguro (Safe-to-Spend) ---
+const safeToSpendMetrics = computed(() => {
+  const now = new Date()
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+
+  // Días hasta el próximo ingreso fijo (o fin de quincena: día 15 o fin de mes)
+  const upcomingIncome = financeStore.upcomingPayments.find(p => p.type === 'Ingreso' && p.daysRemaining > 0)
+  let daysToPayday = upcomingIncome ? upcomingIncome.daysRemaining : 0
+  if (daysToPayday <= 0) {
+    const dom = now.getDate()
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
+    daysToPayday = dom < 15 ? (15 - dom) : Math.max(1, daysInMonth - dom + 1)
+  }
+
+  // Compromisos fijos que vencen antes del próximo ingreso
+  const dueBeforePayday = financeStore.upcomingPayments
+    .filter(p => p.type !== 'Ingreso' && p.daysRemaining <= daysToPayday)
+    .reduce((sum, p) => sum + p.amount, 0)
+
+  const freePool = Math.max(0, liquidCashBalance.value - dueBeforePayday)
+  const dailyAllowance = freePool / Math.max(1, daysToPayday)
+
+  // Gasto variable de hoy
+  const spentToday = financeStore.transactions
+    .filter(tx => tx.type === 'expense' && tx.date && tx.date.startsWith(todayStr) && !tx.subscriptionId)
+    .reduce((sum, tx) => sum + Number(tx.amount), 0)
+
+  const todayUsedPct = dailyAllowance > 0 ? Math.min(100, Math.round((spentToday / dailyAllowance) * 100)) : (spentToday > 0 ? 100 : 0)
+
+  let statusLabel = 'Ritmo Óptimo'
+  let badgeClass = 'bg-white/20 text-white'
+  let barClass = 'bg-white'
+
+  if (freePool <= 0) {
+    statusLabel = 'Liquidez Comprometida'
+    badgeClass = 'bg-amber-400/30 text-amber-100 border border-amber-300/40'
+    barClass = 'bg-amber-300'
+  } else if (spentToday > dailyAllowance) {
+    statusLabel = 'Cuota de Hoy Excedida'
+    badgeClass = 'bg-rose-900/40 text-rose-100 border border-rose-300/40'
+    barClass = 'bg-amber-300'
+  } else if (todayUsedPct >= 75) {
+    statusLabel = 'Cerca del Límite'
+    badgeClass = 'bg-amber-500/30 text-amber-100'
+    barClass = 'bg-amber-200'
+  }
+
+  return {
+    freePool,
+    dailyAllowance,
+    spentToday,
+    daysToPayday,
+    todayUsedPct,
+    statusLabel,
+    badgeClass,
+    barClass
+  }
+})
+
+// --- Algoritmo 2: Detector de Gastos Hormiga & Velocidad de Gasto (MoM) ---
+const microSpendingInsights = computed(() => {
+  const now = new Date()
+  const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  const targetPeriod = selectedMonth.value === 'all' ? currentMonthKey : selectedMonth.value
+
+  const periodExpenses = financeStore.transactions.filter(tx => 
+    tx.type === 'expense' && tx.date && tx.date.startsWith(targetPeriod)
+  )
+
+  const totalExpenses = periodExpenses.reduce((sum, tx) => sum + Number(tx.amount), 0)
+
+  // Gastos Hormiga (<= $180 MXN, sin suscripción fija)
+  const antTxs = periodExpenses.filter(tx => Number(tx.amount) > 0 && Number(tx.amount) <= 180 && !tx.subscriptionId)
+  const antTotal = antTxs.reduce((sum, tx) => sum + Number(tx.amount), 0)
+  const antPct = totalExpenses > 0 ? Math.round((antTotal / totalExpenses) * 100) : 0
+
+  // Top categorías
+  const byCat: Record<string, number> = {}
+  periodExpenses.forEach(tx => {
+    const c = tx.category || 'Otros'
+    byCat[c] = (byCat[c] || 0) + Number(tx.amount)
+  })
+
+  const palette = ['bg-primary', 'bg-amber-500', 'bg-emerald-500', 'bg-purple-500', 'bg-cyan-500']
+  const sortedCats = Object.entries(byCat)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 4)
+    .map(([name, amount], i) => ({
+      name,
+      amount,
+      pct: totalExpenses > 0 ? Math.max(4, Math.round((amount / totalExpenses) * 100)) : 0,
+      colorClass: palette[i % palette.length]
+    }))
+
+  // Velocidad MoM (Comparativa con el mes anterior al mismo día del mes)
+  const prevDate = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+  const prevMonthKey = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`
+  const dom = now.getDate()
+
+  const prevMonthSameDayTotal = financeStore.transactions
+    .filter(tx => {
+      if (tx.type !== 'expense' || !tx.date || !tx.date.startsWith(prevMonthKey)) return false
+      const txDay = Number(tx.date.substring(8, 10))
+      return txDay <= dom
+    })
+    .reduce((sum, tx) => sum + Number(tx.amount), 0)
+
+  let velocityAlert: { text: string; isHigher: boolean } | null = null
+  if (targetPeriod === currentMonthKey && prevMonthSameDayTotal > 0) {
+    const diffPct = Math.round(((totalExpenses - prevMonthSameDayTotal) / prevMonthSameDayTotal) * 100)
+    if (Math.abs(diffPct) >= 5) {
+      velocityAlert = {
+        isHigher: diffPct > 0,
+        text: diffPct > 0 ? `▲ +${diffPct}% vs mes pasado` : `▼ ${diffPct}% vs mes pasado`
+      }
+    }
+  }
+
+  return {
+    totalExpenses,
+    antCount: antTxs.length,
+    antTotal,
+    antPct,
+    topCategories: sortedCats,
+    velocityAlert
+  }
+})
+
+// --- Algoritmo 4: Calendario Heatmap de Gastos Mensual ---
+function changeHeatmapMonth(delta: number) {
+  heatmapMonthOffset.value += delta
+}
+
+function toggleDateFilter(dateStr: string) {
+  if (selectedDateFilter.value === dateStr) {
+    selectedDateFilter.value = null
+  } else {
+    selectedDateFilter.value = dateStr
+  }
+}
+
+const heatmapData = computed(() => {
+  const now = new Date()
+  const target = new Date(now.getFullYear(), now.getMonth() + heatmapMonthOffset.value, 1)
+  const year = target.getFullYear()
+  const month = target.getMonth()
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+  const monthLabel = target.toLocaleDateString('es-MX', { month: 'long', year: 'numeric' })
+
+  // Lunes = 0 ... Domingo = 6
+  const firstDow = (target.getDay() + 6) % 7
+
+  const dailyMap: Record<number, { amount: number; count: number }> = {}
+  for (let d = 1; d <= daysInMonth; d++) dailyMap[d] = { amount: 0, count: 0 }
+
+  const prefix = `${year}-${String(month + 1).padStart(2, '0')}`
+  financeStore.transactions.forEach(tx => {
+    if (!tx.date || !tx.date.startsWith(prefix)) return
+    if (tx.type === 'expense') {
+      const dayNum = Number(tx.date.substring(8, 10))
+      if (dailyMap[dayNum]) {
+        dailyMap[dayNum].amount += Number(tx.amount)
+        dailyMap[dayNum].count += 1
+      }
+    }
+  })
+
+  const maxSpend = Math.max(1, ...Object.values(dailyMap).map(v => v.amount))
+  let zeroSpendDays = 0
+  let peakDay: { dayNum: number; amount: number } | null = null
+
+  const days = []
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${prefix}-${String(d).padStart(2, '0')}`
+    const { amount, count } = dailyMap[d]
+    const isFuture = year === now.getFullYear() && month === now.getMonth() && d > now.getDate()
+
+    if (!isFuture && amount === 0) zeroSpendDays++
+    if (amount > 0 && (!peakDay || amount > peakDay.amount)) {
+      peakDay = { dayNum: d, amount }
+    }
+
+    let bgClass = 'bg-secondary/20 border-border/20 text-muted-foreground'
+    if (!isFuture) {
+      if (amount === 0) {
+        bgClass = 'bg-emerald-500/15 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
+      } else {
+        const ratio = amount / maxSpend
+        if (ratio >= 0.75) {
+          bgClass = 'bg-rose-500/35 border-rose-500/50 text-rose-600 dark:text-rose-300'
+        } else if (ratio >= 0.35) {
+          bgClass = 'bg-orange-500/30 border-orange-500/40 text-orange-600 dark:text-orange-300'
+        } else {
+          bgClass = 'bg-amber-500/20 border-amber-500/35 text-amber-600 dark:text-amber-300'
+        }
+      }
+    }
+
+    days.push({
+      dayNum: d,
+      dateStr,
+      amount,
+      txCount: count,
+      bgClass
+    })
+  }
+
+  return {
+    monthLabel,
+    leadingBlanks: firstDow,
+    days,
+    zeroSpendDays,
+    peakDay
+  }
+})
+
+// --- Algoritmo 6: Optimizador de Tarjetas de Crédito (Float / Jineteo Inteligente) ---
+const creditCardOptimizer = computed(() => {
+  const now = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+
+  const creditCards = financeStore.accounts.filter(acc => 
+    acc.type === 'card' && acc.sub_type === 'credit' && acc.cutoff_day > 0 && acc.payment_day > 0
+  )
+
+  return creditCards.map(card => {
+    const cutoffDay = card.cutoff_day
+    const payDay = card.payment_day
+
+    // 1. Próxima fecha de corte si compramos hoy
+    // Si hoy es día de corte o antes, entra en el corte de este mes; si ya pasó el corte hoy, se va al corte del mes siguiente.
+    let nextCutoff = new Date(today.getFullYear(), today.getMonth(), cutoffDay)
+    if (today.getDate() > cutoffDay) {
+      nextCutoff = new Date(today.getFullYear(), today.getMonth() + 1, cutoffDay)
+    }
+
+    // 2. Fecha límite de pago correspondiente a ese corte (aprox 20 días después del corte)
+    let dueForThatCutoff = new Date(nextCutoff.getFullYear(), nextCutoff.getMonth(), payDay)
+    if (dueForThatCutoff <= nextCutoff) {
+      dueForThatCutoff = new Date(nextCutoff.getFullYear(), nextCutoff.getMonth() + 1, payDay)
+    }
+
+    const floatDays = Math.max(1, Math.ceil((dueForThatCutoff.getTime() - today.getTime()) / (1000 * 3600 * 24)))
+    const daysToCutoff = Math.ceil((nextCutoff.getTime() - today.getTime()) / (1000 * 3600 * 24))
+
+    const limit = Number(card.credit_limit) || 0
+    const used = Math.abs(Math.min(0, Number(card.balance)))
+    const availableCredit = Math.max(0, limit - used)
+    const utilizationPct = limit > 0 ? Math.min(100, Math.round((used / limit) * 100)) : 0
+
+    const dueFormatted = dueForThatCutoff.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })
+    const explanation = daysToCutoff <= 3 
+      ? `⚠️ Corta en ${daysToCutoff}d · Pagarías el ${dueFormatted}` 
+      : `Corta en ${daysToCutoff}d · Pagarías hasta el ${dueFormatted}`
+
+    return {
+      id: card.id,
+      name: card.name,
+      floatDays,
+      daysToCutoff,
+      availableCredit,
+      utilizationPct,
+      explanation
+    }
+  }).sort((a, b) => b.floatDays - a.floatDays)
 })
 
 // Historial por cuenta — pide al backend todos los mov de esa cuenta (no solo los 50

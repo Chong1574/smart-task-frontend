@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import api from '../utils/api';
+import { computeUpcomingPaymentDate } from '../utils/date';
 
 // --- Tipos alineados con tu Lógica de Negocio ---
 export type AccountType = 'card' | 'loan' | 'investment' | 'cash' | 'savings';
@@ -26,6 +27,7 @@ export interface Account {
         periodEndDate: string;
         paymentDueDate: string | null;
         noInterestPayment: number;
+        rawNoInterestPayment?: number;
         minimumPayment: number;
     };
 }
@@ -328,7 +330,7 @@ export const useFinanceStore = defineStore('finance', {
         },
 
         upcomingPayments: (state) => {
-            const payments: Array<{name: string, amount: number, date: Date, type: string, daysRemaining: number, sourceType: 'subscription' | 'account', sourceId: number, accountId?: number | null, category?: string}> = [];
+            const payments: Array<{name: string, amount: number, date: Date, type: string, daysRemaining: number, sourceType: 'subscription' | 'account', sourceId: number, accountId?: number | null, category?: string, isProvisionTransfer?: boolean, statementMinimum?: number, statementNoInterest?: number}> = [];
             const now = new Date();
             const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
@@ -531,6 +533,215 @@ export const useFinanceStore = defineStore('finance', {
 
             // Ordenar por días restantes y retornar solo próximos 15 días
             return payments.filter(p => p.daysRemaining <= 15).sort((a, b) => a.daysRemaining - b.daysRemaining);
+        },
+
+        // Simulación de Flujo de Caja por Eventos Exactos (Día a Día por 30 días)
+        exact30DayCashFlow(state): {
+            days: Array<{
+                dayIndex: number;
+                dateStr: string;
+                label: string;
+                balance: number;
+                inflows: number;
+                outflows: number;
+                events: Array<{ name: string; amount: number; isIncome: boolean }>;
+            }>;
+            d7: number;
+            d15: number;
+            d30: number;
+            lowestBalance: number;
+            lowestDayLabel: string;
+            hasLiquidityValley: boolean;
+        } {
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+            // Liquidez inicial real (efectivo, débito, nómina, ahorro)
+            let runningLiquid = state.accounts
+                .filter(acc => acc.type === 'cash' || (acc.type === 'card' && acc.sub_type !== 'credit') || acc.type === 'savings')
+                .reduce((sum, acc) => sum + Math.max(0, Number(acc.balance)), 0);
+
+            // Si no hay cuentas líquidas registradas aún, caer al totalBalance
+            if (runningLiquid === 0 && state.accounts.length > 0) {
+                runningLiquid = state.accounts.reduce((sum, acc) => {
+                    const isDebt = acc.type === 'loan' || (acc.type === 'card' && acc.sub_type === 'credit');
+                    const balanceVal = Number(acc.balance);
+                    return sum + (isDebt ? -Math.abs(balanceVal) : balanceVal);
+                }, 0);
+            }
+
+            const daysMap: Map<string, { inflows: number; outflows: number; events: Array<{ name: string; amount: number; isIncome: boolean }> }> = new Map();
+
+            for (let i = 0; i <= 30; i++) {
+                const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() + i);
+                const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                daysMap.set(key, { inflows: 0, outflows: 0, events: [] });
+            }
+
+            const addEvent = (date: Date, name: string, amount: number, isIncome: boolean) => {
+                const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+                const bucket = daysMap.get(key);
+                if (bucket && amount > 0) {
+                    if (isIncome) bucket.inflows += amount;
+                    else bucket.outflows += amount;
+                    bucket.events.push({ name, amount, isIncome });
+                }
+            };
+
+            const endWindow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 30);
+
+            // 1. Proyectar suscripciones e ingresos recurrentes en los próximos 30 días
+            state.subscriptions.forEach(sub => {
+                if (!sub.paymentDay && !sub.nextPaymentDate) return;
+                const isIncome = sub.type === 'INCOME';
+                const amount = Number(sub.amount);
+                if (amount <= 0) return;
+
+                if (sub.frequency === 'SEMIMONTHLY' && !sub.nextPaymentDate) {
+                    const rawDay = sub.paymentDay || 1;
+                    const day1 = rawDay > 100 ? Math.floor(rawDay / 100) : rawDay;
+                    const day2 = rawDay > 100 ? rawDay % 100 : Math.min(31, day1 + 15);
+                    for (let mOffset = 0; mOffset <= 1; mOffset++) {
+                        const d1 = new Date(today.getFullYear(), today.getMonth() + mOffset, day1);
+                        const d2 = new Date(today.getFullYear(), today.getMonth() + mOffset, day2);
+                        if (d1 >= today && d1 <= endWindow) addEvent(d1, sub.name, amount, isIncome);
+                        if (d2 >= today && d2 <= endWindow) addEvent(d2, sub.name, amount, isIncome);
+                    }
+                    return;
+                }
+
+                let cursor: Date;
+                if (sub.nextPaymentDate) {
+                    cursor = computeUpcomingPaymentDate(sub.nextPaymentDate, sub.frequency, today);
+                } else if (sub.frequency === 'WEEKLY') {
+                    const targetDow = sub.paymentDay === 7 ? 0 : (sub.paymentDay || 1);
+                    const delta = (targetDow - today.getDay() + 7) % 7;
+                    cursor = new Date(today.getFullYear(), today.getMonth(), today.getDate() + delta);
+                } else {
+                    const maxD = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+                    cursor = new Date(today.getFullYear(), today.getMonth(), Math.min(sub.paymentDay || 1, maxD));
+                    if (cursor < today) {
+                        const nextMaxD = new Date(today.getFullYear(), today.getMonth() + 2, 0).getDate();
+                        cursor = new Date(today.getFullYear(), today.getMonth() + 1, Math.min(sub.paymentDay || 1, nextMaxD));
+                    }
+                }
+
+                let safety = 0;
+                while (cursor <= endWindow && safety < 10) {
+                    safety++;
+                    if (cursor >= today) {
+                        let eventAmt = amount;
+                        if (sub.isVariable && ['YEARLY', 'SEMIANNUAL', 'QUARTERLY', 'BIMONTHLY'].includes(sub.frequency)) {
+                            if (sub.frequency === 'YEARLY') eventAmt = amount / 12;
+                            else if (sub.frequency === 'SEMIANNUAL') eventAmt = amount / 6;
+                            else if (sub.frequency === 'QUARTERLY') eventAmt = amount / 3;
+                            else if (sub.frequency === 'BIMONTHLY') eventAmt = amount / 2;
+                        }
+                        addEvent(cursor, sub.name, eventAmt, isIncome);
+                    }
+                    const nextRef = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() + 1);
+                    if (sub.frequency === 'WEEKLY') {
+                        cursor = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() + 7);
+                    } else if (sub.frequency === 'BIWEEKLY') {
+                        cursor = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() + 14);
+                    } else {
+                        cursor = computeUpcomingPaymentDate(cursor, sub.frequency, nextRef);
+                    }
+                }
+            });
+
+            // 2. Proyectar pagos de deudas (TDC y Préstamos) en los próximos 30 días
+            state.accounts.forEach(acc => {
+                const isDebt = acc.type === 'loan' || (acc.type === 'card' && acc.sub_type === 'credit');
+                if (!isDebt || Number(acc.balance) >= 0 || !acc.payment_day) return;
+
+                let amountToPay = Number(acc.monthly_payment);
+                if (acc.statement?.noInterestPayment && acc.statement.noInterestPayment > 0) {
+                    amountToPay = acc.statement.noInterestPayment;
+                } else if (acc.payment_frequency === 'ONCE') {
+                    amountToPay = Math.abs(Number(acc.balance));
+                } else if (!amountToPay || amountToPay === 0) {
+                    const balance = Math.abs(Number(acc.balance));
+                    amountToPay = balance < 500 ? balance : balance * (Number(acc.minimum_payment_percentage || 5) / 100);
+                }
+
+                if (amountToPay <= 0) return;
+
+                if (acc.payment_frequency === 'WEEKLY') {
+                    const targetDow = acc.payment_day === 7 ? 0 : acc.payment_day;
+                    const delta = (targetDow - today.getDay() + 7) % 7;
+                    let cursor = new Date(today.getFullYear(), today.getMonth(), today.getDate() + delta);
+                    while (cursor <= endWindow) {
+                        addEvent(cursor, `Pago ${acc.name}`, amountToPay, false);
+                        cursor = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() + 7);
+                    }
+                } else if (acc.payment_frequency === 'BIWEEKLY') {
+                    let cursor = new Date(today.getFullYear(), today.getMonth(), Math.min(acc.payment_day, 28));
+                    while (cursor < today) cursor.setDate(cursor.getDate() + 14);
+                    while (cursor <= endWindow) {
+                        addEvent(cursor, `Pago ${acc.name}`, amountToPay, false);
+                        cursor = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() + 14);
+                    }
+                } else {
+                    const maxD = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+                    let cursor = new Date(today.getFullYear(), today.getMonth(), Math.min(acc.payment_day, maxD));
+                    if (cursor < today) {
+                        const nextMaxD = new Date(today.getFullYear(), today.getMonth() + 2, 0).getDate();
+                        cursor = new Date(today.getFullYear(), today.getMonth() + 1, Math.min(acc.payment_day, nextMaxD));
+                    }
+                    if (cursor >= today && cursor <= endWindow) {
+                        addEvent(cursor, `Pago ${acc.name}`, amountToPay, false);
+                    }
+                }
+            });
+
+            const days: Array<{
+                dayIndex: number;
+                dateStr: string;
+                label: string;
+                balance: number;
+                inflows: number;
+                outflows: number;
+                events: Array<{ name: string; amount: number; isIncome: boolean }>;
+            }> = [];
+
+            let currentBal = runningLiquid;
+            let lowestBalance = runningLiquid;
+            let lowestDayLabel = 'Hoy';
+
+            let idx = 0;
+            for (const [dateStr, info] of daysMap.entries()) {
+                currentBal = currentBal + info.inflows - info.outflows;
+                const parts = dateStr.split('-');
+                const dObj = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+                const label = idx === 0 ? 'Hoy' : dObj.toLocaleDateString('es-MX', { day: '2-digit', month: 'short' });
+
+                if (currentBal < lowestBalance) {
+                    lowestBalance = currentBal;
+                    lowestDayLabel = label;
+                }
+
+                days.push({
+                    dayIndex: idx,
+                    dateStr,
+                    label,
+                    balance: currentBal,
+                    inflows: info.inflows,
+                    outflows: info.outflows,
+                    events: info.events
+                });
+                idx++;
+            }
+
+            return {
+                days,
+                d7: days[7]?.balance ?? currentBal,
+                d15: days[15]?.balance ?? currentBal,
+                d30: days[30]?.balance ?? currentBal,
+                lowestBalance,
+                lowestDayLabel,
+                hasLiquidityValley: lowestBalance < 0
+            };
         }
     },
 
