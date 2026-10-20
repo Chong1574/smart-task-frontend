@@ -1,149 +1,408 @@
 <template>
-  <div class="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-4 md:p-8 relative">
+  <div class="min-h-screen bg-background text-foreground flex flex-col items-center justify-start p-4 md:p-8 relative selection:bg-primary/20">
     
-    <!-- Volver -->
-    <NuxtLink to="/taskman" class="absolute top-8 left-8 text-muted-foreground hover:text-foreground flex items-center gap-2 transition-colors z-10">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-      <span class="font-medium hidden md:inline">Volver a Taskman</span>
+    <!-- Volver a Taskman -->
+    <NuxtLink to="/taskman" class="absolute top-6 left-6 md:top-8 md:left-8 text-muted-foreground hover:text-foreground flex items-center gap-2 transition-colors z-20 text-sm font-medium">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      <span>Volver a Taskman</span>
     </NuxtLink>
 
     <ClientOnly>
-      <div class="w-full flex flex-col items-center justify-center animate-in fade-in duration-500">
-        <!-- Header / Reloj y Saludo -->
-        <div class="text-center mb-12 mt-8 md:mt-0">
-          <h1 class="text-7xl md:text-[10rem] leading-none font-serif font-bold bg-clip-text text-transparent bg-gradient-to-br from-primary to-orange-400 tracking-tighter mb-6">
+      <div class="w-full max-w-7xl flex flex-col items-center justify-center animate-in fade-in duration-500 mt-10 md:mt-2">
+        
+        <!-- Header Ejecutivo: Reloj Compacto, Saludo y Pulso del Día -->
+        <header class="text-center mb-8 w-full max-w-3xl">
+          <h1 class="text-6xl md:text-8xl font-serif font-bold bg-clip-text text-transparent bg-gradient-to-br from-primary via-orange-500 to-amber-500 tracking-tight mb-2 leading-none">
             {{ currentTime || '--:--' }}
           </h1>
-          <h2 class="text-3xl md:text-5xl font-medium text-foreground tracking-tight mb-2">
+          <h2 class="text-2xl md:text-3xl font-medium text-foreground tracking-tight">
             {{ greeting }}<span v-if="firstName">, {{ firstName }}</span>
           </h2>
-          <p class="text-xl md:text-2xl text-muted-foreground font-serif">
+          <p class="text-xs md:text-sm text-muted-foreground font-serif capitalize mb-4">
             {{ currentDate }}
           </p>
-        </div>
 
-        <!-- Contenido Principal -->
-        <div class="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12">
+          <!-- Pulso Ejecutivo del Día (KPIs Rápidos) -->
+          <div class="flex flex-wrap items-center justify-center gap-2 text-xs">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-card/60 border border-border/50 text-foreground font-medium shadow-xs backdrop-blur-md">
+              <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+              {{ agendaItems.length }} en agenda ({{ hoursInEvents }}h)
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-card/60 border border-border/50 text-foreground font-medium shadow-xs backdrop-blur-md">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              {{ hoursFreeFocus }}h libres para foco
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-card/60 border border-border/50 text-foreground font-medium shadow-xs backdrop-blur-md">
+              <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+              {{ totalPriorityCount }} {{ totalPriorityCount === 1 ? 'prioridad' : 'prioridades' }}
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-card/60 border border-border/50 text-foreground font-medium shadow-xs backdrop-blur-md">
+              <span class="w-2 h-2 rounded-full" :class="financialRadar.status === 'healthy' ? 'bg-emerald-500' : 'bg-destructive'"></span>
+              ${{ Math.round(financialRadar.totalDue7Days).toLocaleString('es-MX') }} a pagar (7d)
+            </span>
+          </div>
+        </header>
+
+        <!-- Grid Principal (3 Columnas Ejecutivas) -->
+        <main class="w-full grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 items-start">
           
-          <!-- Columna 1: Pendientes de Hoy (Calendario) -->
-          <div class="bg-card/30 backdrop-blur-xl border border-border/40 rounded-3xl p-6 shadow-2xl relative overflow-hidden">
-            <h3 class="text-2xl font-bold mb-6 flex items-center gap-3">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-              Agenda del Día
-            </h3>
-            
-            <div v-if="taskStore.loading || calendarLoading" class="space-y-4">
-               <div v-for="i in 3" :key="i" class="h-14 bg-muted/50 rounded-2xl animate-pulse"></div>
+          <!-- COLUMNA 1: Mi Jornada (Agenda Inteligente & Disponibilidad) -->
+          <section class="bg-card/40 backdrop-blur-xl border border-border/50 rounded-3xl p-5 md:p-6 shadow-xl relative overflow-hidden flex flex-col gap-4">
+            <div class="flex items-center justify-between">
+              <h3 class="text-lg md:text-xl font-bold flex items-center gap-2.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                Agenda del Día
+              </h3>
+              <span class="text-xs text-muted-foreground font-medium">
+                {{ agendaItems.length }} {{ agendaItems.length === 1 ? 'actividad' : 'actividades' }}
+              </span>
             </div>
-            <div v-else-if="agendaItems.length === 0" class="text-center py-8 text-muted-foreground">
-              <p>No tienes tareas ni eventos agendados para hoy.</p>
+
+            <!-- Banner de Disponibilidad & Evento Actual/Siguiente -->
+            <div class="p-3.5 rounded-2xl border text-xs" :class="immediateEventContext.themeClass">
+              <div class="flex items-center gap-2 font-semibold">
+                <span class="relative flex h-2 w-2">
+                  <span v-if="immediateEventContext.isActive" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2 w-2" :class="immediateEventContext.dotClass"></span>
+                </span>
+                <span>{{ immediateEventContext.label }}</span>
+              </div>
+              <p v-if="immediateEventContext.title" class="text-foreground/90 font-medium mt-1 truncate">
+                {{ immediateEventContext.title }}
+                <span v-if="immediateEventContext.time" class="text-muted-foreground font-normal ml-1">({{ immediateEventContext.time }})</span>
+              </p>
+              <p v-else class="text-muted-foreground mt-0.5">
+                {{ immediateEventContext.subtext }}
+              </p>
             </div>
-            <div v-else class="space-y-3">
-              <NuxtLink v-for="item in agendaItems.slice(0, 6)" :key="item.key" :to="item.href" class="block p-4 rounded-2xl bg-background/50 border border-border/50 hover:border-primary/50 transition-colors">
+
+            <!-- Medidor Visual de Disponibilidad -->
+            <div class="bg-background/40 border border-border/40 rounded-2xl p-3 text-xs space-y-1.5">
+              <div class="flex justify-between text-muted-foreground font-medium">
+                <span>Carga del Día</span>
+                <span>{{ hoursInEvents }}h ocupadas / {{ hoursFreeFocus }}h libres</span>
+              </div>
+              <div class="w-full h-2 bg-muted/60 rounded-full overflow-hidden flex">
+                <div 
+                  class="bg-blue-500 transition-all duration-500 rounded-l-full" 
+                  :style="{ width: `${dayLoadPercentage}%` }"
+                  :title="`Eventos: ${hoursInEvents}h`"
+                ></div>
+                <div 
+                  class="bg-emerald-500/80 transition-all duration-500 rounded-r-full" 
+                  :style="{ width: `${100 - dayLoadPercentage}%` }"
+                  :title="`Libre: ${hoursFreeFocus}h`"
+                ></div>
+              </div>
+            </div>
+
+            <!-- Lista de la Agenda / Timeline -->
+            <div v-if="taskStore.loading || calendarLoading" class="space-y-3">
+              <div v-for="i in 3" :key="i" class="h-14 bg-muted/40 rounded-2xl animate-pulse"></div>
+            </div>
+            <div v-else-if="agendaItems.length === 0" class="text-center py-10 text-muted-foreground text-sm">
+              <p>No tienes eventos agendados para hoy.</p>
+              <p class="text-xs text-muted-foreground/70 mt-1">Día completamente libre para foco autónomo.</p>
+            </div>
+            <div v-else class="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
+              <NuxtLink 
+                v-for="item in agendaItems" 
+                :key="item.key" 
+                :to="item.href" 
+                class="block p-3 rounded-2xl bg-background/50 border transition-all hover:border-primary/50 group"
+                :class="item.isCurrent ? 'border-primary ring-1 ring-primary/30 shadow-xs' : item.isPast ? 'border-border/30 opacity-60' : 'border-border/50'"
+              >
                 <div class="flex items-start justify-between gap-2">
-                  <h4 class="font-medium leading-tight" :class="item.kind === 'event' ? 'text-blue-500' : 'text-primary'">
-                    <span v-if="item.kind === 'event'" class="text-[10px] uppercase tracking-wider text-blue-500/70 mr-1">GCal</span>
-                    {{ item.title }}
-                  </h4>
-                  <span v-if="item.time" class="text-xs text-muted-foreground whitespace-nowrap">{{ item.time }}</span>
-                </div>
-                <div v-if="item.kind === 'task'" class="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                  <span v-if="item.durationMin">{{ item.durationMin }} min</span>
-                  <span v-if="item.priority" :class="{'text-destructive': item.priority === 'high', 'text-orange-500': item.priority === 'medium', 'text-green-500': item.priority === 'low'}" class="capitalize">
-                    {{ item.priority }}
+                  <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                      <span v-if="item.kind === 'event'" class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-blue-500/10 text-blue-500 border border-blue-500/20">
+                        GCal
+                      </span>
+                      <span v-else-if="item.kind === 'wishlist'" class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-purple-500/10 text-purple-500 border border-purple-500/20">
+                        Deseo
+                      </span>
+                      <span v-else class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20">
+                        Tarea
+                      </span>
+                      <span v-if="item.isCurrent" class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                        Ahora
+                      </span>
+                      <h4 class="font-medium text-xs md:text-sm leading-tight text-foreground truncate group-hover:text-primary transition-colors">
+                        {{ item.title }}
+                      </h4>
+                    </div>
+                  </div>
+                  <span v-if="item.time" class="text-[11px] text-muted-foreground shrink-0 font-medium whitespace-nowrap">
+                    {{ item.time }}
                   </span>
                 </div>
               </NuxtLink>
-              <NuxtLink v-if="agendaItems.length > 6" to="/taskman/activities" class="block text-center text-muted-foreground pt-2 text-sm font-medium hover:text-primary transition-colors">
-                + {{ agendaItems.length - 6 }} más...
-              </NuxtLink>
             </div>
-          </div>
+          </section>
 
-          <!-- Columna 2: Foco General y Hábitos -->
-          <div class="space-y-8 md:space-y-12">
-            <div class="bg-card/30 backdrop-blur-xl border border-border/40 rounded-3xl p-6 shadow-2xl">
-              <h3 class="text-2xl font-bold mb-6 flex items-center gap-3">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>
-                Foco (Prioridades)
-              </h3>
-              
-              <div v-if="priorityTasks.length > 0" class="space-y-3">
-                <NuxtLink v-for="task in priorityTasks.slice(0, 7)" :key="task.id" to="/taskman/activities" class="block p-3 rounded-xl bg-background/50 border border-border/50 hover:border-primary/50 transition-colors">
-                  <h4 class="font-medium text-sm leading-tight">{{ task.title }}</h4>
-                </NuxtLink>
+          <!-- COLUMNA 2: Foco Ejecutivo (The One Thing & Hábitos Accionables) -->
+          <section class="space-y-6">
+            
+            <!-- The One Thing: Prioridad Crítica del Día -->
+            <div class="bg-gradient-to-br from-card/60 via-card/40 to-primary/5 backdrop-blur-xl border-2 border-primary/30 rounded-3xl p-5 md:p-6 shadow-xl relative overflow-hidden">
+              <div class="flex items-center justify-between mb-3">
+                <span class="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-primary/15 text-primary border border-primary/25">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                  The One Thing
+                </span>
+                <span v-if="theOneThing?.priority" class="text-[10px] font-bold uppercase tracking-wider text-destructive">
+                  Prioridad Alta
+                </span>
               </div>
-              <div v-else class="text-muted-foreground text-sm text-center py-4">Todo limpio.</div>
-            </div>
 
-            <div class="bg-card/30 backdrop-blur-xl border border-border/40 rounded-3xl p-6 shadow-2xl">
-              <h3 class="text-2xl font-bold mb-4 flex items-center gap-3">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                Hábitos
-              </h3>
-              <div v-if="activeHabits.length === 0" class="text-sm text-muted-foreground py-2">
-                 Sin hábitos activos.
-              </div>
-              <div v-else class="flex flex-wrap gap-2">
-                <NuxtLink v-for="habit in activeHabits" :key="habit.id" to="/taskman/habits" class="px-4 py-2 rounded-full border border-border/50 bg-background/50 font-medium text-xs hover:border-primary/50 transition-colors">
-                  {{ habit.name }}
-                </NuxtLink>
-              </div>
-            </div>
-          </div>
-
-          <!-- Columna 3: Pagos Próximos y Motivación -->
-          <div class="space-y-8 md:space-y-12">
-            <div class="bg-card/30 backdrop-blur-xl border border-border/40 rounded-3xl p-6 shadow-2xl">
-              <h3 class="text-2xl font-bold mb-6 flex items-center gap-3">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
-                Próximos Pagos
-              </h3>
-              <div v-if="upcomingPayments.length > 0" class="space-y-3">
-                <NuxtLink v-for="(payment, idx) in upcomingPayments" :key="payment.sourceType + '-' + payment.sourceId + '-' + idx" to="/taskman/wallet" class="flex justify-between items-center p-3 rounded-xl bg-background/50 border border-border/50 hover:border-primary/50 transition-colors">
-                  <div>
-                    <h4 class="font-medium text-sm">{{ payment.name }}</h4>
-                    <p class="text-xs text-muted-foreground">Día {{ new Date(payment.date).getDate() }}</p>
+              <div v-if="theOneThing" class="space-y-3">
+                <div class="flex items-start gap-3">
+                  <button 
+                    type="button" 
+                    @click="handleToggleTask(theOneThing, $event)" 
+                    class="mt-1 w-5 h-5 rounded-md border-2 border-primary/60 hover:bg-primary/20 flex items-center justify-center transition-all cursor-pointer shrink-0"
+                    title="Marcar como completada"
+                  >
+                    <svg v-if="theOneThing.status === 'completed'" class="w-3.5 h-3.5 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  </button>
+                  <div class="min-w-0 flex-1">
+                    <h4 class="text-base md:text-lg font-semibold text-foreground leading-snug">
+                      {{ theOneThing.title }}
+                    </h4>
+                    <p v-if="theOneThing.description" class="text-xs text-muted-foreground mt-1 line-clamp-2">
+                      {{ theOneThing.description }}
+                    </p>
                   </div>
-                  <span class="font-bold text-sm" :class="payment.type === 'Ingreso' ? 'text-green-500' : 'text-destructive'">${{ Number(payment.amount || 0).toFixed(2) }}</span>
-                </NuxtLink>
+                </div>
+
+                <div class="flex items-center justify-between pt-2 border-t border-border/40 text-xs text-muted-foreground">
+                  <span v-if="theOneThing.duration_minutes">⏱️ {{ theOneThing.duration_minutes }} min</span>
+                  <span v-else>🎯 Foco principal</span>
+                  <NuxtLink to="/taskman/activities" class="text-primary hover:underline font-medium">
+                    Ver en Actividades &rarr;
+                  </NuxtLink>
+                </div>
               </div>
-              <div v-else class="text-muted-foreground text-sm text-center py-4">No hay pagos cercanos.</div>
+
+              <div v-else class="text-center py-6 text-muted-foreground">
+                <p class="text-sm font-medium text-foreground/80">✨ ¡Foco despejado!</p>
+                <p class="text-xs mt-1">No hay tareas de alta prioridad pendientes por hoy.</p>
+              </div>
             </div>
 
-            <div class="bg-card/30 backdrop-blur-xl border border-border/40 rounded-3xl p-6 shadow-2xl">
-              <h3 class="text-2xl font-bold mb-4 flex items-center gap-3">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                Proyectos Activos
+            <!-- Otras Prioridades Activas -->
+            <div v-if="secondaryPriorityTasks.length > 0" class="bg-card/40 backdrop-blur-xl border border-border/50 rounded-3xl p-5 shadow-xl">
+              <h3 class="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-3 flex items-center justify-between">
+                <span>Otras Prioridades</span>
+                <span class="text-xs font-normal">({{ secondaryPriorityTasks.length }})</span>
               </h3>
-              <div v-if="activeProjects.length > 0" class="space-y-3">
-                <NuxtLink v-for="project in activeProjects.slice(0, 3)" :key="project.id" to="/taskman/projects" class="block p-3 rounded-xl bg-background/50 border border-border/50 hover:border-primary/50 transition-colors">
-                  <h4 class="font-medium text-sm leading-tight">{{ project.name }}</h4>
-                </NuxtLink>
+              <div class="space-y-2">
+                <div 
+                  v-for="task in secondaryPriorityTasks.slice(0, 4)" 
+                  :key="task.id" 
+                  class="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-background/50 border border-border/40 hover:border-primary/40 transition-colors"
+                >
+                  <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                    <button 
+                      type="button" 
+                      @click="handleToggleTask(task, $event)" 
+                      class="w-4 h-4 rounded border border-border hover:border-primary flex items-center justify-center transition-all cursor-pointer shrink-0"
+                    >
+                      <svg v-if="task.status === 'completed'" class="w-3 h-3 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </button>
+                    <span class="text-xs font-medium text-foreground truncate" :class="{ 'line-through text-muted-foreground': task.status === 'completed' }">
+                      {{ task.title }}
+                    </span>
+                  </div>
+                  <span v-if="task.duration_minutes" class="text-[10px] text-muted-foreground shrink-0 font-medium">
+                    {{ task.duration_minutes }}m
+                  </span>
+                </div>
               </div>
-              <div v-else class="text-muted-foreground text-sm text-center py-4">Sin proyectos activos.</div>
             </div>
 
-            <div class="bg-gradient-to-br from-primary/10 to-orange-500/10 border border-primary/20 rounded-3xl p-6 text-center shadow-lg">
-              <p class="text-lg md:text-xl font-serif font-medium text-foreground italic">
+            <!-- Hábitos del Día (Accionables con 1 Clic + Racha) -->
+            <div class="bg-card/40 backdrop-blur-xl border border-border/50 rounded-3xl p-5 md:p-6 shadow-xl">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="text-base font-bold flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                  Hábitos Diarios
+                </h3>
+                <span class="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
+                  {{ completedHabitsCount }} / {{ activeHabits.length }}
+                </span>
+              </div>
+
+              <!-- Mini barra de progreso de hábitos -->
+              <div class="w-full h-1.5 bg-muted/60 rounded-full overflow-hidden mb-4">
+                <div 
+                  class="bg-primary h-full transition-all duration-300 rounded-full" 
+                  :style="{ width: `${habitsProgressPercentage}%` }"
+                ></div>
+              </div>
+
+              <div v-if="activeHabits.length === 0" class="text-xs text-muted-foreground py-2 text-center">
+                Sin hábitos configurados.
+              </div>
+              <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <button 
+                  v-for="habit in activeHabits" 
+                  :key="habit.id" 
+                  type="button"
+                  @click="handleToggleHabit(habit, $event)"
+                  class="flex items-center justify-between p-2.5 rounded-xl border text-left transition-all cursor-pointer group"
+                  :class="isHabitDoneToday(habit) 
+                    ? 'bg-primary/10 border-primary/30 text-foreground' 
+                    : 'bg-background/50 border-border/40 hover:border-primary/40 text-muted-foreground hover:text-foreground'"
+                >
+                  <div class="flex items-center gap-2 min-w-0 pr-1">
+                    <span 
+                      class="w-4 h-4 rounded-full border flex items-center justify-center transition-all shrink-0"
+                      :class="isHabitDoneToday(habit) ? 'bg-primary border-primary text-primary-foreground' : 'border-border/60 group-hover:border-primary'"
+                    >
+                      <svg v-if="isHabitDoneToday(habit)" class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </span>
+                    <span class="text-xs font-medium truncate" :class="{ 'line-through text-muted-foreground': isHabitDoneToday(habit) }">
+                      {{ habit.name }}
+                    </span>
+                  </div>
+                  <span v-if="getHabitStreak(habit) > 0" class="text-[10px] font-semibold text-amber-500 shrink-0 flex items-center gap-0.5" title="Racha consecutiva">
+                    🔥{{ getHabitStreak(habit) }}
+                  </span>
+                </button>
+              </div>
+            </div>
+
+          </section>
+
+          <!-- COLUMNA 3: Radar Financiero (7 Días) & Proyectos Activos -->
+          <section class="space-y-6">
+            
+            <!-- Radar Financiero: Próximos 7 Días vs Liquidez -->
+            <div class="bg-card/40 backdrop-blur-xl border border-border/50 rounded-3xl p-5 md:p-6 shadow-xl relative overflow-hidden">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-base md:text-lg font-bold flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+                  Radar Financiero (7d)
+                </h3>
+                <span 
+                  class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border"
+                  :class="financialRadar.status === 'healthy' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-destructive/10 text-destructive border-destructive/20'"
+                >
+                  {{ financialRadar.status === 'healthy' ? '🛡️ Cubierto' : '⚠️ Atención' }}
+                </span>
+              </div>
+
+              <!-- Comparativa Visual: Requerido vs Saldo Disponible -->
+              <div class="grid grid-cols-2 gap-3 mb-4">
+                <div class="p-3 rounded-2xl bg-background/50 border border-border/40">
+                  <span class="text-[10px] uppercase font-bold text-muted-foreground tracking-wider block">A Pagar (7d)</span>
+                  <span class="text-base md:text-lg font-bold text-destructive">
+                    ${{ financialRadar.totalDue7Days.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
+                  </span>
+                  <span class="text-[10px] text-muted-foreground block mt-0.5">
+                    {{ financialRadar.items7Days.length }} {{ financialRadar.items7Days.length === 1 ? 'compromiso' : 'compromisos' }}
+                  </span>
+                </div>
+                <div class="p-3 rounded-2xl bg-background/50 border border-border/40">
+                  <span class="text-[10px] uppercase font-bold text-muted-foreground tracking-wider block">Disponible</span>
+                  <span class="text-base md:text-lg font-bold text-foreground">
+                    ${{ financialRadar.availableBalance.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
+                  </span>
+                  <span class="text-[10px] text-muted-foreground block mt-0.5">Cuentas líquidas</span>
+                </div>
+              </div>
+
+              <!-- Diagnóstico de Cobertura -->
+              <div class="text-xs p-2.5 rounded-xl border mb-4 font-medium" :class="financialRadar.status === 'healthy' ? 'bg-emerald-500/5 text-emerald-500/90 border-emerald-500/20' : 'bg-destructive/5 text-destructive border-destructive/20'">
+                <p v-if="financialRadar.status === 'healthy'">
+                  ✓ Cobertura del {{ financialRadar.coveragePct }}%. Margen libre: +${{ Math.round(financialRadar.buffer).toLocaleString('es-MX') }} MXN.
+                </p>
+                <p v-else>
+                  Faltan ${{ Math.round(Math.abs(financialRadar.buffer)).toLocaleString('es-MX') }} MXN para cubrir los compromisos de esta semana.
+                </p>
+              </div>
+
+              <!-- Lista de Vencimientos Inmediatos -->
+              <div class="space-y-2">
+                <NuxtLink 
+                  v-for="(p, idx) in financialRadar.displayItems" 
+                  :key="`${p.name}-${idx}`"
+                  to="/taskman/wallet"
+                  class="flex items-center justify-between p-2.5 rounded-xl bg-background/40 border border-border/40 hover:border-primary/40 transition-colors group"
+                >
+                  <div class="min-w-0 pr-2">
+                    <p class="text-xs font-semibold text-foreground truncate group-hover:text-primary transition-colors">{{ p.name }}</p>
+                    <span 
+                      class="inline-block text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded mt-0.5"
+                      :class="p.daysRemaining === 0 ? 'bg-destructive/15 text-destructive' : p.daysRemaining === 1 ? 'bg-amber-500/15 text-amber-500' : 'text-muted-foreground'"
+                    >
+                      {{ p.urgencyLabel }}
+                    </span>
+                  </div>
+                  <span class="text-xs font-bold shrink-0 text-destructive">
+                    ${{ Number(p.amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
+                  </span>
+                </NuxtLink>
+              </div>
+
+              <div class="mt-3 pt-3 border-t border-border/40 text-right">
+                <NuxtLink to="/taskman/wallet" class="text-xs text-primary hover:underline font-medium">
+                  Ir a Billetera &rarr;
+                </NuxtLink>
+              </div>
+            </div>
+
+            <!-- Proyectos Activos Compactos -->
+            <div class="bg-card/40 backdrop-blur-xl border border-border/50 rounded-3xl p-5 shadow-xl">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-bold flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                  Proyectos Activos
+                </h3>
+                <NuxtLink to="/taskman/projects" class="text-[11px] text-muted-foreground hover:text-primary transition-colors">
+                  Ver todos
+                </NuxtLink>
+              </div>
+              <div v-if="activeProjects.length === 0" class="text-xs text-muted-foreground py-2 text-center">
+                Sin proyectos activos.
+              </div>
+              <div v-else class="space-y-2">
+                <NuxtLink 
+                  v-for="project in activeProjects.slice(0, 3)" 
+                  :key="project.id" 
+                  to="/taskman/projects" 
+                  class="flex items-center justify-between p-2.5 rounded-xl bg-background/50 border border-border/40 hover:border-primary/40 transition-colors"
+                >
+                  <span class="text-xs font-medium text-foreground truncate pr-2">{{ project.name }}</span>
+                  <span class="text-[10px] text-primary font-semibold shrink-0">Activo</span>
+                </NuxtLink>
+              </div>
+            </div>
+
+            <!-- Reflexión / Cita Diaria Minimalista -->
+            <div class="p-4 rounded-2xl bg-gradient-to-br from-primary/5 via-orange-500/5 to-transparent border border-primary/20 text-center">
+              <p class="text-xs md:text-sm font-serif italic text-foreground/80">
                 "{{ dailyQuote }}"
               </p>
             </div>
-          </div>
 
-        </div>
+          </section>
+
+        </main>
       </div>
 
+      <!-- Fallback de Carga Skeleton -->
       <template #fallback>
-        <div class="w-full max-w-7xl flex flex-col items-center justify-center p-8 space-y-12">
-          <div class="space-y-4 flex flex-col items-center">
-            <div class="h-24 md:h-36 w-72 md:w-96 bg-muted/40 rounded-3xl animate-pulse"></div>
-            <div class="h-8 w-48 bg-muted/30 rounded-xl animate-pulse"></div>
+        <div class="w-full max-w-7xl flex flex-col items-center justify-center p-8 space-y-10">
+          <div class="space-y-3 flex flex-col items-center">
+            <div class="h-20 w-64 bg-muted/40 rounded-3xl animate-pulse"></div>
+            <div class="h-6 w-48 bg-muted/30 rounded-xl animate-pulse"></div>
           </div>
           <div class="w-full grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div class="h-80 bg-muted/20 border border-border/30 rounded-3xl animate-pulse"></div>
-            <div class="h-80 bg-muted/20 border border-border/30 rounded-3xl animate-pulse"></div>
-            <div class="h-80 bg-muted/20 border border-border/30 rounded-3xl animate-pulse"></div>
+            <div class="h-96 bg-muted/20 border border-border/30 rounded-3xl animate-pulse"></div>
+            <div class="h-96 bg-muted/20 border border-border/30 rounded-3xl animate-pulse"></div>
+            <div class="h-96 bg-muted/20 border border-border/30 rounded-3xl animate-pulse"></div>
           </div>
         </div>
       </template>
@@ -154,12 +413,12 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useTaskStore } from '~/stores/tasks'
+import { useTaskStore, type Habit, type Task } from '~/stores/tasks'
 import { useAuthStore } from '~/stores/auth'
 import { useFinanceStore } from '~/stores/finance'
 import api from '~/utils/api'
+import confetti from 'canvas-confetti'
 
-// Desactivar el layout por defecto para hacer un verdadero Wallpaper
 definePageMeta({
   layout: false
 })
@@ -242,34 +501,12 @@ const updateTime = () => {
   }
 }
 
-// Solo primer nombre; ya no fallback al prefijo del email.
 const firstName = computed(() => {
   const raw = (authStore.user?.name || '').trim()
   return raw ? raw.split(/\s+/)[0] : ''
 })
 
-// Tareas del día actual
-const todayTasks = computed(() => {
-  const now = new Date();
-  const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-  
-  return taskStore.tasks
-    .filter(t => {
-      if (t.status !== 'pending' && t.status !== 'in_progress') return false;
-      if (!t.deadline) return false;
-      
-      const d = new Date(t.deadline);
-      const localDateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      return localDateStr === todayStr;
-    })
-    .sort((a, b) => {
-      if (a.priority === 'high' && b.priority !== 'high') return -1;
-      if (b.priority === 'high' && a.priority !== 'high') return 1;
-      return 0;
-    })
-})
-
-// Eventos de Google Calendar para hoy — mismo endpoint que /activities.
+// --- Google Calendar & Agenda ---
 const calendarEvents = ref<any[]>([])
 const calendarLoading = ref(false)
 
@@ -280,51 +517,70 @@ async function fetchTodayEvents() {
     const res = await api.get('/oauth/google/events')
     calendarEvents.value = res.data?.data || []
   } catch {
-    // ponytail: calendario opcional; si falla, la agenda solo muestra tareas.
     calendarEvents.value = []
   } finally {
     calendarLoading.value = false
   }
 }
 
-// Agenda unificada: eventos GCal de hoy + tareas con deadline hoy, ordenados por hora.
 interface AgendaItem {
   key: string;
-  kind: 'event' | 'task';
+  kind: 'event' | 'task' | 'wishlist';
   title: string;
   time: string;
   sortTs: number;
+  endTs: number;
   href: string;
-  durationMin?: number;
-  priority?: string;
+  isCurrent?: boolean;
+  isPast?: boolean;
 }
+
+const todayTasks = computed(() => {
+  const now = new Date();
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  
+  return taskStore.tasks.filter(t => {
+    if (t.status !== 'pending' && t.status !== 'in_progress') return false;
+    if (!t.deadline) return false;
+    const d = new Date(t.deadline);
+    const localDateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    return localDateStr === todayStr;
+  })
+})
 
 const agendaItems = computed<AgendaItem[]>(() => {
   const now = new Date();
+  const nowTs = now.getTime();
   const start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
   const end = start + 24 * 3600 * 1000;
   const items: AgendaItem[] = [];
 
   for (const t of todayTasks.value) {
     const ts = t.deadline ? new Date(t.deadline).getTime() : start;
+    const durationMin = t.duration_minutes || 30;
+    const endTs = ts + durationMin * 60000;
     items.push({
       key: `t-${t.id}`,
       kind: 'task',
       title: t.title,
       time: t.deadline ? new Date(t.deadline).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) : '',
       sortTs: ts,
+      endTs,
       href: '/taskman/activities',
-      durationMin: (t as any).duration_minutes,
-      priority: t.priority,
+      isCurrent: nowTs >= ts && nowTs <= endTs,
+      isPast: nowTs > endTs,
     });
   }
 
   for (const ev of calendarEvents.value) {
     const startRaw = ev.start?.dateTime || ev.start?.date;
+    const endRaw = ev.end?.dateTime || ev.end?.date;
     if (!startRaw) continue;
     const startDate = new Date(startRaw);
+    const endDate = endRaw ? new Date(endRaw) : new Date(startDate.getTime() + 3600000);
     const ts = startDate.getTime();
-    if (ts < start || ts >= end) continue; // solo hoy
+    const endTs = endDate.getTime();
+    if (ts < start || ts >= end) continue;
     const isAllDay = !ev.start?.dateTime;
     items.push({
       key: `e-${ev.id}`,
@@ -332,7 +588,10 @@ const agendaItems = computed<AgendaItem[]>(() => {
       title: ev.summary || '(sin título)',
       time: isAllDay ? 'Todo el día' : startDate.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
       sortTs: ts,
+      endTs,
       href: '/taskman/activities',
+      isCurrent: !isAllDay && nowTs >= ts && nowTs <= endTs,
+      isPast: !isAllDay && nowTs > endTs,
     });
   }
 
@@ -344,12 +603,12 @@ const agendaItems = computed<AgendaItem[]>(() => {
     if (wDateStr === todayStr) {
       items.push({
         key: `w-${w.id}`,
-        kind: 'task', // display like a task
+        kind: 'wishlist',
         title: `Comprar: ${w.name}`,
         time: 'Hoy',
-        sortTs: start, // put at the top or bottom of the day
+        sortTs: start,
+        endTs: start + 3600000,
         href: '/taskman/wishlist',
-        priority: w.priority === 'urgent' ? 'high' : w.priority === 'not_important' ? 'low' : 'medium',
       });
     }
   }
@@ -357,28 +616,236 @@ const agendaItems = computed<AgendaItem[]>(() => {
   return items.sort((a, b) => a.sortTs - b.sortTs);
 })
 
-// Tareas prioritarias o atrasadas generales
-const priorityTasks = computed(() => {
+// --- Horas de Disponibilidad y Carga del Día ---
+const totalEventMinutes = computed(() => {
+  let minutes = 0;
+  for (const ev of calendarEvents.value) {
+    if (!ev.start?.dateTime || !ev.end?.dateTime) continue;
+    const s = new Date(ev.start.dateTime).getTime();
+    const e = new Date(ev.end.dateTime).getTime();
+    if (e > s) minutes += Math.round((e - s) / 60000);
+  }
+  for (const t of todayTasks.value) {
+    minutes += (t.duration_minutes || 30);
+  }
+  return minutes;
+})
+
+const hoursInEvents = computed(() => {
+  return (totalEventMinutes.value / 60).toFixed(1);
+})
+
+const hoursFreeFocus = computed(() => {
+  // Jornada base estándar de 8 horas
+  const freeMins = Math.max(0, 480 - totalEventMinutes.value);
+  return (freeMins / 60).toFixed(1);
+})
+
+const dayLoadPercentage = computed(() => {
+  return Math.min(100, Math.round((totalEventMinutes.value / 480) * 100));
+})
+
+// Evento en curso o próximo
+const immediateEventContext = computed(() => {
+  const now = Date.now();
+  const current = agendaItems.value.find(i => i.isCurrent);
+  if (current) {
+    return {
+      isActive: true,
+      label: 'Evento en Curso',
+      title: current.title,
+      time: current.time,
+      themeClass: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500',
+      dotClass: 'bg-emerald-500',
+    };
+  }
+  const next = agendaItems.value.find(i => i.sortTs > now);
+  if (next) {
+    return {
+      isActive: false,
+      label: 'Próxima Actividad',
+      title: next.title,
+      time: next.time,
+      themeClass: 'bg-blue-500/10 border-blue-500/30 text-blue-500',
+      dotClass: 'bg-blue-500',
+    };
+  }
+  return {
+    isActive: false,
+    label: 'Jornada Libre',
+    title: '',
+    subtext: 'No tienes más actividades agendadas para hoy.',
+    themeClass: 'bg-card/60 border-border/40 text-muted-foreground',
+    dotClass: 'bg-muted-foreground',
+  };
+})
+
+// --- The One Thing & Prioridades ---
+const allPriorityTasks = computed(() => {
   return taskStore.tasks
     .filter(t => (t.status === 'pending' || t.status === 'in_progress') && t.priority === 'high')
     .sort((a, b) => {
-      if (a.priority === 'high' && b.priority !== 'high') return -1;
-      if (b.priority === 'high' && a.priority !== 'high') return 1;
-      return 0;
+      // Priorizar las que tienen deadline hoy
+      const now = new Date().toISOString().split('T')[0];
+      const aToday = a.deadline && a.deadline.startsWith(now) ? 1 : 0;
+      const bToday = b.deadline && b.deadline.startsWith(now) ? 1 : 0;
+      return bToday - aToday;
     })
 })
 
+const theOneThing = computed<Task | null>(() => {
+  if (allPriorityTasks.value.length > 0) return allPriorityTasks.value[0];
+  // Fallback a primera tarea de hoy
+  return todayTasks.value[0] || null;
+})
+
+const secondaryPriorityTasks = computed<Task[]>(() => {
+  if (!theOneThing.value) return [];
+  return allPriorityTasks.value.filter(t => t.id !== theOneThing.value?.id);
+})
+
+const totalPriorityCount = computed(() => {
+  return (theOneThing.value ? 1 : 0) + secondaryPriorityTasks.value.length;
+})
+
+async function handleToggleTask(task: Task, event: MouseEvent) {
+  if (!task.id) return;
+  const newStatus = task.status === 'completed' ? 'pending' : 'completed';
+  if (newStatus === 'completed') {
+    triggerConfetti(event);
+  }
+  await taskStore.updateTask(task.id, { status: newStatus });
+}
+
+// --- Hábitos Interactivos ---
 const activeHabits = computed(() => {
-  // Use all habits, filtering out archived ones if they exist, but generally show what the store provides
-  return taskStore.habits.filter(h => h.status !== 'archived')
+  return taskStore.habits.filter(h => h.status !== 'archived');
 })
 
+const getLogDateStr = (log: any) => {
+  if (log.completedAt) return log.completedAt.split('T')[0];
+  if (log.date) return log.date.split('T')[0];
+  return '';
+}
+
+const getLocalTodayStr = () => {
+  const today = new Date();
+  return new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+}
+
+const isHabitDoneToday = (habit: Habit) => {
+  if (!habit.logs || habit.logs.length === 0) return false;
+  const todayStr = getLocalTodayStr();
+  return habit.logs.some(log => getLogDateStr(log) === todayStr);
+}
+
+const completedHabitsCount = computed(() => {
+  return activeHabits.value.filter(isHabitDoneToday).length;
+})
+
+const habitsProgressPercentage = computed(() => {
+  if (activeHabits.value.length === 0) return 0;
+  return Math.round((completedHabitsCount.value / activeHabits.value.length) * 100);
+})
+
+const getHabitStreak = (habit: Habit) => {
+  if (!habit.logs || habit.logs.length === 0) return 0;
+  const dates = habit.logs.map(log => getLogDateStr(log)).filter(Boolean).sort((a, b) => b.localeCompare(a));
+  const uniqueDates = [...new Set(dates)];
+  if (uniqueDates.length === 0) return 0;
+  
+  let streak = 0;
+  const todayStr = getLocalTodayStr();
+  let checkDate = new Date(todayStr + 'T00:00:00');
+  
+  if (uniqueDates[0] === todayStr) {
+    streak++;
+    checkDate.setDate(checkDate.getDate() - 1);
+    uniqueDates.shift();
+  }
+  
+  while (uniqueDates.length > 0) {
+    const prevDateStr = new Date(checkDate.getTime() - checkDate.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+    if (uniqueDates[0] === prevDateStr) {
+      streak++;
+      checkDate.setDate(checkDate.getDate() - 1);
+      uniqueDates.shift();
+    } else {
+      break;
+    }
+  }
+  return streak;
+}
+
+async function handleToggleHabit(habit: Habit, event: MouseEvent) {
+  if (!habit.id) return;
+  if (isHabitDoneToday(habit)) {
+    await taskStore.unlogHabit(habit.id);
+  } else {
+    triggerConfetti(event);
+    await taskStore.logHabit(habit.id);
+  }
+}
+
+function triggerConfetti(event: MouseEvent) {
+  const rect = (event.target as HTMLElement).getBoundingClientRect();
+  const x = (rect.left + rect.width / 2) / window.innerWidth;
+  const y = (rect.top + rect.height / 2) / window.innerHeight;
+  confetti({
+    particleCount: 80,
+    spread: 60,
+    origin: { x, y },
+    colors: ['#f97316', '#10b981', '#3b82f6', '#ec4899', '#eab308'],
+    ticks: 160,
+    gravity: 1.1,
+    scalar: 1.0,
+  });
+}
+
+// --- Radar Financiero (7 Días) ---
+const financialRadar = computed(() => {
+  // 1. Cuentas líquidas (débito, efectivo, nómina, ahorro)
+  const liquidAccounts = financeStore.accounts.filter(acc => 
+    acc.type !== 'loan' && !(acc.type === 'card' && acc.sub_type === 'credit')
+  );
+  const availableBalance = liquidAccounts.reduce((sum, a) => sum + (Number(a.balance) || 0), 0);
+
+  // 2. Pagos de los próximos 7 días
+  const items7Days = financeStore.upcomingPayments.filter(p => {
+    if (p.type === 'Ingreso') return false;
+    return p.daysRemaining >= 0 && p.daysRemaining <= 7;
+  });
+
+  const totalDue7Days = items7Days.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+  const buffer = availableBalance - totalDue7Days;
+  const status = buffer >= 0 ? 'healthy' : 'warning';
+  const coveragePct = totalDue7Days > 0 ? Math.min(999, Math.round((availableBalance / totalDue7Days) * 100)) : 100;
+
+  // Formato para UI (mostrar los 4 pagos más cercanos)
+  const displayItems = (items7Days.length > 0 ? items7Days : financeStore.upcomingPayments.slice(0, 4)).map(p => {
+    let urgencyLabel = `En ${p.daysRemaining} días`;
+    if (p.daysRemaining === 0) urgencyLabel = 'Hoy';
+    else if (p.daysRemaining === 1) urgencyLabel = 'Mañana';
+    return {
+      ...p,
+      urgencyLabel,
+    };
+  });
+
+  return {
+    availableBalance,
+    totalDue7Days,
+    buffer,
+    status,
+    coveragePct,
+    items7Days,
+    displayItems: displayItems.slice(0, 4),
+  };
+})
+
+// --- Proyectos Activos ---
 const activeProjects = computed(() => {
-  return taskStore.projects.filter(p => p.status === 'active')
-})
-
-const upcomingPayments = computed(() => {
-  return financeStore.upcomingPayments.slice(0, 5)
+  return taskStore.projects.filter(p => p.status === 'active');
 })
 
 onMounted(async () => {
@@ -386,10 +853,11 @@ onMounted(async () => {
   updateTime()
   timer = setInterval(updateTime, 1000)
   
-  // Asegurar que toda la información esté cargada
+  // Asegurar la carga de datos completa
   if (taskStore.tasks.length === 0) taskStore.fetchTasks()
   if (taskStore.habits.length === 0) taskStore.fetchHabits()
   if (taskStore.projects.length === 0) taskStore.fetchProjects()
+  if (financeStore.accounts.length === 0) financeStore.fetchAccounts()
   if (financeStore.subscriptions.length === 0) financeStore.fetchSubscriptions()
   if (financeStore.wishlistItems.length === 0) financeStore.fetchWishlistItems()
   await fetchTodayEvents()
