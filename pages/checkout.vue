@@ -464,6 +464,11 @@ const neighborhoodOptions = ref<string[]>([]);
 
 const stateMap: Record<string, string> = {
   "Queretaro De Arteaga": "Querétaro",
+  "Queretaro": "Querétaro",
+  "Qro.": "Querétaro",
+  "Qro": "Querétaro",
+  "qro.": "Querétaro",
+  "qro": "Querétaro",
   "Michoacan De Ocampo": "Michoacán",
   "Veracruz-Llave": "Veracruz",
   "Coahuila De Zaragoza": "Coahuila",
@@ -572,6 +577,15 @@ async function calculateShipping() {
   if (!form.value.name || !form.value.phone || !form.value.email || !form.value.street || !form.value.number || !form.value.neighborhood || !form.value.zip || !form.value.state || !form.value.city) {
     toast.error('Por favor completa todos los Datos de Envío');
     return;
+  }
+
+  // Normalizar estado Querétaro o abreviaturas comunes
+  const trimmedZip = (form.value.zip || '').trim();
+  const trimmedState = (form.value.state || '').trim();
+  if (/^76\d{3}$/.test(trimmedZip) || /^qro\.?$|^que\.?$/i.test(trimmedState)) {
+    form.value.state = 'Querétaro';
+  } else if (stateMap[trimmedState]) {
+    form.value.state = stateMap[trimmedState];
   }
 
   isCalculating.value = true;
