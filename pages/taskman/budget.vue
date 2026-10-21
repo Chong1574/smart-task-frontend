@@ -78,24 +78,52 @@
                 <span>Pagos de Préstamos/Tarjetas</span>
                 <span class="font-mono text-red-400">{{ formatCurrency(financeStore.totalFixedDebtPayments) }}</span>
              </div>
-             <div class="flex justify-between items-center text-sm pt-0.5">
-                <div>
-                   <div class="flex items-center gap-1.5">
-                     <span>Gasolina Proyectada</span>
-                     <span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-500 border border-amber-500/20 font-medium">Calculado</span>
+             <div class="border-t border-border/30 pt-2 space-y-1.5">
+                <div class="flex justify-between items-center text-sm">
+                   <div>
+                      <div class="flex items-center gap-1.5">
+                        <span class="font-medium">Gasolina Proyectada Total</span>
+                        <span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-500 border border-amber-500/20 font-medium">Calculado</span>
+                      </div>
+                      <div class="text-[10px] text-muted-foreground font-mono">
+                        {{ formatCurrency(financeStore.totalEstimatedGasolineBiweekly) }}/quincena · {{ formatCurrency(financeStore.totalEstimatedGasolineDaily) }}/día
+                      </div>
                    </div>
-                   <div class="text-[10px] text-muted-foreground font-mono">
-                     {{ formatCurrency(financeStore.totalEstimatedGasolineBiweekly) }}/quincena · {{ formatCurrency(financeStore.totalEstimatedGasolineDaily) }}/día
+                   <div class="text-right">
+                      <span class="font-mono text-amber-500 font-semibold">{{ formatCurrency(financeStore.totalEstimatedGasolineMonthly) }}</span>
                    </div>
                 </div>
-                <div class="text-right">
-                   <span class="font-mono text-amber-500 font-semibold">{{ formatCurrency(financeStore.totalEstimatedGasolineMonthly) }}</span>
+
+                <!-- Desglose individual separado por vehículo -->
+                <div v-if="financeStore.gasolineProjections.vehicles.length > 0" class="pl-2 pt-1 border-l-2 border-border/40 space-y-1 text-xs">
+                   <div 
+                     v-for="vp in financeStore.gasolineProjections.vehicles" 
+                     :key="vp.vehicleId" 
+                     class="flex justify-between items-center text-muted-foreground py-0.5"
+                   >
+                     <div class="flex items-center gap-1.5 truncate pr-2">
+                       <span class="w-1.5 h-1.5 rounded-full shrink-0" :class="vp.isActiveInBudget ? 'bg-emerald-500' : 'bg-rose-400'"></span>
+                       <span class="truncate font-medium text-foreground">{{ vp.vehicleName }} {{ vp.plate ? `(${vp.plate})` : '' }}</span>
+                       <span v-if="vp.isStale" class="text-[9px] text-rose-500 bg-rose-500/10 px-1.5 py-0.2 rounded border border-rose-500/20 shrink-0 font-medium">
+                         Inactivo (+30d sin cargar)
+                       </span>
+                     </div>
+                     <div class="font-mono text-[11px] shrink-0 text-right">
+                       <span v-if="vp.isActiveInBudget" class="text-foreground">
+                         {{ formatCurrency(vp.monthlyExpense) }}<span class="text-[10px] text-muted-foreground">/mes</span>
+                       </span>
+                       <span v-else class="text-muted-foreground italic text-[10px]">
+                         $0 (Excluido)
+                       </span>
+                     </div>
+                   </div>
                 </div>
-             </div>
-             <div class="pt-1">
-                <NuxtLink to="/taskman/garage" class="inline-flex items-center gap-1 text-xs text-primary hover:underline font-medium">
-                  Ver prospección y telemetría en Garage →
-                </NuxtLink>
+
+                <div class="pt-1">
+                   <NuxtLink to="/taskman/garage" class="inline-flex items-center gap-1 text-xs text-primary hover:underline font-medium">
+                     Ver prospección y telemetría en Garage →
+                   </NuxtLink>
+                </div>
              </div>
           </div>
           <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-red-500/5 rounded-full blur-3xl group-hover:bg-red-500/10 transition-colors"></div>

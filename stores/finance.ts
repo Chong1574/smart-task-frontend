@@ -105,6 +105,10 @@ export interface VehicleGasolineProjection {
     estimatedFullTankAutonomyKm: number;
     logsCount: number;
     isPreliminary: boolean;
+    daysSinceLastRefill: number | null;
+    lastRefillDate: string | null;
+    isStale: boolean;
+    isActiveInBudget: boolean;
 }
 
 export interface GasolineFleetProjection {
@@ -119,6 +123,8 @@ export interface GasolineFleetProjection {
     avgCostPerKm: number;
     avgEfficiencyKmPerLiter: number;
     hasData: boolean;
+    activeVehiclesCount: number;
+    inactiveVehiclesCount: number;
     vehicles: VehicleGasolineProjection[];
 }
 
@@ -217,6 +223,7 @@ export const useFinanceStore = defineStore('finance', {
         },
 
         gasolineProjections: (state): GasolineFleetProjection => {
+            const now = new Date();
             const vehicleResults: VehicleGasolineProjection[] = [];
 
             state.vehicles.forEach(vehicle => {
@@ -246,17 +253,28 @@ export const useFinanceStore = defineStore('finance', {
                         avgDaysBetweenRefills: 0,
                         estimatedFullTankAutonomyKm: 0,
                         logsCount: 0,
-                        isPreliminary: false
+                        isPreliminary: false,
+                        daysSinceLastRefill: null,
+                        lastRefillDate: null,
+                        isStale: false,
+                        isActiveInBudget: false
                     });
                     return;
                 }
+
+                const lastLog = logs[logs.length - 1];
+                const lastTime = new Date(lastLog.date).getTime();
+                const daysSinceLastRefill = Math.max(0, Math.floor((now.getTime() - lastTime) / (1000 * 60 * 60 * 24)));
+                // REGLA: Si lleva más de 30 días (1 mes) sin cargar gasolina, el auto se considera inactivo y NO se suma a los gastos calculados del presupuesto
+                const isStale = daysSinceLastRefill > 30;
+                const isActiveInBudget = !isStale;
 
                 if (logs.length === 1) {
                     const single = logs[0];
                     const cost = Number(single.totalCost);
                     const liters = Number(single.liters);
                     const pricePerL = Number(single.pricePerLiter) || (liters > 0 ? cost / liters : 0);
-                    // Con 1 sola carga no hay odometro previo medido; estimacion preliminar asumiendo ciclo tipico de 7 dias
+                    // Con 1 sola carga no hay odómetro previo medido; estimación preliminar asumiendo ciclo típico de 7 días
                     const dailyCost = cost / 7;
                     const dailyL = liters / 7;
 
@@ -281,17 +299,19 @@ export const useFinanceStore = defineStore('finance', {
                         avgDaysBetweenRefills: 7,
                         estimatedFullTankAutonomyKm: 0,
                         logsCount: 1,
-                        isPreliminary: true
+                        isPreliminary: true,
+                        daysSinceLastRefill,
+                        lastRefillDate: lastLog.date,
+                        isStale,
+                        isActiveInBudget
                     });
                     return;
                 }
 
-                // 2 o mas cargas: telemetria exacta entre primera y ultima recarga
+                // 2 o más cargas: telemetría exacta entre primera y última recarga
                 const firstLog = logs[0];
-                const lastLog = logs[logs.length - 1];
 
                 const firstTime = new Date(firstLog.date).getTime();
-                const lastTime = new Date(lastLog.date).getTime();
                 const rawDays = (lastTime - firstTime) / (1000 * 60 * 60 * 24);
                 const daysElapsed = rawDays >= 1 ? rawDays : Math.max(1, (logs.length - 1) * 7);
 
@@ -335,19 +355,26 @@ export const useFinanceStore = defineStore('finance', {
                     avgDaysBetweenRefills,
                     estimatedFullTankAutonomyKm,
                     logsCount: logs.length,
-                    isPreliminary: false
+                    isPreliminary: false,
+                    daysSinceLastRefill,
+                    lastRefillDate: lastLog.date,
+                    isStale,
+                    isActiveInBudget
                 });
             });
 
-            const activeVehicles = vehicleResults.filter(v => v.monthlyExpense > 0);
-            const totalDaily = vehicleResults.reduce((s, v) => s + v.dailyExpense, 0);
-            const totalWeekly = vehicleResults.reduce((s, v) => s + v.weeklyExpense, 0);
-            const totalBiweekly = vehicleResults.reduce((s, v) => s + v.biweeklyExpense, 0);
-            const totalMonthly = vehicleResults.reduce((s, v) => s + v.monthlyExpense, 0);
-            const totalDailyLiters = vehicleResults.reduce((s, v) => s + v.dailyLiters, 0);
-            const totalMonthlyLiters = vehicleResults.reduce((s, v) => s + v.monthlyLiters, 0);
-            const totalDailyKm = vehicleResults.reduce((s, v) => s + v.dailyKm, 0);
-            const totalMonthlyKm = vehicleResults.reduce((s, v) => s + v.monthlyKm, 0);
+            // FILTRO DE INACTIVIDAD: Solo sumar los autos activos que no lleven más de 1 mes sin cargar
+            const activeVehicles = vehicleResults.filter(v => v.isActiveInBudget && v.monthlyExpense > 0);
+            const inactiveVehicles = vehicleResults.filter(v => v.isStale);
+
+            const totalDaily = activeVehicles.reduce((s, v) => s + v.dailyExpense, 0);
+            const totalWeekly = activeVehicles.reduce((s, v) => s + v.weeklyExpense, 0);
+            const totalBiweekly = activeVehicles.reduce((s, v) => s + v.biweeklyExpense, 0);
+            const totalMonthly = activeVehicles.reduce((s, v) => s + v.monthlyExpense, 0);
+            const totalDailyLiters = activeVehicles.reduce((s, v) => s + v.dailyLiters, 0);
+            const totalMonthlyLiters = activeVehicles.reduce((s, v) => s + v.monthlyLiters, 0);
+            const totalDailyKm = activeVehicles.reduce((s, v) => s + v.dailyKm, 0);
+            const totalMonthlyKm = activeVehicles.reduce((s, v) => s + v.monthlyKm, 0);
 
             const avgCostPerKm = totalDailyKm > 0 ? (totalDaily / totalDailyKm) : 0;
             const avgEfficiencyKmPerLiter = totalDailyLiters > 0 ? (totalDailyKm / totalDailyLiters) : 0;
@@ -364,6 +391,8 @@ export const useFinanceStore = defineStore('finance', {
                 avgCostPerKm: Math.round(avgCostPerKm * 100) / 100,
                 avgEfficiencyKmPerLiter: Math.round(avgEfficiencyKmPerLiter * 100) / 100,
                 hasData: activeVehicles.length > 0,
+                activeVehiclesCount: activeVehicles.length,
+                inactiveVehiclesCount: inactiveVehicles.length,
                 vehicles: vehicleResults
             };
         },
