@@ -1,153 +1,183 @@
 <template>
-  <div class="min-h-screen bg-background text-foreground flex flex-col items-center justify-start p-4 md:p-8 relative selection:bg-primary/20">
+  <div class="min-h-screen lg:h-screen lg:max-h-screen bg-background text-foreground flex flex-col items-center justify-between p-3 sm:p-4 lg:px-8 lg:py-4 relative selection:bg-primary/20 overflow-y-auto lg:overflow-hidden">
     
     <!-- Volver a Taskman -->
-    <NuxtLink to="/taskman" class="absolute top-6 left-6 md:top-8 md:left-8 text-muted-foreground hover:text-foreground flex items-center gap-2 transition-colors z-20 text-sm font-medium">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    <NuxtLink to="/taskman" class="absolute top-3 left-4 md:top-4 md:left-6 text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-colors z-20 text-xs md:text-sm font-medium">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
       <span>Volver a Taskman</span>
     </NuxtLink>
 
     <ClientOnly>
-      <div class="w-full max-w-7xl flex flex-col items-center justify-center animate-in fade-in duration-500 mt-10 md:mt-2">
+      <div class="w-full max-w-7xl flex flex-col items-center justify-between flex-1 min-h-0 animate-in fade-in duration-500 pt-6 lg:pt-0">
         
         <!-- Header Ejecutivo: Reloj Compacto, Saludo y Pulso del Día -->
-        <header class="text-center mb-8 w-full max-w-3xl">
-          <h1 class="text-6xl md:text-8xl font-serif font-bold bg-clip-text text-transparent bg-gradient-to-br from-primary via-orange-500 to-amber-500 tracking-tight mb-2 leading-none">
+        <header class="text-center mb-2.5 lg:mb-3.5 w-full max-w-4xl shrink-0">
+          <h1 class="text-5xl md:text-6xl lg:text-7xl font-serif font-bold bg-clip-text text-transparent bg-gradient-to-br from-primary via-orange-500 to-amber-500 tracking-tight leading-none mb-1">
             {{ currentTime || '--:--' }}
           </h1>
-          <h2 class="text-2xl md:text-3xl font-medium text-foreground tracking-tight">
+          <h2 class="text-xl md:text-2xl font-medium text-foreground tracking-tight">
             {{ greeting }}<span v-if="firstName">, {{ firstName }}</span>
           </h2>
-          <p class="text-xs md:text-sm text-muted-foreground font-serif capitalize mb-4">
+          <p class="text-xs text-muted-foreground font-serif capitalize mb-2">
             {{ currentDate }}
           </p>
 
           <!-- Pulso Ejecutivo del Día (KPIs Rápidos) -->
-          <div class="flex flex-wrap items-center justify-center gap-2 text-xs">
-            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-card/60 border border-border/50 text-foreground font-medium shadow-xs backdrop-blur-md">
-              <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+          <div class="flex flex-wrap items-center justify-center gap-1.5 md:gap-2 text-[11px] md:text-xs">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-card/60 border border-border/50 text-foreground font-medium shadow-xs backdrop-blur-md">
+              <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
               {{ agendaItems.length }} en agenda ({{ hoursInEvents }}h)
             </span>
-            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-card/60 border border-border/50 text-foreground font-medium shadow-xs backdrop-blur-md">
-              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-card/60 border border-border/50 text-foreground font-medium shadow-xs backdrop-blur-md">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
               {{ hoursFreeFocus }}h libres para foco
             </span>
-            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-card/60 border border-border/50 text-foreground font-medium shadow-xs backdrop-blur-md">
-              <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-card/60 border border-border/50 text-foreground font-medium shadow-xs backdrop-blur-md">
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
               {{ totalPriorityCount }} {{ totalPriorityCount === 1 ? 'prioridad' : 'prioridades' }}
             </span>
-            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-card/60 border border-border/50 text-foreground font-medium shadow-xs backdrop-blur-md">
-              <span class="w-2 h-2 rounded-full" :class="financialRadar.status === 'healthy' ? 'bg-emerald-500' : 'bg-destructive'"></span>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-card/60 border border-border/50 text-foreground font-medium shadow-xs backdrop-blur-md">
+              <span class="w-1.5 h-1.5 rounded-full" :class="financialRadar.status === 'healthy' ? 'bg-emerald-500' : 'bg-destructive'"></span>
               ${{ Math.round(financialRadar.totalDue7Days).toLocaleString('es-MX') }} a pagar (7d)
             </span>
           </div>
         </header>
 
-        <!-- Grid Principal (3 Columnas Ejecutivas) -->
-        <main class="w-full grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 items-start">
+        <!-- Grid Principal (3 Columnas Ejecutivas Balanceadas) -->
+        <main class="w-full grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-4 lg:gap-5 items-stretch flex-1 min-h-0">
           
-          <!-- COLUMNA 1: Mi Jornada (Agenda Inteligente & Disponibilidad) -->
-          <section class="bg-card/40 backdrop-blur-xl border border-border/50 rounded-3xl p-5 md:p-6 shadow-xl relative overflow-hidden flex flex-col gap-4">
-            <div class="flex items-center justify-between">
-              <h3 class="text-lg md:text-xl font-bold flex items-center gap-2.5">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-                Agenda del Día
-              </h3>
-              <span class="text-xs text-muted-foreground font-medium">
-                {{ agendaItems.length }} {{ agendaItems.length === 1 ? 'actividad' : 'actividades' }}
-              </span>
-            </div>
-
-            <!-- Banner de Disponibilidad & Evento Actual/Siguiente -->
-            <div class="p-3.5 rounded-2xl border text-xs" :class="immediateEventContext.themeClass">
-              <div class="flex items-center gap-2 font-semibold">
-                <span class="relative flex h-2 w-2">
-                  <span v-if="immediateEventContext.isActive" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span class="relative inline-flex rounded-full h-2 w-2" :class="immediateEventContext.dotClass"></span>
+          <!-- COLUMNA 1: Mi Jornada (Agenda Inteligente & Proyectos Activos) -->
+          <section class="flex flex-col gap-3 md:gap-4 min-h-0">
+            <!-- Agenda del Día -->
+            <div class="bg-card/40 backdrop-blur-xl border border-border/50 rounded-3xl p-4 md:p-5 shadow-xl relative overflow-hidden flex flex-col gap-2.5 flex-1 min-h-0">
+              <div class="flex items-center justify-between shrink-0">
+                <h3 class="text-base md:text-lg font-bold flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                  Agenda del Día
+                </h3>
+                <span class="text-[11px] text-muted-foreground font-medium">
+                  {{ agendaItems.length }} {{ agendaItems.length === 1 ? 'actividad' : 'actividades' }}
                 </span>
-                <span>{{ immediateEventContext.label }}</span>
               </div>
-              <p v-if="immediateEventContext.title" class="text-foreground/90 font-medium mt-1 truncate">
-                {{ immediateEventContext.title }}
-                <span v-if="immediateEventContext.time" class="text-muted-foreground font-normal ml-1">({{ immediateEventContext.time }})</span>
-              </p>
-              <p v-else class="text-muted-foreground mt-0.5">
-                {{ immediateEventContext.subtext }}
-              </p>
-            </div>
 
-            <!-- Medidor Visual de Disponibilidad -->
-            <div class="bg-background/40 border border-border/40 rounded-2xl p-3 text-xs space-y-1.5">
-              <div class="flex justify-between text-muted-foreground font-medium">
-                <span>Carga del Día</span>
-                <span>{{ hoursInEvents }}h ocupadas / {{ hoursFreeFocus }}h libres</span>
-              </div>
-              <div class="w-full h-2 bg-muted/60 rounded-full overflow-hidden flex">
-                <div 
-                  class="bg-blue-500 transition-all duration-500 rounded-l-full" 
-                  :style="{ width: `${dayLoadPercentage}%` }"
-                  :title="`Eventos: ${hoursInEvents}h`"
-                ></div>
-                <div 
-                  class="bg-emerald-500/80 transition-all duration-500 rounded-r-full" 
-                  :style="{ width: `${100 - dayLoadPercentage}%` }"
-                  :title="`Libre: ${hoursFreeFocus}h`"
-                ></div>
-              </div>
-            </div>
-
-            <!-- Lista de la Agenda / Timeline -->
-            <div v-if="taskStore.loading || calendarLoading" class="space-y-3">
-              <div v-for="i in 3" :key="i" class="h-14 bg-muted/40 rounded-2xl animate-pulse"></div>
-            </div>
-            <div v-else-if="agendaItems.length === 0" class="text-center py-10 text-muted-foreground text-sm">
-              <p>No tienes eventos agendados para hoy.</p>
-              <p class="text-xs text-muted-foreground/70 mt-1">Día completamente libre para foco autónomo.</p>
-            </div>
-            <div v-else class="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
-              <NuxtLink 
-                v-for="item in agendaItems" 
-                :key="item.key" 
-                :to="item.href" 
-                class="block p-3 rounded-2xl bg-background/50 border transition-all hover:border-primary/50 group"
-                :class="item.isCurrent ? 'border-primary ring-1 ring-primary/30 shadow-xs' : item.isPast ? 'border-border/30 opacity-60' : 'border-border/50'"
-              >
-                <div class="flex items-start justify-between gap-2">
-                  <div class="min-w-0 flex-1">
-                    <div class="flex items-center gap-1.5 flex-wrap">
-                      <span v-if="item.kind === 'event'" class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-blue-500/10 text-blue-500 border border-blue-500/20">
-                        GCal
-                      </span>
-                      <span v-else-if="item.kind === 'wishlist'" class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-purple-500/10 text-purple-500 border border-purple-500/20">
-                        Deseo
-                      </span>
-                      <span v-else class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20">
-                        Tarea
-                      </span>
-                      <span v-if="item.isCurrent" class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-                        Ahora
-                      </span>
-                      <h4 class="font-medium text-xs md:text-sm leading-tight text-foreground truncate group-hover:text-primary transition-colors">
-                        {{ item.title }}
-                      </h4>
-                    </div>
-                  </div>
-                  <span v-if="item.time" class="text-[11px] text-muted-foreground shrink-0 font-medium whitespace-nowrap">
-                    {{ item.time }}
+              <!-- Banner de Disponibilidad & Evento Actual/Siguiente -->
+              <div class="p-2.5 rounded-xl border text-xs shrink-0" :class="immediateEventContext.themeClass">
+                <div class="flex items-center gap-2 font-semibold">
+                  <span class="relative flex h-2 w-2">
+                    <span v-if="immediateEventContext.isActive" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2" :class="immediateEventContext.dotClass"></span>
                   </span>
+                  <span>{{ immediateEventContext.label }}</span>
                 </div>
-              </NuxtLink>
+                <p v-if="immediateEventContext.title" class="text-foreground/90 font-medium mt-0.5 truncate">
+                  {{ immediateEventContext.title }}
+                  <span v-if="immediateEventContext.time" class="text-muted-foreground font-normal ml-1">({{ immediateEventContext.time }})</span>
+                </p>
+                <p v-else class="text-muted-foreground mt-0.5 text-[11px]">
+                  {{ immediateEventContext.subtext }}
+                </p>
+              </div>
+
+              <!-- Medidor Visual de Disponibilidad -->
+              <div class="bg-background/40 border border-border/40 rounded-xl p-2.5 text-xs space-y-1 shrink-0">
+                <div class="flex justify-between text-muted-foreground font-medium text-[11px]">
+                  <span>Carga del Día</span>
+                  <span>{{ hoursInEvents }}h ocupadas / {{ hoursFreeFocus }}h libres</span>
+                </div>
+                <div class="w-full h-1.5 bg-muted/60 rounded-full overflow-hidden flex">
+                  <div 
+                    class="bg-blue-500 transition-all duration-500 rounded-l-full" 
+                    :style="{ width: `${dayLoadPercentage}%` }"
+                    :title="`Eventos: ${hoursInEvents}h`"
+                  ></div>
+                  <div 
+                    class="bg-emerald-500/80 transition-all duration-500 rounded-r-full" 
+                    :style="{ width: `${100 - dayLoadPercentage}%` }"
+                    :title="`Libre: ${hoursFreeFocus}h`"
+                  ></div>
+                </div>
+              </div>
+
+              <!-- Lista de la Agenda / Timeline -->
+              <div v-if="taskStore.loading || calendarLoading" class="space-y-2 py-2 flex-1">
+                <div v-for="i in 2" :key="i" class="h-10 bg-muted/40 rounded-xl animate-pulse"></div>
+              </div>
+              <div v-else-if="agendaItems.length === 0" class="text-center py-4 text-muted-foreground text-xs flex-1 flex flex-col justify-center">
+                <p class="font-medium text-foreground/80">Sin eventos agendados para hoy</p>
+                <p class="text-[11px] text-muted-foreground/70 mt-0.5">Día completamente libre para foco autónomo.</p>
+              </div>
+              <div v-else class="space-y-2 max-h-[140px] overflow-y-auto pr-1 flex-1">
+                <NuxtLink 
+                  v-for="item in agendaItems" 
+                  :key="item.key" 
+                  :to="item.href" 
+                  class="block p-2 rounded-xl bg-background/50 border transition-all hover:border-primary/50 group"
+                  :class="item.isCurrent ? 'border-primary ring-1 ring-primary/30 shadow-xs' : item.isPast ? 'border-border/30 opacity-60' : 'border-border/50'"
+                >
+                  <div class="flex items-start justify-between gap-2">
+                    <div class="min-w-0 flex-1">
+                      <div class="flex items-center gap-1.5 flex-wrap">
+                        <span v-if="item.kind === 'event'" class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded bg-blue-500/10 text-blue-500 border border-blue-500/20">
+                          GCal
+                        </span>
+                        <span v-else-if="item.kind === 'wishlist'" class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded bg-purple-500/10 text-purple-500 border border-purple-500/20">
+                          Deseo
+                        </span>
+                        <span v-else class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded bg-primary/10 text-primary border border-primary/20">
+                          Tarea
+                        </span>
+                        <span v-if="item.isCurrent" class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                          Ahora
+                        </span>
+                        <h4 class="font-medium text-xs leading-tight text-foreground truncate group-hover:text-primary transition-colors">
+                          {{ item.title }}
+                        </h4>
+                      </div>
+                    </div>
+                    <span v-if="item.time" class="text-[10px] text-muted-foreground shrink-0 font-medium whitespace-nowrap">
+                      {{ item.time }}
+                    </span>
+                  </div>
+                </NuxtLink>
+              </div>
+            </div>
+
+            <!-- Proyectos Activos (Visibles en Columna 1) -->
+            <div class="bg-card/40 backdrop-blur-xl border border-border/50 rounded-3xl p-3.5 md:p-4 shadow-xl shrink-0">
+              <div class="flex items-center justify-between mb-2">
+                <h3 class="text-xs md:text-sm font-bold flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                  Proyectos Activos
+                </h3>
+                <NuxtLink to="/taskman/projects" class="text-[11px] text-muted-foreground hover:text-primary transition-colors font-medium">
+                  Ver todos &rarr;
+                </NuxtLink>
+              </div>
+              <div v-if="activeProjects.length === 0" class="text-xs text-muted-foreground py-2 text-center">
+                Sin proyectos activos actualmente.
+              </div>
+              <div v-else class="space-y-1.5">
+                <NuxtLink 
+                  v-for="project in activeProjects.slice(0, 3)" 
+                  :key="project.id" 
+                  to="/taskman/projects" 
+                  class="flex items-center justify-between p-2 rounded-xl bg-background/50 border border-border/40 hover:border-primary/40 transition-colors group"
+                >
+                  <span class="text-xs font-medium text-foreground truncate pr-2 group-hover:text-primary transition-colors">{{ project.name }}</span>
+                  <span class="text-[10px] text-primary bg-primary/10 px-2 py-0.5 rounded-md font-semibold shrink-0">Activo</span>
+                </NuxtLink>
+              </div>
             </div>
           </section>
 
           <!-- COLUMNA 2: Foco Ejecutivo (The One Thing & Hábitos Accionables) -->
-          <section class="space-y-6">
+          <section class="flex flex-col gap-3 md:gap-4 min-h-0">
             
             <!-- The One Thing: Prioridad Crítica del Día -->
-            <div class="bg-gradient-to-br from-card/60 via-card/40 to-primary/5 backdrop-blur-xl border-2 border-primary/30 rounded-3xl p-5 md:p-6 shadow-xl relative overflow-hidden">
-              <div class="flex items-center justify-between mb-3">
+            <div class="bg-gradient-to-br from-card/60 via-card/40 to-primary/5 backdrop-blur-xl border-2 border-primary/30 rounded-3xl p-4 md:p-5 shadow-xl relative overflow-hidden shrink-0">
+              <div class="flex items-center justify-between mb-2">
                 <span class="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-primary/15 text-primary border border-primary/25">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
                   The One Thing
                 </span>
                 <span v-if="theOneThing?.priority" class="text-[10px] font-bold uppercase tracking-wider text-destructive">
@@ -155,27 +185,27 @@
                 </span>
               </div>
 
-              <div v-if="theOneThing" class="space-y-3">
-                <div class="flex items-start gap-3">
+              <div v-if="theOneThing" class="space-y-2">
+                <div class="flex items-start gap-2.5">
                   <button 
                     type="button" 
                     @click="handleToggleTask(theOneThing, $event)" 
-                    class="mt-1 w-5 h-5 rounded-md border-2 border-primary/60 hover:bg-primary/20 flex items-center justify-center transition-all cursor-pointer shrink-0"
+                    class="mt-0.5 w-5 h-5 rounded-md border-2 border-primary/60 hover:bg-primary/20 flex items-center justify-center transition-all cursor-pointer shrink-0"
                     title="Marcar como completada"
                   >
                     <svg v-if="theOneThing.status === 'completed'" class="w-3.5 h-3.5 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                   </button>
                   <div class="min-w-0 flex-1">
-                    <h4 class="text-base md:text-lg font-semibold text-foreground leading-snug">
+                    <h4 class="text-sm md:text-base font-semibold text-foreground leading-snug">
                       {{ theOneThing.title }}
                     </h4>
-                    <p v-if="theOneThing.description" class="text-xs text-muted-foreground mt-1 line-clamp-2">
+                    <p v-if="theOneThing.description" class="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">
                       {{ theOneThing.description }}
                     </p>
                   </div>
                 </div>
 
-                <div class="flex items-center justify-between pt-2 border-t border-border/40 text-xs text-muted-foreground">
+                <div class="flex items-center justify-between pt-1.5 border-t border-border/40 text-[11px] text-muted-foreground">
                   <span v-if="theOneThing.duration_minutes">⏱️ {{ theOneThing.duration_minutes }} min</span>
                   <span v-else>🎯 Foco principal</span>
                   <NuxtLink to="/taskman/activities" class="text-primary hover:underline font-medium">
@@ -184,25 +214,25 @@
                 </div>
               </div>
 
-              <div v-else class="text-center py-6 text-muted-foreground">
-                <p class="text-sm font-medium text-foreground/80">✨ ¡Foco despejado!</p>
-                <p class="text-xs mt-1">No hay tareas de alta prioridad pendientes por hoy.</p>
+              <div v-else class="text-center py-4 text-muted-foreground">
+                <p class="text-xs font-medium text-foreground/80">✨ ¡Foco despejado!</p>
+                <p class="text-[11px] mt-0.5">No hay tareas de alta prioridad pendientes por hoy.</p>
               </div>
             </div>
 
             <!-- Otras Prioridades Activas -->
-            <div v-if="secondaryPriorityTasks.length > 0" class="bg-card/40 backdrop-blur-xl border border-border/50 rounded-3xl p-5 shadow-xl">
-              <h3 class="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-3 flex items-center justify-between">
+            <div v-if="secondaryPriorityTasks.length > 0" class="bg-card/40 backdrop-blur-xl border border-border/50 rounded-2xl p-3 md:p-3.5 shadow-xl shrink-0">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2 flex items-center justify-between">
                 <span>Otras Prioridades</span>
-                <span class="text-xs font-normal">({{ secondaryPriorityTasks.length }})</span>
+                <span class="text-[10px] font-normal">({{ secondaryPriorityTasks.length }})</span>
               </h3>
-              <div class="space-y-2">
+              <div class="space-y-1.5">
                 <div 
-                  v-for="task in secondaryPriorityTasks.slice(0, 4)" 
+                  v-for="task in secondaryPriorityTasks.slice(0, 3)" 
                   :key="task.id" 
-                  class="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-background/50 border border-border/40 hover:border-primary/40 transition-colors"
+                  class="flex items-center justify-between gap-2.5 p-2 rounded-xl bg-background/50 border border-border/40 hover:border-primary/40 transition-colors"
                 >
-                  <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                  <div class="flex items-center gap-2 min-w-0 flex-1">
                     <button 
                       type="button" 
                       @click="handleToggleTask(task, $event)" 
@@ -222,42 +252,44 @@
             </div>
 
             <!-- Hábitos del Día (Accionables con 1 Clic + Racha) -->
-            <div class="bg-card/40 backdrop-blur-xl border border-border/50 rounded-3xl p-5 md:p-6 shadow-xl">
-              <div class="flex items-center justify-between mb-3">
-                <h3 class="text-base font-bold flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                  Hábitos Diarios
-                </h3>
-                <span class="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
-                  {{ completedHabitsCount }} / {{ activeHabits.length }}
-                </span>
-              </div>
+            <div class="bg-card/40 backdrop-blur-xl border border-border/50 rounded-3xl p-3.5 md:p-4 shadow-xl flex-1 flex flex-col justify-between min-h-0">
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <h3 class="text-xs md:text-sm font-bold flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    Hábitos Diarios
+                  </h3>
+                  <span class="text-[11px] font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
+                    {{ completedHabitsCount }} / {{ activeHabits.length }}
+                  </span>
+                </div>
 
-              <!-- Mini barra de progreso de hábitos -->
-              <div class="w-full h-1.5 bg-muted/60 rounded-full overflow-hidden mb-4">
-                <div 
-                  class="bg-primary h-full transition-all duration-300 rounded-full" 
-                  :style="{ width: `${habitsProgressPercentage}%` }"
-                ></div>
+                <!-- Mini barra de progreso de hábitos -->
+                <div class="w-full h-1.5 bg-muted/60 rounded-full overflow-hidden mb-2.5">
+                  <div 
+                    class="bg-primary h-full transition-all duration-300 rounded-full" 
+                    :style="{ width: `${habitsProgressPercentage}%` }"
+                  ></div>
+                </div>
               </div>
 
               <div v-if="activeHabits.length === 0" class="text-xs text-muted-foreground py-2 text-center">
                 Sin hábitos configurados.
               </div>
-              <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 overflow-y-auto max-h-[160px] pr-0.5">
                 <button 
                   v-for="habit in activeHabits" 
                   :key="habit.id" 
                   type="button"
                   @click="handleToggleHabit(habit, $event)"
-                  class="flex items-center justify-between p-2.5 rounded-xl border text-left transition-all cursor-pointer group"
+                  class="flex items-center justify-between p-2 rounded-xl border text-left transition-all cursor-pointer group"
                   :class="isHabitDoneToday(habit) 
                     ? 'bg-primary/10 border-primary/30 text-foreground' 
                     : 'bg-background/50 border-border/40 hover:border-primary/40 text-muted-foreground hover:text-foreground'"
                 >
-                  <div class="flex items-center gap-2 min-w-0 pr-1">
+                  <div class="flex items-center gap-1.5 min-w-0 pr-1">
                     <span 
-                      class="w-4 h-4 rounded-full border flex items-center justify-center transition-all shrink-0"
+                      class="w-3.5 h-3.5 rounded-full border flex items-center justify-center transition-all shrink-0"
                       :class="isHabitDoneToday(habit) ? 'bg-primary border-primary text-primary-foreground' : 'border-border/60 group-hover:border-primary'"
                     >
                       <svg v-if="isHabitDoneToday(habit)" class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -275,114 +307,93 @@
 
           </section>
 
-          <!-- COLUMNA 3: Radar Financiero (7 Días) & Proyectos Activos -->
-          <section class="space-y-6">
+          <!-- COLUMNA 3: Radar Financiero (7 Días) & Frase del Día -->
+          <section class="flex flex-col gap-3 md:gap-4 min-h-0">
             
             <!-- Radar Financiero: Próximos 7 Días vs Liquidez -->
-            <div class="bg-card/40 backdrop-blur-xl border border-border/50 rounded-3xl p-5 md:p-6 shadow-xl relative overflow-hidden">
-              <div class="flex items-center justify-between mb-4">
-                <h3 class="text-base md:text-lg font-bold flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
-                  Radar Financiero (7d)
-                </h3>
-                <span 
-                  class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border"
-                  :class="financialRadar.status === 'healthy' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-destructive/10 text-destructive border-destructive/20'"
-                >
-                  {{ financialRadar.status === 'healthy' ? '🛡️ Cubierto' : '⚠️ Atención' }}
-                </span>
-              </div>
-
-              <!-- Comparativa Visual: Requerido vs Saldo Disponible -->
-              <div class="grid grid-cols-2 gap-3 mb-4">
-                <div class="p-3 rounded-2xl bg-background/50 border border-border/40">
-                  <span class="text-[10px] uppercase font-bold text-muted-foreground tracking-wider block">A Pagar (7d)</span>
-                  <span class="text-base md:text-lg font-bold text-destructive">
-                    ${{ financialRadar.totalDue7Days.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
-                  </span>
-                  <span class="text-[10px] text-muted-foreground block mt-0.5">
-                    {{ financialRadar.items7Days.length }} {{ financialRadar.items7Days.length === 1 ? 'compromiso' : 'compromisos' }}
+            <div class="bg-card/40 backdrop-blur-xl border border-border/50 rounded-3xl p-4 md:p-5 shadow-xl relative overflow-hidden flex-1 flex flex-col justify-between min-h-0">
+              <div>
+                <div class="flex items-center justify-between mb-2.5">
+                  <h3 class="text-xs md:text-sm font-bold flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+                    Radar Financiero (7d)
+                  </h3>
+                  <span 
+                    class="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border"
+                    :class="financialRadar.status === 'healthy' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-destructive/10 text-destructive border-destructive/20'"
+                  >
+                    {{ financialRadar.status === 'healthy' ? '🛡️ Cubierto' : '⚠️ Atención' }}
                   </span>
                 </div>
-                <div class="p-3 rounded-2xl bg-background/50 border border-border/40">
-                  <span class="text-[10px] uppercase font-bold text-muted-foreground tracking-wider block">Disponible</span>
-                  <span class="text-base md:text-lg font-bold text-foreground">
-                    ${{ financialRadar.availableBalance.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
-                  </span>
-                  <span class="text-[10px] text-muted-foreground block mt-0.5">Cuentas líquidas</span>
-                </div>
-              </div>
 
-              <!-- Diagnóstico de Cobertura -->
-              <div class="text-xs p-2.5 rounded-xl border mb-4 font-medium" :class="financialRadar.status === 'healthy' ? 'bg-emerald-500/5 text-emerald-500/90 border-emerald-500/20' : 'bg-destructive/5 text-destructive border-destructive/20'">
-                <p v-if="financialRadar.status === 'healthy'">
-                  ✓ Cobertura del {{ financialRadar.coveragePct }}%. Margen libre: +${{ Math.round(financialRadar.buffer).toLocaleString('es-MX') }} MXN.
-                </p>
-                <p v-else>
-                  Faltan ${{ Math.round(Math.abs(financialRadar.buffer)).toLocaleString('es-MX') }} MXN para cubrir los compromisos de esta semana.
-                </p>
-              </div>
-
-              <!-- Lista de Vencimientos Inmediatos -->
-              <div class="space-y-2">
-                <NuxtLink 
-                  v-for="(p, idx) in financialRadar.displayItems" 
-                  :key="`${p.name}-${idx}`"
-                  to="/taskman/wallet"
-                  class="flex items-center justify-between p-2.5 rounded-xl bg-background/40 border border-border/40 hover:border-primary/40 transition-colors group"
-                >
-                  <div class="min-w-0 pr-2">
-                    <p class="text-xs font-semibold text-foreground truncate group-hover:text-primary transition-colors">{{ p.name }}</p>
-                    <span 
-                      class="inline-block text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded mt-0.5"
-                      :class="p.daysRemaining === 0 ? 'bg-destructive/15 text-destructive' : p.daysRemaining === 1 ? 'bg-amber-500/15 text-amber-500' : 'text-muted-foreground'"
-                    >
-                      {{ p.urgencyLabel }}
+                <!-- Comparativa Visual: Requerido vs Saldo Disponible -->
+                <div class="grid grid-cols-2 gap-2 mb-2.5">
+                  <div class="p-2.5 rounded-xl bg-background/50 border border-border/40">
+                    <span class="text-[9px] uppercase font-bold text-muted-foreground tracking-wider block">A Pagar (7d)</span>
+                    <span class="text-sm md:text-base font-bold text-destructive">
+                      ${{ financialRadar.totalDue7Days.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
+                    </span>
+                    <span class="text-[9px] text-muted-foreground block">
+                      {{ financialRadar.items7Days.length }} {{ financialRadar.items7Days.length === 1 ? 'compromiso' : 'compromisos' }}
                     </span>
                   </div>
-                  <span class="text-xs font-bold shrink-0 text-destructive">
-                    ${{ Number(p.amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
-                  </span>
-                </NuxtLink>
+                  <div class="p-2.5 rounded-xl bg-background/50 border border-border/40">
+                    <span class="text-[9px] uppercase font-bold text-muted-foreground tracking-wider block">Disponible</span>
+                    <span class="text-sm md:text-base font-bold text-foreground">
+                      ${{ financialRadar.availableBalance.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
+                    </span>
+                    <span class="text-[9px] text-muted-foreground block">Cuentas líquidas</span>
+                  </div>
+                </div>
+
+                <!-- Diagnóstico de Cobertura -->
+                <div class="text-[11px] p-2 rounded-xl border mb-2 font-medium" :class="financialRadar.status === 'healthy' ? 'bg-emerald-500/5 text-emerald-500/90 border-emerald-500/20' : 'bg-destructive/5 text-destructive border-destructive/20'">
+                  <p v-if="financialRadar.status === 'healthy'">
+                    ✓ Cobertura del {{ financialRadar.coveragePct }}%. Margen libre: +${{ Math.round(financialRadar.buffer).toLocaleString('es-MX') }} MXN.
+                  </p>
+                  <p v-else>
+                    Faltan ${{ Math.round(Math.abs(financialRadar.buffer)).toLocaleString('es-MX') }} MXN para cubrir compromisos de la semana.
+                  </p>
+                </div>
+
+                <!-- Lista de Vencimientos Inmediatos -->
+                <div class="space-y-1.5 max-h-[130px] overflow-y-auto pr-1">
+                  <NuxtLink 
+                    v-for="(p, idx) in financialRadar.displayItems.slice(0, 3)" 
+                    :key="`${p.name}-${idx}`"
+                    to="/taskman/wallet"
+                    class="flex items-center justify-between p-2 rounded-xl bg-background/40 border border-border/40 hover:border-primary/40 transition-colors group"
+                  >
+                    <div class="min-w-0 pr-2">
+                      <p class="text-xs font-semibold text-foreground truncate group-hover:text-primary transition-colors">{{ p.name }}</p>
+                      <span 
+                        class="inline-block text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded mt-0.5"
+                        :class="p.daysRemaining === 0 ? 'bg-destructive/15 text-destructive' : p.daysRemaining === 1 ? 'bg-amber-500/15 text-amber-500' : 'text-muted-foreground'"
+                      >
+                        {{ p.urgencyLabel }}
+                      </span>
+                    </div>
+                    <span class="text-xs font-bold shrink-0 text-destructive">
+                      ${{ Number(p.amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
+                    </span>
+                  </NuxtLink>
+                </div>
               </div>
 
-              <div class="mt-3 pt-3 border-t border-border/40 text-right">
+              <div class="pt-2 border-t border-border/40 text-right shrink-0">
                 <NuxtLink to="/taskman/wallet" class="text-xs text-primary hover:underline font-medium">
                   Ir a Billetera &rarr;
                 </NuxtLink>
               </div>
             </div>
 
-            <!-- Proyectos Activos Compactos -->
-            <div class="bg-card/40 backdrop-blur-xl border border-border/50 rounded-3xl p-5 shadow-xl">
-              <div class="flex items-center justify-between mb-3">
-                <h3 class="text-sm font-bold flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                  Proyectos Activos
-                </h3>
-                <NuxtLink to="/taskman/projects" class="text-[11px] text-muted-foreground hover:text-primary transition-colors">
-                  Ver todos
-                </NuxtLink>
+            <!-- La Frase del Día / Cita Inspiradora: PROMINENTE Y TOTALMENTE VISIBLE -->
+            <div class="p-3.5 md:p-4 rounded-3xl bg-gradient-to-br from-primary/10 via-orange-500/5 to-transparent border border-primary/20 text-center shadow-lg relative overflow-hidden shrink-0 flex flex-col justify-center items-center">
+              <div class="flex items-center gap-1.5 text-primary/70 text-[10px] font-bold uppercase tracking-widest mb-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.75-2-2-2H4c-1.25 0-2 .75-2 2v6c0 7 4 8 7 8Z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.75-2-2-2h-4c-1.25 0-2 .75-2 2v6c0 7 4 8 7 8Z"/></svg>
+                <span>Frase del Día</span>
               </div>
-              <div v-if="activeProjects.length === 0" class="text-xs text-muted-foreground py-2 text-center">
-                Sin proyectos activos.
-              </div>
-              <div v-else class="space-y-2">
-                <NuxtLink 
-                  v-for="project in activeProjects.slice(0, 3)" 
-                  :key="project.id" 
-                  to="/taskman/projects" 
-                  class="flex items-center justify-between p-2.5 rounded-xl bg-background/50 border border-border/40 hover:border-primary/40 transition-colors"
-                >
-                  <span class="text-xs font-medium text-foreground truncate pr-2">{{ project.name }}</span>
-                  <span class="text-[10px] text-primary font-semibold shrink-0">Activo</span>
-                </NuxtLink>
-              </div>
-            </div>
-
-            <!-- Reflexión / Cita Diaria Minimalista -->
-            <div class="p-4 rounded-2xl bg-gradient-to-br from-primary/5 via-orange-500/5 to-transparent border border-primary/20 text-center">
-              <p class="text-xs md:text-sm font-serif italic text-foreground/80">
+              <p class="text-xs md:text-sm font-serif italic text-foreground/90 leading-relaxed max-w-sm">
                 "{{ dailyQuote }}"
               </p>
             </div>
