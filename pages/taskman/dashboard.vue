@@ -205,7 +205,15 @@
 
         <!-- Gráfica de Barras: Gastos de Vehículos -->
         <div class="bg-card border border-border/40 p-6 rounded-3xl shadow-sm">
-          <h3 class="font-bold text-lg mb-4">Gasto Mensual Vehículos (Gasolina)</h3>
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <h3 class="font-bold text-lg">Gasto Mensual Vehículos (Gasolina)</h3>
+              <p class="text-xs text-muted-foreground mt-0.5" v-if="financeStore.gasolineProjections.totalMonthly > 0">
+                Prospección: <strong class="text-amber-500 font-mono">{{ formatCurrency(financeStore.gasolineProjections.totalMonthly) }}</strong>/mes ({{ formatCurrency(financeStore.gasolineProjections.totalBiweekly) }}/quincena)
+              </p>
+            </div>
+            <NuxtLink to="/taskman/garage" class="text-xs text-primary hover:underline font-medium">Garage →</NuxtLink>
+          </div>
           <div class="h-64 relative flex items-center justify-center">
             <ClientOnly fallback="Cargando gráfica...">
               <Bar v-if="hasVehiclesData" :data="vehiclesChartData" :options="barOptions" />

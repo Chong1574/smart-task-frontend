@@ -66,7 +66,7 @@
                 ></div>
               </div>
               <div class="flex justify-between text-[10px] opacity-85">
-                <span>Libre quincena: {{ formatCurrency(safeToSpendMetrics.freePool) }}</span>
+                <span>Libre quincena: {{ formatCurrency(safeToSpendMetrics.freePool) }} <span v-if="safeToSpendMetrics.gasolineReserved > 0" class="opacity-75 font-mono text-[9px]">(Gas: {{ formatCurrency(safeToSpendMetrics.gasolineReserved) }})</span></span>
                 <span>Próximo ingreso en {{ safeToSpendMetrics.daysToPayday }}d</span>
               </div>
             </div>
@@ -1275,7 +1275,12 @@ const safeToSpendMetrics = computed(() => {
     .filter(p => p.type !== 'Ingreso' && p.daysRemaining <= daysToPayday)
     .reduce((sum, p) => sum + p.amount, 0)
 
-  const freePool = Math.max(0, liquidCashBalance.value - dueBeforePayday)
+  // Reserva de combustible proyectada para cubrir el uso del vehículo hasta el día de pago
+  const dailyGas = financeStore.totalEstimatedGasolineDaily || 0
+  const gasolineReserved = Math.round(dailyGas * Math.max(1, daysToPayday) * 100) / 100
+  const totalCommitmentsBeforePayday = dueBeforePayday + gasolineReserved
+
+  const freePool = Math.max(0, liquidCashBalance.value - totalCommitmentsBeforePayday)
   const dailyAllowance = freePool / Math.max(1, daysToPayday)
 
   // Gasto variable de hoy
@@ -1311,7 +1316,8 @@ const safeToSpendMetrics = computed(() => {
     todayUsedPct,
     statusLabel,
     badgeClass,
-    barClass
+    barClass,
+    gasolineReserved
   }
 })
 

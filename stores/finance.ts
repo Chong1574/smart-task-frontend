@@ -79,7 +79,47 @@ export interface Vehicle {
     make?: string;
     model?: string;
     year?: number;
+    tankCapacity?: number | null;
     fuelLogs: FuelLog[];
+}
+
+export interface VehicleGasolineProjection {
+    vehicleId: number;
+    vehicleName: string;
+    plate?: string;
+    model?: string;
+    dailyExpense: number;
+    weeklyExpense: number;
+    biweeklyExpense: number;
+    monthlyExpense: number;
+    dailyLiters: number;
+    weeklyLiters: number;
+    biweeklyLiters: number;
+    monthlyLiters: number;
+    dailyKm: number;
+    monthlyKm: number;
+    costPerKm: number;
+    kmPerLiter: number;
+    avgPricePerLiter: number;
+    avgDaysBetweenRefills: number;
+    estimatedFullTankAutonomyKm: number;
+    logsCount: number;
+    isPreliminary: boolean;
+}
+
+export interface GasolineFleetProjection {
+    totalDaily: number;
+    totalWeekly: number;
+    totalBiweekly: number;
+    totalMonthly: number;
+    totalDailyLiters: number;
+    totalMonthlyLiters: number;
+    totalDailyKm: number;
+    totalMonthlyKm: number;
+    avgCostPerKm: number;
+    avgEfficiencyKmPerLiter: number;
+    hasData: boolean;
+    vehicles: VehicleGasolineProjection[];
 }
 
 const COLORS = [
@@ -176,10 +216,181 @@ export const useFinanceStore = defineStore('finance', {
             }, 0);
         },
 
+        gasolineProjections: (state): GasolineFleetProjection => {
+            const vehicleResults: VehicleGasolineProjection[] = [];
+
+            state.vehicles.forEach(vehicle => {
+                const logs = [...(vehicle.fuelLogs || [])]
+                    .filter(l => Number(l.totalCost) > 0 && Number(l.liters) > 0)
+                    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime() || Number(a.odometer) - Number(b.odometer));
+
+                if (logs.length === 0) {
+                    vehicleResults.push({
+                        vehicleId: vehicle.id,
+                        vehicleName: vehicle.name,
+                        plate: vehicle.plate,
+                        model: vehicle.model,
+                        dailyExpense: 0,
+                        weeklyExpense: 0,
+                        biweeklyExpense: 0,
+                        monthlyExpense: 0,
+                        dailyLiters: 0,
+                        weeklyLiters: 0,
+                        biweeklyLiters: 0,
+                        monthlyLiters: 0,
+                        dailyKm: 0,
+                        monthlyKm: 0,
+                        costPerKm: 0,
+                        kmPerLiter: 0,
+                        avgPricePerLiter: 0,
+                        avgDaysBetweenRefills: 0,
+                        estimatedFullTankAutonomyKm: 0,
+                        logsCount: 0,
+                        isPreliminary: false
+                    });
+                    return;
+                }
+
+                if (logs.length === 1) {
+                    const single = logs[0];
+                    const cost = Number(single.totalCost);
+                    const liters = Number(single.liters);
+                    const pricePerL = Number(single.pricePerLiter) || (liters > 0 ? cost / liters : 0);
+                    // Con 1 sola carga no hay odometro previo medido; estimacion preliminar asumiendo ciclo tipico de 7 dias
+                    const dailyCost = cost / 7;
+                    const dailyL = liters / 7;
+
+                    vehicleResults.push({
+                        vehicleId: vehicle.id,
+                        vehicleName: vehicle.name,
+                        plate: vehicle.plate,
+                        model: vehicle.model,
+                        dailyExpense: Math.round(dailyCost * 100) / 100,
+                        weeklyExpense: Math.round(dailyCost * 7 * 100) / 100,
+                        biweeklyExpense: Math.round(dailyCost * 15 * 100) / 100,
+                        monthlyExpense: Math.round(dailyCost * 30 * 100) / 100,
+                        dailyLiters: Math.round(dailyL * 100) / 100,
+                        weeklyLiters: Math.round(dailyL * 7 * 100) / 100,
+                        biweeklyLiters: Math.round(dailyL * 15 * 100) / 100,
+                        monthlyLiters: Math.round(dailyL * 30 * 100) / 100,
+                        dailyKm: 0,
+                        monthlyKm: 0,
+                        costPerKm: 0,
+                        kmPerLiter: 0,
+                        avgPricePerLiter: Math.round(pricePerL * 100) / 100,
+                        avgDaysBetweenRefills: 7,
+                        estimatedFullTankAutonomyKm: 0,
+                        logsCount: 1,
+                        isPreliminary: true
+                    });
+                    return;
+                }
+
+                // 2 o mas cargas: telemetria exacta entre primera y ultima recarga
+                const firstLog = logs[0];
+                const lastLog = logs[logs.length - 1];
+
+                const firstTime = new Date(firstLog.date).getTime();
+                const lastTime = new Date(lastLog.date).getTime();
+                const rawDays = (lastTime - firstTime) / (1000 * 60 * 60 * 24);
+                const daysElapsed = rawDays >= 1 ? rawDays : Math.max(1, (logs.length - 1) * 7);
+
+                const deltaKm = Math.max(0, Number(lastLog.odometer) - Number(firstLog.odometer));
+                const subsequentLogs = logs.slice(1);
+                const totalCostConsumed = subsequentLogs.reduce((sum, l) => sum + Number(l.totalCost), 0);
+                const totalLitersConsumed = subsequentLogs.reduce((sum, l) => sum + Number(l.liters), 0);
+
+                const effCost = totalCostConsumed > 0 ? totalCostConsumed : logs.reduce((sum, l) => sum + Number(l.totalCost), 0);
+                const effLiters = totalLitersConsumed > 0 ? totalLitersConsumed : logs.reduce((sum, l) => sum + Number(l.liters), 0);
+
+                const dailyCost = effCost / daysElapsed;
+                const dailyLiters = effLiters / daysElapsed;
+                const dailyKm = deltaKm / daysElapsed;
+
+                const kmPerLiter = effLiters > 0 && deltaKm > 0 ? (deltaKm / effLiters) : 0;
+                const costPerKm = deltaKm > 0 ? (effCost / deltaKm) : 0;
+                const avgPricePerLiter = effLiters > 0 ? (effCost / effLiters) : 0;
+                const avgDaysBetweenRefills = Math.max(1, Math.round((daysElapsed / (logs.length - 1)) * 10) / 10);
+                const tankCap = Number(vehicle.tankCapacity) || 0;
+                const estimatedFullTankAutonomyKm = tankCap > 0 && kmPerLiter > 0 ? Math.round(tankCap * kmPerLiter) : 0;
+
+                vehicleResults.push({
+                    vehicleId: vehicle.id,
+                    vehicleName: vehicle.name,
+                    plate: vehicle.plate,
+                    model: vehicle.model,
+                    dailyExpense: Math.round(dailyCost * 100) / 100,
+                    weeklyExpense: Math.round(dailyCost * 7 * 100) / 100,
+                    biweeklyExpense: Math.round(dailyCost * 15 * 100) / 100,
+                    monthlyExpense: Math.round(dailyCost * 30 * 100) / 100,
+                    dailyLiters: Math.round(dailyLiters * 100) / 100,
+                    weeklyLiters: Math.round(dailyLiters * 7 * 100) / 100,
+                    biweeklyLiters: Math.round(dailyLiters * 15 * 100) / 100,
+                    monthlyLiters: Math.round(dailyLiters * 30 * 100) / 100,
+                    dailyKm: Math.round(dailyKm * 10) / 10,
+                    monthlyKm: Math.round(dailyKm * 30 * 10) / 10,
+                    costPerKm: Math.round(costPerKm * 100) / 100,
+                    kmPerLiter: Math.round(kmPerLiter * 100) / 100,
+                    avgPricePerLiter: Math.round(avgPricePerLiter * 100) / 100,
+                    avgDaysBetweenRefills,
+                    estimatedFullTankAutonomyKm,
+                    logsCount: logs.length,
+                    isPreliminary: false
+                });
+            });
+
+            const activeVehicles = vehicleResults.filter(v => v.monthlyExpense > 0);
+            const totalDaily = vehicleResults.reduce((s, v) => s + v.dailyExpense, 0);
+            const totalWeekly = vehicleResults.reduce((s, v) => s + v.weeklyExpense, 0);
+            const totalBiweekly = vehicleResults.reduce((s, v) => s + v.biweeklyExpense, 0);
+            const totalMonthly = vehicleResults.reduce((s, v) => s + v.monthlyExpense, 0);
+            const totalDailyLiters = vehicleResults.reduce((s, v) => s + v.dailyLiters, 0);
+            const totalMonthlyLiters = vehicleResults.reduce((s, v) => s + v.monthlyLiters, 0);
+            const totalDailyKm = vehicleResults.reduce((s, v) => s + v.dailyKm, 0);
+            const totalMonthlyKm = vehicleResults.reduce((s, v) => s + v.monthlyKm, 0);
+
+            const avgCostPerKm = totalDailyKm > 0 ? (totalDaily / totalDailyKm) : 0;
+            const avgEfficiencyKmPerLiter = totalDailyLiters > 0 ? (totalDailyKm / totalDailyLiters) : 0;
+
+            return {
+                totalDaily: Math.round(totalDaily * 100) / 100,
+                totalWeekly: Math.round(totalWeekly * 100) / 100,
+                totalBiweekly: Math.round(totalBiweekly * 100) / 100,
+                totalMonthly: Math.round(totalMonthly * 100) / 100,
+                totalDailyLiters: Math.round(totalDailyLiters * 100) / 100,
+                totalMonthlyLiters: Math.round(totalMonthlyLiters * 100) / 100,
+                totalDailyKm: Math.round(totalDailyKm * 10) / 10,
+                totalMonthlyKm: Math.round(totalMonthlyKm * 10) / 10,
+                avgCostPerKm: Math.round(avgCostPerKm * 100) / 100,
+                avgEfficiencyKmPerLiter: Math.round(avgEfficiencyKmPerLiter * 100) / 100,
+                hasData: activeVehicles.length > 0,
+                vehicles: vehicleResults
+            };
+        },
+
+        totalEstimatedGasolineMonthly(state): number {
+            return ((this as any).gasolineProjections as GasolineFleetProjection)?.totalMonthly || 0;
+        },
+
+        totalEstimatedGasolineBiweekly(state): number {
+            return ((this as any).gasolineProjections as GasolineFleetProjection)?.totalBiweekly || 0;
+        },
+
+        totalEstimatedGasolineWeekly(state): number {
+            return ((this as any).gasolineProjections as GasolineFleetProjection)?.totalWeekly || 0;
+        },
+
+        totalEstimatedGasolineDaily(state): number {
+            return ((this as any).gasolineProjections as GasolineFleetProjection)?.totalDaily || 0;
+        },
+
         totalFixedExpenses(state): number {
             // workaround for pinia getter `this` access or direct call if available
             // Note: to access other getters we use `this`
-            return (this as any).totalFixedSubscriptionExpenses + (this as any).totalFixedDebtPayments;
+            const subs = (this as any).totalFixedSubscriptionExpenses || 0;
+            const debts = (this as any).totalFixedDebtPayments || 0;
+            const gas = (this as any).totalEstimatedGasolineMonthly || 0;
+            return subs + debts + gas;
         },
 
         totalFixedIncome: (state) => {
@@ -695,6 +906,18 @@ export const useFinanceStore = defineStore('finance', {
                 }
             });
 
+            // 3. Proyectar gastos fijos de combustible estimados (cadencia semanal)
+            const gasFleet = (this as any).gasolineProjections as GasolineFleetProjection;
+            if (gasFleet && gasFleet.totalDaily > 0) {
+                const weeklyFuel = gasFleet.totalWeekly;
+                for (let offset = 7; offset <= 30; offset += 7) {
+                    const fuelDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + offset);
+                    if (fuelDate <= endWindow) {
+                        addEvent(fuelDate, 'Gasolina Proyectada (Consumo semanal)', weeklyFuel, false);
+                    }
+                }
+            }
+
             const days: Array<{
                 dayIndex: number;
                 dateStr: string;
@@ -1081,6 +1304,25 @@ export const useFinanceStore = defineStore('finance', {
                 }
             } catch (err) {
                 console.error("Error updating vehicle:", err);
+            }
+        },
+
+        async deleteFuelLog(id: number) {
+            try {
+                const res = await api.delete(`/vehicles/logs/${id}`);
+                if (res.data.success) {
+                    await this.fetchVehicles();
+                    await this.fetchAccounts();
+                    await this.fetchTransactions();
+                    return true;
+                } else {
+                    alert("Error al eliminar: " + (res.data.message || "Desconocido"));
+                    return false;
+                }
+            } catch (err: any) {
+                console.error(err);
+                alert("Error de red o servidor: " + (err.response?.data?.message || err.message));
+                return false;
             }
         },
 

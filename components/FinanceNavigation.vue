@@ -17,6 +17,14 @@
       <span>Presupuesto & Proyecciones</span>
     </NuxtLink>
     <NuxtLink 
+      to="/taskman/garage" 
+      class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap"
+      :class="route.path === '/taskman/garage' ? 'bg-background text-foreground shadow-sm font-semibold' : 'text-muted-foreground hover:text-foreground hover:bg-background/40'"
+    >
+      <Car class="w-4 h-4 shrink-0 text-amber-500" />
+      <span>Garage & Gasolina</span>
+    </NuxtLink>
+    <NuxtLink 
       to="/taskman/wishlist" 
       class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap"
       :class="route.path === '/taskman/wishlist' ? 'bg-background text-foreground shadow-sm font-semibold' : 'text-muted-foreground hover:text-foreground hover:bg-background/40'"
@@ -37,7 +45,7 @@
 
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
-import { Wallet, TrendingUp, Sparkles, Activity } from 'lucide-vue-next'
+import { Wallet, TrendingUp, Sparkles, Activity, Car } from 'lucide-vue-next'
 
 const route = useRoute()
 </script>

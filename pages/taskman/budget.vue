@@ -66,7 +66,7 @@
             <div>
               <h3 class="font-bold text-lg mb-1">Burn Rate Fijo</h3>
               <p class="text-3xl font-bold font-mono text-red-500">{{ formatCurrency(financeStore.totalFixedExpenses) }} <span class="text-sm text-muted-foreground font-sans">/ mes</span></p>
-              <p class="text-xs text-muted-foreground mt-1">Lo mínimo que gastas en suscripciones y deudas al mes.</p>
+              <p class="text-xs text-muted-foreground mt-1">Lo indispensable para cubrir compromisos fijos, deudas y consumo de gasolina.</p>
             </div>
           </div>
           <div class="mt-4 space-y-2 relative z-10">
@@ -77,6 +77,25 @@
              <div class="flex justify-between items-center text-sm">
                 <span>Pagos de Préstamos/Tarjetas</span>
                 <span class="font-mono text-red-400">{{ formatCurrency(financeStore.totalFixedDebtPayments) }}</span>
+             </div>
+             <div class="flex justify-between items-center text-sm pt-0.5">
+                <div>
+                   <div class="flex items-center gap-1.5">
+                     <span>Gasolina Proyectada</span>
+                     <span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-500 border border-amber-500/20 font-medium">Calculado</span>
+                   </div>
+                   <div class="text-[10px] text-muted-foreground font-mono">
+                     {{ formatCurrency(financeStore.totalEstimatedGasolineBiweekly) }}/quincena · {{ formatCurrency(financeStore.totalEstimatedGasolineDaily) }}/día
+                   </div>
+                </div>
+                <div class="text-right">
+                   <span class="font-mono text-amber-500 font-semibold">{{ formatCurrency(financeStore.totalEstimatedGasolineMonthly) }}</span>
+                </div>
+             </div>
+             <div class="pt-1">
+                <NuxtLink to="/taskman/garage" class="inline-flex items-center gap-1 text-xs text-primary hover:underline font-medium">
+                  Ver prospección y telemetría en Garage →
+                </NuxtLink>
              </div>
           </div>
           <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-red-500/5 rounded-full blur-3xl group-hover:bg-red-500/10 transition-colors"></div>
