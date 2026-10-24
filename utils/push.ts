@@ -15,35 +15,62 @@ function urlBase64ToUint8Array(base64String: string) {
     return outputArray;
 }
 
-const registerWebPush = async () => {
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+export const requestWebPushPermission = async (): Promise<'granted' | 'denied' | 'unsupported'> => {
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
         console.warn('Web Push not supported in this browser');
-        return;
+        return 'unsupported';
     }
 
     try {
         const permission = await Notification.requestPermission();
         if (permission !== 'granted') {
-            console.warn('Web Push permission denied');
+            console.warn('Web Push permission denied or dismissed:', permission);
+            return 'denied';
+        }
+        await subscribeAndRegisterWebPush();
+        return 'granted';
+    } catch (e) {
+        console.error('Error requesting Web Push permission:', e);
+        return 'denied';
+    }
+};
+
+const subscribeAndRegisterWebPush = async () => {
+    const registration = await navigator.serviceWorker.register('/sw.js');
+    await navigator.serviceWorker.ready;
+
+    let subscription = await registration.pushManager.getSubscription();
+    if (!subscription) {
+        subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+        });
+    }
+
+    await api.post('/notifications/register-device', {
+        token: JSON.stringify(subscription),
+        platform: 'web'
+    });
+    console.log('Web Push successfully registered with backend.');
+};
+
+const registerWebPush = async () => {
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+        console.warn('Web Push not supported in this browser');
+        return;
+    }
+
+    try {
+        // Si ya tiene permiso concedido, renovamos la suscripción silenciosamente
+        if (Notification.permission === 'granted') {
+            await subscribeAndRegisterWebPush();
             return;
         }
-
-        const registration = await navigator.serviceWorker.register('/sw.js');
-        await navigator.serviceWorker.ready;
-
-        let subscription = await registration.pushManager.getSubscription();
-        if (!subscription) {
-            subscription = await registration.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-            });
+        // Intentar solicitar si el navegador lo permite en carga, de lo contrario el botón en NotificationBell lo activará con gesto de usuario
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+            await subscribeAndRegisterWebPush();
         }
-
-        await api.post('/notifications/register-device', {
-            token: JSON.stringify(subscription),
-            platform: 'web'
-        });
-        console.log('Web Push successfully registered with backend.');
     } catch (e) {
         console.error('Error registering Web Push:', e);
     }

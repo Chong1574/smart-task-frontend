@@ -324,6 +324,7 @@ const handleLogoutEvent = () => {
 }
 
 import { registerPushNotifications } from '~/utils/push'
+import { watch } from 'vue'
 
 onMounted(() => {
   if (typeof window !== 'undefined') {
@@ -333,6 +334,12 @@ onMounted(() => {
     if (authStore.isAuthenticated) {
       registerPushNotifications()
     }
+  }
+})
+
+watch(() => authStore.isAuthenticated, (isAuth) => {
+  if (typeof window !== 'undefined' && isAuth) {
+    registerPushNotifications()
   }
 })
 
