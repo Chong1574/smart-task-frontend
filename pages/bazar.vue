@@ -1,9 +1,9 @@
 <template>
-  <div class="py-12 md:py-20">
+  <div class="py-6 md:py-16">
     <div class="container max-w-6xl px-4">
 
       <!-- Cabecera -->
-      <div class="mb-10 text-center">
+      <div class="mb-6 md:mb-10 text-center">
         <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary mb-4 text-xs font-semibold tracking-wide">
           <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
           Manufactura 3D Bajo Demanda · Piezas Físicas Listas para Usar
@@ -39,7 +39,7 @@
       </div>
 
       <!-- Barra de Confianza (Resuelve dudas clave antes de explorar) -->
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 mb-8">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-2.5 mb-6 md:mb-8">
         <div class="flex items-center gap-2.5 bg-card border border-border/60 rounded-xl px-3.5 py-2.5 shadow-2xs">
           <span class="text-lg shrink-0">📦</span>
           <div class="min-w-0">
@@ -70,11 +70,45 @@
         </div>
       </div>
 
+            <!-- Barra Rápida de Categorías en Celular (Navegación ágil con el pulgar) -->
+      <div class="md:hidden mb-4">
+        <div class="flex items-center gap-2 overflow-x-auto pb-1.5 scrollbar-none no-scrollbar -mx-4 px-4">
+          <!-- Botón de Filtros Avanzados -->
+          <button
+            type="button"
+            @click="isMobileFiltersOpen = true"
+            class="h-9 px-3.5 rounded-full border border-border/80 bg-card text-xs font-semibold shrink-0 flex items-center gap-1.5 shadow-2xs active:scale-95 transition-transform cursor-pointer"
+            :class="hasActiveFilters ? 'text-primary border-primary bg-primary/10' : 'text-foreground'"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            <span>Filtros</span>
+            <span v-if="activeFiltersCount > 0" class="w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold">
+              {{ activeFiltersCount }}
+            </span>
+          </button>
+
+          <!-- Chips de Categorías -->
+          <button
+            v-for="cat in categoriesWithCounts"
+            :key="'chip-'+cat.id"
+            type="button"
+            @click="selectedCategory = cat.id"
+            class="h-9 px-3.5 rounded-full text-xs font-semibold transition-all shrink-0 flex items-center gap-1.5 border cursor-pointer"
+            :class="selectedCategory === cat.id
+              ? 'bg-primary text-primary-foreground border-primary shadow-xs'
+              : 'bg-card text-muted-foreground border-border/70 hover:text-foreground'"
+          >
+            <span>{{ cat.label }}</span>
+            <span class="text-[10px] opacity-70">({{ cat.count }})</span>
+          </button>
+        </div>
+      </div>
+
       <!-- Layout con Sidebar (estilo MercadoLibre/Amazon) -->
       <div class="flex flex-col md:flex-row gap-8 items-start">
         
         <!-- Sidebar de Filtros -->
-        <aside class="w-full md:w-64 flex-shrink-0 bg-card border border-border/60 rounded-2xl p-5 shadow-sm md:sticky md:top-24 md:z-10 md:max-h-[calc(100vh-7rem)] md:overflow-y-auto">
+        <aside class="hidden md:block w-full md:w-64 flex-shrink-0 bg-card border border-border/60 rounded-2xl p-5 shadow-sm md:sticky md:top-24 md:z-10 md:max-h-[calc(100vh-7rem)] md:overflow-y-auto">
           <div class="flex items-center justify-between mb-4">
             <h2 class="text-lg font-bold font-serif">Filtros</h2>
             <button 
@@ -375,23 +409,23 @@
               <span class="font-medium animate-pulse">{{ deepSearchPhrases[deepSearchStatusIndex] }}</span>
               <span class="ml-auto text-[10px] uppercase tracking-wider text-muted-foreground/70">Procesando</span>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-6">
 
         <div
           v-for="product in filteredProducts"
           :key="product.id"
-          class="group flex flex-col bg-card rounded-2xl overflow-hidden border border-border/60 hover:border-primary/40 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-300 cursor-pointer"
+          class="group flex flex-col bg-card rounded-2xl overflow-hidden border border-border/60 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 cursor-pointer relative"
           @mouseenter="hoveredProductId = product.id"
           @mouseleave="hoveredProductId = null"
           @click="openProductDetail(product)"
         >
-          <!-- Cabecera Visual Limpia -->
+          <!-- Cabecera Visual Limpia y Enfoque en Conversión -->
           <div class="aspect-square bg-secondary/40 overflow-hidden relative">
             <img
               v-if="getCardCurrentImage(product)"
               :src="imgProxy(getCardCurrentImage(product), { width: 600 })"
               :srcset="imgProxySrcSet(getCardCurrentImage(product), 600)"
-              sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+              sizes="(min-width: 1024px) 33vw, 50vw"
               :alt="product.title"
               loading="lazy"
               decoding="async"
@@ -399,14 +433,14 @@
               height="600"
               class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
-            <div v-else class="absolute inset-0 flex items-center justify-center text-muted-foreground/30 font-serif italic">
-              [ Imagen del Producto ]
+            <div v-else class="absolute inset-0 flex items-center justify-center text-muted-foreground/30 font-serif italic text-xs">
+              [ Sin imagen ]
             </div>
 
-            <!-- Único Badge Superior Izquierdo: Categoría o Personalizable -->
+            <!-- Badge Superior Izquierdo: Personalizable, Exclusivo o Categoría -->
             <div
               v-if="isProductPersonalized(product) || product.source === 'CUSTOM' || product.isCustom || product.category"
-              class="absolute top-3 left-3 backdrop-blur-md px-2.5 py-1 text-[11px] font-semibold rounded-full border shadow-xs flex items-center gap-1 max-w-[75%] truncate"
+              class="absolute top-2 left-2 sm:top-3 sm:left-3 backdrop-blur-md px-2 py-0.5 sm:px-2.5 sm:py-1 text-[10px] sm:text-[11px] font-semibold rounded-full border shadow-xs flex items-center gap-1 max-w-[85%] truncate z-10"
               :class="isProductPersonalized(product)
                 ? 'bg-amber-500/95 text-white border-amber-400/50'
                 : (product.source === 'CUSTOM' || product.isCustom)
@@ -414,16 +448,22 @@
                   : 'bg-background/90 text-foreground border-border/60'"
             >
               <span v-if="isProductPersonalized(product)">✨ Personalizable</span>
-              <span v-else-if="product.source === 'CUSTOM' || product.isCustom">⭐ Diseño Exclusivo</span>
+              <span v-else-if="product.source === 'CUSTOM' || product.isCustom">⭐ Exclusivo</span>
               <span v-else class="truncate">{{ product.category }}</span>
             </div>
 
-            <!-- Flechas en hover para explorar fotos sin saturar la imagen -->
+            <!-- Badge Superior Derecho: Certeza Comercial (Pieza Física) -->
+            <div class="absolute top-2 right-2 sm:top-3 sm:right-3 backdrop-blur-md px-1.5 py-0.5 rounded-md bg-black/40 text-white text-[9px] sm:text-[10px] font-medium border border-white/20 flex items-center gap-1 z-10">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span class="hidden xs:inline sm:inline">Pieza física</span>
+            </div>
+
+            <!-- Flechas de exploración de fotos en desktop (ocultas en touch para no estorbar) -->
             <template v-if="getProductImages(product).length > 1">
               <button
                 type="button"
                 @click.stop="stepCardImage(product, -1)"
-                class="absolute left-2.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-background/85 hover:bg-background text-foreground border border-border/60 shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity cursor-pointer"
+                class="hidden sm:flex absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-background/85 hover:bg-background text-foreground border border-border/60 shadow-md items-center justify-center opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity cursor-pointer z-10"
                 title="Foto anterior"
                 aria-label="Foto anterior"
               >
@@ -432,7 +472,7 @@
               <button
                 type="button"
                 @click.stop="stepCardImage(product, 1)"
-                class="absolute right-2.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-background/85 hover:bg-background text-foreground border border-border/60 shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity cursor-pointer"
+                class="hidden sm:flex absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-background/85 hover:bg-background text-foreground border border-border/60 shadow-md items-center justify-center opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity cursor-pointer z-10"
                 title="Siguiente foto"
                 aria-label="Siguiente foto"
               >
@@ -440,56 +480,64 @@
               </button>
 
               <!-- Contador discreto de fotos -->
-              <button
-                type="button"
-                @click.stop="stepCardImage(product, 1)"
-                class="absolute bottom-2.5 right-2.5 bg-background/85 hover:bg-background text-foreground backdrop-blur-md px-2 py-0.5 rounded-full text-[10px] font-medium border border-border/50 shadow-xs cursor-pointer transition-colors"
-                title="Ver siguiente foto"
+              <div
+                class="absolute bottom-2 right-2 bg-background/80 backdrop-blur-md px-1.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-medium text-foreground border border-border/40 shadow-2xs z-10"
               >
                 {{ getCurrentImageDisplayIndex(product) }}/{{ getProductImages(product).length }}
-              </button>
+              </div>
             </template>
           </div>
 
-          <!-- Cuerpo de la Tarjeta (Limpio y enfocado a conversión) -->
-          <div class="p-5 flex flex-col flex-grow">
-            <h3 class="font-serif text-lg font-bold leading-snug mb-1.5 text-foreground group-hover:text-primary transition-colors line-clamp-2">
+          <!-- Cuerpo de la Tarjeta: Sin saturación, enfocado a venta -->
+          <div class="p-2.5 sm:p-5 flex flex-col flex-grow">
+            <!-- Título Comercial -->
+            <h3 class="font-serif text-xs sm:text-base font-bold leading-snug mb-1 text-foreground group-hover:text-primary transition-colors line-clamp-2 min-h-[2rem] sm:min-h-0">
               {{ product.title }}
             </h3>
-            <p v-if="product.description" class="text-muted-foreground text-xs leading-relaxed mb-3 line-clamp-2">
+
+            <!-- Indicador sutil de valor (Factor de venta directo) -->
+            <div class="flex items-center gap-1 text-[10px] sm:text-xs text-muted-foreground font-medium mb-1.5 sm:mb-3 truncate">
+              <span v-if="product.variants && product.variants.length > 1" class="flex items-center gap-1 text-primary font-semibold">
+                <span>✨</span> {{ product.variants.length }} tamaños
+              </span>
+              <span v-else class="flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span> Listo para enviar
+              </span>
+            </div>
+
+            <!-- Descripción (Solo visible en pantalla grande para no saturar celular) -->
+            <p v-if="product.description" class="hidden sm:block text-muted-foreground text-xs leading-relaxed mb-3 line-clamp-2">
               {{ product.description }}
             </p>
 
-            <!-- Variantes interactivas SOLO cuando hay más de 1 opción (con gramos como referencia de tamaño) -->
-            <div v-if="product.variants && product.variants.length > 1" class="mb-3">
+            <!-- Variantes interactivas en desktop -->
+            <div v-if="product.variants && product.variants.length > 1" class="hidden sm:block mb-3">
               <div class="flex flex-wrap gap-1.5">
                 <button
                   v-for="(v, vIdx) in product.variants.slice(0, 3)"
                   :key="vIdx"
                   type="button"
                   @click.stop="selectCardVariant(product, Number(vIdx))"
-                  class="text-[11px] px-2.5 py-1 rounded-lg border transition-all inline-flex items-center gap-1 cursor-pointer max-w-full"
+                  class="text-[11px] px-2 py-0.5 rounded-lg border transition-all inline-flex items-center gap-1 cursor-pointer max-w-full"
                   :class="getActiveVariantIdx(product) === Number(vIdx)
                     ? 'bg-primary/15 border-primary text-primary font-semibold shadow-2xs'
                     : 'bg-secondary/35 border-border/60 text-muted-foreground hover:text-foreground hover:border-primary/40'"
-                  :title="v.grams ? `${v.name} (~${v.grams}g) — ${fmt(v.price)}` : `${v.name} — ${fmt(v.price)}`"
                 >
-                  <span class="truncate max-w-[120px]">{{ v.name }}</span>
-                  <span v-if="v.grams" class="opacity-70 text-[10px] shrink-0">~{{ v.grams }}g</span>
+                  <span class="truncate max-w-[100px]">{{ v.name }}</span>
                 </button>
                 <button
                   v-if="product.variants.length > 3"
                   type="button"
                   @click.stop="openProductDetail(product)"
-                  class="text-[10px] px-2 py-1 rounded-lg border border-border/60 bg-secondary/25 text-primary font-medium hover:bg-primary/10 transition-colors cursor-pointer"
+                  class="text-[10px] px-1.5 py-0.5 rounded-lg border border-border/60 bg-secondary/25 text-primary font-medium hover:bg-primary/10 transition-colors"
                 >
                   +{{ product.variants.length - 3 }}
                 </button>
               </div>
             </div>
 
-            <!-- Etiquetas clicables -->
-            <div v-if="product.tags && product.tags.length" class="flex flex-wrap gap-1 mb-4">
+            <!-- Etiquetas clicables (Solo en desktop para evitar ruido en celular) -->
+            <div v-if="product.tags && product.tags.length" class="hidden sm:flex flex-wrap gap-1 mb-4">
               <button
                 v-for="tag in product.tags.slice(0, 3)"
                 :key="tag"
@@ -508,20 +556,14 @@
               </span>
             </div>
 
-            <!-- Footer Directo: Precio + Botón de Compra Juntos (Cero fricción ni textos solapados) -->
-            <div class="mt-auto pt-3 border-t border-border/50 flex items-center justify-between gap-3">
+            <!-- Footer: Precio de Alto Impacto + Botón Rápido de Compra -->
+            <div class="mt-auto pt-2 sm:pt-3 border-t border-border/40 flex items-center justify-between gap-1.5 sm:gap-3">
               <div class="min-w-0">
-                <span
-                  v-if="product.variants && product.variants.length > 1"
-                  class="block text-[10px] text-muted-foreground truncate"
-                >
-                  {{ getActiveVariant(product)?.name }}
-                </span>
-                <div class="flex items-baseline gap-1">
-                  <span class="text-2xl font-extrabold text-foreground tracking-tight">
+                <div class="flex items-baseline gap-0.5 sm:gap-1">
+                  <span class="text-sm sm:text-2xl font-black text-foreground tracking-tight">
                     {{ getFormattedActivePrice(product) }}
                   </span>
-                  <span v-if="getActivePrice(product) > 0" class="text-[10px] font-semibold text-muted-foreground">
+                  <span v-if="getActivePrice(product) > 0" class="text-[9px] sm:text-[10px] font-bold text-muted-foreground">
                     MXN
                   </span>
                 </div>
@@ -531,39 +573,27 @@
               <button
                 type="button"
                 @click.stop="handleCardQuickAction(product)"
-                class="px-3.5 py-2.5 rounded-xl font-semibold text-xs transition-all inline-flex items-center gap-1.5 shadow-sm cursor-pointer shrink-0"
+                class="h-8 sm:h-9 px-2.5 sm:px-3.5 rounded-xl font-bold text-xs transition-all inline-flex items-center justify-center gap-1.5 shadow-xs cursor-pointer shrink-0"
                 :class="justAddedId === product.id
                   ? 'bg-emerald-600 text-white shadow-emerald-500/20'
-                  : 'bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-md hover:shadow-primary/20 active:scale-[0.98]'"
+                  : (isActiveVariantPersonalized(product)
+                    ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20'
+                    : 'bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95 shadow-primary/20')"
                 :aria-label="isActiveVariantPersonalized(product) ? 'Personalizar pieza' : 'Agregar al carrito'"
               >
                 <template v-if="justAddedId === product.id">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-                  <span>¡Listo!</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                  <span class="hidden sm:inline">¡Listo!</span>
                 </template>
                 <template v-else-if="isActiveVariantPersonalized(product)">
-                  <span>✨ Personalizar</span>
+                  <span class="text-xs">✨</span>
+                  <span class="hidden sm:inline">Personalizar</span>
                 </template>
                 <template v-else>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-                  <span>Agregar</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                  <span class="hidden sm:inline">Agregar</span>
                 </template>
               </button>
-            </div>
-
-            <!-- Enlace de descarga sólo si el producto tiene archivo adjunto -->
-            <div v-if="product.fileUrl" class="mt-2 pt-2 border-t border-border/40">
-              <a
-                :href="`${apiBase}/products/${product.id}/download`"
-                class="inline-flex items-center gap-1 text-xs text-primary hover:underline font-medium"
-                target="_blank"
-                @click.stop
-              >
-                Descargar archivo
-                <span v-if="product.fileSizeBytes" class="text-muted-foreground">
-                  ({{ formatSize(product.fileSizeBytes) }})
-                </span>
-              </a>
             </div>
           </div>
         </div>
@@ -591,6 +621,144 @@
         @close="selected = null" 
         @select-tag="handleSelectTagFromDetail" 
       />
+        
+      <!-- Modal / Sheet de Filtros para Celular -->
+      <div
+        v-if="isMobileFiltersOpen"
+        class="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex flex-col justify-end md:hidden animate-in fade-in duration-200"
+        @click.self="isMobileFiltersOpen = false"
+      >
+        <div class="bg-card border-t border-border rounded-t-3xl max-h-[85vh] overflow-y-auto p-5 shadow-2xl space-y-6">
+          <div class="flex items-center justify-between pb-3 border-b border-border/60 sticky top-0 bg-card z-10">
+            <div class="flex items-center gap-2">
+              <h2 class="text-lg font-bold font-serif">Filtros</h2>
+              <span v-if="activeFiltersCount > 0" class="text-xs bg-primary/10 text-primary font-bold px-2 py-0.5 rounded-full">
+                {{ activeFiltersCount }} activos
+              </span>
+            </div>
+            <div class="flex items-center gap-3">
+              <button
+                v-if="hasActiveFilters"
+                type="button"
+                @click="resetFilters"
+                class="text-xs text-primary hover:underline font-semibold cursor-pointer"
+              >
+                Limpiar todo
+              </button>
+              <button
+                type="button"
+                @click="isMobileFiltersOpen = false"
+                class="p-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary cursor-pointer"
+                aria-label="Cerrar filtros"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Categorías en modal móvil -->
+          <div>
+            <h3 class="font-semibold text-sm mb-2 text-foreground">Categorías</h3>
+            <div class="grid grid-cols-2 gap-1.5">
+              <button
+                v-for="cat in categoriesWithCounts"
+                :key="'mob-'+cat.id"
+                type="button"
+                @click="selectedCategory = cat.id"
+                class="text-xs p-2 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer"
+                :class="selectedCategory === cat.id
+                  ? 'bg-primary/10 border-primary text-primary font-bold shadow-2xs'
+                  : 'bg-secondary/20 border-border/60 text-muted-foreground hover:text-foreground'"
+              >
+                <span class="truncate pr-1">{{ cat.label }}</span>
+                <span class="text-[10px] opacity-70 shrink-0">({{ cat.count }})</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Rango de Precio en modal móvil -->
+          <div class="pt-4 border-t border-border/60">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="font-semibold text-sm text-foreground">Precio</h3>
+              <span class="text-xs font-semibold text-primary">{{ priceSummaryLabel }}</span>
+            </div>
+            <div class="px-1 py-2">
+              <Slider v-model="priceRange" :min="0" :max="1000" :step="10" class="w-full" />
+            </div>
+            <div class="flex justify-between text-[10px] text-muted-foreground mb-3 px-1">
+              <span>$0</span>
+              <span>$1,000+</span>
+            </div>
+            <div class="flex flex-wrap gap-1.5">
+              <button
+                v-for="preset in PRICE_PRESETS"
+                :key="'mob-pre-'+preset.id"
+                type="button"
+                @click="selectPricePreset(preset)"
+                class="text-xs px-2.5 py-1 rounded-lg border transition-all cursor-pointer"
+                :class="selectedPricePreset === preset.id
+                  ? 'bg-primary text-primary-foreground border-primary font-medium shadow-xs'
+                  : 'bg-secondary/35 text-muted-foreground border-border/60'"
+              >
+                {{ preset.shortLabel }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Etiquetas en modal móvil -->
+          <div v-if="popularTags.length > 0" class="pt-4 border-t border-border/60">
+            <div class="flex items-center justify-between mb-2.5">
+              <h3 class="font-semibold text-sm text-foreground">Etiquetas</h3>
+              <button
+                v-if="selectedTag"
+                type="button"
+                @click="selectedTag = null"
+                class="text-xs text-primary font-semibold hover:underline cursor-pointer"
+              >
+                Quitar etiqueta
+              </button>
+            </div>
+            <div class="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto">
+              <button
+                v-for="tag in popularTags.slice(0, 16)"
+                :key="'mob-tag-'+tag.norm"
+                type="button"
+                @click="toggleTag(tag.display)"
+                class="text-xs px-2.5 py-1 rounded-full border transition-all inline-flex items-center gap-1.5 cursor-pointer"
+                :class="isTagActive(tag.norm)
+                  ? 'bg-primary text-primary-foreground border-primary font-semibold shadow-xs'
+                  : 'bg-secondary/35 text-foreground/80 border-border/60'"
+              >
+                <span>{{ formatTagDisplay(tag.display) }}</span>
+                <span class="text-[10px] opacity-70">({{ tag.count }})</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Búsqueda Global 3D en modal móvil -->
+          <div class="pt-4 border-t border-border/60">
+            <button 
+              type="button"
+              @click="handleDeepSearchClick(); isMobileFiltersOpen = false" 
+              class="w-full text-xs font-semibold py-2.5 px-3 rounded-xl bg-secondary/80 text-foreground border border-border transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+            >
+              <span>Explorar modelos en la Web 3D</span>
+              <svg class="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            </button>
+          </div>
+
+          <!-- Botón de aplicar y ver productos -->
+          <div class="pt-3 sticky bottom-0 bg-card pb-1">
+            <button
+              type="button"
+              @click="isMobileFiltersOpen = false"
+              class="w-full h-11 bg-primary text-primary-foreground font-bold text-sm rounded-xl shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
+            >
+              <span>Ver {{ filteredProducts.length }} productos</span>
+            </button>
+          </div>
+        </div>
+      </div>
         </main>
       </div>
     </div>
@@ -655,6 +823,15 @@ let deepSearchStatusInterval: any = null;
 const searchedLive = ref(false);
 const rateLimited = ref(false);
 const selected = ref<Product | null>(null);
+const isMobileFiltersOpen = ref(false);
+const activeFiltersCount = computed(() => {
+  let count = 0;
+  if (selectedCategory.value !== 'todos') count++;
+  if (selectedTag.value !== null) count++;
+  if (priceRange.value[0] > 0 || priceRange.value[1] < 1000) count++;
+  if (query.value.trim().length > 0) count++;
+  return count;
+});
 const selectedInitialVariantIdx = ref<number>(0);
 
 // Estado interactivo por tarjeta para previsualizar variantes, fotos y feedback de compra
@@ -1313,7 +1490,7 @@ if (route.query.p) {
   const rawP = String(route.query.p).trim();
   const { data: ssrProduct } = await useAsyncData('ssr-prod-' + rawP, async () => {
     try {
-      return await $fetch<Product>(`${apiBase}/products/${encodeURIComponent(rawP)}`);
+      return (await $fetch(`${apiBase}/products/${encodeURIComponent(rawP)}`)) as Product;
     } catch {
       return null;
     }

@@ -3,10 +3,10 @@
     class="fixed inset-0 z-50 bg-background/90 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200"
     @click.self="$emit('close')"
   >
-    <div class="container max-w-5xl mx-auto py-6 md:py-10 px-4 relative">
+    <div class="container max-w-5xl mx-auto py-3 md:py-10 px-3 md:px-4 relative pb-28 md:pb-10">
       <div class="bg-card border border-border/70 rounded-3xl shadow-2xl overflow-hidden">
         <!-- Barra superior fija dentro del modal -->
-        <div class="sticky top-0 z-20 flex items-center justify-between px-6 py-4 bg-card/90 backdrop-blur-md border-b border-border/60">
+        <div class="sticky top-0 z-20 flex items-center justify-between px-4 md:px-6 py-3.5 bg-card/95 backdrop-blur-md border-b border-border/60">
           <button
             type="button"
             class="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground font-medium transition-colors cursor-pointer"
@@ -88,44 +88,7 @@
               </button>
             </div>
 
-            <!-- ¿Qué incluye tu pedido? (Con filamento dinámico según el modelo/impresión) -->
-            <div class="bg-secondary/25 border border-border/60 rounded-2xl p-4 space-y-3 text-xs">
-              <h4 class="font-semibold text-foreground text-xs uppercase tracking-wider flex items-center gap-1.5">
-                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>
-                ¿Qué incluye tu pedido?
-              </h4>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-muted-foreground">
-                <div class="flex items-start gap-2 bg-card/70 p-2.5 rounded-xl border border-border/40">
-                  <span class="text-base leading-none mt-0.5">✨</span>
-                  <div>
-                    <p class="font-semibold text-foreground">Acabado Limpio y Detallado</p>
-                    <p class="text-[11px] leading-snug">Pieza revisada, libre de soportes y lista para usar desde que abres tu caja.</p>
-                  </div>
-                </div>
-                <div class="flex items-start gap-2 bg-card/70 p-2.5 rounded-xl border border-border/40">
-                  <span class="text-base leading-none mt-0.5">🛡️</span>
-                  <div>
-                    <p class="font-semibold text-foreground">{{ recommendedFilamentInfo.title }}</p>
-                    <p class="text-[11px] leading-snug">{{ recommendedFilamentInfo.description }}</p>
-                  </div>
-                </div>
-                <div class="flex items-start gap-2 bg-card/70 p-2.5 rounded-xl border border-border/40">
-                  <span class="text-base leading-none mt-0.5">🎨</span>
-                  <div>
-                    <p class="font-semibold text-foreground">Color a tu Elección</p>
-                    <p class="text-[11px] leading-snug">En los tonos originales del modelo o en cualquiera de nuestros colores Sunlu / Bambu PLA.</p>
-                  </div>
-                </div>
-                <div class="flex items-start gap-2 bg-card/70 p-2.5 rounded-xl border border-border/40">
-                  <span class="text-base leading-none mt-0.5">🚚</span>
-                  <div>
-                    <p class="font-semibold text-foreground">Envío Protegido a todo MX</p>
-                    <p class="text-[11px] leading-snug">Empaque seguro con garantía de reposición sin costo ante cualquier daño.</p>
-                  </div>
-                </div>
-              </div>
             </div>
-          </div>
 
           <!-- Columna Derecha: Flujo de Compra de Baja Fricción -->
           <div class="md:col-span-6 flex flex-col">
@@ -340,6 +303,44 @@
               </button>
             </div>
 
+            <!-- ¿Qué incluye tu pedido? (Con filamento dinámico según el modelo/impresión) -->
+            <div class="bg-secondary/25 border border-border/60 rounded-2xl p-4 space-y-3 text-xs">
+              <h4 class="font-semibold text-foreground text-xs uppercase tracking-wider flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>
+                ¿Qué incluye tu pedido?
+              </h4>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-muted-foreground">
+                <div class="flex items-start gap-2 bg-card/70 p-2.5 rounded-xl border border-border/40">
+                  <span class="text-base leading-none mt-0.5">✨</span>
+                  <div>
+                    <p class="font-semibold text-foreground">Acabado Limpio y Detallado</p>
+                    <p class="text-[11px] leading-snug">Pieza revisada, libre de soportes y lista para usar desde que abres tu caja.</p>
+                  </div>
+                </div>
+                <div class="flex items-start gap-2 bg-card/70 p-2.5 rounded-xl border border-border/40">
+                  <span class="text-base leading-none mt-0.5">🛡️</span>
+                  <div>
+                    <p class="font-semibold text-foreground">{{ recommendedFilamentInfo.title }}</p>
+                    <p class="text-[11px] leading-snug">{{ recommendedFilamentInfo.description }}</p>
+                  </div>
+                </div>
+                <div class="flex items-start gap-2 bg-card/70 p-2.5 rounded-xl border border-border/40">
+                  <span class="text-base leading-none mt-0.5">🎨</span>
+                  <div>
+                    <p class="font-semibold text-foreground">Color a tu Elección</p>
+                    <p class="text-[11px] leading-snug">En los tonos originales del modelo o en cualquiera de nuestros colores Sunlu / Bambu PLA.</p>
+                  </div>
+                </div>
+                <div class="flex items-start gap-2 bg-card/70 p-2.5 rounded-xl border border-border/40">
+                  <span class="text-base leading-none mt-0.5">🚚</span>
+                  <div>
+                    <p class="font-semibold text-foreground">Envío Protegido a todo MX</p>
+                    <p class="text-[11px] leading-snug">Empaque seguro con garantía de reposición sin costo ante cualquier daño.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- Atribución legal -->
             <div class="mt-auto pt-3 border-t border-border/40 text-[11px] text-muted-foreground flex flex-wrap items-center justify-between gap-2">
               <span v-if="product.licenseAttribution">Diseño: {{ product.licenseAttribution }}</span>
@@ -354,6 +355,24 @@
               </a>
             </div>
           </div>
+        </div>
+        <!-- Barra fija inferior de compra en celular (Conversión directa sin scroll) -->
+        <div class="md:hidden fixed bottom-0 left-0 right-0 p-3 bg-card/95 backdrop-blur-md border-t border-border z-30 flex items-center justify-between gap-3 shadow-2xl">
+          <div class="min-w-0">
+            <span class="block text-[10px] text-muted-foreground uppercase font-semibold">Total estimado</span>
+            <div class="flex items-baseline gap-1">
+              <span class="text-xl font-black text-primary">{{ priceLabel }}</span>
+              <span v-if="currentPrice > 0" class="text-[10px] font-semibold text-muted-foreground">MXN</span>
+            </div>
+          </div>
+          <button
+            type="button"
+            @click="buyNow"
+            class="flex-1 h-11 bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-sm px-4 rounded-xl transition-all shadow-md shadow-primary/25 flex justify-center items-center gap-2 cursor-pointer active:scale-[0.98]"
+          >
+            <span>Comprar ahora</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </button>
         </div>
       </div>
     </div>
