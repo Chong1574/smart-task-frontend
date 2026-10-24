@@ -65,15 +65,7 @@ export default defineNuxtConfig({
       ],
       meta: [
         { property: 'og:site_name', content: 'El Rincón de Brandy' },
-        { property: 'og:type', content: 'website' },
-        { property: 'og:image', content: `${SITE_URL}/og-cover.jpg` },
-        { property: 'og:image:secure_url', content: `${SITE_URL}/og-cover.jpg` },
-        { property: 'og:image:type', content: 'image/jpeg' },
-        { property: 'og:image:width', content: '2528' },
-        { property: 'og:image:height', content: '1696' },
-        { property: 'og:image:alt', content: 'El Rincón de Brandy — Taller Boutique de Innovación y Manufactura 3D' },
-        { name: 'twitter:card', content: 'summary_large_image' },
-        { name: 'twitter:image', content: `${SITE_URL}/og-cover.jpg` }
+        { property: 'og:type', content: 'website' }
       ],
       script: []
     },

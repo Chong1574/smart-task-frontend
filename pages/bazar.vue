@@ -1254,9 +1254,24 @@ function priceLabel(p: Product): string {
   return hasVariants ? `desde ${fmt(n)}` : fmt(n);
 }
 
-const seoTitle = computed(() => selected.value ? `${selected.value.title} — El Bazar` : 'El Bazar — Productos en impresión 3D y accesorios');
-const seoDesc = computed(() => selected.value ? (selected.value.description || 'Producto en el bazar') : 'Galería de creaciones físicas: piezas en impresión 3D, accesorios de estilo de vida y electrónica diseñada con detalle.');
-const seoImage = computed(() => selected.value?.imageUrl ? imgProxy(selected.value.imageUrl, { width: 1200 }) : 'https://shongyi.com/logo.png');
+const seoTitle = computed(() => {
+  if (selected.value && typeof selected.value === 'object' && selected.value.title) {
+    return `${selected.value.title} — El Bazar`;
+  }
+  return 'El Bazar — Productos en impresión 3D y accesorios';
+});
+const seoDesc = computed(() => {
+  if (selected.value && typeof selected.value === 'object' && selected.value.description) {
+    return String(selected.value.description).slice(0, 180);
+  }
+  return 'Galería de creaciones físicas: piezas en impresión 3D, accesorios de estilo de vida y electrónica diseñada con detalle.';
+});
+const seoImage = computed(() => {
+  if (selected.value && typeof selected.value === 'object' && selected.value.imageUrl) {
+    return imgProxy(selected.value.imageUrl, { width: 1200, format: 'jpeg', quality: 80 });
+  }
+  return 'https://shongyi.com/og-cover.jpg';
+});
 
 useSeoMeta({
   title: seoTitle,
@@ -1264,9 +1279,16 @@ useSeoMeta({
   ogTitle: seoTitle,
   ogDescription: seoDesc,
   ogImage: seoImage,
+  ogImageSecureUrl: seoImage,
+  ogImageType: 'image/jpeg',
+  ogImageWidth: 1200,
+  ogImageHeight: 800,
   ogType: 'website',
-  ogUrl: computed(() => selected.value ? `https://shongyi.com/bazar?p=${selected.value.id}` : 'https://shongyi.com/bazar'),
-  twitterCard: 'summary_large_image'
+  ogUrl: computed(() => (selected.value && typeof selected.value === 'object' && selected.value.id) ? `https://shongyi.com/bazar?p=${selected.value.id}` : 'https://shongyi.com/bazar'),
+  twitterCard: 'summary_large_image',
+  twitterTitle: seoTitle,
+  twitterDescription: seoDesc,
+  twitterImage: seoImage
 })
 
 useHead({
@@ -1291,12 +1313,12 @@ if (route.query.p) {
   const rawP = String(route.query.p).trim();
   const { data: ssrProduct } = await useAsyncData('ssr-prod-' + rawP, async () => {
     try {
-      return await <Product>(apiBase + '/products/' + encodeURIComponent(rawP));
+      return await $fetch<Product>(`${apiBase}/products/${encodeURIComponent(rawP)}`);
     } catch {
       return null;
     }
   });
-  if (ssrProduct.value) {
+  if (ssrProduct.value && typeof ssrProduct.value === 'object') {
     selected.value = ssrProduct.value;
   }
 }

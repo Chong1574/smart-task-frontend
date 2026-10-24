@@ -599,10 +599,31 @@ function formatTag(raw: string | null | undefined): string {
   return clean;
 }
 
+async function shareProduct() {
+  const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/bazar?p=${props.product.id}` : `https://shongyi.com/bazar?p=${props.product.id}`;
+  if (typeof navigator !== 'undefined' && navigator.share) {
+    try {
+      await navigator.share({
+        title: props.product.title,
+        text: `Mira este modelo en El Bazar: ${props.product.title}`,
+        url: shareUrl,
+      });
+      return;
+    } catch (e: any) {
+      if (e.name === 'AbortError') return;
+    }
+  }
+  if (typeof navigator !== 'undefined' && navigator.clipboard) {
+    await navigator.clipboard.writeText(shareUrl);
+    toast.success('Enlace copiado al portapapeles');
+  }
+}
+
 const whatsappInquiryUrl = computed(() => {
   const vName = activeVariant.value ? ` (${activeVariant.value.name})` : '';
   const colorNote = selectedColorId.value !== 'original' ? ` en color ${selectedColorObj.value.label}` : '';
-  const msg = `Hola, vi el modelo "${props.product.title}"${vName}${colorNote} en El Bazar (${priceLabel.value}) y tengo una duda.`;
+  const shareUrl = `https://shongyi.com/bazar?p=${props.product.id}`;
+  const msg = `Hola, vi el modelo "${props.product.title}"${vName}${colorNote} en El Bazar (${priceLabel.value}):\n${shareUrl}\n\nTengo una duda.`;
   return `https://wa.me/524421752026?text=${encodeURIComponent(msg)}`;
 });
 
