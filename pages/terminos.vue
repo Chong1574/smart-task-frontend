@@ -8,8 +8,7 @@
       <h2 class="text-2xl font-serif font-bold text-[#8E5E44] mt-8">Identidad del Responsable</h2>
       <p>
         Responsable: El Rincón de Brandy (Taskman)<br>
-        Email de contacto: <a href="mailto:contacto@shongyi.com" class="text-[#8E5E44] hover:underline">contacto@shongyi.com</a><br>
-        WhatsApp: <a href="https://wa.me/524421752026" target="_blank" rel="noopener noreferrer" class="text-[#8E5E44] hover:underline">442 175 2026</a>
+        Email de contacto: <a href="mailto:contacto@shongyi.com" class="text-[#8E5E44] hover:underline">contacto@shongyi.com</a>
       </p>
 
       <h2 class="text-2xl font-serif font-bold text-[#8E5E44] mt-8">1. Aceptación de los Términos</h2>
@@ -27,11 +26,22 @@
       <h2 class="text-2xl font-serif font-bold text-[#8E5E44] mt-8">5. Tienda, Pagos y Ciberseguridad</h2>
       <p>Al utilizar nuestra sección de tienda o realizar un pedido, aceptas proporcionar información veraz para el procesamiento y envío. Los pagos electrónicos son procesados por entidades financieras de terceros acreditadas. <strong>No guardamos información de tarjetas de crédito o débito</strong>. Tu información de pago se usa únicamente para procesar el cobro legítimo de tus pedidos y prevenir actividades fraudulentas. Nos comprometemos a mantener altos estándares de ciberseguridad para proteger la integridad de tus datos durante el checkout.</p>
 
-      <h2 class="text-2xl font-serif font-bold text-[#8E5E44] mt-8">6. Desistimiento y Devoluciones</h2>
-      <p>Para clientes residentes en la Unión Europea o jurisdicciones aplicables, cuentas con un derecho de desistimiento de 14 días naturales desde la recepción de tu producto físico. Para productos digitales, este derecho expira en cuanto el contenido ha comenzado a descargarse o ejecutarse con tu previo consentimiento expreso.</p>
+      <h2 class="text-2xl font-serif font-bold text-[#8E5E44] mt-8">6. Cancelaciones, Devoluciones y Garantías (México)</h2>
+      <p>
+        De conformidad con la <strong>Ley Federal de Protección al Consumidor (LFPC)</strong> en los Estados Unidos Mexicanos y los lineamientos de la <strong>PROFECO</strong>, en compras realizadas por medios electrónicos cuentas con un plazo de 5 días hábiles a partir de la entrega del producto físico para solicitar la revocación o cancelación de la compra, siempre que el producto se encuentre en las mismas condiciones en que fue entregado, completo, con sus empaques originales y sin signos de mal uso.
+      </p>
+      <p>
+        En caso de que el producto presente defectos de fabricación, fallas o daño imputable al transporte, tendrás derecho a la reposición del producto o a la devolución y reembolso del importe pagado de acuerdo con la legislación mexicana.
+      </p>
+      <p>
+        Para productos, licencias o contenidos digitales, el derecho de revocación expira en cuanto el contenido o acceso ha comenzado a descargarse, activarse o ejecutarse con tu previo consentimiento expreso.
+      </p>
 
       <h2 class="text-2xl font-serif font-bold text-[#8E5E44] mt-8">7. Cambios en los Términos</h2>
       <p>Nos reservamos el derecho, a nuestra sola discreción, de modificar o reemplazar estos Términos en cualquier momento. Al continuar accediendo o utilizando nuestro Servicio después de que esas revisiones entren en vigencia, aceptas estar sujeto a los términos revisados.</p>
+
+      <h2 class="text-2xl font-serif font-bold text-[#8E5E44] mt-8">8. Legislación Aplicable y Jurisdicción</h2>
+      <p>Estos Términos y Condiciones se rigen e interpretan conforme a las leyes vigentes de los <strong>Estados Unidos Mexicanos</strong>. Para la interpretación, cumplimiento o resolución de cualquier controversia, las partes se someten a la competencia de la <strong>Procuraduría Federal del Consumidor (PROFECO)</strong> en el ámbito administrativo y a la jurisdicción de los tribunales competentes en México.</p>
 
       <div class="mt-12 pt-8 border-t border-gray-200">
         <NuxtLink to="/" class="text-[#8E5E44] hover:underline">&larr; Volver al inicio</NuxtLink>

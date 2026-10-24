@@ -8,8 +8,7 @@
       <h2 class="text-2xl font-serif font-bold text-[#8E5E44] mt-8">Identidad del Responsable</h2>
       <p>
         Responsable: El Rincón de Brandy (Taskman)<br>
-        Email de contacto: <a href="mailto:contacto@shongyi.com" class="text-[#8E5E44] hover:underline">contacto@shongyi.com</a><br>
-        WhatsApp: <a href="https://wa.me/524421752026" target="_blank" rel="noopener noreferrer" class="text-[#8E5E44] hover:underline">442 175 2026</a>
+        Email de contacto: <a href="mailto:contacto@shongyi.com" class="text-[#8E5E44] hover:underline">contacto@shongyi.com</a>
       </p>
 
       <h2 class="text-2xl font-serif font-bold text-[#8E5E44] mt-8">1. Información que recopilamos</h2>
