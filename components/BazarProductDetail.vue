@@ -3,16 +3,16 @@
     class="fixed inset-0 z-50 bg-background/90 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200"
     @click.self="$emit('close')"
   >
-    <div class="container max-w-5xl mx-auto py-3 md:py-10 px-3 md:px-4 relative pb-28 md:pb-10">
+    <div class="container max-w-5xl mx-auto py-2 sm:py-6 md:py-10 px-2 sm:px-4 relative pb-28 md:pb-10">
       <div class="bg-card border border-border/70 rounded-3xl shadow-2xl overflow-hidden">
         <!-- Barra superior fija dentro del modal -->
-        <div class="sticky top-0 z-20 flex items-center justify-between px-4 md:px-6 py-3.5 bg-card/95 backdrop-blur-md border-b border-border/60">
+        <div class="sticky top-0 z-20 flex items-center justify-between px-4 md:px-6 py-3 bg-card/95 backdrop-blur-md border-b border-border/60">
           <button
             type="button"
-            class="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground font-medium transition-colors cursor-pointer"
+            class="inline-flex items-center gap-2 text-xs sm:text-sm text-muted-foreground hover:text-foreground font-medium transition-colors cursor-pointer"
             @click="$emit('close')"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
             Volver al catálogo
           </button>
 
@@ -22,13 +22,13 @@
             aria-label="Cerrar"
             @click="$emit('close')"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
           </button>
         </div>
 
-        <div class="p-6 md:p-8 grid md:grid-cols-12 gap-8">
-          <!-- Columna Izquierda: Galería + ¿Qué incluye tu pedido? -->
-          <div class="md:col-span-6 space-y-4">
+        <div class="p-4 sm:p-6 md:p-8 grid md:grid-cols-12 gap-5 md:gap-8">
+          <!-- Columna Izquierda: Galería Visual -->
+          <div class="md:col-span-6 space-y-3">
             <div class="aspect-square bg-secondary/40 rounded-2xl overflow-hidden relative group border border-border/50">
               <img
                 v-if="currentImage"
@@ -39,13 +39,13 @@
                 height="900"
                 class="w-full h-full object-cover transition-all duration-300"
               />
-              <div v-else class="w-full h-full flex items-center justify-center text-muted-foreground/40 font-serif italic">
+              <div v-else class="w-full h-full flex items-center justify-center text-muted-foreground/40 font-serif italic text-xs">
                 [ Imagen del Producto ]
               </div>
 
-              <!-- Único badge limpio sobre la imagen -->
-              <div v-if="product.category" class="absolute top-3 left-3">
-                <span class="bg-background/90 backdrop-blur-md text-foreground text-xs font-semibold px-3 py-1 rounded-full border border-border/60 shadow-sm">
+              <!-- Badge comercial limpio sobre la imagen -->
+              <div v-if="product.category" class="absolute top-2.5 left-2.5">
+                <span class="bg-background/90 backdrop-blur-md text-foreground text-[11px] font-semibold px-2.5 py-0.5 rounded-full border border-border/60 shadow-xs">
                   {{ product.category }}
                 </span>
               </div>
@@ -55,91 +55,93 @@
                 <button
                   type="button"
                   @click="prevImage"
-                  class="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-background/85 hover:bg-background text-foreground border border-border/60 shadow-md flex items-center justify-center transition-all opacity-90 hover:scale-105 cursor-pointer"
+                  class="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-background/85 hover:bg-background text-foreground border border-border/60 shadow-md flex items-center justify-center transition-all opacity-90 hover:scale-105 cursor-pointer"
                   aria-label="Imagen anterior"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
                 </button>
                 <button
                   type="button"
                   @click="nextImage"
-                  class="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-background/85 hover:bg-background text-foreground border border-border/60 shadow-md flex items-center justify-center transition-all opacity-90 hover:scale-105 cursor-pointer"
+                  class="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-background/85 hover:bg-background text-foreground border border-border/60 shadow-md flex items-center justify-center transition-all opacity-90 hover:scale-105 cursor-pointer"
                   aria-label="Siguiente imagen"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
                 </button>
-                <div class="absolute bottom-3 right-3 bg-background/85 backdrop-blur-md text-foreground text-xs font-medium px-2.5 py-1 rounded-full border border-border/60 shadow-sm">
+                <div class="absolute bottom-2.5 right-2.5 bg-background/85 backdrop-blur-md text-foreground text-[10px] font-semibold px-2 py-0.5 rounded-full border border-border/60 shadow-xs">
                   {{ imgIdx + 1 }} / {{ images.length }}
                 </div>
               </template>
             </div>
 
             <!-- Miniaturas -->
-            <div v-if="images.length > 1" class="grid grid-cols-5 sm:grid-cols-6 gap-2">
+            <div v-if="images.length > 1" class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
               <button
                 v-for="(img, i) in images"
                 :key="i"
                 type="button"
                 @click="selectImage(i)"
-                class="aspect-square rounded-xl overflow-hidden border-2 transition-all cursor-pointer"
+                class="w-12 h-12 sm:w-14 sm:h-14 shrink-0 rounded-xl overflow-hidden border-2 transition-all cursor-pointer"
                 :class="imgIdx === i ? 'border-primary ring-2 ring-primary/20 scale-[1.02]' : 'border-border/40 opacity-70 hover:opacity-100'"
               >
-                <img :src="imgProxy(img, { width: 160 })" loading="lazy" decoding="async" class="w-full h-full object-cover" />
+                <img :src="imgProxy(img, { width: 120 })" loading="lazy" decoding="async" class="w-full h-full object-cover" />
               </button>
             </div>
+          </div>
 
-            </div>
-
-          <!-- Columna Derecha: Flujo de Compra de Baja Fricción -->
-          <div class="md:col-span-6 flex flex-col">
+          <!-- Columna Derecha: Flujo Comercial de Alta Conversión -->
+          <div class="md:col-span-6 flex flex-col justify-between space-y-4">
             <!-- 1. Título y Descripción -->
-            <div class="mb-5">
-              <h1 class="text-2xl md:text-3xl font-serif font-bold text-foreground leading-tight mb-2">
+            <div>
+              <h1 class="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-foreground leading-snug mb-1.5">
                 {{ product.title }}
               </h1>
-              <p v-if="product.description" class="text-sm text-muted-foreground leading-relaxed">
+              <p v-if="product.description" class="text-xs sm:text-sm text-muted-foreground leading-relaxed">
                 {{ product.description }}
               </p>
             </div>
 
-            <!-- 2. Bloque Principal de Conversión: Precio y Botón de Compra JUNTOS (Cero fricción visual) -->
-            <div class="bg-secondary/35 border border-primary/25 rounded-2xl p-4 mb-5 space-y-3 shadow-xs">
-              <div class="flex flex-wrap items-center justify-between gap-3">
+            <!-- 2. Bloque Principal de Precio y Compra -->
+            <div class="bg-secondary/25 border border-border/70 rounded-2xl p-3.5 sm:p-4 space-y-3">
+              <div class="flex items-center justify-between gap-3">
                 <div>
                   <span class="block text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
                     {{ activeVariant && variants.length > 1 ? `Precio · ${activeVariant.name}` : 'Precio final · IVA incluido' }}
                   </span>
-                  <div class="flex items-baseline gap-1.5">
-                    <span class="text-3xl md:text-4xl font-extrabold text-primary tracking-tight">{{ priceLabel }}</span>
-                    <span v-if="currentPrice > 0" class="text-xs font-semibold text-muted-foreground">MXN</span>
+                  <div class="flex items-baseline gap-1">
+                    <span class="text-2xl sm:text-3xl font-black text-primary tracking-tight">{{ priceLabel }}</span>
+                    <span v-if="currentPrice > 0" class="text-xs font-bold text-muted-foreground">MXN</span>
                   </div>
                 </div>
 
-                <!-- Cantidad + Comprar Ahora inmediatamente al lado del precio -->
-                <div class="flex items-center gap-2 flex-1 sm:flex-initial justify-end">
-                  <div class="flex items-center border border-border rounded-xl bg-card h-11 px-1 shrink-0">
+                <!-- Selector de Cantidad + Comprar Ahora (en desktop) -->
+                <div class="flex items-center gap-2">
+                  <div class="flex items-center border border-border rounded-xl bg-card h-10 px-1 shrink-0">
                     <button
                       type="button"
-                      class="w-7 h-9 text-muted-foreground hover:text-foreground disabled:opacity-40 font-bold text-sm cursor-pointer"
+                      class="w-7 h-8 text-muted-foreground hover:text-foreground disabled:opacity-40 font-bold text-sm cursor-pointer"
                       @click="quantity > 1 ? quantity-- : null"
                       :disabled="quantity <= 1"
+                      aria-label="Disminuir cantidad"
                     >
                       −
                     </button>
-                    <span class="px-1.5 text-sm font-bold w-6 text-center">{{ quantity }}</span>
+                    <span class="px-1 text-xs sm:text-sm font-bold w-6 text-center">{{ quantity }}</span>
                     <button
                       type="button"
-                      class="w-7 h-9 text-muted-foreground hover:text-foreground font-bold text-sm cursor-pointer"
+                      class="w-7 h-8 text-muted-foreground hover:text-foreground font-bold text-sm cursor-pointer"
                       @click="quantity++"
+                      aria-label="Aumentar cantidad"
                     >
                       +
                     </button>
                   </div>
 
+                  <!-- Botón Comprar ahora SOLO VISIBLE EN DESKTOP (en móvil la barra fija inferior es el CTA principal único) -->
                   <button
                     type="button"
                     @click="buyNow"
-                    class="flex-1 sm:flex-initial h-11 bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-sm px-5 rounded-xl transition-all shadow-md shadow-primary/20 hover:shadow-primary/30 flex justify-center items-center gap-2 cursor-pointer whitespace-nowrap"
+                    class="hidden md:flex h-10 bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs sm:text-sm px-5 rounded-xl transition-all shadow-md shadow-primary/20 hover:shadow-primary/30 justify-center items-center gap-2 cursor-pointer whitespace-nowrap"
                   >
                     <span>Comprar ahora</span>
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
@@ -147,96 +149,92 @@
                 </div>
               </div>
 
-              <!-- Acciones secundarias integradas -->
-              <div class="grid grid-cols-2 gap-2 pt-2 border-t border-border/50">
+              <!-- Acciones secundarias: Agregar al carrito y WhatsApp -->
+              <div class="grid grid-cols-2 gap-2 pt-2.5 border-t border-border/50">
                 <button
                   type="button"
                   @click="addToCartOnly"
-                  class="h-9 bg-card hover:bg-secondary text-foreground font-semibold text-xs px-3 rounded-xl transition-all flex justify-center items-center gap-1.5 border border-border/80 cursor-pointer"
+                  class="h-9 bg-card hover:bg-secondary text-foreground font-semibold text-xs px-2.5 rounded-xl transition-all flex justify-center items-center gap-1.5 border border-border/80 cursor-pointer"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-                  Agregar al carrito
+                  <span>Agregar al carrito</span>
                 </button>
 
                 <a
                   :href="whatsappInquiryUrl"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="h-9 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 font-semibold text-xs px-3 rounded-xl transition-all flex justify-center items-center gap-1.5"
+                  class="h-9 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 font-semibold text-xs px-2.5 rounded-xl transition-all flex justify-center items-center gap-1.5"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-                  Resolver duda por WhatsApp
+                  <span>Dudas por WhatsApp</span>
                 </a>
               </div>
             </div>
 
-            <!-- 3. Selector de Variantes (Solo gramos como referencia de proporción cuando hay >1 variante) -->
-            <div v-if="variants.length > 1" class="mb-5">
-              <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                Versión o tamaño ({{ variants.length }} opciones):
-              </p>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <label
+            <!-- 3. Selector de Variantes (Chips horizontales limpios, CERO tecnicismos) -->
+            <div v-if="variants.length > 1" class="space-y-1.5">
+              <div class="flex items-center justify-between text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                <span>Versión:</span>
+                <span class="text-foreground font-bold">{{ activeVariant?.name }}</span>
+              </div>
+              <div class="flex flex-wrap gap-2">
+                <button
                   v-for="(v, i) in variants"
                   :key="i"
-                  class="flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all"
-                  :class="variantIdx === i ? 'border-primary bg-primary/10 shadow-2xs ring-1 ring-primary/30' : 'border-border/70 bg-card hover:border-primary/40'"
+                  type="button"
+                  @click="variantIdx = i"
+                  class="px-3 py-1.5 rounded-xl text-xs font-bold border transition-all inline-flex items-center gap-1.5 cursor-pointer"
+                  :class="variantIdx === i
+                    ? 'border-primary bg-primary text-primary-foreground shadow-xs'
+                    : 'border-border/80 bg-card hover:bg-secondary text-foreground'"
                 >
-                  <div class="flex items-center gap-2.5 min-w-0 pr-2">
-                    <input type="radio" :value="i" v-model="variantIdx" class="accent-primary shrink-0" />
-                    <img v-if="v.imageUrl" :src="imgProxy(v.imageUrl, { width: 64 })" loading="lazy" class="w-7 h-7 rounded-lg object-cover shrink-0 border border-border/60" />
-                    <div class="min-w-0">
-                      <p class="text-xs font-semibold text-foreground truncate">{{ v.name }}</p>
-                      <p v-if="v.grams" class="text-[11px] text-muted-foreground">
-                        Ref. ~{{ v.grams }}g
-                      </p>
-                    </div>
-                  </div>
-                  <span class="font-bold text-xs text-foreground shrink-0">{{ fmt(v.price) }}</span>
-                </label>
+                  <img v-if="v.imageUrl" :src="imgProxy(v.imageUrl, { width: 48 })" class="w-4 h-4 rounded object-cover" />
+                  <span>{{ v.name }}</span>
+                  <span class="font-normal opacity-90">({{ fmt(v.price) }})</span>
+                </button>
               </div>
             </div>
 
-            <!-- 4. Selector de Color Mejorado (Paleta Sunlu PLA & Bambu PLA Lite) -->
-            <div class="mb-5 bg-card/60 border border-border/70 rounded-2xl p-3.5 space-y-3">
+            <!-- 4. Selector de Color Simplificado (Limpio y colapsable) -->
+            <div class="bg-card/70 border border-border/70 rounded-xl p-3 space-y-2">
               <div class="flex items-center justify-between">
-                <span class="text-xs font-bold uppercase tracking-wider text-foreground">Color del filamento:</span>
-                <div class="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-secondary/70 border border-border/60">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Color de la pieza:</span>
+                <span class="text-xs font-semibold text-foreground flex items-center gap-1.5">
                   <span
-                    class="w-3 h-3 rounded-full border border-black/20 dark:border-white/20 shrink-0"
+                    class="w-2.5 h-2.5 rounded-full inline-block border border-black/20"
                     :style="{ background: currentColorSwatch }"
                   ></span>
-                  <span class="text-foreground truncate max-w-[170px]">{{ selectedColorObj.label }}</span>
-                </div>
+                  {{ selectedColorObj.label }}
+                </span>
               </div>
 
-              <!-- Opción destacada: Tono original / Como en la foto -->
-              <button
-                type="button"
-                @click="selectedColorId = 'original'"
-                class="w-full text-left p-2.5 rounded-xl border transition-all flex items-center justify-between cursor-pointer"
-                :class="selectedColorId === 'original'
-                  ? 'border-primary bg-primary/10 shadow-xs ring-1 ring-primary/30'
-                  : 'border-border/60 bg-background/60 hover:bg-secondary/40 text-muted-foreground hover:text-foreground'"
-              >
-                <div class="flex items-center gap-2.5 min-w-0">
-                  <div class="w-6 h-6 rounded-lg shadow-xs flex items-center justify-center shrink-0 border border-white/20" style="background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 50%, #FFE66D 100%);">
-                    <span class="text-[11px]">✨</span>
-                  </div>
-                  <div class="min-w-0">
-                    <p class="text-xs font-semibold text-foreground truncate">Como en el modelo (Recomendado)</p>
-                    <p class="text-[10px] text-muted-foreground truncate">Acabado y combinaciones fieles a la foto original</p>
-                  </div>
-                </div>
-                <span v-if="selectedColorId === 'original'" class="text-primary font-bold text-xs shrink-0">✓ Activo</span>
-              </button>
+              <!-- Selector rápido -->
+              <div class="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  @click="selectedColorId = 'original'; showColorPicker = false"
+                  class="px-3 py-1.5 rounded-lg text-xs font-semibold border flex items-center gap-1.5 cursor-pointer transition-all"
+                  :class="selectedColorId === 'original'
+                    ? 'border-primary bg-primary/10 text-primary ring-1 ring-primary/40 font-bold'
+                    : 'border-border/60 bg-background/60 hover:bg-secondary text-muted-foreground'"
+                >
+                  <span>✨</span>
+                  <span>Como en la foto (Recomendado)</span>
+                </button>
 
-              <!-- Swatches de colores reales Sunlu / Bambu PLA -->
-              <div>
-                <div class="flex items-center justify-between text-[11px] text-muted-foreground mb-1.5">
-                  <span>O elige un color sólido (Paleta Sunlu / Bambu PLA):</span>
-                  <span class="text-[10px] opacity-75">16 tonos</span>
-                </div>
+                <button
+                  type="button"
+                  @click="showColorPicker = !showColorPicker"
+                  class="px-2.5 py-1.5 rounded-lg text-xs font-medium border border-dashed border-border/80 hover:border-primary text-muted-foreground hover:text-foreground transition-all cursor-pointer flex items-center gap-1"
+                >
+                  <span>🎨</span>
+                  <span>{{ showColorPicker ? 'Ocultar tonos' : (selectedColorId !== 'original' ? 'Cambiar tono' : 'Elegir otro tono') }}</span>
+                </button>
+              </div>
+
+              <!-- Swatches colapsables solo cuando el usuario los pide -->
+              <div v-if="showColorPicker" class="pt-2 border-t border-border/40 animate-in fade-in duration-150">
                 <div class="grid grid-cols-8 gap-1.5 sm:gap-2">
                   <button
                     v-for="color in SUNLU_BAMBU_COLORS"
@@ -248,18 +246,15 @@
                       ? 'ring-2 ring-primary ring-offset-2 scale-105 shadow-md z-10'
                       : 'hover:scale-105 hover:shadow-xs opacity-90 hover:opacity-100'"
                     :style="{ backgroundColor: color.hex }"
-                    :title="`${color.label} — ${color.brand}`"
+                    :title="color.label"
                     :aria-label="color.label"
                   >
-                    <!-- Borde sutil para contraste -->
                     <div class="absolute inset-0 rounded-xl border border-black/15 dark:border-white/15 pointer-events-none"></div>
-
-                    <!-- Checkmark cuando está seleccionado -->
                     <svg
                       v-if="selectedColorId === color.id"
                       xmlns="http://www.w3.org/2000/svg"
-                      width="14"
-                      height="14"
+                      width="12"
+                      height="12"
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
@@ -276,87 +271,62 @@
               </div>
             </div>
 
-            <!-- 5. Campo de Personalización (ÚNICAMENTE si el producto lleva nombre/QR personalizado) -->
-            <div v-if="isPersonalized" class="mb-5 animate-in fade-in slide-in-from-top-2">
-              <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5 text-foreground">
-                Texto o enlace a personalizar <span class="text-red-500">*</span>
+            <!-- 5. Campo de Personalización (si aplica) -->
+            <div v-if="isPersonalized" class="animate-in fade-in slide-in-from-top-2">
+              <label class="block text-xs font-semibold uppercase tracking-wider mb-1 text-foreground">
+                Texto a personalizar <span class="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 v-model="customText"
-                placeholder="Ej. Nombre a grabar o enlace para código QR..."
-                class="w-full h-10 px-3.5 rounded-xl border border-primary/50 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="Ej. Nombre a grabar o dedicatoria..."
+                class="w-full h-9 px-3 rounded-xl border border-primary/50 bg-background text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
 
-            <!-- Etiquetas -->
-            <div v-if="product.tags && product.tags.length" class="flex flex-wrap gap-1.5 mb-4">
-              <button
-                v-for="tag in product.tags.slice(0, 6)"
-                :key="tag"
-                type="button"
-                @click="$emit('select-tag', tag)"
-                class="px-2.5 py-1 bg-secondary/40 hover:bg-primary hover:text-primary-foreground text-foreground/80 text-[11px] rounded-full border border-border/60 transition-all cursor-pointer"
-                title="Filtrar catálogo por esta etiqueta"
-              >
-                #{{ formatTag(tag) }}
-              </button>
-            </div>
+            <!-- 6. Factores de Venta y Garantías (Trust Badges comerciales) -->
+            <div class="grid grid-cols-2 gap-2.5 py-3 border-t border-b border-border/50 text-xs">
+              <div class="flex items-center gap-2 bg-secondary/15 p-2 rounded-xl border border-border/40">
+                <span class="text-base shrink-0">🚚</span>
+                <div class="min-w-0">
+                  <p class="font-bold text-foreground text-[11px] leading-tight">Envío seguro</p>
+                  <p class="text-[10px] text-muted-foreground leading-tight truncate">A todo México con rastreo</p>
+                </div>
+              </div>
 
-            <!-- ¿Qué incluye tu pedido? (Con filamento dinámico según el modelo/impresión) -->
-            <div class="bg-secondary/25 border border-border/60 rounded-2xl p-4 space-y-3 text-xs">
-              <h4 class="font-semibold text-foreground text-xs uppercase tracking-wider flex items-center gap-1.5">
-                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>
-                ¿Qué incluye tu pedido?
-              </h4>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-muted-foreground">
-                <div class="flex items-start gap-2 bg-card/70 p-2.5 rounded-xl border border-border/40">
-                  <span class="text-base leading-none mt-0.5">✨</span>
-                  <div>
-                    <p class="font-semibold text-foreground">Acabado Limpio y Detallado</p>
-                    <p class="text-[11px] leading-snug">Pieza revisada, libre de soportes y lista para usar desde que abres tu caja.</p>
-                  </div>
+              <div class="flex items-center gap-2 bg-secondary/15 p-2 rounded-xl border border-border/40">
+                <span class="text-base shrink-0">🛡️</span>
+                <div class="min-w-0">
+                  <p class="font-bold text-foreground text-[11px] leading-tight">Garantía total</p>
+                  <p class="text-[10px] text-muted-foreground leading-tight truncate">Reposición si llega dañado</p>
                 </div>
-                <div class="flex items-start gap-2 bg-card/70 p-2.5 rounded-xl border border-border/40">
-                  <span class="text-base leading-none mt-0.5">🛡️</span>
-                  <div>
-                    <p class="font-semibold text-foreground">{{ recommendedFilamentInfo.title }}</p>
-                    <p class="text-[11px] leading-snug">{{ recommendedFilamentInfo.description }}</p>
-                  </div>
+              </div>
+
+              <div class="flex items-center gap-2 bg-secondary/15 p-2 rounded-xl border border-border/40">
+                <span class="text-base shrink-0">✨</span>
+                <div class="min-w-0">
+                  <p class="font-bold text-foreground text-[11px] leading-tight">Listo para usar</p>
+                  <p class="text-[10px] text-muted-foreground leading-tight truncate">Pieza física terminada</p>
                 </div>
-                <div class="flex items-start gap-2 bg-card/70 p-2.5 rounded-xl border border-border/40">
-                  <span class="text-base leading-none mt-0.5">🎨</span>
-                  <div>
-                    <p class="font-semibold text-foreground">Color a tu Elección</p>
-                    <p class="text-[11px] leading-snug">En los tonos originales del modelo o en cualquiera de nuestros colores Sunlu / Bambu PLA.</p>
-                  </div>
-                </div>
-                <div class="flex items-start gap-2 bg-card/70 p-2.5 rounded-xl border border-border/40">
-                  <span class="text-base leading-none mt-0.5">🚚</span>
-                  <div>
-                    <p class="font-semibold text-foreground">Envío Protegido a todo MX</p>
-                    <p class="text-[11px] leading-snug">Empaque seguro con garantía de reposición sin costo ante cualquier daño.</p>
-                  </div>
+              </div>
+
+              <div class="flex items-center gap-2 bg-secondary/15 p-2 rounded-xl border border-border/40">
+                <span class="text-base shrink-0">💳</span>
+                <div class="min-w-0">
+                  <p class="font-bold text-foreground text-[11px] leading-tight">Pago protegido</p>
+                  <p class="text-[10px] text-muted-foreground leading-tight truncate">Tarjeta o transferencia</p>
                 </div>
               </div>
             </div>
 
-            <!-- Atribución legal -->
-            <div class="mt-auto pt-3 border-t border-border/40 text-[11px] text-muted-foreground flex flex-wrap items-center justify-between gap-2">
-              <span v-if="product.licenseAttribution">Diseño: {{ product.licenseAttribution }}</span>
-              <a
-                v-if="product.sourceUrl || product.externalId"
-                :href="product.externalId && product.source === 'MAKERWORLD' ? `https://makerworld.com/es/models/${product.externalId}` : (product.sourceUrl || `https://makerworld.com/es/models/${product.externalId}`)"
-                target="_blank"
-                rel="noopener"
-                class="text-primary hover:underline inline-block"
-              >
-                Referencia del modelo 3D →
-              </a>
+            <!-- Atribución legal discreta (Sin botones que saquen al cliente de la tienda) -->
+            <div v-if="product.licenseAttribution" class="pt-1 text-[10px] text-muted-foreground/60 text-center">
+              Diseño original bajo licencia de autor: {{ product.licenseAttribution }}
             </div>
           </div>
         </div>
-        <!-- Barra fija inferior de compra en celular (Conversión directa sin scroll) -->
+
+        <!-- Barra fija inferior de compra en celular (ÚNICO botón principal en móvil) -->
         <div class="md:hidden fixed bottom-0 left-0 right-0 p-3 bg-card/95 backdrop-blur-md border-t border-border z-30 flex items-center justify-between gap-3 shadow-2xl">
           <div class="min-w-0">
             <span class="block text-[10px] text-muted-foreground uppercase font-semibold">Total estimado</span>
@@ -427,40 +397,37 @@ const emit = defineEmits<{
 interface FilamentColor {
   id: string;
   label: string;
-  brand: string;
   hex: string;
   textColor: string;
 }
 
 const ORIGINAL_COLOR_OPTION = {
   id: 'original',
-  label: 'Como en el modelo',
-  brand: 'Referencia visual del modelo',
+  label: 'Como en la foto (Recomendado)',
   swatch: 'linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 50%, #FFE66D 100%)',
 };
 
 const SUNLU_BAMBU_COLORS: FilamentColor[] = [
-  // Neutros & Metálicos
-  { id: 'white', label: 'Blanco Puro', brand: 'Bambu Jade / Sunlu White', hex: '#FFFFFF', textColor: '#18181B' },
-  { id: 'black', label: 'Negro Mate', brand: 'Bambu Black / Sunlu Black', hex: '#18181B', textColor: '#FFFFFF' },
-  { id: 'gray', label: 'Gris Ceniza', brand: 'Bambu Gray / Sunlu Grey', hex: '#71717A', textColor: '#FFFFFF' },
-  { id: 'silver', label: 'Plata / Silver', brand: 'Sunlu Silk Silver', hex: '#9CA3AF', textColor: '#18181B' },
-  { id: 'beige', label: 'Beige / Hueso', brand: 'Bambu Desert / Sunlu Bone', hex: '#E4D5B7', textColor: '#18181B' },
-  { id: 'brown', label: 'Café / Marrón', brand: 'Bambu Brown / Sunlu Brown', hex: '#5C3A21', textColor: '#FFFFFF' },
-  // Colores Vivos
-  { id: 'red', label: 'Rojo Carmesí', brand: 'Bambu Red / Sunlu Red', hex: '#DC2626', textColor: '#FFFFFF' },
-  { id: 'orange', label: 'Naranja', brand: 'Bambu Orange / Sunlu Orange', hex: '#EA580C', textColor: '#FFFFFF' },
-  { id: 'yellow', label: 'Amarillo', brand: 'Bambu Yellow / Sunlu Yellow', hex: '#EAB308', textColor: '#18181B' },
-  { id: 'bambu_green', label: 'Verde Bambú', brand: 'Bambu Green / Sunlu Grass', hex: '#16A34A', textColor: '#FFFFFF' },
-  { id: 'forest_green', label: 'Verde Bosque', brand: 'Sunlu Dark Green', hex: '#14532D', textColor: '#FFFFFF' },
-  { id: 'cyan', label: 'Azul Cielo / Cian', brand: 'Bambu Cyan / Sunlu Cyan', hex: '#06B6D4', textColor: '#FFFFFF' },
-  { id: 'blue', label: 'Azul Rey', brand: 'Bambu Blue / Sunlu Royal', hex: '#2563EB', textColor: '#FFFFFF' },
-  { id: 'navy', label: 'Azul Marino', brand: 'Sunlu Dark Blue', hex: '#1E3A8A', textColor: '#FFFFFF' },
-  { id: 'purple', label: 'Púrpura / Morado', brand: 'Bambu Purple / Sunlu Purple', hex: '#7C3AED', textColor: '#FFFFFF' },
-  { id: 'pink', label: 'Rosa Sakura', brand: 'Bambu Magenta / Sunlu Pink', hex: '#F472B6', textColor: '#18181B' },
+  { id: 'white', label: 'Blanco Puro', hex: '#FFFFFF', textColor: '#18181B' },
+  { id: 'black', label: 'Negro Mate', hex: '#18181B', textColor: '#FFFFFF' },
+  { id: 'gray', label: 'Gris Ceniza', hex: '#71717A', textColor: '#FFFFFF' },
+  { id: 'silver', label: 'Plata Metálico', hex: '#9CA3AF', textColor: '#18181B' },
+  { id: 'beige', label: 'Beige Hueso', hex: '#E4D5B7', textColor: '#18181B' },
+  { id: 'brown', label: 'Café Madera', hex: '#5C3A21', textColor: '#FFFFFF' },
+  { id: 'red', label: 'Rojo Carmesí', hex: '#DC2626', textColor: '#FFFFFF' },
+  { id: 'orange', label: 'Naranja', hex: '#EA580C', textColor: '#FFFFFF' },
+  { id: 'yellow', label: 'Amarillo', hex: '#EAB308', textColor: '#18181B' },
+  { id: 'bambu_green', label: 'Verde Claro', hex: '#16A34A', textColor: '#FFFFFF' },
+  { id: 'forest_green', label: 'Verde Oscuro', hex: '#14532D', textColor: '#FFFFFF' },
+  { id: 'cyan', label: 'Azul Cielo', hex: '#06B6D4', textColor: '#FFFFFF' },
+  { id: 'blue', label: 'Azul Rey', hex: '#2563EB', textColor: '#FFFFFF' },
+  { id: 'navy', label: 'Azul Marino', hex: '#1E3A8A', textColor: '#FFFFFF' },
+  { id: 'purple', label: 'Púrpura', hex: '#7C3AED', textColor: '#FFFFFF' },
+  { id: 'pink', label: 'Rosa Sakura', hex: '#F472B6', textColor: '#18181B' },
 ];
 
 const selectedColorId = ref<string>('original');
+const showColorPicker = ref<boolean>(false);
 
 const selectedColorObj = computed(() => {
   if (selectedColorId.value === 'original') return ORIGINAL_COLOR_OPTION;
@@ -506,39 +473,6 @@ const variants = computed(() => Array.isArray(props.product.variants) ? props.pr
 const variantIdx = ref(props.initialVariantIdx ?? 0);
 const activeVariant = computed(() => variants.value[variantIdx.value] || null);
 
-// Detecta el filamento recomendado de la variante activa o de los metadatos del modelo
-const recommendedFilamentInfo = computed(() => {
-  const explicitFilament = activeVariant.value?.filament || '';
-  const searchCorpus = `${explicitFilament} ${props.product.title || ''} ${props.product.description || ''} ${props.product.descriptionHtml || ''} ${(props.product.tags || []).join(' ')}`;
-
-  if (/\bpetg\b/i.test(searchCorpus)) {
-    return {
-      code: 'PETG',
-      title: 'Impreso en PETG Técnico',
-      description: 'Polímero de alta resistencia mecánica, térmica y a la humedad para uso exigente.'
-    };
-  }
-  if (/\btpu\b/i.test(searchCorpus)) {
-    return {
-      code: 'TPU',
-      title: 'Impreso en TPU Flexible',
-      description: 'Material elástico de alta absorción de impactos y gran durabilidad.'
-    };
-  }
-  if (/\b(abs|asa)\b/i.test(searchCorpus)) {
-    return {
-      code: 'ABS/ASA',
-      title: 'Impreso en ABS/ASA Estructural',
-      description: 'Grado industrial con resistencia superior a temperatura e intemperie.'
-    };
-  }
-  return {
-    code: 'PLA+',
-    title: 'Impreso en PLA+ de Alta Definición',
-    description: 'Acabado rígido, superficie detallada y gran solidez estructural.'
-  };
-});
-
 function syncVariantImage(idx: number) {
   const v = variants.value[idx];
   if (!v) return;
@@ -547,20 +481,15 @@ function syncVariantImage(idx: number) {
     return;
   }
   if (v.imageUrl) {
-    const cleanTarget = v.imageUrl.split('?')[0].toLowerCase();
-    // 1. Direct match or clean URL match
-    let existingIdx = images.value.findIndex(img => img === v.imageUrl || (img && img.split('?')[0].toLowerCase() === cleanTarget));
-    
-    // 2. Match by basename/filename if exists
-    if (existingIdx === -1) {
-      const targetName = cleanTarget.split('/').pop();
-      if (targetName && targetName.length > 5) {
-        existingIdx = images.value.findIndex(img => img && img.toLowerCase().includes(targetName));
-      }
-    }
-    if (existingIdx !== -1) {
-      imgIdx.value = existingIdx;
-      return;
+    const cleanV = v.imageUrl.split('?')[0].toLowerCase();
+    const foundIdx = images.value.findIndex(img => {
+      const cleanImg = img.split('?')[0].toLowerCase();
+      if (cleanImg === cleanV) return true;
+      const targetName = cleanV.split('/').pop();
+      return Boolean(targetName && targetName.length > 5 && cleanImg.includes(targetName));
+    });
+    if (foundIdx !== -1) {
+      imgIdx.value = foundIdx;
     }
   }
 }
@@ -610,42 +539,6 @@ function fmt(n: number): string {
   return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(n);
 }
 
-function formatTag(raw: string | null | undefined): string {
-  if (!raw) return '';
-  let clean = raw.trim().replace(/^#+/, '');
-  clean = clean.replace(/([a-z0-9])([A-Z])/g, '$1 $2');
-  clean = clean.replace(/[-_]+/g, ' ').replace(/\s+/g, ' ');
-  return clean;
-}
-
-async function shareProduct() {
-  const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/bazar?p=${props.product.id}` : `https://shongyi.com/bazar?p=${props.product.id}`;
-  if (typeof navigator !== 'undefined' && navigator.share) {
-    try {
-      await navigator.share({
-        title: props.product.title,
-        text: `Mira este modelo en El Bazar: ${props.product.title}`,
-        url: shareUrl,
-      });
-      return;
-    } catch (e: any) {
-      if (e.name === 'AbortError') return;
-    }
-  }
-  if (typeof navigator !== 'undefined' && navigator.clipboard) {
-    await navigator.clipboard.writeText(shareUrl);
-    toast.success('Enlace copiado al portapapeles');
-  }
-}
-
-const whatsappInquiryUrl = computed(() => {
-  const vName = activeVariant.value ? ` (${activeVariant.value.name})` : '';
-  const colorNote = selectedColorId.value !== 'original' ? ` en color ${selectedColorObj.value.label}` : '';
-  const shareUrl = `https://shongyi.com/bazar?p=${props.product.id}`;
-  const msg = `Hola, vi el modelo "${props.product.title}"${vName}${colorNote} en El Bazar (${priceLabel.value}):\n${shareUrl}\n\nTengo una duda.`;
-  return `https://wa.me/524421752026?text=${encodeURIComponent(msg)}`;
-});
-
 onMounted(() => {
   if (props.initialVariantIdx !== undefined && props.initialVariantIdx >= 0) {
     variantIdx.value = props.initialVariantIdx;
@@ -672,10 +565,18 @@ onMounted(() => {
 const cart = useCartStore();
 const quantity = ref(1);
 
+const whatsappInquiryUrl = computed(() => {
+  const vName = activeVariant.value ? ` (${activeVariant.value.name})` : '';
+  const colorNote = selectedColorId.value !== 'original' ? ` en color ${selectedColorObj.value.label}` : '';
+  const shareUrl = `https://shongyi.com/bazar?p=${props.product.id}`;
+  const msg = `Hola, me interesa "${props.product.title}"${vName}${colorNote} en El Bazar (${priceLabel.value}):\n${shareUrl}\n\n¿Me podrías dar más información?`;
+  return `https://wa.me/524421752026?text=${encodeURIComponent(msg)}`;
+});
+
 function resolveOrderNote(): string {
   const parts: string[] = [];
   if (selectedColorId.value !== 'original') {
-    parts.push(`Color: ${selectedColorObj.value.label} (${selectedColorObj.value.brand})`);
+    parts.push(`Color: ${selectedColorObj.value.label}`);
   }
   if (customText.value.trim()) {
     parts.push(`Personalizado: ${customText.value.trim()}`);
