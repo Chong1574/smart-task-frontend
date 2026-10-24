@@ -116,15 +116,72 @@
                   :key="i"
                   type="button"
                   @click="variantIdx = i"
-                  class="px-3 py-1.5 rounded-xl text-xs font-bold border transition-all inline-flex items-center gap-1.5 cursor-pointer"
+                  class="px-3 py-1.5 rounded-xl text-xs font-bold border transition-all inline-flex items-center gap-1.5 cursor-pointer text-left"
                   :class="variantIdx === i
                     ? 'border-primary bg-primary text-primary-foreground shadow-xs'
                     : 'border-border/80 bg-card hover:bg-secondary text-foreground'"
                 >
-                  <img v-if="v.imageUrl" :src="imgProxy(v.imageUrl, { width: 48 })" class="w-4 h-4 rounded object-cover" />
+                  <img v-if="v.imageUrl" :src="imgProxy(v.imageUrl, { width: 48 })" class="w-4 h-4 rounded object-cover shrink-0" />
                   <span>{{ v.name }}</span>
-                  <span class="font-normal opacity-90">({{ fmt(v.price) }})</span>
+                  <span class="opacity-80 text-[10px] font-medium shrink-0">· {{ getVariantDimensions(v).tag }}</span>
+                  <span class="font-normal opacity-90 shrink-0">({{ fmt(v.price) }})</span>
                 </button>
+              </div>
+
+              <!-- Especificación / Qué incluye la versión seleccionada -->
+              <div
+                v-if="activeVariant && (activeVariant.description || getFallbackVariantDescription(activeVariant))"
+                class="mt-2.5 p-3 rounded-xl border transition-all text-xs"
+                :class="isPartialVariant(activeVariant)
+                  ? 'bg-amber-500/10 border-amber-500/35 text-amber-950 dark:text-amber-200'
+                  : 'bg-secondary/45 border-border/70 text-muted-foreground'"
+              >
+                <div class="flex items-start gap-2.5">
+                  <span class="text-sm shrink-0 mt-0.5">
+                    {{ isPartialVariant(activeVariant) ? '⚠️' : '📦' }}
+                  </span>
+                  <div class="space-y-0.5 min-w-0">
+                    <p class="font-semibold text-foreground text-[11px] uppercase tracking-wider">
+                      {{ isPartialVariant(activeVariant) ? 'Especificación importante de esta opción:' : '¿Qué incluye esta versión?' }}
+                    </p>
+                    <p class="leading-relaxed text-xs">
+                      {{ activeVariant.description || getFallbackVariantDescription(activeVariant) }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Medidas y Escala Física Dinámica (Referencia Cama P1S 25.6 cm) -->
+            <div class="bg-secondary/35 border border-border/70 rounded-xl p-3 space-y-2">
+              <div class="flex items-center justify-between text-xs">
+                <div class="flex items-center gap-1.5 font-semibold text-foreground">
+                  <span class="text-sm">📏</span>
+                  <span class="text-[11px] uppercase tracking-wider font-bold text-muted-foreground">Medida estimada:</span>
+                  <span v-if="variants.length > 1 && activeVariant" class="text-xs font-semibold text-primary truncate max-w-[130px]">({{ activeVariant.name }})</span>
+                </div>
+                <span class="text-[10px] px-2 py-0.5 rounded-full bg-background/80 border border-border/60 text-muted-foreground font-medium shrink-0">
+                  Ref. Cama P1S 25.6 cm
+                </span>
+              </div>
+
+              <div class="text-xs sm:text-sm font-bold text-foreground">
+                {{ activeVariantDimensions.text }}
+              </div>
+
+              <!-- Barra visual de proporción de escala frente a la cama P1S (25.6 cm) -->
+              <div class="space-y-1 pt-0.5">
+                <div class="w-full bg-background/80 rounded-full h-1.5 overflow-hidden border border-border/40">
+                  <div
+                    class="bg-primary h-full rounded-full transition-all duration-300"
+                    :style="{ width: `${activeVariantDimensions.scalePercent}%` }"
+                  ></div>
+                </div>
+                <div class="flex justify-between text-[10px] text-muted-foreground/75 font-mono">
+                  <span>0 cm</span>
+                  <span>Escala: {{ activeVariantDimensions.scalePercent }}% de la base P1S</span>
+                  <span>25.6 cm</span>
+                </div>
               </div>
             </div>
 
@@ -412,6 +469,16 @@ interface Variant {
   imageIndex?: number;
   imageUrl?: string;
   filament?: string;
+  dimensions?: string;
+  sizeLabel?: string;
+  description?: string;
+  isPartial?: boolean;
+}
+
+interface VariantDimensions {
+  text: string;
+  tag: string;
+  scalePercent: number;
 }
 
 interface Product {
@@ -520,6 +587,167 @@ function nextImage() {
 const variants = computed(() => Array.isArray(props.product.variants) ? props.product.variants : []);
 const variantIdx = ref(props.initialVariantIdx ?? 0);
 const activeVariant = computed(() => variants.value[variantIdx.value] || null);
+
+function isPartialVariant(v: any): boolean {
+  if (!v || !v.name) return false;
+  const n = v.name.toLowerCase();
+  return /(solo piezas|solo tablero|sin tablero|sin piezas|solo carcasa|solo base|solo tapa|solo conector|solo adaptador|solo accesorio|sin electr|sin motor)/i.test(n) ||
+         Boolean(v.isPartial);
+}
+
+function getFallbackVariantDescription(v: any): string {
+  if (!v) return '';
+  if (v.description) return v.description;
+  const n = (v.name || '').toLowerCase();
+  const title = (props.product.title || '').toLowerCase();
+  if (/(ajedrez|chess)/i.test(title)) {
+    if (/tablero/i.test(n) && !/pieza/i.test(n)) {
+      return 'Incluye únicamente el tablero de juego temático. No incluye las piezas ni figuras.';
+    }
+    if (/pieza/i.test(n) && !/tablero/i.test(n)) {
+      return 'Incluye únicamente el juego de 32 figuras de ajedrez. No incluye el tablero.';
+    }
+    if (/completo/i.test(n)) {
+      return 'Incluye el juego completo: Tablero y las 32 figuras temáticas listas para jugar.';
+    }
+  }
+  return '';
+}
+
+function getVariantDimensions(v: Variant | null): VariantDimensions {
+  const p1sMax = 25.6; // cm (Cama Bambu Lab P1S: 25.6 × 25.6 × 25.6 cm)
+  const title = (props.product.title || '').toLowerCase();
+  const cat = (props.product.category || '').toLowerCase();
+  const vName = (v?.name || '').toLowerCase();
+  const grams = Number(v?.grams || (props.product as any)?.grams || 60);
+
+  // 1. Dimensiones explícitas de la BD / IA
+  if (v?.dimensions) {
+    const dimStr = v.dimensions;
+    const tag = v.sizeLabel || dimStr.split('x')[0].split('×')[0].trim();
+    const match = dimStr.match(/(\d+(?:\.\d+)?)/);
+    const mainDim = match ? parseFloat(match[1]) : 10;
+    const scale = Math.min(Math.round((mainDim / p1sMax) * 100), 100);
+    return {
+      text: dimStr,
+      tag: tag.startsWith('~') ? tag : `~${tag}`,
+      scalePercent: Math.max(scale, 10)
+    };
+  }
+
+  // 2. Cortadores de galletas / Repostería / Sellos
+  if (/(galleta|cortador|sello|reposter)/i.test(title) || /reposter/i.test(cat)) {
+    const isPack = /(pack|set|juego|4|5|6)/i.test(vName) || /(pack|set|juego)/i.test(title);
+    let sz = 8.0;
+    let desc = 'Tamaño galleta estándar clásica';
+    if (grams < 40) {
+      sz = 6.5;
+      desc = 'Para galletas pequeñas / bocadillos';
+    } else if (grams < 90) {
+      sz = 8.0;
+      desc = 'Tamaño galleta estándar clásica';
+    } else if (grams < 130) {
+      sz = 8.5;
+      desc = 'Set repostería (~8.5 cm c/u)';
+    } else {
+      sz = 10.0;
+      desc = 'Tamaño grande / repostería premium';
+    }
+    const prefix = isPack ? 'Set multiset · ' : '';
+    return {
+      text: `${prefix}~${sz.toFixed(1)} × ${sz.toFixed(1)} cm (Grosor ~1.5 cm) · ${desc}`,
+      tag: `~${sz.toFixed(1)} cm`,
+      scalePercent: Math.round((sz / p1sMax) * 100)
+    };
+  }
+
+  // 3. Fidgets, giroscopios, antiestrés, cubos, juguetes articulados
+  if (/(fidget|giroscopio|antiestr|cubo|spinner|articulad)/i.test(title)) {
+    if (grams < 35) {
+      return {
+        text: '~5.5 × 5.5 × 2.0 cm · Tamaño bolsillo / llavero',
+        tag: '~5.5 cm',
+        scalePercent: Math.round((5.5 / p1sMax) * 100)
+      };
+    } else if (grams < 75) {
+      return {
+        text: '~8.0 × 8.0 × 3.5 cm · Tamaño palma de la mano',
+        tag: '~8.0 cm',
+        scalePercent: Math.round((8.0 / p1sMax) * 100)
+      };
+    } else {
+      return {
+        text: '~10.5 × 10.5 × 4.5 cm · Tamaño mediano de escritorio',
+        tag: '~10.5 cm',
+        scalePercent: Math.round((10.5 / p1sMax) * 100)
+      };
+    }
+  }
+
+  // 4. Soportes, bases, organizadores, stands
+  if (/(soporte|base|organizador|stand|dock|porta)/i.test(title)) {
+    if (grams < 60) {
+      return {
+        text: '~9.5 × 7.0 × 4.5 cm · Compacto de escritorio',
+        tag: '~9.5 cm',
+        scalePercent: Math.round((9.5 / p1sMax) * 100)
+      };
+    } else if (grams < 120) {
+      return {
+        text: '~14.0 × 9.5 × 7.5 cm · Para celulares y accesorios',
+        tag: '~14 cm',
+        scalePercent: Math.round((14.0 / p1sMax) * 100)
+      };
+    } else {
+      return {
+        text: '~19.0 × 13.0 × 10.0 cm · Base amplia reforzada',
+        tag: '~19 cm',
+        scalePercent: Math.round((19.0 / p1sMax) * 100)
+      };
+    }
+  }
+
+  // 5. Ajedrez / Chess
+  if (/(ajedrez|chess)/i.test(title)) {
+    if (/tablero/i.test(vName) && !/pieza/i.test(vName)) {
+      return {
+        text: '~22.0 × 22.0 × 1.8 cm · Tablero oficial de juego',
+        tag: '~22 cm',
+        scalePercent: Math.round((22.0 / p1sMax) * 100)
+      };
+    }
+    if (/pieza/i.test(vName) && !/tablero/i.test(vName)) {
+      return {
+        text: '32 piezas · Rey: ~7.5 cm de alto · Peón: ~4.5 cm',
+        tag: 'Rey ~7.5 cm',
+        scalePercent: Math.round((7.5 / p1sMax) * 100)
+      };
+    }
+    if (/completo/i.test(vName)) {
+      return {
+        text: 'Tablero ~22 × 22 cm + 32 piezas (Rey ~7.5 cm alt.)',
+        tag: 'Tablero ~22 cm',
+        scalePercent: Math.round((22.0 / p1sMax) * 100)
+      };
+    }
+  }
+
+  // 6. Estimación física volumétrica acotada a la cama Bambu P1S (25.6 × 25.6 × 25.6 cm)
+  const vol = Math.max(grams, 10) / 0.35;
+  const rawSide = Math.pow(vol, 1 / 3) * 1.45;
+  const side = Math.min(Math.round(rawSide * 10) / 10, p1sMax);
+  const w = Math.min(Math.round(side * 0.8 * 10) / 10, p1sMax);
+  const h = Math.min(Math.round(side * 0.55 * 10) / 10, p1sMax);
+  const scale = Math.min(Math.round((side / p1sMax) * 100), 100);
+
+  return {
+    text: `~${side.toFixed(1)} × ${w.toFixed(1)} × ${h.toFixed(1)} cm`,
+    tag: `~${side.toFixed(1)} cm`,
+    scalePercent: Math.max(scale, 10)
+  };
+}
+
+const activeVariantDimensions = computed(() => getVariantDimensions(activeVariant.value));
 
 function syncVariantImage(idx: number) {
   const v = variants.value[idx];

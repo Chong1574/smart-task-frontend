@@ -11,6 +11,7 @@ export interface CartItem {
   quantity: number;
   imageUrl?: string;
   variantName?: string;
+  variantDescription?: string;
   customText?: string;
 }
 
@@ -85,6 +86,7 @@ export const useCartStore = defineStore('cart', () => {
         quantity,
         imageUrl: image,
         variantName: variant ? variant.name : undefined,
+        variantDescription: variant?.description || undefined,
         customText: customText || undefined
       });
     }

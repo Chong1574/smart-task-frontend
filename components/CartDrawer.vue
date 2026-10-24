@@ -51,7 +51,8 @@
             <div class="flex justify-between items-start gap-2">
               <div>
                 <h3 class="font-medium text-sm text-foreground line-clamp-2 leading-tight">{{ item.title }}</h3>
-                <p v-if="item.variantName" class="text-xs text-muted-foreground mt-1">{{ item.variantName }}</p>
+                <p v-if="item.variantName" class="text-xs text-muted-foreground mt-1 font-semibold">{{ item.variantName }}</p>
+                <p v-if="item.variantDescription" class="text-[11px] text-muted-foreground/80 line-clamp-2 mt-0.5 leading-tight">{{ item.variantDescription }}</p>
                 <p v-if="item.customText" class="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5 italic text-balance font-medium">Texto: "{{ item.customText }}"</p>
               </div>
               <button
