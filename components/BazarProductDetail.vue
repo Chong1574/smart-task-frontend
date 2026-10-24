@@ -1,32 +1,35 @@
 <template>
   <div
-    class="fixed inset-0 z-50 bg-background/90 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200"
+    class="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
     @click.self="$emit('close')"
   >
-    <div class="container max-w-5xl mx-auto py-2 sm:py-6 md:py-10 px-2 sm:px-4 relative pb-28 md:pb-10">
-      <div class="bg-card border border-border/70 rounded-3xl shadow-2xl overflow-hidden">
-        <!-- Barra superior fija dentro del modal -->
-        <div class="sticky top-0 z-20 flex items-center justify-between px-4 md:px-6 py-3 bg-card/95 backdrop-blur-md border-b border-border/60">
-          <button
-            type="button"
-            class="inline-flex items-center gap-2 text-xs sm:text-sm text-muted-foreground hover:text-foreground font-medium transition-colors cursor-pointer"
-            @click="$emit('close')"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-            Volver al catálogo
-          </button>
+    <div
+      class="bg-card border border-border/70 rounded-t-3xl sm:rounded-3xl shadow-2xl w-full max-w-5xl h-[94dvh] sm:h-auto sm:max-h-[90vh] flex flex-col overflow-hidden"
+    >
+      <!-- 1. Barra superior fija (flex-none) -->
+      <header class="flex-none flex items-center justify-between px-4 sm:px-6 py-3 bg-card/95 backdrop-blur-md border-b border-border/60 z-10">
+        <button
+          type="button"
+          class="inline-flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground hover:text-foreground font-medium transition-colors cursor-pointer"
+          @click="$emit('close')"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          Volver al catálogo
+        </button>
 
-          <button
-            type="button"
-            class="p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
-            aria-label="Cerrar"
-            @click="$emit('close')"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-          </button>
-        </div>
+        <button
+          type="button"
+          class="p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
+          aria-label="Cerrar"
+          @click="$emit('close')"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+      </header>
 
-        <div class="p-4 sm:p-6 md:p-8 grid md:grid-cols-12 gap-5 md:gap-8">
+      <!-- 2. Contenido Scrolleable (flex-1: NUNCA se sobrepone con el footer) -->
+      <main class="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8">
+        <div class="grid md:grid-cols-12 gap-5 md:gap-8">
           <!-- Columna Izquierda: Galería Visual -->
           <div class="md:col-span-6 space-y-3">
             <div class="aspect-square bg-secondary/40 rounded-2xl overflow-hidden relative group border border-border/50">
@@ -89,7 +92,7 @@
             </div>
           </div>
 
-          <!-- Columna Derecha: Flujo Comercial de Alta Conversión -->
+          <!-- Columna Derecha: Información y Opciones de Compra -->
           <div class="md:col-span-6 flex flex-col justify-between space-y-4">
             <!-- 1. Título y Descripción -->
             <div>
@@ -101,81 +104,10 @@
               </p>
             </div>
 
-            <!-- 2. Bloque Principal de Precio y Compra -->
-            <div class="bg-secondary/25 border border-border/70 rounded-2xl p-3.5 sm:p-4 space-y-3">
-              <div class="flex items-center justify-between gap-3">
-                <div>
-                  <span class="block text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                    {{ activeVariant && variants.length > 1 ? `Precio · ${activeVariant.name}` : 'Precio final · IVA incluido' }}
-                  </span>
-                  <div class="flex items-baseline gap-1">
-                    <span class="text-2xl sm:text-3xl font-black text-primary tracking-tight">{{ priceLabel }}</span>
-                    <span v-if="currentPrice > 0" class="text-xs font-bold text-muted-foreground">MXN</span>
-                  </div>
-                </div>
-
-                <!-- Selector de Cantidad + Comprar Ahora (en desktop) -->
-                <div class="flex items-center gap-2">
-                  <div class="flex items-center border border-border rounded-xl bg-card h-10 px-1 shrink-0">
-                    <button
-                      type="button"
-                      class="w-7 h-8 text-muted-foreground hover:text-foreground disabled:opacity-40 font-bold text-sm cursor-pointer"
-                      @click="quantity > 1 ? quantity-- : null"
-                      :disabled="quantity <= 1"
-                      aria-label="Disminuir cantidad"
-                    >
-                      −
-                    </button>
-                    <span class="px-1 text-xs sm:text-sm font-bold w-6 text-center">{{ quantity }}</span>
-                    <button
-                      type="button"
-                      class="w-7 h-8 text-muted-foreground hover:text-foreground font-bold text-sm cursor-pointer"
-                      @click="quantity++"
-                      aria-label="Aumentar cantidad"
-                    >
-                      +
-                    </button>
-                  </div>
-
-                  <!-- Botón Comprar ahora SOLO VISIBLE EN DESKTOP (en móvil la barra fija inferior es el CTA principal único) -->
-                  <button
-                    type="button"
-                    @click="buyNow"
-                    class="hidden md:flex h-10 bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs sm:text-sm px-5 rounded-xl transition-all shadow-md shadow-primary/20 hover:shadow-primary/30 justify-center items-center gap-2 cursor-pointer whitespace-nowrap"
-                  >
-                    <span>Comprar ahora</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                  </button>
-                </div>
-              </div>
-
-              <!-- Acciones secundarias: Agregar al carrito y WhatsApp -->
-              <div class="grid grid-cols-2 gap-2 pt-2.5 border-t border-border/50">
-                <button
-                  type="button"
-                  @click="addToCartOnly"
-                  class="h-9 bg-card hover:bg-secondary text-foreground font-semibold text-xs px-2.5 rounded-xl transition-all flex justify-center items-center gap-1.5 border border-border/80 cursor-pointer"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-                  <span>Agregar al carrito</span>
-                </button>
-
-                <a
-                  :href="whatsappInquiryUrl"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="h-9 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 font-semibold text-xs px-2.5 rounded-xl transition-all flex justify-center items-center gap-1.5"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-                  <span>Dudas por WhatsApp</span>
-                </a>
-              </div>
-            </div>
-
-            <!-- 3. Selector de Variantes (Chips horizontales limpios, CERO tecnicismos) -->
+            <!-- 2. Selector de Versiones (Limpieza total, sin gramos ni tecnicismos) -->
             <div v-if="variants.length > 1" class="space-y-1.5">
               <div class="flex items-center justify-between text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                <span>Versión:</span>
+                <span>Versión / Modelo:</span>
                 <span class="text-foreground font-bold">{{ activeVariant?.name }}</span>
               </div>
               <div class="flex flex-wrap gap-2">
@@ -196,7 +128,7 @@
               </div>
             </div>
 
-            <!-- 4. Selector de Color Simplificado (Limpio y colapsable) -->
+            <!-- 3. Selector de Color Simplificado (Colapsable) -->
             <div class="bg-card/70 border border-border/70 rounded-xl p-3 space-y-2">
               <div class="flex items-center justify-between">
                 <span class="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Color de la pieza:</span>
@@ -209,7 +141,7 @@
                 </span>
               </div>
 
-              <!-- Selector rápido -->
+              <!-- Fila compacta -->
               <div class="flex items-center gap-2 flex-wrap">
                 <button
                   type="button"
@@ -233,7 +165,7 @@
                 </button>
               </div>
 
-              <!-- Swatches colapsables solo cuando el usuario los pide -->
+              <!-- Paleta desplegable -->
               <div v-if="showColorPicker" class="pt-2 border-t border-border/40 animate-in fade-in duration-150">
                 <div class="grid grid-cols-8 gap-1.5 sm:gap-2">
                   <button
@@ -271,7 +203,7 @@
               </div>
             </div>
 
-            <!-- 5. Campo de Personalización (si aplica) -->
+            <!-- 4. Campo de Personalización (si aplica) -->
             <div v-if="isPersonalized" class="animate-in fade-in slide-in-from-top-2">
               <label class="block text-xs font-semibold uppercase tracking-wider mb-1 text-foreground">
                 Texto a personalizar <span class="text-red-500">*</span>
@@ -282,6 +214,72 @@
                 placeholder="Ej. Nombre a grabar o dedicatoria..."
                 class="w-full h-9 px-3 rounded-xl border border-primary/50 bg-background text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
+            </div>
+
+            <!-- 5. En Desktop (md:): Bloque de Precio + Cantidad + Botones Integrados -->
+            <div class="hidden md:block bg-secondary/25 border border-border/70 rounded-2xl p-4 space-y-3">
+              <div class="flex items-center justify-between gap-3">
+                <div>
+                  <span class="block text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                    {{ activeVariant && variants.length > 1 ? `Precio · ${activeVariant.name}` : 'Precio final · IVA incluido' }}
+                  </span>
+                  <div class="flex items-baseline gap-1">
+                    <span class="text-3xl font-black text-primary tracking-tight">{{ priceLabel }}</span>
+                    <span v-if="currentPrice > 0" class="text-xs font-bold text-muted-foreground">MXN</span>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <div class="flex items-center border border-border rounded-xl bg-card h-10 px-1 shrink-0">
+                    <button
+                      type="button"
+                      class="w-7 h-8 text-muted-foreground hover:text-foreground disabled:opacity-40 font-bold text-sm cursor-pointer"
+                      @click="quantity > 1 ? quantity-- : null"
+                      :disabled="quantity <= 1"
+                    >
+                      −
+                    </button>
+                    <span class="px-1 text-sm font-bold w-6 text-center">{{ quantity }}</span>
+                    <button
+                      type="button"
+                      class="w-7 h-8 text-muted-foreground hover:text-foreground font-bold text-sm cursor-pointer"
+                      @click="quantity++"
+                    >
+                      +
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    @click="buyNow"
+                    class="h-10 bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-sm px-5 rounded-xl transition-all shadow-md shadow-primary/20 hover:shadow-primary/30 justify-center items-center gap-2 cursor-pointer whitespace-nowrap"
+                  >
+                    <span>Comprar ahora</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2 pt-2.5 border-t border-border/50">
+                <button
+                  type="button"
+                  @click="addToCartOnly"
+                  class="h-9 bg-card hover:bg-secondary text-foreground font-semibold text-xs px-2.5 rounded-xl transition-all flex justify-center items-center gap-1.5 border border-border/80 cursor-pointer"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                  <span>Agregar al carrito</span>
+                </button>
+
+                <a
+                  :href="whatsappInquiryUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="h-9 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 font-semibold text-xs px-2.5 rounded-xl transition-all flex justify-center items-center gap-1.5"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                  <span>Dudas por WhatsApp</span>
+                </a>
+              </div>
             </div>
 
             <!-- 6. Factores de Venta y Garantías (Trust Badges comerciales) -->
@@ -319,32 +317,82 @@
               </div>
             </div>
 
-            <!-- Atribución legal discreta (Sin botones que saquen al cliente de la tienda) -->
+            <!-- Enlace WhatsApp discreto en móvil -->
+            <div class="md:hidden pt-1">
+              <a
+                :href="whatsappInquiryUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="w-full h-9 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 font-semibold text-xs px-3 rounded-xl transition-all flex justify-center items-center gap-1.5"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                <span>¿Tienes dudas? Escríbenos por WhatsApp</span>
+              </a>
+            </div>
+
+            <!-- Atribución legal discreta -->
             <div v-if="product.licenseAttribution" class="pt-1 text-[10px] text-muted-foreground/60 text-center">
               Diseño original bajo licencia de autor: {{ product.licenseAttribution }}
             </div>
           </div>
         </div>
+      </main>
 
-        <!-- Barra fija inferior de compra en celular (ÚNICO botón principal en móvil) -->
-        <div class="md:hidden fixed bottom-0 left-0 right-0 p-3 bg-card/95 backdrop-blur-md border-t border-border z-30 flex items-center justify-between gap-3 shadow-2xl">
+      <!-- 3. FOOTER MÓVIL (flex-none, anclado al fondo del modal, IMPOSIBLE que se sobreponga) -->
+      <footer class="md:hidden flex-none p-3 bg-card/95 backdrop-blur-md border-t border-border flex items-center justify-between gap-3 shadow-2xl z-20">
+        <!-- Precio y Cantidad -->
+        <div class="flex items-center gap-2">
           <div class="min-w-0">
-            <span class="block text-[10px] text-muted-foreground uppercase font-semibold">Total estimado</span>
-            <div class="flex items-baseline gap-1">
-              <span class="text-xl font-black text-primary">{{ priceLabel }}</span>
-              <span v-if="currentPrice > 0" class="text-[10px] font-semibold text-muted-foreground">MXN</span>
+            <span class="block text-[9px] text-muted-foreground uppercase font-semibold leading-tight">Total</span>
+            <div class="flex items-baseline gap-0.5">
+              <span class="text-lg font-black text-primary leading-tight">{{ priceLabel }}</span>
+              <span v-if="currentPrice > 0" class="text-[9px] font-bold text-muted-foreground">MXN</span>
             </div>
           </div>
+
+          <!-- Selector de Cantidad compacto en el footer -->
+          <div class="flex items-center border border-border rounded-lg bg-secondary/40 h-8 px-1 shrink-0">
+            <button
+              type="button"
+              class="w-6 h-7 text-muted-foreground hover:text-foreground disabled:opacity-40 font-bold text-xs cursor-pointer"
+              @click="quantity > 1 ? quantity-- : null"
+              :disabled="quantity <= 1"
+            >
+              −
+            </button>
+            <span class="px-1 text-xs font-bold w-4 text-center">{{ quantity }}</span>
+            <button
+              type="button"
+              class="w-6 h-7 text-muted-foreground hover:text-foreground font-bold text-xs cursor-pointer"
+              @click="quantity++"
+            >
+              +
+            </button>
+          </div>
+        </div>
+
+        <!-- Botones de Acción Móvil -->
+        <div class="flex items-center gap-2 flex-1 justify-end">
+          <button
+            type="button"
+            @click="addToCartOnly"
+            class="h-10 w-10 bg-secondary/80 hover:bg-secondary text-foreground rounded-xl border border-border flex items-center justify-center shrink-0 cursor-pointer active:scale-95 transition-all"
+            title="Agregar al carrito"
+            aria-label="Agregar al carrito"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          </button>
+
           <button
             type="button"
             @click="buyNow"
-            class="flex-1 h-11 bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-sm px-4 rounded-xl transition-all shadow-md shadow-primary/25 flex justify-center items-center gap-2 cursor-pointer active:scale-[0.98]"
+            class="flex-1 h-10 bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs sm:text-sm px-3 rounded-xl transition-all shadow-md shadow-primary/25 flex justify-center items-center gap-1.5 cursor-pointer active:scale-[0.98] whitespace-nowrap"
           >
             <span>Comprar ahora</span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
           </button>
         </div>
-      </div>
+      </footer>
     </div>
   </div>
 </template>
