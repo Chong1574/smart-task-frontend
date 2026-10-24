@@ -421,6 +421,13 @@
         >
           <!-- Cabecera Visual Limpia y Enfoque en Conversión -->
           <div class="aspect-square bg-secondary/40 overflow-hidden relative">
+            <!-- Enlace semántico transparente para Googlebot e indexación -->
+            <NuxtLink
+              :to="'/bazar?p=' + product.id"
+              :aria-label="product.title"
+              class="absolute inset-0 z-0"
+              @click.prevent="openProductDetail(product)"
+            />
             <img
               v-if="getCardCurrentImage(product)"
               :src="imgProxy(getCardCurrentImage(product), { width: 600 })"
@@ -491,8 +498,14 @@
           <!-- Cuerpo de la Tarjeta: Sin saturación, enfocado a venta -->
           <div class="p-2.5 sm:p-5 flex flex-col flex-grow">
             <!-- Título Comercial -->
-            <h3 class="font-serif text-xs sm:text-base font-bold leading-snug mb-1 text-foreground group-hover:text-primary transition-colors line-clamp-2 min-h-[2rem] sm:min-h-0">
-              {{ product.title }}
+            <h3 class="font-serif text-xs sm:text-base font-bold leading-snug mb-1 text-foreground group-hover:text-primary transition-colors line-clamp-2 min-h-[2rem] sm:min-h-0 relative z-10">
+              <NuxtLink
+                :to="'/bazar?p=' + product.id"
+                @click.prevent="openProductDetail(product)"
+                class="hover:text-primary transition-colors text-inherit no-underline"
+              >
+                {{ product.title }}
+              </NuxtLink>
             </h3>
 
             <!-- Indicador sutil de valor (Factor de venta directo) -->
@@ -1431,6 +1444,24 @@ function priceLabel(p: Product): string {
   return hasVariants ? `desde ${fmt(n)}` : fmt(n);
 }
 
+const route = useRoute();
+const router = useRouter();
+
+// Precargar producto en SSR para que los rastreadores (Googlebot, WhatsApp, Facebook) vean la foto, título y precio del producto
+if (route.query.p) {
+  const rawP = String(route.query.p).trim();
+  const { data: ssrProduct } = await useAsyncData('ssr-prod-' + rawP, async () => {
+    try {
+      return (await $fetch(`${apiBase}/products/${encodeURIComponent(rawP)}`)) as Product;
+    } catch {
+      return null;
+    }
+  });
+  if (ssrProduct.value && typeof ssrProduct.value === 'object') {
+    selected.value = ssrProduct.value;
+  }
+}
+
 const seoTitle = computed(() => {
   if (selected.value && typeof selected.value === 'object' && selected.value.title) {
     return `${selected.value.title} — El Bazar`;
@@ -1466,39 +1497,72 @@ useSeoMeta({
   twitterTitle: seoTitle,
   twitterDescription: seoDesc,
   twitterImage: seoImage
-})
+});
 
-useHead({
-  script: [{
-    type: 'application/ld+json',
-    innerHTML: JSON.stringify({
+const structuredData = computed(() => {
+  const p = selected.value;
+  if (p && typeof p === 'object' && p.id) {
+    const rawImg = p.imageUrl || (p.images && p.images[0]) || '';
+    const productImg = rawImg ? imgProxy(rawImg, { width: 1200, format: 'jpeg', quality: 85 }) : 'https://shongyi.com/og-cover.jpg';
+    const price = p.price || (p.variants && p.variants[0]?.price) || 150;
+    return [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        name: p.title,
+        image: [productImg],
+        description: p.description || p.title,
+        sku: `PROD-${p.id}`,
+        offers: {
+          '@type': 'Offer',
+          url: `https://shongyi.com/bazar?p=${p.id}`,
+          priceCurrency: 'MXN',
+          price: price,
+          availability: 'https://schema.org/InStock',
+          itemCondition: 'https://schema.org/NewCondition',
+          seller: {
+            '@type': 'Organization',
+            name: 'El Rincón de Brandy',
+            url: 'https://shongyi.com'
+          }
+        }
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'Store',
+        name: 'El Bazar — El Rincón de Brandy',
+        url: 'https://shongyi.com/bazar',
+        description: 'Tienda de productos físicos de diseño, hogar y estilo de vida.',
+        parentOrganization: { '@type': 'Organization', name: 'El Rincón de Brandy', url: 'https://shongyi.com' }
+      }
+    ];
+  }
+  return [
+    {
       '@context': 'https://schema.org',
       '@type': 'Store',
       name: 'El Bazar — El Rincón de Brandy',
       url: 'https://shongyi.com/bazar',
-      description: 'Tienda de productos físicos en impresión 3D, accesorios de estilo de vida y electrónica.',
+      description: 'Tienda de productos físicos de diseño, hogar y estilo de vida.',
       parentOrganization: { '@type': 'Organization', name: 'El Rincón de Brandy', url: 'https://shongyi.com' }
-    })
-  }]
-})
-
-const route = useRoute();
-const router = useRouter();
-
-// Precargar producto en SSR para que los rastreadores (WhatsApp, Facebook, Twitter) vean la foto y título del producto
-if (route.query.p) {
-  const rawP = String(route.query.p).trim();
-  const { data: ssrProduct } = await useAsyncData('ssr-prod-' + rawP, async () => {
-    try {
-      return (await $fetch(`${apiBase}/products/${encodeURIComponent(rawP)}`)) as Product;
-    } catch {
-      return null;
     }
-  });
-  if (ssrProduct.value && typeof ssrProduct.value === 'object') {
-    selected.value = ssrProduct.value;
-  }
-}
+  ];
+});
+
+useHead({
+  script: [{
+    type: 'application/ld+json',
+    innerHTML: computed(() => JSON.stringify(structuredData.value))
+  }],
+  link: [
+    {
+      rel: 'canonical',
+      href: computed(() => (selected.value && typeof selected.value === 'object' && selected.value.id)
+        ? `https://shongyi.com/bazar?p=${selected.value.id}`
+        : 'https://shongyi.com/bazar')
+    }
+  ]
+});
 
 watch(selected, (newVal) => {
   if (newVal) {

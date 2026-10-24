@@ -25,10 +25,29 @@ export default defineNuxtConfig({
     name: 'El Rincón de Brandy'
   },
   sitemap: {
-    exclude: ['/taskman/**', '/login', '/register', '/forgot-password', '/auth-callback']
+    exclude: [
+      '/taskman/**',
+      '/login',
+      '/register',
+      '/forgot-password',
+      '/auth-callback',
+      '/checkout',
+      '/rastreo'
+    ],
+    sources: [
+      '/api/__sitemap__/urls'
+    ]
   },
   robots: {
-    disallow: ['/taskman', '/login', '/register', '/forgot-password', '/auth-callback']
+    disallow: [
+      '/taskman',
+      '/login',
+      '/register',
+      '/forgot-password',
+      '/auth-callback',
+      '/checkout',
+      '/rastreo'
+    ]
   },
   googleFonts: {
     families: {
@@ -60,8 +79,7 @@ export default defineNuxtConfig({
       htmlAttrs: { lang: 'es' },
       viewport: 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover',
       link: [
-        { rel: 'icon', type: 'image/png', href: '/logo.png' },
-        { rel: 'canonical', href: SITE_URL }
+        { rel: 'icon', type: 'image/png', href: '/logo.png' }
       ],
       meta: [
         { property: 'og:site_name', content: 'El Rincón de Brandy' },
