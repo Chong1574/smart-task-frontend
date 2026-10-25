@@ -4,10 +4,10 @@
     @click.self="$emit('close')"
   >
     <div
-      class="bg-card border border-border/70 rounded-t-3xl sm:rounded-3xl shadow-2xl w-full max-w-5xl h-[94dvh] sm:h-auto sm:max-h-[90vh] flex flex-col overflow-hidden"
+      class="bg-card border border-border/70 rounded-t-3xl sm:rounded-3xl shadow-2xl w-full max-w-full sm:max-w-5xl h-[94dvh] sm:h-auto sm:max-h-[90vh] flex flex-col overflow-hidden"
     >
       <!-- 1. Barra superior fija (flex-none) -->
-      <header class="flex-none flex items-center justify-between px-4 sm:px-6 py-3 bg-card/95 backdrop-blur-md border-b border-border/60 z-10">
+      <header class="flex-none flex items-center justify-between px-4 sm:px-6 py-3 bg-card/95 backdrop-blur-md border-b border-border/60 z-10 w-full max-w-full min-w-0">
         <button
           type="button"
           class="inline-flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground hover:text-foreground font-medium transition-colors cursor-pointer"
@@ -28,11 +28,11 @@
       </header>
 
       <!-- 2. Contenido Scrolleable (flex-1: NUNCA se sobrepone con el footer) -->
-      <main class="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8">
-        <div class="grid md:grid-cols-12 gap-5 md:gap-8">
+      <main class="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 md:p-8 w-full max-w-full min-w-0">
+        <div class="grid md:grid-cols-12 gap-5 md:gap-8 w-full max-w-full min-w-0">
           <!-- Columna Izquierda: Galería Visual -->
-          <div class="md:col-span-6 space-y-3">
-            <div class="aspect-square bg-secondary/40 rounded-2xl overflow-hidden relative group border border-border/50">
+          <div class="md:col-span-6 space-y-3 w-full max-w-full min-w-0">
+            <div class="w-full max-w-full aspect-square bg-secondary/40 rounded-2xl overflow-hidden relative group border border-border/50">
               <img
                 v-if="currentImage"
                 :src="imgProxy(currentImage, { width: 900 })"
@@ -78,7 +78,7 @@
             </div>
 
             <!-- Miniaturas -->
-            <div v-if="images.length > 1" class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+            <div v-if="images.length > 1" class="flex gap-2 overflow-x-auto pb-1 no-scrollbar w-full max-w-full min-w-0 touch-pan-x">
               <button
                 v-for="(img, i) in images"
                 :key="i"
@@ -93,36 +93,36 @@
           </div>
 
           <!-- Columna Derecha: Información y Opciones de Compra -->
-          <div class="md:col-span-6 flex flex-col justify-between space-y-4">
+          <div class="md:col-span-6 flex flex-col justify-between space-y-4 w-full max-w-full min-w-0">
             <!-- 1. Título y Descripción -->
-            <div>
-              <h1 class="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-foreground leading-snug mb-1.5">
+            <div class="w-full max-w-full min-w-0">
+              <h1 class="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-foreground leading-snug mb-1.5 break-words">
                 {{ product.title }}
               </h1>
-              <p v-if="product.description" class="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+              <p v-if="product.description" class="text-xs sm:text-sm text-muted-foreground leading-relaxed break-words">
                 {{ product.description }}
               </p>
             </div>
 
             <!-- 2. Selector de Versiones (Limpieza total, sin gramos ni tecnicismos) -->
-            <div v-if="variants.length > 1" class="space-y-1.5">
+            <div v-if="variants.length > 1" class="space-y-1.5 w-full max-w-full min-w-0">
               <div class="flex items-center justify-between text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                 <span>Versión / Modelo:</span>
-                <span class="text-foreground font-bold">{{ activeVariant?.name }}</span>
+                <span class="text-foreground font-bold truncate max-w-[180px]">{{ activeVariant?.name }}</span>
               </div>
-              <div class="flex flex-wrap gap-2">
+              <div class="flex flex-wrap gap-2 w-full min-w-0">
                 <button
                   v-for="(v, i) in variants"
                   :key="i"
                   type="button"
                   @click="variantIdx = i"
-                  class="px-3 py-1.5 rounded-xl text-xs font-bold border transition-all inline-flex items-center gap-1.5 cursor-pointer text-left"
+                  class="px-3 py-1.5 rounded-xl text-xs font-bold border transition-all inline-flex items-center gap-1.5 cursor-pointer text-left max-w-full"
                   :class="variantIdx === i
                     ? 'border-primary bg-primary text-primary-foreground shadow-xs'
                     : 'border-border/80 bg-card hover:bg-secondary text-foreground'"
                 >
                   <img v-if="v.imageUrl" :src="imgProxy(v.imageUrl, { width: 48 })" class="w-4 h-4 rounded object-cover shrink-0" />
-                  <span>{{ v.name }}</span>
+                  <span class="truncate">{{ v.name }}</span>
                   <span class="opacity-80 text-[10px] font-medium shrink-0">· {{ getVariantDimensions(v).tag }}</span>
                   <span class="font-normal opacity-90 shrink-0">({{ fmt(v.price) }})</span>
                 </button>
@@ -131,7 +131,7 @@
               <!-- Especificación / Qué incluye la versión seleccionada -->
               <div
                 v-if="activeVariant && (activeVariant.description || getFallbackVariantDescription(activeVariant))"
-                class="mt-2.5 p-3 rounded-xl border transition-all text-xs"
+                class="mt-2.5 p-3 rounded-xl border transition-all text-xs w-full max-w-full min-w-0"
                 :class="isPartialVariant(activeVariant)
                   ? 'bg-amber-500/10 border-amber-500/35 text-amber-950 dark:text-amber-200'
                   : 'bg-secondary/45 border-border/70 text-muted-foreground'"
@@ -140,11 +140,11 @@
                   <span class="text-sm shrink-0 mt-0.5">
                     {{ isPartialVariant(activeVariant) ? '⚠️' : '📦' }}
                   </span>
-                  <div class="space-y-0.5 min-w-0">
+                  <div class="space-y-0.5 min-w-0 flex-1">
                     <p class="font-semibold text-foreground text-[11px] uppercase tracking-wider">
                       {{ isPartialVariant(activeVariant) ? 'Especificación importante de esta opción:' : '¿Qué incluye esta versión?' }}
                     </p>
-                    <p class="leading-relaxed text-xs">
+                    <p class="leading-relaxed text-xs break-words">
                       {{ activeVariant.description || getFallbackVariantDescription(activeVariant) }}
                     </p>
                   </div>
@@ -153,20 +153,20 @@
             </div>
 
             <!-- Medidas y Dimensiones Físicas Máximas -->
-            <div class="bg-secondary/35 border border-border/70 rounded-xl p-3 space-y-1.5">
+            <div class="bg-secondary/35 border border-border/70 rounded-xl p-3 space-y-1.5 w-full max-w-full min-w-0">
               <div class="flex items-center gap-1.5 text-xs font-semibold text-foreground">
                 <span class="text-sm">📏</span>
                 <span class="text-[11px] uppercase tracking-wider font-bold text-muted-foreground">Dimensiones estimadas:</span>
-                <span v-if="variants.length > 1 && activeVariant" class="text-xs font-semibold text-primary truncate">({{ activeVariant.name }})</span>
+                <span v-if="variants.length > 1 && activeVariant" class="text-xs font-semibold text-primary truncate max-w-[150px]">({{ activeVariant.name }})</span>
               </div>
 
-              <div class="text-xs sm:text-sm font-bold text-foreground leading-snug">
+              <div class="text-xs sm:text-sm font-bold text-foreground leading-snug break-words">
                 {{ activeVariantDimensions.text }}
               </div>
             </div>
 
             <!-- 3. Selector de Color Simplificado (Colapsable) -->
-            <div class="bg-card/70 border border-border/70 rounded-xl p-3 space-y-2">
+            <div class="bg-card/70 border border-border/70 rounded-xl p-3 space-y-2 w-full max-w-full min-w-0">
               <div class="flex items-center justify-between">
                 <span class="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Color de la pieza:</span>
                 <span class="text-xs font-semibold text-foreground flex items-center gap-1.5">
