@@ -152,36 +152,16 @@
               </div>
             </div>
 
-            <!-- Medidas y Escala Física Dinámica (Referencia Cama P1S 25.6 cm) -->
-            <div class="bg-secondary/35 border border-border/70 rounded-xl p-3 space-y-2">
-              <div class="flex items-center justify-between text-xs">
-                <div class="flex items-center gap-1.5 font-semibold text-foreground">
-                  <span class="text-sm">📏</span>
-                  <span class="text-[11px] uppercase tracking-wider font-bold text-muted-foreground">Medida estimada:</span>
-                  <span v-if="variants.length > 1 && activeVariant" class="text-xs font-semibold text-primary truncate max-w-[130px]">({{ activeVariant.name }})</span>
-                </div>
-                <span class="text-[10px] px-2 py-0.5 rounded-full bg-background/80 border border-border/60 text-muted-foreground font-medium shrink-0">
-                  Ref. Cama P1S 25.6 cm
-                </span>
+            <!-- Medidas y Dimensiones Físicas Máximas -->
+            <div class="bg-secondary/35 border border-border/70 rounded-xl p-3 space-y-1.5">
+              <div class="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+                <span class="text-sm">📏</span>
+                <span class="text-[11px] uppercase tracking-wider font-bold text-muted-foreground">Dimensiones estimadas:</span>
+                <span v-if="variants.length > 1 && activeVariant" class="text-xs font-semibold text-primary truncate">({{ activeVariant.name }})</span>
               </div>
 
-              <div class="text-xs sm:text-sm font-bold text-foreground">
+              <div class="text-xs sm:text-sm font-bold text-foreground leading-snug">
                 {{ activeVariantDimensions.text }}
-              </div>
-
-              <!-- Barra visual de proporción de escala frente a la cama P1S (25.6 cm) -->
-              <div class="space-y-1 pt-0.5">
-                <div class="w-full bg-background/80 rounded-full h-1.5 overflow-hidden border border-border/40">
-                  <div
-                    class="bg-primary h-full rounded-full transition-all duration-300"
-                    :style="{ width: `${activeVariantDimensions.scalePercent}%` }"
-                  ></div>
-                </div>
-                <div class="flex justify-between text-[10px] text-muted-foreground/75 font-mono">
-                  <span>0 cm</span>
-                  <span>Escala: {{ activeVariantDimensions.scalePercent }}% de la base P1S</span>
-                  <span>25.6 cm</span>
-                </div>
               </div>
             </div>
 
