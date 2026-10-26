@@ -66,11 +66,23 @@
 
               <p class="text-xs text-muted-foreground line-clamp-2">{{ pedido.descripcion }}</p>
               
-              <!-- Badges de Color, Piezas y Pago -->
+              <!-- Badges de Color, Disponibilidad en Taller, Piezas y Pago -->
               <div class="flex flex-wrap items-center gap-1.5 pt-1">
                 <span v-if="pedido.color" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-secondary text-foreground border border-border/60 shadow-2xs">
                   <span class="w-2.5 h-2.5 rounded-full shrink-0 border border-black/25" :style="{ backgroundColor: getColorHex(pedido.color) }"></span>
                   <span class="truncate max-w-[120px]">{{ pedido.color }}</span>
+                  <span
+                    class="w-1.5 h-1.5 rounded-full shrink-0"
+                    :class="getColorStock(pedido.color).inStock ? 'bg-emerald-500' : 'bg-amber-500'"
+                    :title="getColorStock(pedido.color).label"
+                  ></span>
+                </span>
+                <span
+                  v-if="pedido.color && !getColorStock(pedido.color).inStock"
+                  class="text-[10px] text-amber-600 dark:text-amber-400 font-bold bg-amber-500/10 border border-amber-500/25 px-2 py-0.5 rounded-md"
+                  title="No está en taller: comprar en Amazon / Mercado Libre"
+                >
+                  🛒 Pedir rollo (+{{ getColorStock(pedido.color).deliveryDays }}d)
                 </span>
                 <span v-if="pedido.piezas" class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-secondary/60 text-muted-foreground border border-border/40">
                   {{ pedido.piezas }}
@@ -398,6 +410,7 @@ import { useRouter } from 'vue-router';
 import api from '~/utils/api';
 import { imgProxy } from '~/utils/imgProxy';
 import { SUNLU_BAMBU_COLORS, type FilamentColor } from '~/data/filament-colors';
+import { useFilamentsStore } from '~/stores/filaments';
 import {
   Plus, X, ArrowRight, ArrowLeft, Clock, Printer, CheckCircle2,
   Truck, PackageCheck, Trash2, WifiOff, Package, Palette, Search, ExternalLink
@@ -416,8 +429,13 @@ definePageMeta({
 });
 
 const pedidosStore = usePedidosStore();
+const filamentsStore = useFilamentsStore();
 const authStore = useAuthStore();
 const router = useRouter();
+
+function getColorStock(colorName?: string) {
+  return filamentsStore.getColorStatus(colorName || '');
+}
 
 const showAddModal = ref(false);
 const showDetailsModal = ref(false);
@@ -568,6 +586,7 @@ const columns: ColumnDef[] = [
 
 onMounted(() => {
   pedidosStore.fetchPedidos();
+  filamentsStore.fetchFilaments();
 });
 
 const pedidosByStatus = (status: PedidoStatus) => {

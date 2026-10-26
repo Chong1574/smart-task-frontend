@@ -165,6 +165,66 @@
               </div>
             </div>
 
+            <!-- Banner Inteligente de Recomendación de Material Térmico/Ambiental -->
+            <div
+              v-if="productTier.id !== 'indoor'"
+              class="rounded-xl border p-3.5 space-y-2.5 transition-all text-xs w-full max-w-full min-w-0"
+              :class="productTier.id === 'auto'
+                ? 'bg-amber-500/10 border-amber-500/35 text-amber-950 dark:text-amber-200'
+                : 'bg-blue-500/10 border-blue-500/35 text-blue-950 dark:text-blue-200'"
+            >
+              <div class="flex items-start gap-2.5">
+                <span class="text-xl shrink-0">{{ productTier.icon }}</span>
+                <div class="space-y-1 flex-1 min-w-0">
+                  <div class="flex items-center justify-between gap-2">
+                    <h4 class="font-bold text-foreground text-xs leading-snug">{{ productTier.warningTitle }}</h4>
+                    <span
+                      class="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider shrink-0 bg-background border"
+                      :class="productTier.id === 'auto' ? 'text-amber-600 dark:text-amber-400 border-amber-500/40' : 'text-blue-600 dark:text-blue-400 border-blue-500/40'"
+                    >
+                      Resiste {{ productTier.maxOperatingTemp }}
+                    </span>
+                  </div>
+                  <p class="text-xs text-muted-foreground leading-relaxed break-words">
+                    {{ productTier.warningDesc }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Selector de Material -->
+              <div class="pt-2 border-t border-border/50 grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  @click="selectedMaterial = productTier.recommendedMaterial"
+                  class="p-2 rounded-xl border text-left flex flex-col gap-0.5 cursor-pointer transition-all"
+                  :class="selectedMaterial === productTier.recommendedMaterial
+                    ? 'border-primary bg-primary text-primary-foreground font-bold shadow-xs'
+                    : 'border-border/80 bg-card hover:bg-secondary text-foreground'"
+                >
+                  <div class="flex items-center justify-between text-xs">
+                    <span class="font-bold">{{ productTier.recommendedMaterial }} (Recomendado)</span>
+                    <span v-if="selectedMaterial === productTier.recommendedMaterial">✓</span>
+                  </div>
+                  <span class="text-[10px] opacity-85 font-normal">Térmicamente resistente</span>
+                </button>
+
+                <button
+                  type="button"
+                  @click="selectedMaterial = 'PLA'"
+                  class="p-2 rounded-xl border text-left flex flex-col gap-0.5 cursor-pointer transition-all"
+                  :class="selectedMaterial === 'PLA'
+                    ? 'border-primary bg-primary text-primary-foreground font-bold shadow-xs'
+                    : 'border-border/80 bg-card hover:bg-secondary text-muted-foreground'"
+                >
+                  <div class="flex items-center justify-between text-xs">
+                    <span class="font-bold">PLA Estándar</span>
+                    <span v-if="selectedMaterial === 'PLA'">✓</span>
+                  </div>
+                  <span class="text-[10px] opacity-85 font-normal">Solo para sombra/interiores</span>
+                </button>
+              </div>
+            </div>
+
             <!-- 3. Selector de Color Simplificado (Colapsable) -->
             <div class="bg-card/70 border border-border/70 rounded-xl p-3 space-y-2 w-full max-w-full min-w-0">
               <div class="flex items-center justify-between">
@@ -200,6 +260,17 @@
                   <span>🎨</span>
                   <span>{{ showColorPicker ? 'Ocultar tonos' : (selectedColorId !== 'original' ? 'Cambiar tono' : 'Elegir otro tono') }}</span>
                 </button>
+              </div>
+
+              <!-- Indicador de Disponibilidad de Color en Taller -->
+              <div class="flex items-center justify-between text-[11px] pt-1 border-t border-border/40">
+                <span class="text-muted-foreground">Disponibilidad del tono:</span>
+                <span
+                  class="font-semibold flex items-center gap-1"
+                  :class="colorStockInfo.inStock ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'"
+                >
+                  <span>{{ colorStockInfo.inStock ? '⚡ En taller (Impresión inmediata)' : `⏱️ Sobre pedido (+${colorStockInfo.deliveryDays} días entrega)` }}</span>
+                </span>
               </div>
 
               <!-- Paleta desplegable -->
@@ -489,50 +560,57 @@ const emit = defineEmits<{
   (e: 'select-tag', tag: string): void;
 }>();
 
-interface FilamentColor {
-  id: string;
-  label: string;
-  hex: string;
-  textColor: string;
-}
+import {
+  SUNLU_BAMBU_COLORS,
+  ORIGINAL_COLOR_OPTION,
+  detectMaterialTier,
+  type FilamentColor,
+  type MaterialTierInfo
+} from '~/data/filament-colors';
+import { useFilamentsStore } from '~/stores/filaments';
 
-const ORIGINAL_COLOR_OPTION = {
-  id: 'original',
-  label: 'Como en la foto (Recomendado)',
-  swatch: 'linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 50%, #FFE66D 100%)',
-};
+const filamentsStore = useFilamentsStore();
 
-const SUNLU_BAMBU_COLORS: FilamentColor[] = [
-  { id: 'white', label: 'Blanco Puro', hex: '#FFFFFF', textColor: '#18181B' },
-  { id: 'black', label: 'Negro Mate', hex: '#18181B', textColor: '#FFFFFF' },
-  { id: 'gray', label: 'Gris Ceniza', hex: '#71717A', textColor: '#FFFFFF' },
-  { id: 'silver', label: 'Plata Metálico', hex: '#9CA3AF', textColor: '#18181B' },
-  { id: 'beige', label: 'Beige Hueso', hex: '#E4D5B7', textColor: '#18181B' },
-  { id: 'brown', label: 'Café Madera', hex: '#5C3A21', textColor: '#FFFFFF' },
-  { id: 'red', label: 'Rojo Carmesí', hex: '#DC2626', textColor: '#FFFFFF' },
-  { id: 'orange', label: 'Naranja', hex: '#EA580C', textColor: '#FFFFFF' },
-  { id: 'yellow', label: 'Amarillo', hex: '#EAB308', textColor: '#18181B' },
-  { id: 'bambu_green', label: 'Verde Claro', hex: '#16A34A', textColor: '#FFFFFF' },
-  { id: 'forest_green', label: 'Verde Oscuro', hex: '#14532D', textColor: '#FFFFFF' },
-  { id: 'cyan', label: 'Azul Cielo', hex: '#06B6D4', textColor: '#FFFFFF' },
-  { id: 'blue', label: 'Azul Rey', hex: '#2563EB', textColor: '#FFFFFF' },
-  { id: 'navy', label: 'Azul Marino', hex: '#1E3A8A', textColor: '#FFFFFF' },
-  { id: 'purple', label: 'Púrpura', hex: '#7C3AED', textColor: '#FFFFFF' },
-  { id: 'pink', label: 'Rosa Sakura', hex: '#F472B6', textColor: '#18181B' },
-];
+// Nivel y recomendación térmica/ambiental
+const productTier = computed<MaterialTierInfo>(() => {
+  return detectMaterialTier(props.product.title || '', props.product.category || '', props.product.tags || []);
+});
+
+// Material seleccionado (default: el recomendado para su nivel)
+const selectedMaterial = ref<string>('PLA');
+
+watch(
+  () => productTier.value,
+  (tier) => {
+    if (tier && tier.id !== 'indoor') {
+      selectedMaterial.value = tier.recommendedMaterial;
+    } else {
+      selectedMaterial.value = 'PLA';
+    }
+  },
+  { immediate: true }
+);
+
+const colorsList = computed(() => {
+  return filamentsStore.filaments.length ? filamentsStore.filaments : SUNLU_BAMBU_COLORS;
+});
 
 const selectedColorId = ref<string>('original');
 const showColorPicker = ref<boolean>(false);
 
 const selectedColorObj = computed(() => {
   if (selectedColorId.value === 'original') return ORIGINAL_COLOR_OPTION;
-  return SUNLU_BAMBU_COLORS.find(c => c.id === selectedColorId.value) || ORIGINAL_COLOR_OPTION;
+  return colorsList.value.find(c => c.id === selectedColorId.value) || ORIGINAL_COLOR_OPTION;
 });
 
 const currentColorSwatch = computed(() => {
   if (selectedColorId.value === 'original') return ORIGINAL_COLOR_OPTION.swatch;
-  const found = SUNLU_BAMBU_COLORS.find(c => c.id === selectedColorId.value);
+  const found = colorsList.value.find(c => c.id === selectedColorId.value);
   return found ? found.hex : '#18181B';
+});
+
+const colorStockInfo = computed(() => {
+  return filamentsStore.getColorStatus(selectedColorId.value);
 });
 
 const images = computed(() => {
@@ -781,8 +859,19 @@ const isPersonalized = computed(() => {
 const customText = ref('');
 
 const currentPrice = computed(() => {
-  if (variants.value.length) return variants.value[variantIdx.value]?.price ?? 0;
-  return props.product.priceFrom ?? (typeof props.product.price === 'number' ? props.product.price : parseFloat(String(props.product.price ?? 0)));
+  let base = 0;
+  if (variants.value.length) {
+    base = variants.value[variantIdx.value]?.price ?? 0;
+  } else {
+    base = props.product.priceFrom ?? (typeof props.product.price === 'number' ? props.product.price : parseFloat(String(props.product.price ?? 0)));
+  }
+
+  // Ajuste si se escoge material de ingeniería superior (PETG / ASA)
+  if (selectedMaterial.value !== 'PLA' && productTier.value.id !== 'indoor') {
+    const delta = (base * (productTier.value.priceDeltaPercent || 0)) / 100;
+    return Math.round(base + delta);
+  }
+  return base;
 });
 
 const priceLabel = computed(() => {
@@ -796,6 +885,7 @@ function fmt(n: number): string {
 }
 
 onMounted(() => {
+  filamentsStore.fetchFilaments();
   if (props.initialVariantIdx !== undefined && props.initialVariantIdx >= 0) {
     variantIdx.value = props.initialVariantIdx;
     syncVariantImage(props.initialVariantIdx);
@@ -823,14 +913,20 @@ const quantity = ref(1);
 
 const whatsappInquiryUrl = computed(() => {
   const vName = activeVariant.value ? ` (${activeVariant.value.name})` : '';
+  const matNote = selectedMaterial.value !== 'PLA' ? ` en ${selectedMaterial.value}` : '';
   const colorNote = selectedColorId.value !== 'original' ? ` en color ${selectedColorObj.value.label}` : '';
   const shareUrl = `https://shongyi.com/bazar?p=${props.product.id}`;
-  const msg = `Hola, me interesa "${props.product.title}"${vName}${colorNote} en El Bazar (${priceLabel.value}):\n${shareUrl}\n\n¿Me podrías dar más información?`;
+  const msg = `Hola, me interesa "${props.product.title}"${vName}${matNote}${colorNote} en El Bazar (${priceLabel.value}):\n${shareUrl}\n\n¿Me podrías dar más información?`;
   return `https://wa.me/524421752026?text=${encodeURIComponent(msg)}`;
 });
 
 function resolveOrderNote(): string {
   const parts: string[] = [];
+  if (selectedMaterial.value !== 'PLA') {
+    parts.push(`Material: ${selectedMaterial.value} (${productTier.value.badge})`);
+  } else {
+    parts.push('Material: PLA Estándar');
+  }
   if (selectedColorId.value !== 'original') {
     parts.push(`Color: ${selectedColorObj.value.label}`);
   }

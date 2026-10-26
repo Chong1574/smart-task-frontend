@@ -63,6 +63,10 @@
             <Package class="w-5 h-5 shrink-0" />
             <span v-show="isSidebarOpen" class="font-medium whitespace-nowrap">Pedidos Brandy</span>
           </NuxtLink>
+          <NuxtLink to="/taskman/admin/filamentos" class="w-full flex items-center justify-center md:justify-start gap-3 p-3 rounded-xl text-primary hover:bg-primary/10 transition-all" :class="!isSidebarOpen ? 'md:justify-center' : ''">
+            <Palette class="w-5 h-5 shrink-0" />
+            <span v-show="isSidebarOpen" class="font-medium whitespace-nowrap">Filamentos</span>
+          </NuxtLink>
         </div>
         <button @click="openProfile" class="w-full flex items-center justify-center md:justify-start gap-3 p-3 rounded-xl text-muted-foreground hover:bg-secondary transition-all" :class="!isSidebarOpen ? 'md:justify-center' : ''" title="Editar perfil">
           <div class="w-5 h-5 shrink-0 rounded-full bg-gradient-to-tr from-primary to-orange-400 text-primary-foreground flex items-center justify-center text-[10px] font-bold uppercase">
@@ -207,6 +211,10 @@
             <Package class="w-5 h-5 text-primary" />
             <span>Pedidos Brandy</span>
           </NuxtLink>
+          <NuxtLink @click="showMobileMenu = false" to="/taskman/admin/filamentos" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-secondary text-foreground text-sm font-medium transition-colors" active-class="bg-primary/10 text-primary font-bold">
+            <Palette class="w-5 h-5 text-primary" />
+            <span>Filamentos</span>
+          </NuxtLink>
           <NuxtLink @click="showMobileMenu = false" to="/taskman/admin/bazar" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-secondary text-foreground text-sm font-medium transition-colors" active-class="bg-primary/10 text-primary font-bold">
             <ShieldAlert class="w-5 h-5 text-primary" />
             <span>Bazar</span>
@@ -265,6 +273,7 @@ import {
   ShieldAlert,
   Lock,
   Package,
+  Palette,
   MoreHorizontal,
   User
 } from 'lucide-vue-next'
