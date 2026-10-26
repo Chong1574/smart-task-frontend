@@ -18,23 +18,98 @@
     </div>
 
     <!-- Pestañas -->
-    <div class="flex border-b border-border/60 gap-2">
+    <div class="flex border-b border-border/60 gap-2 overflow-x-auto">
       <button
         type="button"
-        class="px-4 py-2.5 text-sm font-medium border-b-2 transition-colors"
-        :class="activeTab === 'batch' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'"
-        @click="activeTab = 'batch'"
+        class="px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap"
+        :class="activeTab === 'direct' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'"
+        @click="activeTab = 'direct'"
       >
-        Importador Batch MakerWorld (n8n + Gemini + MELI)
+        Importar por ID / Link MakerWorld
       </button>
       <button
         type="button"
-        class="px-4 py-2.5 text-sm font-medium border-b-2 transition-colors"
+        class="px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap"
+        :class="activeTab === 'batch' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'"
+        @click="activeTab = 'batch'"
+      >
+        Lotes por Conceptos JSON
+      </button>
+      <button
+        type="button"
+        class="px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap"
         :class="activeTab === 'custom' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'"
         @click="activeTab = 'custom'"
       >
         Diseños Custom ({{ products.length }})
       </button>
+    </div>
+
+    <!-- TAB 0: IMPORTADOR DIRECTO POR ID / LINK -->
+    <div v-if="activeTab === 'direct'" class="space-y-6">
+      <div class="rounded-xl border border-border/60 bg-card p-5 space-y-4">
+        <div>
+          <h2 class="text-lg font-semibold flex items-center gap-2">
+            <span>Importar Modelos Seleccionados de MakerWorld</span>
+          </h2>
+          <p class="text-xs text-muted-foreground mt-1">
+            Pega los IDs o enlaces de los modelos que elegiste en MakerWorld (ej. <code>95181</code> o <code>https://makerworld.com/es/models/3448045</code>). Se extraerán los datos técnicos, se calculará el precio con tus filamentos, se enriquecerá con IA y quedará publicado en el Bazar y Mercado Libre.
+          </p>
+        </div>
+
+        <div class="space-y-3">
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
+              IDs o Enlaces de MakerWorld (uno por línea o separados por coma)
+            </label>
+            <textarea
+              v-model="singleInputText"
+              rows="4"
+              class="w-full rounded-lg border border-border bg-background p-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary/40"
+              placeholder="95181&#10;https://makerworld.com/es/models/3448045"
+            />
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
+                Categoría en el Bazar
+              </label>
+              <select v-model="singleCategory" class="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40">
+                <option value="Gadgets & Utilidades">Gadgets & Utilidades</option>
+                <option value="Hogar & Deco">Hogar & Deco</option>
+                <option value="Organización & Setup">Organización & Setup</option>
+                <option value="Coleccionables & Figuras">Coleccionables & Figuras</option>
+                <option value="Juegos & Diversión">Juegos & Diversión</option>
+              </select>
+            </div>
+            <div class="flex items-end">
+              <button
+                type="button"
+                :disabled="singleRunning || !singleInputText.trim()"
+                class="w-full rounded-lg bg-primary text-primary-foreground py-2 px-5 text-sm font-bold shadow-md hover:opacity-90 disabled:opacity-50 transition-opacity flex items-center justify-center gap-2 cursor-pointer"
+                @click="runSingleImport"
+              >
+                <span v-if="singleRunning" class="animate-spin inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full" />
+                <span>{{ singleRunning ? 'Importando y Publicando…' : 'Importar y Publicar en Bazar' }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Alertas de estado -->
+        <div v-if="singleRunning" class="rounded-lg border border-primary/30 bg-primary/10 p-3 text-xs text-primary animate-pulse font-medium">
+          ⏳ Procesando en n8n: extrayendo detalles técnicos de MakerWorld, calculando costos de filamento, enriqueciendo con Gemini y publicando...
+        </div>
+
+        <div v-if="singleSuccess" class="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-600 font-semibold flex items-center gap-2">
+          <span>✅ {{ singleSuccess }}</span>
+        </div>
+
+        <div v-if="singleError" class="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive">
+          ❌ {{ singleError }}
+        </div>
+      </div>
     </div>
 
     <!-- TAB 1: IMPORTADOR BATCH MAKERWORLD -->
@@ -443,7 +518,58 @@ const DEFAULT_MAKERWORLD_JSON = {
 const authStore = useAuthStore();
 const router = useRouter();
 
-const activeTab = ref<'batch' | 'custom'>('batch');
+const activeTab = ref<'direct' | 'batch' | 'custom'>('direct');
+
+// Estado Importador Directo por ID/Link
+const singleInputText = ref('');
+const singleCategory = ref('Gadgets & Utilidades');
+const singleRunning = ref(false);
+const singleError = ref<string | null>(null);
+const singleSuccess = ref<string | null>(null);
+
+async function runSingleImport() {
+  const raw = singleInputText.value.trim();
+  if (!raw) return;
+
+  const items = raw.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+  if (items.length === 0) return;
+
+  singleRunning.value = true;
+  singleError.value = null;
+  singleSuccess.value = null;
+
+  try {
+    if (items.length === 1) {
+      const item = items[0];
+      const isUrl = item.startsWith('http');
+      const payload: any = {
+        categoria: singleCategory.value,
+        forzarLicencia: true,
+      };
+      if (isUrl) payload.url = item;
+      else payload.modelId = item;
+
+      await api.post('/products/batch-import', payload, { timeout: 240_000 });
+      singleSuccess.value = `¡Modelo ${item} procesado y publicado con éxito en el Bazar!`;
+    } else {
+      const modelIds = items.map(it => {
+        const match = it.match(/models\/(\d+)/i);
+        return match ? match[1] : it;
+      });
+      await api.post('/products/batch-import', {
+        modelIds,
+        categoria: singleCategory.value,
+      }, { timeout: 360_000 });
+      singleSuccess.value = `¡Se procesaron ${items.length} modelos y quedaron publicados en el Bazar!`;
+    }
+    singleInputText.value = '';
+    await refresh();
+  } catch (e: any) {
+    singleError.value = e.response?.data?.error || e.message || 'Error al importar modelo de MakerWorld';
+  } finally {
+    singleRunning.value = false;
+  }
+}
 
 // Estado Batch Importer
 const batchJsonText = ref(JSON.stringify(DEFAULT_MAKERWORLD_JSON, null, 2));
