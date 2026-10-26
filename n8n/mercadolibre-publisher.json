@@ -15,6 +15,29 @@
     {
       "parameters": {
         "method": "GET",
+        "url": "http://host.docker.internal:3000/api/meli/token",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "meli-get-token",
+      "name": "Obtener Token MELI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        420,
+        300
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "notes": "Auth: seleccionar credencial Header Auth 'Taskman Sync' post-import. El backend refresca el token solo; si responde 409 (needsReauth) abrir /api/meli/auth?secret=<SYNC_SECRET> una vez."
+    },
+    {
+      "parameters": {
+        "method": "GET",
         "url": "http://host.docker.internal:3000/api/products?limit=10&syncMeli=pending",
         "sendHeaders": true,
         "headerParameters": {
@@ -52,125 +75,17 @@
     },
     {
       "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "title",
-              "name": "title",
-              "value": "={{ $json.title }}",
-              "type": "string"
-            },
-            {
-              "id": "category_id",
-              "name": "category_id",
-              "value": "MLM3530",
-              "type": "string"
-            },
-            {
-              "id": "price",
-              "name": "price",
-              "value": "={{ $json.price }}",
-              "type": "number"
-            },
-            {
-              "id": "currency_id",
-              "name": "currency_id",
-              "value": "MXN",
-              "type": "string"
-            },
-            {
-              "id": "available_quantity",
-              "name": "available_quantity",
-              "value": 10,
-              "type": "number"
-            },
-            {
-              "id": "buying_mode",
-              "name": "buying_mode",
-              "value": "buy_it_now",
-              "type": "string"
-            },
-            {
-              "id": "condition",
-              "name": "condition",
-              "value": "new",
-              "type": "string"
-            },
-            {
-              "id": "listing_type_id",
-              "name": "listing_type_id",
-              "value": "gold_special",
-              "type": "string"
-            },
-            {
-              "id": "pictures",
-              "name": "pictures",
-              "value": "=[{\"source\": \"{{ $json.imageUrl }}\"}]",
-              "type": "array"
-            }
-          ]
-        },
-        "options": {}
+        "jsCode": "// Publica en Mercado Libre los productos pendientes del bazar.\n// v2: ya NO usa la categoría fija MLM3530 (Otros). Usa el mismo resolver que el Importador Batch:\n// (a) mapa curado CATEGORY_MAP, (b) domain_discovery + Gemini con nivel de confianza,\n// (c) sin categoría segura = no se publica y queda como pending_category en la respuesta.\nconst meliAccessToken = $('Obtener Token MELI').first().json.accessToken;\nif (!meliAccessToken) {\n  throw new Error('Token de Mercado Libre no disponible o expirado. Reconecta en /api/meli/auth');\n}\n\nconst parseMaybeJson = (v, fallback) => {\n  if (Array.isArray(v)) return v;\n  if (typeof v === 'string' && v.trim().startsWith('[')) {\n    try { return JSON.parse(v); } catch (e) { return fallback; }\n  }\n  return fallback;\n};\n\nconst products = $input.all().map(i => i.json).filter(p => p && p.title);\n\n// ===== RESOLVER DE CATEGORÍA Y ATRIBUTOS DE MERCADO LIBRE =====\n// El MISMO bloque está en el workflow Importador Batch MakerWorld. Si cambias algo aquí, cópialo allá.\nconst CATEGORY_MAP = [\n  // Llena cada id con la categoría confirmada abriendo en el navegador:\n  // https://api.mercadolibre.com/sites/MLM/domain_discovery/search?q=TERMINO\n  // Mientras el id tenga guiones bajos (MLM_____), la regla se ignora.\n  // Pon primero las reglas más específicas.\n  { match: /l[aá]mpara|luz de noche|litofan/i, id: 'MLM_____', name: 'Lámparas' },\n  { match: /soporte.*(celular|tel[eé]fono|smartphone)/i, id: 'MLM_____', name: 'Soportes para celular' },\n  { match: /soporte.*(aud[ií]fonos|diadema|headset)/i, id: 'MLM_____', name: 'Soportes para audífonos' },\n  { match: /soporte.*(control|joystick)/i, id: 'MLM_____', name: 'Soportes para controles' },\n  { match: /organizador/i, id: 'MLM_____', name: 'Organizadores' },\n  { match: /maceta/i, id: 'MLM_____', name: 'Macetas' },\n  { match: /llavero/i, id: 'MLM_____', name: 'Llaveros' },\n  { match: /fidget|antiestr[eé]s/i, id: 'MLM_____', name: 'Juguetes antiestrés' },\n  { match: /figura|coleccionable/i, id: 'MLM_____', name: 'Figuras coleccionables' }\n];\nconst isConfirmedId = (id) => /^MLM\\d+$/.test(String(id || ''));\n\nconst BAD_ROOTS = [\n  'agro', 'peluqueria', 'peluquería', 'extensiones', 'belleza y cuidado personal',\n  'alimentos y bebidas', 'salud y equipamiento médico', 'salud y equipamiento medico',\n  'bebés', 'bebes', 'ropa, bolsas y calzado', 'maquinaria agrícola', 'maquinaria agricola',\n  'plataformas vibratorias', 'paneles solares', 'repuestos maquinaria agrícola',\n  'repuestos maquinaria agricola', 'vehículos', 'vehiculos', 'refacciones autos',\n  'refacciones de línea pesada'\n];\n\nconst FORBIDDEN_CAT_IDS = new Set([\n  'MLM3530', 'MLM1228', 'MLM1953',\n  'MLM187619', // Micrómetros\n  'MLM180875', // Paneles Solares\n  'MLM456878', // Plataforma agrícola\n  'MLM431655', // Cola de Caballo\n  'MLM189080', // Básculas de Laboratorio\n  'MLM457153'  // Básculas de Precisión\n]);\n\nconst cleanForSearch = (t) => String(t || '')\n  .replace(/[|·—–\\-_/()\\[\\]\"!¡¿?:,.]/g, ' ')\n  .replace(/\\b(3d|impreso|impresa|impresi[oó]n|pla|petg|stl|decorativ[oa]|articulad[oa]|premium|original|micromedidor|micrometro|micrómetro)\\b/gi, ' ')\n  .replace(/\\s{2,}/g, ' ')\n  .trim();\n\nconst GEMINI_KEY = ($env.GEMINI_API_KEY || '').trim();\n\nasync function geminiJson(promptText) {\n  if (!GEMINI_KEY) return null;\n  try {\n    const gRes = await this.helpers.httpRequest({\n      method: 'POST',\n      url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${GEMINI_KEY}`,\n      headers: { 'Content-Type': 'application/json' },\n      body: {\n        contents: [{ parts: [{ text: promptText }] }],\n        generationConfig: { responseMimeType: 'application/json', temperature: 0.1 }\n      },\n      timeout: 15000\n    });\n    const gText = gRes?.candidates?.[0]?.content?.parts?.[0]?.text || '';\n    const m = gText.match(/\\{.*\\}/s);\n    return m ? JSON.parse(m[0]) : null;\n  } catch (e) {\n    return null;\n  }\n}\n\nasync function resolveMeliCategory(ctx) {\n  const hints = [ctx.tipo, ctx.searchTerm, ctx.title, String(ctx.title || '').split(' ').slice(0, 3).join(' '), ctx.concepto, ctx.categoria]\n    .map(cleanForSearch)\n    .filter((q, idx, arr) => Boolean(q && q.length >= 3 && arr.indexOf(q) === idx));\n  const textoClave = [ctx.tipo, ctx.searchTerm, ctx.title, ctx.concepto].filter(Boolean).join(' | ');\n\n  // (a) Mapa curado: si coincide, no se consulta nada más\n  const mapped = CATEGORY_MAP.find(c => isConfirmedId(c.id) && c.match.test(textoClave));\n  if (mapped) {\n    return { id: mapped.id, name: mapped.name, by: 'mapa', hints, candidates: [], discoveryAttrs: [] };\n  }\n\n  // (b) domain_discovery con todas las pistas\n  const rawCandidateMap = new Map();\n  for (const q of hints) {\n    try {\n      const discRes = await this.helpers.httpRequest({\n        method: 'GET',\n        url: `https://api.mercadolibre.com/sites/MLM/domain_discovery/search?q=${encodeURIComponent(q)}&limit=5`,\n        headers: { 'User-Agent': 'Mozilla/5.0' },\n        timeout: 6000\n      });\n      if (Array.isArray(discRes)) {\n        for (const c of discRes) {\n          if (c?.category_id && !FORBIDDEN_CAT_IDS.has(c.category_id) && !rawCandidateMap.has(c.category_id)) {\n            rawCandidateMap.set(c.category_id, c);\n          }\n        }\n      }\n    } catch (discErr) {}\n  }\n\n  const validCandidates = [];\n  for (const [cid, c] of rawCandidateMap.entries()) {\n    try {\n      const catDetail = await this.helpers.httpRequest({\n        method: 'GET',\n        url: `https://api.mercadolibre.com/categories/${cid}`,\n        headers: { 'User-Agent': 'Mozilla/5.0' },\n        timeout: 5000\n      });\n      if (!catDetail) continue;\n      const isLeaf = !Array.isArray(catDetail.children_categories) || catDetail.children_categories.length === 0;\n      const isAllowed = catDetail.settings?.listing_allowed !== false && catDetail.settings?.buying_allowed !== false;\n      const fullBreadcrumb = (catDetail.path_from_root || []).map(p => p.name).join(' > ');\n      const hasBadDomain = BAD_ROOTS.some(bad => fullBreadcrumb.toLowerCase().includes(bad));\n      if (isLeaf && isAllowed && !hasBadDomain) {\n        validCandidates.push({\n          id: cid,\n          name: catDetail.name || c.category_name || '',\n          path: fullBreadcrumb,\n          attrs: Array.isArray(c.attributes) ? c.attributes : []\n        });\n      }\n    } catch (catErr) {}\n  }\n\n  const candidatePaths = validCandidates.map(vc => `[${vc.id}] ${vc.path}`);\n  if (validCandidates.length === 0) {\n    return { id: null, by: 'sin_candidatos', hints, candidates: [] };\n  }\n  if (!GEMINI_KEY) {\n    const vc0 = validCandidates[0];\n    return { id: vc0.id, name: vc0.name, by: 'discovery', hints, candidates: candidatePaths, discoveryAttrs: vc0.attrs };\n  }\n\n  // (c) Gemini elige entre los candidatos (o ninguno) y da su nivel de confianza\n  let optionsPrompt = '0. NINGUNA de estas opciones describe con seguridad lo que el objeto ES físicamente\\n';\n  validCandidates.forEach((vc, idx) => {\n    optionsPrompt += `${idx + 1}. [${vc.id}] ${vc.path}\\n`;\n  });\n\n  const parsed = await geminiJson.call(this, `Eres experto en catalogación de Mercado Libre México.\\nProducto: ${ctx.title}\\nTipo de objeto: ${ctx.tipo || ctx.searchTerm || 'no especificado'}\\nDescripción: ${String(ctx.description || '').slice(0, 400)}\\nPistas: ${hints.join(' | ')}\\n\\nCandidatos encontrados en Mercado Libre:\\n${optionsPrompt}\\nReglas:\\n- Elige según lo que el objeto ES físicamente, no según su tema o decoración. Ejemplos: una lámpara con forma de luna es una lámpara (no astronomía); un soporte de celular con forma de gato es un soporte (no una figura); una maceta con forma de dinosaurio es una maceta (no un juguete).\\n- Si ninguna describe con seguridad el objeto, o son herramientas industriales, refacciones de vehículos o equipos especializados, elige 0.\\n- \"confianza\": \"alta\" si la categoría es exactamente ese tipo de objeto, \"media\" si es cercana, \"baja\" si dudas.\\n\\nResponde ÚNICAMENTE un JSON válido con esta estructura:\\n{\\n  \"index\": 0,\\n  \"confianza\": \"alta\"\\n}`);\n\n  if (!parsed) {\n    return { id: null, by: 'gemini_error', hints, candidates: candidatePaths };\n  }\n  const chosenIdx = Number(parsed.index);\n  const confianza = String(parsed.confianza || '').toLowerCase();\n  if (!isNaN(chosenIdx) && chosenIdx > 0 && chosenIdx <= validCandidates.length && confianza !== 'baja') {\n    const vc = validCandidates[chosenIdx - 1];\n    return { id: vc.id, name: vc.name, by: `discovery+gemini (${confianza || 'sin dato'})`, hints, candidates: candidatePaths, discoveryAttrs: vc.attrs };\n  }\n  return { id: null, by: confianza === 'baja' ? 'gemini_confianza_baja' : 'gemini_ninguna', hints, candidates: candidatePaths };\n}\n\nasync function resolveMeliAttributes(categoryId, categoryName, ctx, discoveryAttrs) {\n  const attributesMap = new Map();\n  attributesMap.set('BRAND', { id: 'BRAND', value_name: 'Genérica' });\n  attributesMap.set('MODEL', { id: 'MODEL', value_name: ctx.modelName || 'Estándar' });\n  for (const a of (discoveryAttrs || [])) {\n    if (!a?.id || attributesMap.has(a.id)) continue;\n    if (a.value_id) attributesMap.set(a.id, { id: a.id, value_id: a.value_id, value_name: a.value_name });\n    else if (a.value_name) attributesMap.set(a.id, { id: a.id, value_name: a.value_name });\n  }\n\n  let catAttrs = [];\n  try {\n    const attrRes = await this.helpers.httpRequest({\n      method: 'GET',\n      url: `https://api.mercadolibre.com/categories/${categoryId}/attributes`,\n      headers: { 'User-Agent': 'Mozilla/5.0' },\n      timeout: 5000\n    });\n    if (Array.isArray(attrRes)) catAttrs = attrRes;\n  } catch (attrErr) {}\n\n  const pendingAttrs = catAttrs.filter(a => a?.tags?.required && !attributesMap.has(a.id));\n  const fichaAttrs = pendingAttrs.map(a => ({\n    id: a.id,\n    nombre: a.name,\n    tipo: a.value_type,\n    valores: Array.isArray(a.values) && a.values.length > 0 ? a.values.map(v => v.name).slice(0, 40) : undefined,\n    unidades: Array.isArray(a.allowed_units) && a.allowed_units.length > 0 ? a.allowed_units.map(u => u.name).slice(0, 10) : undefined\n  }));\n\n  const parsed = await geminiJson.call(this, `Eres experto en publicaciones de Mercado Libre México.\\nProducto: ${ctx.title}\\nTipo de objeto: ${ctx.tipo || ctx.searchTerm || 'no especificado'}\\nDescripción: ${String(ctx.description || '').slice(0, 400)}\\nMedidas aproximadas: ${ctx.dimensions || 'no especificadas'}\\nOpción principal: ${ctx.modelName || 'Estándar'}\\nCategoría elegida: ${categoryName}\\n\\nTareas:\\n1. \"meli_title\": título estilo Mercado Libre, máx 58 caracteres: sustantivo principal del objeto + detalles clave. PROHIBIDO: impresión 3D, impreso, PLA, filamento, STL, micrómetro, micromedidor, calibrador, marcas.\\n2. \"attributes\": llena CADA atributo de la lista para este objeto físico (material plástico, hecho artesanalmente, marca Genérica).\\n   - Si el atributo trae \"valores\", copia EXACTAMENTE uno de esos valores.\\n   - Si es numérico con unidad, responde número y unidad (ej. \"12 cm\"), estimando con las medidas.\\n   - Si no se puede saber, usa el valor más neutro y honesto (ej. \"Otro\").\\n\\nAtributos a llenar:\\n${JSON.stringify(fichaAttrs)}\\n\\nResponde ÚNICAMENTE un JSON válido con esta estructura:\\n{\\n  \"meli_title\": \"Título máx 58 caracteres\",\\n  \"attributes\": [ { \"id\": \"ID_DEL_ATRIBUTO\", \"value_name\": \"valor\" } ]\\n}`);\n\n  let meliTitle = null;\n  if (parsed?.meli_title) {\n    meliTitle = String(parsed.meli_title).replace(/[^\\p{L}\\p{N}\\s]/gu, ' ').replace(/\\s{2,}/g, ' ').trim().slice(0, 58);\n  }\n  const aiVals = new Map();\n  if (Array.isArray(parsed?.attributes)) {\n    for (const av of parsed.attributes) {\n      if (av?.id && av.value_name !== undefined && av.value_name !== null && String(av.value_name).trim()) {\n        aiVals.set(String(av.id), String(av.value_name).trim());\n      }\n    }\n  }\n\n  const missing = [];\n  for (const attr of pendingAttrs) {\n    const vals = Array.isArray(attr.values) ? attr.values : [];\n    const aiVal = aiVals.get(attr.id);\n    if (vals.length > 0) {\n      const exact = aiVal ? vals.find(v => String(v.name).toLowerCase() === aiVal.toLowerCase()) : null;\n      const neutral = vals.find(v => /gen|otro|est|pl[aá]stico/i.test(v.name));\n      const chosen = exact || neutral;\n      if (chosen) attributesMap.set(attr.id, { id: attr.id, value_id: chosen.id, value_name: chosen.name });\n      else missing.push(attr.id);\n    } else if (aiVal) {\n      attributesMap.set(attr.id, { id: attr.id, value_name: aiVal });\n    } else if (attr.value_type === 'string') {\n      attributesMap.set(attr.id, { id: attr.id, value_name: attr.id === 'MATERIAL' ? 'Plástico' : 'Estándar' });\n    } else {\n      missing.push(attr.id);\n    }\n  }\n\n  return { attributes: Array.from(attributesMap.values()), meliTitle, missing };\n}\n// ===== FIN DEL RESOLVER =====\n\nconst meliResults = [];\nfor (const prod of products) {\n  const prodId = prod.externalId || prod.id;\n  const cleanMeliTitle = String(prod.title).substring(0, 60);\n  const variants = parseMaybeJson(prod.variants, []);\n  const imagesRaw = parseMaybeJson(prod.images, []);\n  const imageList = imagesRaw.length > 0 ? imagesRaw : (prod.imageUrl ? [prod.imageUrl] : []);\n  const picturesForMeli = imageList\n    .map(u => (typeof u === 'string' ? u : u?.url || u?.source))\n    .filter(u => u && !/\\.gif(\\?|$)/i.test(u))\n    .slice(0, 6)\n    .map(u => ({ source: u }));\n  const firstVariant = variants.length > 0 ? variants[0] : null;\n  const firstVariantName = firstVariant?.name ? String(firstVariant.name).slice(0, 40) : 'Estándar';\n  const rawMeliPrice = firstVariant?.price ?? prod.priceFrom ?? prod.price;\n  const safeMeliPrice = Math.max(Math.round(Number(rawMeliPrice) || 145), 35);\n\n  if (picturesForMeli.length === 0) {\n    meliResults.push({ externalId: prodId, title: prod.title, status: 'error', error: 'Producto sin imágenes válidas (no GIF)' });\n    continue;\n  }\n\n  const ctx = {\n    title: cleanMeliTitle,\n    description: prod.description,\n    tipo: prod.meli_tipo || prod.meliTipo || '',\n    searchTerm: prod.meli_search_term || prod.meliSearchTerm || '',\n    concepto: '',\n    categoria: prod.category || '',\n    modelName: firstVariantName,\n    dimensions: firstVariant?.dimensions || ''\n  };\n\n  // 1. Categoría (mapa -> discovery + Gemini). Sin categoría segura = no se publica.\n  const cat = await resolveMeliCategory.call(this, ctx);\n  if (!cat.id) {\n    meliResults.push({\n      externalId: prodId,\n      title: prod.title,\n      status: 'pending_category',\n      reason: cat.by,\n      hints: cat.hints,\n      candidates: cat.candidates,\n      error: 'Sin categoría segura en Mercado Libre, no se publicó. Agrega este tipo de objeto al CATEGORY_MAP y vuelve a correr el workflow.'\n    });\n    continue;\n  }\n\n  // 2. Atributos obligatorios + título ML\n  const attrsRes = await resolveMeliAttributes.call(this, cat.id, cat.name, ctx, cat.discoveryAttrs);\n  const finalMeliTitle = attrsRes.meliTitle || cleanMeliTitle.slice(0, 58);\n\n  const meliPayload = {\n    family_name: finalMeliTitle,\n    category_id: cat.id,\n    price: safeMeliPrice,\n    currency_id: 'MXN',\n    available_quantity: 5,\n    buying_mode: 'buy_it_now',\n    condition: 'new',\n    listing_type_id: 'gold_special',\n    pictures: picturesForMeli,\n    attributes: attrsRes.attributes\n  };\n\n  try {\n    const fullRes = await this.helpers.httpRequest({\n      method: 'POST',\n      url: 'https://api.mercadolibre.com/items',\n      headers: {\n        'Content-Type': 'application/json',\n        'Authorization': `Bearer ${meliAccessToken}`\n      },\n      body: meliPayload,\n      returnFullResponse: true,\n      ignoreHttpStatusErrors: true,\n      timeout: 20000\n    });\n    const statusCode = fullRes?.statusCode || 200;\n    const mRes = fullRes?.body || fullRes;\n    if (statusCode >= 200 && statusCode < 300 && mRes?.id) {\n      meliResults.push({\n        externalId: prodId,\n        title: prod.title,\n        status: 'published',\n        meliId: mRes.id,\n        categoryId: cat.id,\n        categoryName: cat.name,\n        categoryBy: cat.by,\n        permalink: mRes.permalink || null\n      });\n    } else {\n      const causes = Array.isArray(mRes?.cause) ? mRes.cause.map(c => c.message || c.code).filter(Boolean).join(' | ') : '';\n      meliResults.push({\n        externalId: prodId,\n        title: prod.title,\n        status: 'error',\n        categoryId: cat.id,\n        categoryName: cat.name,\n        categoryBy: cat.by,\n        missingAttributes: attrsRes.missing,\n        error: causes || mRes?.message || mRes?.error || `HTTP ${statusCode}`\n      });\n    }\n  } catch (mErr) {\n    meliResults.push({\n      externalId: prodId,\n      title: prod.title,\n      status: 'error',\n      categoryId: cat.id,\n      categoryName: cat.name,\n      missingAttributes: attrsRes.missing,\n      error: mErr.message\n    });\n  }\n}\n\nreturn [{\n  json: {\n    summary: {\n      processed: products.length,\n      published: meliResults.filter(r => r.status === 'published').length,\n      pendingCategory: meliResults.filter(r => r.status === 'pending_category').length,\n      errors: meliResults.filter(r => r.status === 'error').length\n    },\n    meliResults\n  }\n}];"
       },
-      "id": "map-to-meli",
-      "name": "Map to MELI format",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.2,
+      "id": "resolve-and-publish-meli",
+      "name": "Resolver Categoría y Publicar en ML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
         1080,
         300
-      ]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://api.mercadolibre.com/items",
-        "authentication": "none",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"title\": \"{{ $json.title }}\",\n  \"category_id\": \"{{ $json.category_id }}\",\n  \"price\": {{ $json.price }},\n  \"currency_id\": \"{{ $json.currency_id }}\",\n  \"available_quantity\": {{ $json.available_quantity }},\n  \"buying_mode\": \"{{ $json.buying_mode }}\",\n  \"condition\": \"{{ $json.condition }}\",\n  \"listing_type_id\": \"{{ $json.listing_type_id }}\",\n  \"pictures\": {{ JSON.stringify($json.pictures) }}\n}",
-        "options": {},
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $('Obtener Token MELI').first().json.accessToken }}"
-            }
-          ]
-        }
-      },
-      "id": "post-meli",
-      "name": "Post to Mercado Libre",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
-      "position": [
-        1300,
-        300
-      ]
-    },
-    {
-      "parameters": {
-        "method": "GET",
-        "url": "http://host.docker.internal:3000/api/meli/token",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "options": {
-          "timeout": 30000
-        }
-      },
-      "id": "meli-get-token",
-      "name": "Obtener Token MELI",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        420,
-        300
       ],
-      "retryOnFail": true,
-      "maxTries": 3,
-      "waitBetweenTries": 3000,
-      "notes": "Auth: seleccionar credencial Header Auth 'Taskman Sync' post-import. El backend refresca el token solo; si responde 409 (needsReauth) abrir /api/meli/auth?secret=<SYNC_SECRET> una vez."
+      "notes": "Reemplaza a 'Map to MELI format' + 'Post to Mercado Libre'. Ya no usa la categoría fija MLM3530. El resolver es el mismo del Importador Batch: si editas CATEGORY_MAP, edítalo en ambos."
     }
   ],
   "connections": {
@@ -179,6 +94,17 @@
         [
           {
             "node": "Obtener Token MELI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtener Token MELI": {
+      "main": [
+        [
+          {
+            "node": "Fetch pending products",
             "type": "main",
             "index": 0
           }
@@ -200,29 +126,7 @@
       "main": [
         [
           {
-            "node": "Map to MELI format",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Map to MELI format": {
-      "main": [
-        [
-          {
-            "node": "Post to Mercado Libre",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Obtener Token MELI": {
-      "main": [
-        [
-          {
-            "node": "Fetch pending products",
+            "node": "Resolver Categoría y Publicar en ML",
             "type": "main",
             "index": 0
           }
@@ -238,7 +142,8 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "f7d2e3b1-4c90-4a8a-b94f-123456789abc",
+  "versionId": "f7d2e3b1-4c90-4a8a-b94f-123456789abd",
   "triggerCount": 0,
-  "tags": []
+  "tags": [],
+  "id": "MeliPublisher01"
 }
