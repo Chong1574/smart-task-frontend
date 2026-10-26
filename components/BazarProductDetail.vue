@@ -123,7 +123,7 @@
                 >
                   <img v-if="v.imageUrl" :src="imgProxy(v.imageUrl, { width: 48 })" class="w-4 h-4 rounded object-cover shrink-0" />
                   <span class="truncate">{{ v.name }}</span>
-                  <span class="opacity-80 text-[10px] font-medium shrink-0">· {{ getVariantDimensions(v).tag }}</span>
+                  <span v-if="!hasExplicitDimensionInName(v.name)" class="opacity-80 text-[10px] font-medium shrink-0">· {{ getVariantDimensions(v).tag }}</span>
                   <span class="font-normal opacity-90 shrink-0">({{ fmt(v.price) }})</span>
                 </button>
               </div>
@@ -672,11 +672,17 @@ function getFallbackVariantDescription(v: any): string {
   return '';
 }
 
+function hasExplicitDimensionInName(name?: string): boolean {
+  if (!name) return false;
+  return /(\d+(?:\.\d+)?)\s*(?:cm|cms|centímetros|centimetros|mm)\b/i.test(name) || /\d+\s*[x×]\s*\d+/i.test(name);
+}
+
 function getVariantDimensions(v: Variant | null): VariantDimensions {
   const p1sMax = 25.6; // cm (Cama Bambu Lab P1S: 25.6 × 25.6 × 25.6 cm)
   const title = (props.product.title || '').toLowerCase();
   const cat = (props.product.category || '').toLowerCase();
-  const vName = (v?.name || '').toLowerCase();
+  const rawVName = v?.name || '';
+  const vName = rawVName.toLowerCase();
   const grams = Number(v?.grams || (props.product as any)?.grams || 60);
 
   // 1. Dimensiones explícitas de la BD / IA
@@ -689,6 +695,32 @@ function getVariantDimensions(v: Variant | null): VariantDimensions {
     return {
       text: dimStr,
       tag: tag.startsWith('~') ? tag : `~${tag}`,
+      scalePercent: Math.max(scale, 10)
+    };
+  }
+
+  // 1.1 Si el nombre de la variante contiene dimensiones explícitas (ej: "Compacta (11 cm)", "Grande (24 cm)", "15x10x5 cm")
+  const explicit3DMatch = rawVName.match(/(\d+(?:\.\d+)?)\s*[x×]\s*(\d+(?:\.\d+)?)(?:\s*[x×]\s*(\d+(?:\.\d+)?))?\s*(?:cm)?/i);
+  const explicitCmMatch = rawVName.match(/(\d+(?:\.\d+)?)\s*(?:cm|cms|centímetros|centimetros)\b/i);
+
+  if (explicit3DMatch) {
+    const d1 = parseFloat(explicit3DMatch[1]);
+    const d2 = parseFloat(explicit3DMatch[2]);
+    const d3 = explicit3DMatch[3] ? parseFloat(explicit3DMatch[3]) : null;
+    const maxD = Math.max(d1, d2, d3 || 0);
+    const scale = Math.min(Math.round((maxD / p1sMax) * 100), 100);
+    const fullText = d3 ? `~${d1} × ${d2} × ${d3} cm` : `~${d1} × ${d2} cm`;
+    return {
+      text: fullText,
+      tag: `~${maxD} cm`,
+      scalePercent: Math.max(scale, 10)
+    };
+  } else if (explicitCmMatch) {
+    const size = parseFloat(explicitCmMatch[1]);
+    const scale = Math.min(Math.round((size / p1sMax) * 100), 100);
+    return {
+      text: `~${size} cm de dimensión principal / altura`,
+      tag: `~${size} cm`,
       scalePercent: Math.max(scale, 10)
     };
   }
@@ -743,7 +775,7 @@ function getVariantDimensions(v: Variant | null): VariantDimensions {
   }
 
   // 4. Soportes, bases, organizadores, stands
-  if (/(soporte|base|organizador|stand|dock|porta)/i.test(title)) {
+  if (/(soporte|base\b|organizador|stand|dock|\bporta[-\s]?(celular|smartphone|telefono|teléfono|control|mando|tablet|laptop|auricular|audifono|audífonos|lapicero|plumas|tarjetas?)\b)/i.test(title)) {
     if (grams < 60) {
       return {
         text: '~9.5 × 7.0 × 4.5 cm · Compacto de escritorio',
@@ -761,6 +793,29 @@ function getVariantDimensions(v: Variant | null): VariantDimensions {
         text: '~19.0 × 13.0 × 10.0 cm · Base amplia reforzada',
         tag: '~19 cm',
         scalePercent: Math.round((19.0 / p1sMax) * 100)
+      };
+    }
+  }
+
+  // 5. Portavelas, velas, candelabros, lámparas, macetas, floreros
+  if (/(portavela|vela\b|candelabr|lámpara|lampara|maceta|macetero|florero|jarrón|jarron)/i.test(title)) {
+    if (grams < 70) {
+      return {
+        text: '~8.0 × 8.0 × 7.0 cm · Tamaño pequeño / vela de té',
+        tag: '~8 cm',
+        scalePercent: Math.round((8.0 / p1sMax) * 100)
+      };
+    } else if (grams < 150) {
+      return {
+        text: '~12.0 × 12.0 × 11.0 cm · Tamaño mediano decorativo',
+        tag: '~12 cm',
+        scalePercent: Math.round((12.0 / p1sMax) * 100)
+      };
+    } else {
+      return {
+        text: '~16.0 × 16.0 × 15.0 cm · Tamaño grande / vela pilar',
+        tag: '~16 cm',
+        scalePercent: Math.round((16.0 / p1sMax) * 100)
       };
     }
   }
