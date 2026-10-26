@@ -648,9 +648,9 @@ const activeVariant = computed(() => variants.value[variantIdx.value] || null);
 
 function isPartialVariant(v: any): boolean {
   if (!v || !v.name) return false;
+  if (v.isPartial !== undefined) return Boolean(v.isPartial);
   const n = v.name.toLowerCase();
-  return /(solo piezas|solo tablero|sin tablero|sin piezas|solo carcasa|solo base|solo tapa|solo conector|solo adaptador|solo accesorio|sin electr|sin motor)/i.test(n) ||
-         Boolean(v.isPartial);
+  return /(\bsolo\b|\bsin\b|repuesto|refacci[oó]n|accesorio|recambio|\bpieza individual\b|solo conector|solo adaptador|solo base|solo tapa)/i.test(n);
 }
 
 function getFallbackVariantDescription(v: any): string {
@@ -667,6 +667,23 @@ function getFallbackVariantDescription(v: any): string {
     }
     if (/completo/i.test(n)) {
       return 'Incluye el juego completo: Tablero y las 32 figuras temáticas listas para jugar.';
+    }
+  }
+  if (/(l[aá]mpara|iluminaci[oó]n|bur[oó])/i.test(title)) {
+    if (/c[uú]pula|pantalla/i.test(n)) {
+      return 'Incluye únicamente la cúpula o pantalla superior. Es una refacción/reemplazo y no incluye la base, el tallo ni el socket.';
+    }
+    if (/tallo|soporte principal/i.test(n)) {
+      return 'Incluye únicamente la estructura del tallo soporte. No incluye la cúpula, base ni socket.';
+    }
+    if (/base/i.test(n)) {
+      return 'Incluye únicamente la base inferior difusora. No incluye el tallo ni la cúpula.';
+    }
+    if (/socket|adaptador/i.test(n)) {
+      return 'Incluye únicamente el accesorio adaptador para socket. No incluye foco ni lámpara.';
+    }
+    if (/completo|set/i.test(n)) {
+      return 'Incluye la estructura completa de la lámpara (Cúpula, Tallo, Base y Adaptador) lista para usar con tu foco LED preferido.';
     }
   }
   return '';
