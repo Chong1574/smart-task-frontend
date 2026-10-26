@@ -118,6 +118,45 @@ export const useFilamentsStore = defineStore('filaments', {
         this.filaments = [...list];
         toast.success('Cambios aplicados localmente');
       }
+    },
+
+    async createFilament(filamentData: Partial<FilamentColor>) {
+      try {
+        const res = await api.post('/filaments', filamentData);
+        if (res.data?.success) {
+          toast.success('Nuevo filamento agregado');
+          await this.fetchFilaments();
+          return res.data.filament;
+        }
+      } catch (err: any) {
+        // Fallback local
+        const newFilament: FilamentColor = {
+          id: filamentData.id || filamentData.label?.toLowerCase().replace(/[^a-z0-9]+/g, '_') || `custom_${Date.now()}`,
+          label: filamentData.label || 'Color Personalizado',
+          brand: filamentData.brand || 'Personalizado',
+          hex: filamentData.hex || '#18181B',
+          textColor: filamentData.hex === '#FFFFFF' ? '#18181B' : '#FFFFFF',
+          material: filamentData.material || 'PLA',
+          costPerKg: filamentData.costPerKg || 300,
+          inStock: Boolean(filamentData.inStock),
+          supplierDeliveryDays: filamentData.supplierDeliveryDays || 2,
+          supplierUrl: filamentData.supplierUrl
+        };
+        this.filaments.push(newFilament);
+        toast.success('Filamento añadido');
+        return newFilament;
+      }
+    },
+
+    async removeFilament(id: string | number) {
+      try {
+        await api.delete(`/filaments/${id}`);
+        toast.success('Filamento eliminado');
+        await this.fetchFilaments();
+      } catch (err: any) {
+        this.filaments = this.filaments.filter(f => f.id !== id);
+        toast.success('Filamento eliminado');
+      }
     }
   }
 });

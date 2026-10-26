@@ -570,7 +570,7 @@ export const useFinanceStore = defineStore('finance', {
         },
 
         upcomingPayments: (state) => {
-            const payments: Array<{name: string, amount: number, date: Date, type: string, daysRemaining: number, sourceType: 'subscription' | 'account', sourceId: number, accountId?: number | null, category?: string, isProvisionTransfer?: boolean, statementMinimum?: number, statementNoInterest?: number}> = [];
+            const payments: Array<{name: string, amount: number, date: Date, type: string, daysRemaining: number, sourceType: 'subscription' | 'account', sourceId: number, accountId?: number | null, category?: string, isProvisionTransfer?: boolean, statementMinimum?: number, statementNoInterest?: number, overdueCount?: number}> = [];
             const now = new Date();
             const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
@@ -578,13 +578,11 @@ export const useFinanceStore = defineStore('finance', {
             state.subscriptions.forEach(sub => {
                 if (!sub.paymentDay && !sub.nextPaymentDate) return;
 
-                // Preferir nextPaymentDate del backend (se actualiza al registrar pago). Fallback:
-                // computar el próximo día del ciclo. Ambos caminos ocultan el sub del cycle actual
-                // si ya se pagó — resolvimos "los pagos no se propaga si se pagaron".
                 let nextDate: Date;
                 let amountToPay = Number(sub.amount);
                 const isProvision = sub.isVariable && ['YEARLY', 'SEMIANNUAL', 'QUARTERLY', 'BIMONTHLY'].includes(sub.frequency);
                 let isProvisionTransfer = false;
+                let overdueCount = 1;
 
                 if (sub.nextPaymentDate) {
                     // Evitar desfase de zona horaria al parsear fechas UTC
@@ -593,7 +591,45 @@ export const useFinanceStore = defineStore('finance', {
 
                     // Si la fecha configurada o de inicio quedó en el pasado, proyectar la recurrencia al ciclo actual/próximo
                     if (billDate < today) {
-                        billDate = computeUpcomingPaymentDate(billDate, sub.frequency, today);
+                        // Si quedó en el pasado y no se ha pagado: NO borrar ni sobreponer.
+                        // Contar periodos que han vencido y acumular el saldo adeudado.
+                        let cursor = new Date(billDate.getTime());
+                        while (true) {
+                            let nextCycle: Date;
+                            switch (sub.frequency) {
+                                case 'WEEKLY':
+                                    nextCycle = new Date(cursor.getTime() + 7 * 86400000);
+                                    break;
+                                case 'BIWEEKLY':
+                                    nextCycle = new Date(cursor.getTime() + 14 * 86400000);
+                                    break;
+                                case 'SEMIMONTHLY':
+                                    nextCycle = new Date(cursor.getTime() + 15 * 86400000);
+                                    break;
+                                case 'BIMONTHLY':
+                                    nextCycle = new Date(cursor.getFullYear(), cursor.getMonth() + 2, cursor.getDate());
+                                    break;
+                                case 'QUARTERLY':
+                                    nextCycle = new Date(cursor.getFullYear(), cursor.getMonth() + 3, cursor.getDate());
+                                    break;
+                                case 'SEMIANNUAL':
+                                    nextCycle = new Date(cursor.getFullYear(), cursor.getMonth() + 6, cursor.getDate());
+                                    break;
+                                case 'YEARLY':
+                                    nextCycle = new Date(cursor.getFullYear() + 1, cursor.getMonth(), cursor.getDate());
+                                    break;
+                                case 'MONTHLY':
+                                default:
+                                    nextCycle = new Date(cursor.getFullYear(), cursor.getMonth() + 1, cursor.getDate());
+                                    break;
+                            }
+                            if (nextCycle <= today) {
+                                overdueCount++;
+                                cursor = nextCycle;
+                            } else {
+                                break;
+                            }
+                        }
                     }
                     const billMonth = billDate.getMonth();
                     const billYear = billDate.getFullYear();
@@ -606,10 +642,11 @@ export const useFinanceStore = defineStore('finance', {
                         // If provDate is the bill month (or past it), show the FULL bill
                         if (provDate.getFullYear() > billYear || (provDate.getFullYear() === billYear && provDate.getMonth() >= billMonth)) {
                             nextDate = new Date(billDate.getFullYear(), billDate.getMonth(), billDate.getDate());
-                            // Full amount is kept
+                            if (overdueCount > 1) {
+                                amountToPay = amountToPay * overdueCount;
+                            }
                         } else {
                             // Check if the user just paid the full bill this very same month.
-                            // If they did, they don't start saving for the next cycle until next month!
                             if (sub.lastPaymentDate) {
                                 const lastDate = new Date(sub.lastPaymentDate);
                                 if (provDate.getFullYear() === lastDate.getFullYear() && provDate.getMonth() === lastDate.getMonth()) {
@@ -629,9 +666,10 @@ export const useFinanceStore = defineStore('finance', {
                             if (hasPaidProvision) {
                                 provDate.setMonth(provDate.getMonth() + 1);
                                 if (provDate.getFullYear() === billYear && provDate.getMonth() === billMonth) {
-                                    // Advanced into the bill month!
                                     nextDate = new Date(billDate.getFullYear(), billDate.getMonth(), billDate.getDate());
-                                    // Full amount is kept
+                                    if (overdueCount > 1) {
+                                        amountToPay = amountToPay * overdueCount;
+                                    }
                                 } else {
                                     nextDate = provDate;
                                     isProvisionTransfer = true;
@@ -645,16 +683,18 @@ export const useFinanceStore = defineStore('finance', {
                                 isProvisionTransfer = true;
                                 if (sub.frequency === 'YEARLY') amountToPay = amountToPay / 12;
                                 else if (sub.frequency === 'SEMIANNUAL') amountToPay = amountToPay / 6;
-                                else if (sub.frequency === 'QUARTERLY') amountToPay = amountToPay / 3;
+                                    if (sub.frequency === 'QUARTERLY') amountToPay = amountToPay / 3;
                                 else if (sub.frequency === 'BIMONTHLY') amountToPay = amountToPay / 2;
                             }
                         }
                     } else {
                         nextDate = new Date(billDate.getFullYear(), billDate.getMonth(), billDate.getDate());
+                        if (overdueCount > 1) {
+                            amountToPay = amountToPay * overdueCount;
+                        }
                     }
                 } else {
                     if (sub.frequency === 'WEEKLY') {
-                        // paymentDay is 1-7 (Mon-Sun)
                         const targetDow = sub.paymentDay === 7 ? 0 : sub.paymentDay;
                         const delta = (targetDow - today.getDay() + 7) % 7 || 7;
                         nextDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + delta);
@@ -673,20 +713,40 @@ export const useFinanceStore = defineStore('finance', {
                             nextDate = new Date(today.getFullYear(), today.getMonth() + 1, day1);
                         }
                     } else {
-                        nextDate = new Date(today.getFullYear(), today.getMonth(), sub.paymentDay);
-                        if (nextDate < today) nextDate.setMonth(nextDate.getMonth() + 1);
+                        const currentMonthDueDate = new Date(today.getFullYear(), today.getMonth(), sub.paymentDay);
+                        const currentMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+                        const hasPaidThisMonth = state.transactions.some(t => 
+                            t.subscriptionId === sub.id && new Date(t.date) >= currentMonthStart
+                        );
+
+                        if (hasPaidThisMonth) {
+                            nextDate = new Date(today.getFullYear(), today.getMonth() + 1, sub.paymentDay);
+                        } else {
+                            if (currentMonthDueDate < today) {
+                                nextDate = currentMonthDueDate;
+                                const lastMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                                const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0, 23, 59, 59);
+                                const hasPaidLastMonth = state.transactions.some(t => 
+                                    t.subscriptionId === sub.id && new Date(t.date) >= lastMonthStart && new Date(t.date) <= lastMonthEnd
+                                );
+                                if (!hasPaidLastMonth) {
+                                    overdueCount = 2;
+                                    amountToPay = amountToPay * 2;
+                                }
+                            } else {
+                                nextDate = currentMonthDueDate;
+                            }
+                        }
                     }
                 }
 
-                // daysRemaining can be negative if the user missed the payment date.
-                // We shouldn't hide it so the user can clearly see it's overdue.
                 const daysRemaining = Math.ceil((nextDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
-                // We only hide it if it's crazily overdue (e.g. > 365 days) to avoid complete ghosts if abandoned,
-                // but for normal overdue we keep it.
                 if (daysRemaining < -365) return; 
 
                 payments.push({
-                    name: isProvisionTransfer ? `${sub.name} (Guardado mensual)` : sub.name,
+                    name: isProvisionTransfer 
+                        ? `${sub.name} (Guardado mensual)` 
+                        : (overdueCount > 1 ? `${sub.name} (${overdueCount} acumulados)` : sub.name),
                     amount: amountToPay,
                     date: nextDate,
                     type: isProvisionTransfer ? 'Guardado' : (sub.type === 'INCOME' ? 'Ingreso' : (sub.type === 'MEMBERSHIP' ? 'Membresía' : 'Servicio')),
@@ -695,7 +755,8 @@ export const useFinanceStore = defineStore('finance', {
                     sourceId: sub.id,
                     accountId: sub.accountId,
                     category: isProvisionTransfer ? 'Ahorro' : (sub.type === 'INCOME' ? 'Nómina' : 'Servicios'),
-                    isProvisionTransfer
+                    isProvisionTransfer,
+                    overdueCount
                 });
             });
 

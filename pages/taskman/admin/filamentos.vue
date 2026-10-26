@@ -14,9 +14,17 @@
 
       <div class="flex items-center gap-3">
         <button
+          type="button"
+          @click="showAddModal = true"
+          class="bg-secondary hover:bg-secondary/80 text-foreground px-4 py-2.5 rounded-xl font-bold border border-border/70 transition-all flex items-center gap-2 cursor-pointer text-xs sm:text-sm shadow-xs"
+        >
+          <Plus class="w-4 h-4 text-primary" />
+          <span>+ Agregar Color</span>
+        </button>
+        <button
           @click="saveChanges"
           :disabled="saving"
-          class="bg-primary text-primary-foreground px-5 py-2.5 rounded-xl font-bold shadow-md hover:opacity-90 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+          class="bg-primary text-primary-foreground px-5 py-2.5 rounded-xl font-bold shadow-md hover:opacity-90 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 text-xs sm:text-sm"
         >
           <Save class="w-4 h-4" />
           <span>{{ saving ? 'Guardando...' : 'Guardar Cambios' }}</span>
@@ -179,10 +187,99 @@
                 ↗
               </a>
             </div>
+
+            <!-- Eliminar -->
+            <button
+              type="button"
+              @click="confirmDelete(item)"
+              class="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors cursor-pointer"
+              title="Eliminar filamento"
+            >
+              <Trash2 class="w-4 h-4" />
+            </button>
           </div>
         </div>
       </div>
     </section>
+
+    <!-- Modal Agregar Nuevo Filamento -->
+    <div v-if="showAddModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
+      <div class="bg-card border border-border rounded-3xl p-6 w-full max-w-lg shadow-2xl relative">
+        <button @click="showAddModal = false" class="absolute top-4 right-4 p-2 text-muted-foreground hover:bg-secondary rounded-full transition-colors cursor-pointer">
+          <X class="w-5 h-5" />
+        </button>
+        <h2 class="text-xl font-serif font-bold mb-4 flex items-center gap-2 text-foreground">
+          <Plus class="w-5 h-5 text-primary" />
+          <span>Registrar Nuevo Color o Rollo</span>
+        </h2>
+
+        <form @submit.prevent="submitNewFilament" class="space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Nombre del Color *</label>
+              <input v-model="newForm.colorName" required type="text" placeholder="Ej. Morado Galaxia, Madera..." class="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-primary/50 focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Material *</label>
+              <select v-model="newForm.material" class="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-primary/50 focus:outline-none">
+                <option value="PLA">PLA (Estándar/Seda)</option>
+                <option value="PETG">PETG (Exterior/Humedad)</option>
+                <option value="ASA">ASA (Automotriz/Calor)</option>
+                <option value="ABS">ABS (Impacto)</option>
+                <option value="TPU">TPU (Flexible)</option>
+                <option value="PA-CF">PA-CF / Nylon (Ingeniería)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Tono / Muestra Visual</label>
+              <div class="flex items-center gap-2">
+                <input type="color" v-model="newForm.hex" class="w-10 h-10 rounded-xl cursor-pointer border border-border p-0.5 bg-background" />
+                <input type="text" v-model="newForm.hex" class="flex-1 bg-background border border-border rounded-xl px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-primary/50 focus:outline-none" placeholder="#HEX" />
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Marca</label>
+              <input v-model="newForm.brand" type="text" placeholder="Ej. Bambu Lab, Sunlu, eSun..." class="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-primary/50 focus:outline-none" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Costo por Rollo ($ MXN) *</label>
+              <input v-model.number="newForm.costPerKg" required type="number" min="50" step="10" placeholder="320" class="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-primary/50 focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Días entrega de proveedor</label>
+              <input v-model.number="newForm.supplierDeliveryDays" type="number" min="1" max="30" placeholder="2" class="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-primary/50 focus:outline-none" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Enlace de Compra (Amazon / Mercado Libre)</label>
+            <input v-model="newForm.supplierUrl" type="url" placeholder="https://articulo.mercadolibre.com.mx/..." class="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-primary/50 focus:outline-none" />
+          </div>
+
+          <div class="pt-2">
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" v-model="newForm.inStock" class="rounded border-input text-primary focus:ring-primary w-4 h-4 accent-primary" />
+              <span class="text-sm font-medium text-foreground">Tengo este rollo actualmente en mi taller (Stock disponible)</span>
+            </label>
+          </div>
+
+          <div class="flex justify-end gap-3 pt-3 border-t border-border/50">
+            <button type="button" @click="showAddModal = false" class="px-4 py-2 rounded-xl text-sm font-semibold hover:bg-secondary transition-colors cursor-pointer">
+              Cancelar
+            </button>
+            <button type="submit" class="bg-primary text-primary-foreground px-5 py-2 rounded-xl text-sm font-bold shadow-md hover:opacity-90 transition-opacity cursor-pointer">
+              Registrar Rollo
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -190,7 +287,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useFilamentsStore } from '~/stores/filaments';
 import { useAuthStore } from '~/stores/auth';
-import { Save } from 'lucide-vue-next';
+import { Save, Plus, Trash2, X } from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
 
 definePageMeta({
@@ -208,6 +305,57 @@ definePageMeta({
 const filamentsStore = useFilamentsStore();
 const saving = ref(false);
 const selectedTab = ref('TODOS');
+const showAddModal = ref(false);
+
+const newForm = ref({
+  colorName: '',
+  material: 'PLA',
+  hex: '#18181B',
+  brand: 'Bambu / Sunlu',
+  costPerKg: 320,
+  inStock: true,
+  supplierDeliveryDays: 2,
+  supplierUrl: ''
+});
+
+async function submitNewFilament() {
+  if (!newForm.value.colorName.trim()) {
+    toast.error('Ingresa un nombre para el color');
+    return;
+  }
+
+  const created = await filamentsStore.createFilament({
+    label: newForm.value.colorName.trim(),
+    colorName: newForm.value.colorName.trim(),
+    material: newForm.value.material,
+    hex: newForm.value.hex,
+    brand: newForm.value.brand || 'Personalizado',
+    costPerKg: Number(newForm.value.costPerKg),
+    inStock: Boolean(newForm.value.inStock),
+    supplierDeliveryDays: Number(newForm.value.supplierDeliveryDays || 2),
+    supplierUrl: newForm.value.supplierUrl.trim() || undefined
+  });
+
+  if (created) {
+    showAddModal.value = false;
+    newForm.value = {
+      colorName: '',
+      material: 'PLA',
+      hex: '#18181B',
+      brand: 'Bambu / Sunlu',
+      costPerKg: 320,
+      inStock: true,
+      supplierDeliveryDays: 2,
+      supplierUrl: ''
+    };
+  }
+}
+
+async function confirmDelete(item: any) {
+  if (confirm(`¿Eliminar filamento "${item.label}"?`)) {
+    await filamentsStore.removeFilament(item.id);
+  }
+}
 
 const materialTabs = [
   { id: 'TODOS', label: 'Todos' },

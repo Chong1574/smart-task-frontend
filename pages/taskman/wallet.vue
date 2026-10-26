@@ -473,6 +473,10 @@
                       <Clock class="w-2.5 h-2.5" />
                       {{ getPaymentUrgency(payment).label }}
                     </span>
+                    <span v-if="payment.overdueCount && payment.overdueCount > 1" class="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400 font-bold border border-rose-500/30 flex items-center gap-1">
+                      <AlertTriangle class="w-2.5 h-2.5" />
+                      {{ payment.overdueCount }} acumulados
+                    </span>
                   </div>
                 </div>
 
@@ -1187,7 +1191,8 @@ import {
   TrendingUp,
   Tag,
   Search,
-  ArrowUpRight
+  ArrowUpRight,
+  AlertTriangle
 } from 'lucide-vue-next'
 import { useFinanceStore } from '~/stores/finance'
 import type { Account, AccountType, TransactionType } from '~/stores/finance'
@@ -1788,8 +1793,11 @@ const liquidityCoverage = computed(() => {
 
 function getPaymentUrgency(p: any) {
   if (p.daysRemaining < 0) {
+    const days = Math.abs(p.daysRemaining);
     return {
-      label: `Vencido (${Math.abs(p.daysRemaining)}d)`,
+      label: p.overdueCount && p.overdueCount > 1 
+        ? `Vencido (${p.overdueCount} acumulados · ${days}d)` 
+        : `Vencido (${days}d)`,
       class: 'bg-rose-500/15 text-rose-500 border-rose-500/30 animate-pulse font-bold'
     }
   }
