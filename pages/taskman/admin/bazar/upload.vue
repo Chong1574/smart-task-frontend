@@ -1,5 +1,14 @@
 <template>
   <div class="max-w-2xl mx-auto space-y-6">
+    <div class="flex items-center justify-between">
+      <NuxtLink
+        to="/taskman/admin/bazar"
+        class="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground font-medium transition-colors"
+      >
+        ← Volver al Backoffice del Bazar
+      </NuxtLink>
+    </div>
+
     <div>
       <h1 class="text-3xl font-serif font-bold">Subir modelo al Bazar</h1>
       <p class="text-muted-foreground">Diseños propios. Imagen + STL/3MF van directo al almacenamiento en la nube.</p>
@@ -25,11 +34,11 @@
           <label class="text-sm font-medium">Categoría</label>
           <select v-model="category" class="w-full rounded-md border bg-background px-3 py-2">
             <option value="Coleccionables & Figuras">Coleccionables & Figuras</option>
-          <option value="Hogar & Deco">Hogar & Deco</option>
-          <option value="Organización & Setup">Organización & Setup</option>
-          <option value="Gadgets & Utilidades">Gadgets & Utilidades</option>
-          <option value="Juegos & Diversión">Juegos & Diversión</option>
-</select>
+            <option value="Hogar & Deco">Hogar & Deco</option>
+            <option value="Organización & Setup">Organización & Setup</option>
+            <option value="Gadgets & Utilidades">Gadgets & Utilidades</option>
+            <option value="Juegos & Diversión">Juegos & Diversión</option>
+          </select>
         </div>
       </div>
 
@@ -70,7 +79,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch } from 'vue';
+import { ref, reactive, computed, watch, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '~/stores/auth';
 import api from '~/utils/api';
@@ -81,9 +90,11 @@ definePageMeta({ layout: 'taskman' });
 const authStore = useAuthStore();
 const router = useRouter();
 
-// Guard client-side (defensa en profundidad; backend igual valida)
-onMounted(() => {
-  // ponytail: guard sólo por email; migrar a role cuando aparezca segundo admin.
+// Guard client-side con soporte para inicialización
+onMounted(async () => {
+  if (!authStore.isInitialized) {
+    await authStore.init();
+  }
   if (!authStore.user?.email) {
     router.replace('/login');
   }
