@@ -945,7 +945,7 @@ function getActivePrice(p: Product): number {
 
 function getFormattedActivePrice(p: Product): string {
   const n = getActivePrice(p);
-  if (!n || isNaN(n)) return 'Gratis';
+  if (!n || isNaN(n) || n <= 0) return 'Bajo cotización';
   return fmt(n);
 }
 
@@ -1307,6 +1307,9 @@ const filteredProducts = computed(() => {
   const targetTagNorm = selectedTag.value ? normalizeText(selectedTag.value) : null;
 
   return products.value.filter(p => {
+    // Excluir productos marcados como no públicos
+    if (p.isPublic === false) return false;
+
     // 0. Licencia comercial libre (sin requerir suscripción/permiso de creador)
     if (!p.isCustom && p.licenseType && !ALLOWED_BAZAR_LICENSES.has(p.licenseType)) {
       return false;
@@ -1329,6 +1332,9 @@ const filteredProducts = computed(() => {
     const hasVariants = Array.isArray(p.variants) && p.variants.length > 1;
     const rawPrice = hasVariants ? p.priceFrom : (p.priceFrom ?? (typeof p.price === 'number' ? p.price : parseFloat(String(p.price ?? 0))));
     const price = typeof rawPrice === 'number' ? rawPrice : 0;
+
+    // Excluir del catálogo cualquier producto sin precio real (> 0)
+    if (price <= 0) return false;
 
     const maxLimit = priceRange.value[1] >= 1000 ? Infinity : priceRange.value[1];
     if (price < priceRange.value[0] || price > maxLimit) {
@@ -1440,7 +1446,7 @@ function priceLabel(p: Product): string {
   const hasVariants = Array.isArray(p.variants) && p.variants.length > 1;
   const rawPrice = hasVariants ? p.priceFrom : (p.priceFrom ?? (typeof p.price === 'number' ? p.price : parseFloat(String(p.price ?? 0))));
   const n = typeof rawPrice === 'number' ? rawPrice : 0;
-  if (!n || isNaN(n)) return 'Gratis';
+  if (!n || isNaN(n) || n <= 0) return 'Bajo cotización';
   return hasVariants ? `desde ${fmt(n)}` : fmt(n);
 }
 

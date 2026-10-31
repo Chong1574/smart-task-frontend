@@ -123,7 +123,7 @@ const cart = useCartStore();
 const router = useRouter();
 
 function formatPrice(amount: number) {
-  if (amount === 0) return 'Gratis';
+  if (amount <= 0) return '$0 MXN';
   return new Intl.NumberFormat('es-MX', {
     style: 'currency',
     currency: 'MXN',

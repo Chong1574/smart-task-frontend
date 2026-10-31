@@ -63,6 +63,10 @@ export const useCartStore = defineStore('cart', () => {
       : (product.priceFrom ?? (typeof product.price === 'number' ? product.price : parseFloat(String(product.price ?? 0))));
 
     const resolvedPrice = typeof price === 'number' ? price : 0;
+    if (resolvedPrice <= 0) {
+      console.warn('Bloqueado intento de agregar producto $0 o sin precio:', product.title);
+      return;
+    }
 
     const image = variant?.imageUrl
       || product.imageUrl

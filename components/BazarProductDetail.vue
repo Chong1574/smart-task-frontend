@@ -362,7 +362,7 @@
                     @click="buyNow"
                     class="h-10 bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-sm px-5 rounded-xl transition-all shadow-md shadow-primary/20 hover:shadow-primary/30 justify-center items-center gap-2 cursor-pointer whitespace-nowrap"
                   >
-                    <span>Comprar ahora</span>
+                    <span>{{ currentPrice > 0 ? 'Comprar ahora' : 'Cotizar en WhatsApp' }}</span>
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                   </button>
                 </div>
@@ -496,7 +496,7 @@
             @click="buyNow"
             class="flex-1 h-10 bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs sm:text-sm px-3 rounded-xl transition-all shadow-md shadow-primary/25 flex justify-center items-center gap-1.5 cursor-pointer active:scale-[0.98] whitespace-nowrap"
           >
-            <span>Comprar ahora</span>
+            <span>{{ currentPrice > 0 ? 'Comprar ahora' : 'Cotizar en WhatsApp' }}</span>
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
           </button>
         </div>
@@ -948,7 +948,7 @@ const currentPrice = computed(() => {
 
 const priceLabel = computed(() => {
   const n = currentPrice.value ?? 0;
-  if (!n) return 'Gratis';
+  if (!n || n <= 0) return 'Bajo cotización';
   return fmt(n);
 });
 
@@ -1009,6 +1009,11 @@ function resolveOrderNote(): string {
 }
 
 function buyNow() {
+  if (currentPrice.value <= 0) {
+    toast.info('Producto bajo cotización', { description: 'Te estamos redirigiendo a WhatsApp para cotizar esta pieza a medida.' });
+    window.open(whatsappInquiryUrl.value, '_blank');
+    return;
+  }
   if (isPersonalized.value && !customText.value.trim()) {
     toast.error('Atención', { description: 'Por favor, ingresa el texto a personalizar.' });
     return;
@@ -1019,6 +1024,11 @@ function buyNow() {
 }
 
 function addToCartOnly() {
+  if (currentPrice.value <= 0) {
+    toast.info('Producto bajo cotización', { description: 'Te estamos redirigiendo a WhatsApp para cotizar esta pieza a medida.' });
+    window.open(whatsappInquiryUrl.value, '_blank');
+    return;
+  }
   if (isPersonalized.value && !customText.value.trim()) {
     toast.error('Atención', { description: 'Por favor, ingresa el texto a personalizar.' });
     return;
