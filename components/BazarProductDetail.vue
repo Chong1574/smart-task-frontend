@@ -84,7 +84,8 @@
                 :key="i"
                 type="button"
                 @click="selectImage(i)"
-                class="w-12 h-12 sm:w-14 sm:h-14 shrink-0 rounded-xl overflow-hidden border-2 transition-all cursor-pointer"
+                :aria-label="'Ver imagen ' + (i + 1) + ' de ' + images.length"
+                class="w-12 h-12 sm:w-14 sm:h-14 shrink-0 rounded-xl overflow-hidden border-2 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
                 :class="imgIdx === i ? 'border-primary ring-2 ring-primary/20 scale-[1.02]' : 'border-border/40 opacity-70 hover:opacity-100'"
               >
                 <img :src="imgProxy(img, { width: 120 })" loading="lazy" decoding="async" class="w-full h-full object-cover" />

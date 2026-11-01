@@ -22,6 +22,7 @@
           <input
             v-model="query"
             type="search"
+            aria-label="Buscar productos en el bazar"
             placeholder="Buscar en el bazar (ej. portavasos, organizador, dinosaurio, soporte...)"
             class="w-full h-12 pl-11 pr-4 rounded-full border border-border bg-card text-sm shadow-xs focus:outline-none focus:ring-2 focus:ring-primary"
           />
@@ -236,13 +237,14 @@
                   ref="tagSearchInputRef"
                   type="text"
                   v-model="tagSearchQuery"
+                  aria-label="Filtrar etiquetas"
                   placeholder="Filtrar etiquetas..."
                   class="w-full h-7 pl-7 pr-6 rounded-lg border border-border/80 bg-background text-xs placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary"
                 />
                 <svg class="absolute left-2 top-2 text-muted-foreground/60 w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
-                <button v-if="tagSearchQuery" @click="tagSearchQuery = ''" class="absolute right-2 top-1.5 text-muted-foreground hover:text-foreground text-xs">✕</button>
+                <button v-if="tagSearchQuery" @click="tagSearchQuery = ''" class="absolute right-2 top-1.5 text-muted-foreground hover:text-foreground text-xs focus-visible:ring-1 focus-visible:ring-primary focus-visible:outline-none rounded" aria-label="Limpiar filtro de etiquetas">✕</button>
               </div>
             </transition>
 
@@ -1540,6 +1542,24 @@ const structuredData = computed(() => {
         url: 'https://shongyi.com/bazar',
         description: 'Tienda de productos físicos de diseño, hogar y estilo de vida.',
         parentOrganization: { '@type': 'Organization', name: 'El Rincón de Brandy', url: 'https://shongyi.com' }
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          {
+            '@type': 'ListItem',
+            position: 1,
+            name: 'Inicio',
+            item: 'https://shongyi.com'
+          },
+          {
+            '@type': 'ListItem',
+            position: 2,
+            name: 'El Bazar',
+            item: 'https://shongyi.com/bazar'
+          }
+        ]
       }
     ];
   }
