@@ -51,45 +51,22 @@
             </div>
             
             <div class="lg:w-1/2 w-full">
-              <!-- Mockup del dashboard de Taskman -->
-              <div class="relative w-full aspect-[16/10] bg-card rounded-2xl overflow-hidden border border-border shadow-2xl">
-                <div class="flex items-center gap-2 px-4 py-3 border-b border-border bg-secondary/40">
-                  <div class="w-2.5 h-2.5 rounded-full bg-red-500/80"></div>
-                  <div class="w-2.5 h-2.5 rounded-full bg-yellow-500/80"></div>
-                  <div class="w-2.5 h-2.5 rounded-full bg-green-500/80"></div>
-                  <span class="ml-3 text-xs text-muted-foreground">taskman — Dashboard</span>
-                </div>
-                <div class="p-4 grid grid-cols-3 gap-3 text-xs">
-                  <div class="col-span-1 space-y-2">
-                    <div class="px-3 py-2 rounded-lg bg-primary/10 text-primary font-semibold">Tareas</div>
-                    <div class="px-3 py-2 rounded-lg bg-secondary/60">Finanzas</div>
-                    <div class="px-3 py-2 rounded-lg bg-secondary/60">Hábitos</div>
-                    <div class="px-3 py-2 rounded-lg bg-secondary/60">Proyectos</div>
-                  </div>
-                  <div class="col-span-2 space-y-2">
-                    <div class="flex items-center gap-2 p-2.5 rounded-lg border border-border">
-                      <span class="w-4 h-4 rounded border-2 border-primary bg-primary/20"></span>
-                      <span class="line-through text-muted-foreground">Sincronizar con Google Calendar</span>
-                    </div>
-                    <div class="flex items-center gap-2 p-2.5 rounded-lg border border-border">
-                      <span class="w-4 h-4 rounded border-2 border-border"></span>
-                      <span>Revisar presupuesto del mes</span>
-                    </div>
-                    <div class="flex items-center gap-2 p-2.5 rounded-lg border border-border">
-                      <span class="w-4 h-4 rounded border-2 border-border"></span>
-                      <span>Racha de hábitos: 12 días 🔥</span>
-                    </div>
-                    <div class="h-14 rounded-lg bg-gradient-to-r from-primary/20 via-[#F2A65A]/20 to-primary/5 flex items-end gap-1 p-2">
-                      <span class="flex-1 bg-primary/60 rounded-sm h-[40%]"></span>
-                      <span class="flex-1 bg-primary/60 rounded-sm h-[70%]"></span>
-                      <span class="flex-1 bg-primary/60 rounded-sm h-[55%]"></span>
-                      <span class="flex-1 bg-primary/60 rounded-sm h-[90%]"></span>
-                      <span class="flex-1 bg-primary/60 rounded-sm h-[65%]"></span>
-                    </div>
-                  </div>
-                </div>
+              <!-- Video Tour Oficial de Taskman -->
+              <div class="relative w-full aspect-video bg-black rounded-2xl overflow-hidden border border-border shadow-2xl group">
+                <video 
+                  controls 
+                  preload="metadata" 
+                  poster="/videos/taskman-tour.jpg"
+                  class="w-full h-full object-cover"
+                >
+                  <source src="/videos/taskman-tour.mp4" type="video/mp4">
+                  Tu navegador no soporta la reproducción de video.
+                </video>
               </div>
-              <p class="text-xs text-center text-muted-foreground mt-4 italic">Vista ilustrativa del panel de Taskman.</p>
+              <p class="text-xs text-center text-muted-foreground mt-3 italic flex items-center justify-center gap-1.5">
+                <span class="inline-block w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                Recorrido oficial de 50s por la plataforma Taskman.
+              </p>
             </div>
           </div>
 
