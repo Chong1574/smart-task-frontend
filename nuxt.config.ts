@@ -79,7 +79,8 @@ export default defineNuxtConfig({
       htmlAttrs: { lang: 'es' },
       viewport: 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover',
       link: [
-        { rel: 'icon', type: 'image/png', href: '/logo.png' }
+        { rel: 'icon', type: 'image/png', href: '/logo.png' },
+        { rel: 'help', href: '/llms.txt', type: 'text/plain', title: 'LLM Knowledge Base' }
       ],
       meta: [
         { property: 'og:site_name', content: 'El Rincón de Brandy' },

@@ -22,7 +22,7 @@
 
         <h1 class="text-5xl md:text-7xl font-serif text-foreground font-bold tracking-tight mb-6 leading-[1.1]">
           Impulsamos tus ideas con <br class="hidden md:block"/>
-          <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary via-[#F2A65A] to-primary bg-[length:200%_auto] animate-gradient">
+          <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-[#F2A65A]">
             Tecnología y Manufactura
           </span>
         </h1>
@@ -44,23 +44,23 @@
           </NuxtLink>
         </div>
         
-        <!-- Trust Indicators -->
+        <!-- Indicadores de Taller & Manufactura Real -->
         <div class="mt-16 pt-8 border-t border-border/40 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
           <div>
-            <div class="text-3xl font-bold text-foreground">100%</div>
-            <div class="text-xs text-muted-foreground uppercase tracking-wider mt-1">A Medida</div>
+            <div class="text-3xl font-bold font-mono text-primary">0.12 mm</div>
+            <div class="text-xs text-muted-foreground uppercase tracking-wider mt-1">Precisión de Capa</div>
           </div>
           <div>
-            <div class="text-3xl font-bold text-foreground">+50</div>
-            <div class="text-xs text-muted-foreground uppercase tracking-wider mt-1">Proyectos Exitosos</div>
+            <div class="text-3xl font-bold font-mono text-foreground">4 Colores</div>
+            <div class="text-xs text-muted-foreground uppercase tracking-wider mt-1">Multimaterial AMS</div>
           </div>
           <div>
-            <div class="text-3xl font-bold text-foreground">Soporte</div>
-            <div class="text-xs text-muted-foreground uppercase tracking-wider mt-1">Continuo e Integral</div>
+            <div class="text-3xl font-bold text-foreground">PLA+ / PETG</div>
+            <div class="text-xs text-muted-foreground uppercase tracking-wider mt-1">Grado Técnico</div>
           </div>
           <div>
-            <div class="text-3xl font-bold text-foreground">SEO</div>
-            <div class="text-xs text-muted-foreground uppercase tracking-wider mt-1">Optimización Web</div>
+            <div class="text-3xl font-bold text-foreground">Querétaro</div>
+            <div class="text-xs text-muted-foreground uppercase tracking-wider mt-1">Envíos a todo México</div>
           </div>
         </div>
       </div>
@@ -373,6 +373,19 @@ useHead({
         description: 'Ecosistema multidisciplinario: automatización y control, ingeniería de software, manufactura física en impresión 3D y respaldo patrimonial.',
         areaServed: 'MX',
         priceRange: '$$',
+        telephone: '+52-442-175-2026',
+        email: 'contacto@shongyi.com',
+        address: {
+          '@type': 'PostalAddress',
+          addressLocality: 'Santiago de Querétaro',
+          addressRegion: 'Querétaro',
+          addressCountry: 'MX'
+        },
+        geo: {
+          '@type': 'GeoCoordinates',
+          latitude: 20.5888,
+          longitude: -100.3899
+        },
         knowsAbout: [
           'Impresión 3D',
           'Manufactura de precisión',
@@ -392,6 +405,39 @@ useHead({
         name: 'El Rincón de Brandy',
         url: 'https://shongyi.com',
         inLanguage: 'es-MX'
+      })
+    },
+    {
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: [
+          {
+            '@type': 'Question',
+            name: '¿Dónde puedo mandar a imprimir en 3D en Querétaro?',
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: 'El Rincón de Brandy ofrece servicio de manufactura aditiva e impresión 3D en Santiago de Querétaro con tecnología Bambu Lab P1S y soporte multicromático de hasta 4 colores continuos por pieza en filamentos PLA+, PETG técnico, TPU y resina HD.'
+            }
+          },
+          {
+            '@type': 'Question',
+            name: '¿Hacen envíos de piezas y productos 3D a todo México?',
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: 'Sí, realizamos envíos asegurados con número de guía rastreable a cualquier código postal de la República Mexicana mediante paqueterías líderes, además de entregas locales en el área metropolitana de Querétaro.'
+            }
+          },
+          {
+            '@type': 'Question',
+            name: '¿Cómo puedo cotizar una pieza o prototipo 3D?',
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: 'Puedes enviar tu archivo 3D en formato STL, STEP u OBJ vía WhatsApp al +52 442 175 2026 o por correo a contacto@shongyi.com. Te proporcionamos cálculo de material, tiempo y cotización detallada en menos de 2 horas hábiles.'
+            }
+          }
+        ]
       })
     }
   ]

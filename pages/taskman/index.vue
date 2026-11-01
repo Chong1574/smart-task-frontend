@@ -32,7 +32,7 @@
       <!-- Métricas / Resumen -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <!-- Tarjeta de Metas -->
-        <div @click="$router.push('/taskman/projects')" class="bg-card p-6 rounded-2xl border border-border/40 shadow-sm hover:shadow-md transition-shadow group cursor-pointer">
+        <NuxtLink to="/taskman/projects" class="bg-card p-6 rounded-2xl border border-border/40 shadow-sm hover:shadow-md transition-shadow group block focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none">
           <div class="flex items-center justify-between mb-4">
             <h3 class="font-medium text-muted-foreground">Proyectos</h3>
             <div class="w-10 h-10 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -44,10 +44,10 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
             <span>{{ completedProjectsCount }} completados</span>
           </div>
-        </div>
+        </NuxtLink>
 
         <!-- Tarjeta de Hábitos -->
-        <div @click="$router.push('/taskman/habits')" class="bg-card p-6 rounded-2xl border border-border/40 shadow-sm hover:shadow-md transition-shadow group cursor-pointer">
+        <NuxtLink to="/taskman/habits" class="bg-card p-6 rounded-2xl border border-border/40 shadow-sm hover:shadow-md transition-shadow group block focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none">
           <div class="flex items-center justify-between mb-4">
             <h3 class="font-medium text-muted-foreground">Hábitos (Hoy)</h3>
             <div class="w-10 h-10 rounded-full bg-orange-500/10 text-orange-500 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -58,10 +58,10 @@
           <div class="mt-2 text-sm text-green-500 flex items-center gap-1">
             <span>{{ habitsRemaining === 0 && activeHabitsCount > 0 ? '¡Día perfecto!' : '¡Aún puedes lograrlo!' }}</span>
           </div>
-        </div>
+        </NuxtLink>
 
         <!-- Tareas completadas -->
-        <div @click="$router.push('/taskman/activities')" class="bg-card p-6 rounded-2xl border border-border/40 shadow-sm hover:shadow-md transition-shadow group cursor-pointer">
+        <NuxtLink to="/taskman/activities" class="bg-card p-6 rounded-2xl border border-border/40 shadow-sm hover:shadow-md transition-shadow group block focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none">
           <div class="flex items-center justify-between mb-4">
             <h3 class="font-medium text-muted-foreground">Tareas</h3>
             <div class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -73,10 +73,10 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
             <span>{{ completedTasksCount }} completadas</span>
           </div>
-        </div>
+        </NuxtLink>
 
         <!-- Finanzas -->
-        <div @click="$router.push('/taskman/wallet')" class="bg-card p-6 rounded-2xl border border-border/40 shadow-sm hover:shadow-md transition-shadow group cursor-pointer">
+        <NuxtLink to="/taskman/wallet" class="bg-card p-6 rounded-2xl border border-border/40 shadow-sm hover:shadow-md transition-shadow group block focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none">
           <div class="flex items-center justify-between mb-4">
             <h3 class="font-medium text-muted-foreground">Patrimonio Neto</h3>
             <div class="w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -87,7 +87,7 @@
           <div class="mt-2 text-sm text-muted-foreground flex items-center gap-1">
             <span>{{ financeStore.accounts.length }} cuentas activas</span>
           </div>
-        </div>
+        </NuxtLink>
       </div>
 
       <!-- Dashboard Grid -->
@@ -106,7 +106,7 @@
               No tienes tareas próximas a vencer. ¡Disfruta tu día!
             </div>
             <div v-else class="space-y-3">
-              <div v-for="task in upcomingTasks" :key="task.id" class="flex items-center justify-between p-3 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors cursor-pointer" @click="$router.push('/taskman/activities')">
+              <NuxtLink v-for="task in upcomingTasks" :key="task.id" to="/taskman/activities" class="flex items-center justify-between p-3 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors group block focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none">
                 <div>
                   <h4 class="font-medium">{{ task.title }}</h4>
                   <p class="text-xs text-muted-foreground">{{ getProjectName(task.projectId) || task.category || 'Sin categoría' }}</p>
@@ -117,7 +117,7 @@
                   </p>
                   <p v-if="isOverdue(task.deadline)" class="text-[10px] text-red-500/80">Vencida</p>
                 </div>
-              </div>
+              </NuxtLink>
             </div>
           </div>
 
@@ -131,7 +131,7 @@
               No hay vehículos registrados en tu Garage.
             </div>
             <div v-else class="space-y-4">
-              <div v-for="v in financeStore.vehicles" :key="v.id" class="flex items-center justify-between p-4 rounded-xl border border-border/50 cursor-pointer hover:bg-secondary/20 transition-colors" @click="$router.push('/taskman/garage')">
+              <NuxtLink v-for="v in financeStore.vehicles" :key="v.id" to="/taskman/garage" class="flex items-center justify-between p-4 rounded-xl border border-border/50 hover:bg-secondary/20 transition-colors group block focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none">
                 <div>
                   <h4 class="font-bold">{{ v.name }}</h4>
                   <p class="text-xs text-muted-foreground">{{ v.plate || 'Sin placas' }}</p>
@@ -140,7 +140,7 @@
                   <p class="font-mono text-sm font-medium">{{ getLastOdometer(v) }} km</p>
                   <p class="text-xs text-muted-foreground">Último odom.</p>
                 </div>
-              </div>
+              </NuxtLink>
             </div>
           </div>
 
@@ -150,7 +150,7 @@
         <div class="space-y-8">
           
           <!-- Ruleta CTA -->
-          <div @click="$router.push('/taskman/activities')" class="bg-gradient-to-br from-primary to-orange-500 p-8 rounded-3xl shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all group cursor-pointer text-white flex flex-col justify-between h-56 relative overflow-hidden">
+          <NuxtLink to="/taskman/activities" class="bg-gradient-to-br from-primary to-orange-500 p-8 rounded-3xl shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all group block text-white flex flex-col justify-between h-56 relative overflow-hidden focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none">
             <div class="relative z-10">
               <div class="flex items-center justify-between mb-4">
                 <h3 class="text-xl font-serif font-bold">¿No sabes qué hacer?</h3>
@@ -161,7 +161,7 @@
             </div>
             <!-- Decoración -->
             <div class="absolute -right-8 -bottom-8 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
-          </div>
+          </NuxtLink>
 
 
           <!-- Resumen Cuentas -->
@@ -174,7 +174,7 @@
               No tienes cuentas financieras registradas.
             </div>
             <div v-else class="space-y-3 max-h-64 overflow-y-auto pr-2">
-              <div v-for="acc in financeStore.accounts" :key="acc.id" class="flex justify-between items-center p-3 rounded-xl bg-secondary/20 hover:bg-secondary/40 transition-colors cursor-pointer" @click="$router.push('/taskman/wallet')">
+              <NuxtLink v-for="acc in financeStore.accounts" :key="acc.id" to="/taskman/wallet" class="flex justify-between items-center p-3 rounded-xl bg-secondary/20 hover:bg-secondary/40 transition-colors group block focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none">
                 <div class="flex items-center gap-3">
                   <div class="w-8 h-8 rounded-full bg-gradient-to-br flex-shrink-0" :class="acc.color"></div>
                   <div>
@@ -185,11 +185,11 @@
                 <span class="font-mono text-sm font-bold" :class="getAccountBalanceColor(acc)">
                   {{ formatCurrency(acc.type === 'loan' || (acc.type === 'card' && acc.sub_type === 'credit') ? -Math.abs(acc.balance) : acc.balance) }}
                 </span>
-              </div>
+              </NuxtLink>
             </div>
-            <button @click="$router.push('/taskman/wallet')" class="w-full mt-4 py-2 text-sm text-primary font-medium hover:underline">
+            <NuxtLink to="/taskman/wallet" class="block text-center w-full mt-4 py-2 text-sm text-primary font-medium hover:underline focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded-lg">
               Ver todas las finanzas &rarr;
-            </button>
+            </NuxtLink>
           </div>
 
         </div>

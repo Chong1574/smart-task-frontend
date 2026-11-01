@@ -17,11 +17,11 @@
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
               Calendario
             </button>
-            <button @click="connectGoogleCalendar" class="px-2 py-2 rounded-xl text-blue-500 hover:bg-blue-500/10 transition-colors" title="Reconectar Google Calendar">
+            <button @click="connectGoogleCalendar" class="px-2 py-2 rounded-xl text-blue-500 hover:bg-blue-500/10 transition-colors focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none" title="Reconectar Google Calendar" aria-label="Reconectar Google Calendar">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
             </button>
           </div>
-          <button @click="showRoulette = true" class="bg-orange-500 text-white px-4 py-2 rounded-xl font-medium shadow-lg shadow-orange-500/20 hover:scale-105 transition-transform flex items-center gap-2">
+          <button @click="showRoulette = true" class="bg-orange-500/10 border border-orange-500/30 text-orange-600 hover:bg-orange-500/20 px-4 py-2 rounded-xl font-medium transition-all flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:outline-none" aria-label="Jugar ruleta de tareas">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
             Jugar Ruleta
           </button>
@@ -35,7 +35,7 @@
       <!-- Ruleta Modal -->
       <div v-if="showRoulette" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
         <div class="bg-card w-full max-w-lg rounded-3xl p-8 border border-border/50 shadow-2xl relative overflow-hidden">
-          <button @click="showRoulette = false" class="absolute top-4 right-4 text-muted-foreground hover:text-foreground">
+          <button @click="showRoulette = false" class="absolute top-4 right-4 text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded-lg p-1" aria-label="Cerrar ruleta">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
           </button>
           
@@ -191,12 +191,12 @@
             </span>
           </div>
           <div class="col-span-1 text-right flex justify-end gap-1 items-center">
-            <button v-if="task.status === 'pending'" @click="markComplete(task)" class="bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white p-2 rounded-full transition-colors flex-shrink-0" title="Completar Tarea">
+            <button v-if="task.status === 'pending'" @click="markComplete(task)" class="bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white p-2 rounded-full transition-colors flex-shrink-0 focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:outline-none" title="Completar Tarea" aria-label="Completar Tarea">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
             </button>
-            <div class="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex gap-1">
-              <button @click="openEditTask(task)" class="text-muted-foreground hover:text-primary p-2" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>
-              <button @click="deleteTask(task)" class="text-muted-foreground hover:text-destructive p-2" title="Eliminar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></button>
+            <div class="opacity-100 md:opacity-0 md:group-hover:opacity-100 group-focus-within:opacity-100 focus-within:opacity-100 transition-opacity flex gap-1">
+              <button @click="openEditTask(task)" class="text-muted-foreground hover:text-primary p-2 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded-lg" title="Editar" aria-label="Editar tarea"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>
+              <button @click="deleteTask(task)" class="text-muted-foreground hover:text-destructive p-2 focus-visible:ring-2 focus-visible:ring-destructive focus-visible:outline-none rounded-lg" title="Eliminar" aria-label="Eliminar tarea"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></button>
             </div>
           </div>
         </div>
@@ -208,7 +208,7 @@
     <!-- Modal Añadir Tarea -->
     <div v-if="showTaskModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-300">
       <div class="bg-card w-full max-w-lg rounded-3xl p-6 md:p-8 border border-border/50 shadow-2xl relative shadow-primary/10">
-        <button @click="showTaskModal = false" class="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors">
+        <button @click="showTaskModal = false" class="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded-lg p-1" aria-label="Cerrar modal de tarea">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
         </button>
         <h2 class="text-2xl font-serif font-bold mb-6">{{ isEditingTask ? 'Editar Tarea' : 'Nueva Tarea' }}</h2>

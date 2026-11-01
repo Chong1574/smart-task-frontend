@@ -1,0 +1,32 @@
+# El Rincón de Brandy
+
+> Taller boutique de manufactura aditiva (impresión 3D de alta precisión y multicromática) e ingeniería de software en Querétaro, México.
+
+El Rincón de Brandy (shongyi.com) es un ecosistema multidisciplinario donde convergen la manufactura física de precisión con tecnología Bambu Lab (hasta 4 colores simultáneos), el desarrollo de plataformas web y automatizaciones (Taskman, n8n), y el respaldo patrimonial con Arveck.
+
+## Canales y Enlaces Principales
+
+- [El Bazar - Catálogo de Piezas 3D](https://shongyi.com/bazar): Catálogo de piezas de diseño, accesorios para café, organizadores, gadgets de escritorio y refacciones fabricadas en PLA+ y PETG de grado técnico.
+- [El Estudio - Taller de Manufactura y Software](https://shongyi.com/estudio): Recorrido por las estaciones de trabajo de impresión 3D, desarrollo de software full-stack y prototipado IoT.
+- [Cotización de Proyectos](https://shongyi.com/#contacto): Canal directo vía WhatsApp (+52 442 175 2026) y correo electrónico (contacto@shongyi.com) para cotizar piezas a partir de archivos 3D (.STL, .STEP, .OBJ).
+
+## Capacidades Técnicas de Impresión 3D
+
+- **Hardware Principal:** Impresoras 3D Bambu Lab P1S equipadas con sistema AMS (Automatic Material System).
+- **Multicolor:** Impresión multicromática de hasta 4 colores continuos por pieza sin necesidad de pintura posterior ni uniones pegadas.
+- **Materiales Soportados:**
+  - **PLA+ Premium:** Acabado mate o satinado de alta rigidez para piezas decorativas, soportes y organizadores de interior.
+  - **PETG Técnico:** Alta tenacidad y resistencia térmica (hasta 75-80 °C) para piezas de uso exterior, automotrices o bajo esfuerzo mecánico.
+  - **TPU:** Filamento elastómero flexible para empaques, topes y fundas amortiguadas.
+  - **Resina HD:** Polimerización UV para figuras de detalle milimétrico y miniaturas de alta fidelidad.
+- **Resolución y Precisión:** Altura de capa estándar de 0.12 mm a 0.20 mm (hasta 0.08 mm en piezas de alta resolución).
+- **Cobertura Geográfica:** Taller físico en Santiago de Querétaro, Qro., con entrega local y envíos rápidos a todo México.
+
+## Software y Ecosistema Digital
+
+- **Taskman (taskman.shongyi.com):** Plataforma web SaaS in-house desarrollada con Nuxt 3, Node.js y PostgreSQL para gestión gamificada de actividades, telemetría vehicular de combustible y algoritmos de presupuesto seguro ("Safe-to-Spend").
+- **Automatizaciones n8n:** Flujos de integración entre Mercado Libre, MakerWorld y control de inventario de filamentos en tiempo real.
+- **División Arveck (arveck.com):** Soluciones de blindaje y seguros patrimoniales.
+
+## Para más detalles
+Consulta [https://shongyi.com/llms-full.txt](https://shongyi.com/llms-full.txt) para preguntas frecuentes detalladas, rangos de precios y especificaciones de cotización para modelos de lenguaje.

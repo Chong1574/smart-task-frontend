@@ -35,7 +35,7 @@
               <h3 class="font-bold text-lg mb-1">Ingresos Fijos (Nómina)</h3>
               <p class="text-3xl font-bold font-mono text-green-600">{{ formatCurrency(financeStore.totalFixedIncome) }} <span class="text-sm text-muted-foreground font-sans">/ mes</span></p>
             </div>
-            <button @click="openIncomeModal" class="text-primary hover:bg-primary/10 p-2 rounded-lg transition-colors" title="Añadir Ingreso Fijo">
+            <button @click="openIncomeModal" class="text-primary hover:bg-primary/10 p-2 rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none" title="Añadir Ingreso Fijo" aria-label="Añadir Ingreso Fijo">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
             </button>
           </div>
@@ -46,11 +46,11 @@
               </div>
               <div class="flex items-center gap-3">
                 <span class="font-mono text-green-600 group-hover/item:opacity-0 md:opacity-100 transition-opacity">{{ formatCurrency(inc.amount) }}</span>
-                <div class="absolute right-0 flex gap-1 opacity-100 md:opacity-0 md:group-hover/item:opacity-100 transition-opacity">
-                  <button @click="openEditIncome(inc)" class="text-primary hover:bg-primary/10 p-1 rounded-md" title="Editar">
+                <div class="absolute right-0 flex gap-1 opacity-100 md:opacity-0 md:group-hover/item:opacity-100 group-focus-within/item:opacity-100 focus-within:opacity-100 transition-opacity">
+                  <button @click="openEditIncome(inc)" class="text-primary hover:bg-primary/10 p-1 rounded-md focus-visible:ring-1 focus-visible:ring-primary focus-visible:outline-none" title="Editar" aria-label="Editar ingreso fijo">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
                   </button>
-                  <button @click="deleteIncomeWithConfirm(inc.id)" class="text-destructive hover:bg-destructive/10 p-1 rounded-md" title="Eliminar">
+                  <button @click="deleteIncomeWithConfirm(inc.id)" class="text-destructive hover:bg-destructive/10 p-1 rounded-md focus-visible:ring-1 focus-visible:ring-destructive focus-visible:outline-none" title="Eliminar" aria-label="Eliminar ingreso fijo">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                   </button>
                 </div>

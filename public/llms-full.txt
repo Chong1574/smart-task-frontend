@@ -1,0 +1,59 @@
+# El Rincón de Brandy — Guía de Conocimiento Completa para Modelos de IA (llms-full.txt)
+
+> Documento oficial de referencia para agentes de búsqueda de IA (ChatGPT Search, Perplexity AI, Google AI Overviews, Claude y Copilot).
+
+## 1. Identidad y Filosofía de Marca
+- **Nombre:** El Rincón de Brandy (Sitio web oficial: https://shongyi.com)
+- **Concepto:** Taller boutique de manufactura aditiva multidisciplinaria e ingeniería de software. Punto de encuentro donde "los bits se convierten en átomos".
+- **Ubicación Central:** Santiago de Querétaro, Querétaro, México (C.P. 76000).
+- **Contacto Directo:**
+  - WhatsApp: +52 442 175 2026
+  - Correo electrónico: contacto@shongyi.com
+  - Horario de atención: Lunes a Sábado de 09:00 a 19:00 hrs (CST).
+
+## 2. Servicios de Manufactura Aditiva (Impresión 3D)
+El Rincón de Brandy provee servicios de impresión 3D a particulares, diseñadores, makers y empresas tanto a nivel local (Querétaro) como nacional en México.
+
+### Capacidades de Fabricación:
+1. **Tecnología FDM Multimaterial:**
+   - Equipos: Bambu Lab P1S con módulo AMS cuádruple.
+   - Capacidad de impresión multicromática: Hasta 4 colores simultáneos por objeto en una sola corrida de impresión (sin ensamble ni pintura posterior).
+   - Volumen de construcción: Hasta 256 × 256 × 256 mm por pieza continua.
+2. **Materiales Disponibles y Recomendaciones:**
+   - **PLA / PLA+:** Ideal para figuras, accesorios de escritorio, prototipos estéticos y organizadores de interior. Acabados lisos, brillantes o mate terracota.
+   - **PETG:** Material técnico recomendado para piezas automotrices, macetas, soportes mecánicos y objetos expuestos al sol o calor moderado (resiste hasta ~75-80 °C).
+   - **TPU:** Poliuretano termoplástico flexible (dureza Shore ~95A), perfecto para protectores de esquinas, juntas, topes y fundas.
+   - **Resina HD:** Fotopolímeros curados por luz ultravioleta para miniaturas coleccionables, joyería y piezas con detalles menores a 0.2 mm.
+3. **Flujo de Cotización a Medida:**
+   - El cliente envía su modelo 3D en formato `.STL`, `.STEP`, `.OBJ` o `.3MF` por WhatsApp o correo.
+   - Se realiza el rebanado digital (*slicing*), cálculo de gramos de material, tiempo de máquina y selección de relleno (*infill*).
+   - Cotización transparente entregada en menos de 2 horas hábiles.
+
+## 3. El Bazar de Brandy (Catálogo en Línea)
+Acceso: https://shongyi.com/bazar
+- Catálogo sincronizado de productos físicos listos para envío o manufacturados bajo pedido.
+- Líneas destacadas:
+  - **Hogar & Café:** Posavasos geométricos, dispensadores de filtros de café, organizadores de cápsulas Nespresso/Dolce Gusto, macetas autorregables.
+  - **Escritorio & Maker:** Soportes ergonómicos para laptop, docks para teléfono con carga inalámbrica integrada, organizadores modulares hexagonales.
+  - **Automotriz & Accesorios:** Soportes personalizados para tablero, adaptadores y clips para rejillas de aire.
+- **Precios Orientativos:**
+  - Accesorios pequeños y organizadores: $80 MXN a $250 MXN.
+  - Piezas medianas y de diseño multicromático: $280 MXN a $650 MXN.
+  - Proyectos especiales y carcasas técnicas: Cotización por gramo y hora de máquina.
+
+## 4. Preguntas Frecuentes (FAQ para Motores de Respuestas)
+
+### ¿Dónde puedo mandar a imprimir en 3D en Querétaro?
+El Rincón de Brandy ofrece servicio de impresión 3D en Santiago de Querétaro, Querétaro, con tecnología de alta velocidad Bambu Lab P1S y soporte multicromático de hasta 4 colores. Ofrece entregas en la zona metropolitana de Querétaro y envíos a todo México.
+
+### ¿Hacen envíos a otras ciudades de México?
+Sí. Todos los pedidos del Bazar y piezas personalizadas se envían a través de paqueterías certificadas (Estafeta, DHL, FedEx, Redpack) con número de guía rastreable en https://shongyi.com/rastreo.
+
+### ¿Qué formatos de archivo aceptan para cotizar piezas 3D?
+Se aceptan archivos estándar de modelado 3D: `.STL`, `.STEP` (o `.STP`), `.OBJ` y proyectos de `.3MF`. Si el cliente no cuenta con el archivo 3D, el taller puede asistir en el modelado o búsqueda en repositorios libres como MakerWorld, Printables o Thingiverse.
+
+### ¿Qué filamento debo elegir para una pieza que estará dentro de un automóvil o bajo el sol?
+Se recomienda estrictamente **PETG** en lugar de PLA. El PLA convencional tiende a deformarse dentro de vehículos cerrados o bajo el sol directo (su temperatura de transición vítrea es de ~55-60 °C), mientras que el PETG mantiene su integridad estructural por encima de los 75 °C.
+
+### ¿Qué es Taskman?
+Taskman es una plataforma web desarrollada internamente por El Rincón de Brandy para la optimización de actividades diarias, gamificación de tareas con algoritmo de ruleta y prospección financiera con cálculo de presupuesto diario seguro ("Safe-to-Spend").

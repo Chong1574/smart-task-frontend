@@ -149,12 +149,13 @@
                 step="10"
                 class="w-16 bg-transparent text-xs font-bold text-foreground focus:outline-none text-right"
                 placeholder="300"
+                aria-label="Costo por kilogramo"
               />
               <span class="text-[11px] text-muted-foreground">/kg</span>
             </div>
 
             <!-- Días de Entrega Proveedor -->
-            <div class="flex items-center gap-1.5 bg-background border border-border/80 rounded-xl px-2.5 py-1" title="Días que tarda en llegar si se pide en Amazon / Mercado Libre">
+            <div class="flex items-center gap-1.5 bg-background border border-border/80 rounded-xl px-2.5 py-1 focus-within:ring-1 focus-within:ring-primary focus-within:border-primary" title="Días que tarda en llegar si se pide en Amazon / Mercado Libre">
               <span class="text-xs text-muted-foreground">⏱️</span>
               <input
                 type="number"
@@ -163,18 +164,20 @@
                 max="30"
                 class="w-10 bg-transparent text-xs font-bold text-foreground focus:outline-none text-center"
                 placeholder="2"
+                aria-label="Días de entrega de proveedor"
               />
               <span class="text-[11px] text-muted-foreground">días</span>
             </div>
 
             <!-- Enlace Proveedor (Amazon / Mercado Libre) -->
-            <div class="flex items-center gap-1 bg-background border border-border/80 rounded-xl px-2.5 py-1 min-w-[140px] max-w-[200px]">
+            <div class="flex items-center gap-1 bg-background border border-border/80 rounded-xl px-2.5 py-1 min-w-[140px] max-w-[200px] focus-within:ring-1 focus-within:ring-primary focus-within:border-primary">
               <span class="text-xs text-muted-foreground">🔗</span>
               <input
                 type="url"
                 v-model="item.supplierUrl"
                 placeholder="Link compra ML/Amazon"
                 class="w-full bg-transparent text-[11px] text-foreground focus:outline-none truncate"
+                aria-label="Enlace de compra del proveedor"
               />
               <a
                 v-if="item.supplierUrl"
