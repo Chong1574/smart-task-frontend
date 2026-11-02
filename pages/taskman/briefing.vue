@@ -117,7 +117,10 @@
                   <div class="flex items-start justify-between gap-2">
                     <div class="min-w-0 flex-1">
                       <div class="flex items-center gap-1.5 flex-wrap">
-                        <span v-if="item.kind === 'event'" class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded bg-blue-500/10 text-blue-500 border border-blue-500/20">
+                        <span v-if="item.kind === 'celebration'" class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                          Especial
+                        </span>
+                        <span v-else-if="item.kind === 'event'" class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded bg-blue-500/10 text-blue-500 border border-blue-500/20">
                           GCal
                         </span>
                         <span v-else-if="item.kind === 'wishlist'" class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded bg-purple-500/10 text-purple-500 border border-purple-500/20">
@@ -534,16 +537,31 @@ async function fetchTodayEvents() {
   }
 }
 
+// Watcher reactivo: si el usuario navega a esta vista o el estado de calendar se resuelve tras el mount
+watch(() => authStore.hasCalendarConnected, (connected) => {
+  if (connected && calendarEvents.value.length === 0) {
+    fetchTodayEvents()
+  }
+})
+
 interface AgendaItem {
   key: string;
-  kind: 'event' | 'task' | 'wishlist';
+  kind: 'event' | 'celebration' | 'task' | 'wishlist';
   title: string;
   time: string;
   sortTs: number;
   endTs: number;
   href: string;
+  isCelebration?: boolean;
   isCurrent?: boolean;
   isPast?: boolean;
+}
+
+const isCelebrationEvent = (title: string, isAllDay: boolean) => {
+  if (!title) return false;
+  const lower = title.toLowerCase();
+  const keywords = ['feriado', 'aniversario', 'cumpleaños', 'cumple', 'mesesario', 'festivo', 'día de', 'dia de', 'holiday'];
+  return isAllDay || keywords.some(k => lower.includes(k));
 }
 
 const todayTasks = computed(() => {
@@ -587,20 +605,38 @@ const agendaItems = computed<AgendaItem[]>(() => {
     const startRaw = ev.start?.dateTime || ev.start?.date;
     const endRaw = ev.end?.dateTime || ev.end?.date;
     if (!startRaw) continue;
-    const startDate = new Date(startRaw);
-    const endDate = endRaw ? new Date(endRaw) : new Date(startDate.getTime() + 3600000);
+    
+    const isAllDay = !ev.start?.dateTime;
+    let startDate: Date;
+    let endDate: Date;
+
+    if (isAllDay) {
+      // Formato YYYY-MM-DD
+      const [y, m, d] = startRaw.split('-').map(Number);
+      startDate = new Date(y, m - 1, d);
+      endDate = new Date(startDate.getTime() + 24 * 3600 * 1000);
+    } else {
+      startDate = new Date(startRaw);
+      endDate = endRaw ? new Date(endRaw) : new Date(startDate.getTime() + 3600000);
+    }
+
     const ts = startDate.getTime();
     const endTs = endDate.getTime();
-    if (ts < start || ts >= end) continue;
-    const isAllDay = !ev.start?.dateTime;
+    
+    // Verificar si cae en el día de hoy
+    if (endTs <= start || ts >= end) continue;
+
+    const celebration = isCelebrationEvent(ev.summary || '', isAllDay);
+
     items.push({
       key: `e-${ev.id}`,
-      kind: 'event',
+      kind: celebration ? 'celebration' : 'event',
       title: ev.summary || '(sin título)',
       time: isAllDay ? 'Todo el día' : startDate.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
       sortTs: ts,
       endTs,
       href: '/taskman/activities',
+      isCelebration: celebration,
       isCurrent: !isAllDay && nowTs >= ts && nowTs <= endTs,
       isPast: !isAllDay && nowTs > endTs,
     });
@@ -628,14 +664,34 @@ const agendaItems = computed<AgendaItem[]>(() => {
 })
 
 // --- Horas de Disponibilidad y Carga del Día ---
+// Solo cuentan reuniones/eventos específicos de hoy con horario fijo (no feriados/aniversarios/todo el día)
 const totalEventMinutes = computed(() => {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const end = start + 24 * 3600 * 1000;
   let minutes = 0;
+
   for (const ev of calendarEvents.value) {
+    // Si no tiene dateTime (es todo el día / feriado / conmemoración), no bloquea horas productivas
     if (!ev.start?.dateTime || !ev.end?.dateTime) continue;
+    
     const s = new Date(ev.start.dateTime).getTime();
     const e = new Date(ev.end.dateTime).getTime();
-    if (e > s) minutes += Math.round((e - s) / 60000);
+
+    // Solo contabilizar si ocurre HOY
+    if (e <= start || s >= end) continue;
+
+    // Si es un aniversario/mesesario/feriado por nombre, no se descuenta de las horas de foco
+    if (isCelebrationEvent(ev.summary || '', false)) continue;
+
+    const clampedStart = Math.max(s, start);
+    const clampedEnd = Math.min(e, end);
+
+    if (clampedEnd > clampedStart) {
+      minutes += Math.round((clampedEnd - clampedStart) / 60000);
+    }
   }
+
   for (const t of todayTasks.value) {
     minutes += (t.duration_minutes || 30);
   }
@@ -864,13 +920,13 @@ onMounted(async () => {
   updateTime()
   timer = setInterval(updateTime, 1000)
   
-  // Asegurar la carga de datos completa
-  if (taskStore.tasks.length === 0) taskStore.fetchTasks()
-  if (taskStore.habits.length === 0) taskStore.fetchHabits()
-  if (taskStore.projects.length === 0) taskStore.fetchProjects()
-  if (financeStore.accounts.length === 0) financeStore.fetchAccounts()
-  if (financeStore.subscriptions.length === 0) financeStore.fetchSubscriptions()
-  if (financeStore.wishlistItems.length === 0) financeStore.fetchWishlistItems()
+  // Refrescar y asegurar la carga de datos completa al navegar al briefing
+  taskStore.fetchTasks()
+  taskStore.fetchHabits()
+  taskStore.fetchProjects()
+  financeStore.fetchAccounts()
+  financeStore.fetchSubscriptions()
+  financeStore.fetchWishlistItems()
   await fetchTodayEvents()
 })
 
