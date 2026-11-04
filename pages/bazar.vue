@@ -522,7 +522,7 @@
 
             <!-- Descripción (Solo visible en pantalla grande para no saturar celular) -->
             <p v-if="product.description" class="hidden sm:block text-muted-foreground text-xs leading-relaxed mb-3 line-clamp-2">
-              {{ product.description }}
+              {{ cleanProductDescription(product.description) }}
             </p>
 
             <!-- Variantes interactivas en desktop -->
@@ -788,6 +788,7 @@ import { imgProxy, imgProxySrcSet } from '~/utils/imgProxy';
 import { useCartStore } from '~/stores/cart';
 import { toast } from 'vue-sonner';
 import { trackEvent } from '~/utils/analytics';
+import { cleanProductDescription } from '~/utils/formatDescription';
 
 const cart = useCartStore();
 

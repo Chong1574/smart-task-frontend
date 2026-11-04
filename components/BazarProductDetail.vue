@@ -100,9 +100,19 @@
               <h1 class="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-foreground leading-snug mb-1.5 break-words">
                 {{ product.title }}
               </h1>
-              <p v-if="product.description" class="text-xs sm:text-sm text-muted-foreground leading-relaxed break-words">
-                {{ product.description }}
-              </p>
+              <div v-if="descriptionParagraphs.length > 0" class="space-y-1.5 text-xs sm:text-sm text-muted-foreground leading-relaxed break-words">
+                <p v-for="(p, idx) in visibleDescriptionParagraphs" :key="idx">
+                  {{ p }}
+                </p>
+                <button
+                  v-if="descriptionParagraphs.length > 2"
+                  type="button"
+                  @click="isDescriptionExpanded = !isDescriptionExpanded"
+                  class="text-[11px] font-semibold text-primary hover:underline inline-flex items-center gap-1 cursor-pointer pt-0.5"
+                >
+                  <span>{{ isDescriptionExpanded ? '− Ver menos' : '+ Ver descripción completa' }}</span>
+                </button>
+              </div>
             </div>
 
             <!-- 2. Selector de Versiones (Limpieza total, sin gramos ni tecnicismos) -->
@@ -512,6 +522,7 @@ import { imgProxy } from '~/utils/imgProxy';
 import { useCartStore } from '~/stores/cart';
 import { toast } from 'vue-sonner';
 import { trackEvent } from '~/utils/analytics';
+import { getProductParagraphs } from '~/utils/formatDescription';
 
 interface Variant {
   name: string;
@@ -979,6 +990,13 @@ onMounted(() => {
     },
     { viewed_product: props.product.title }
   );
+});
+
+const isDescriptionExpanded = ref(false);
+const descriptionParagraphs = computed(() => getProductParagraphs(props.product.description, 10));
+const visibleDescriptionParagraphs = computed(() => {
+  if (isDescriptionExpanded.value) return descriptionParagraphs.value;
+  return descriptionParagraphs.value.slice(0, 2);
 });
 
 const cart = useCartStore();
