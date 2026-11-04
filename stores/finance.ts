@@ -195,7 +195,7 @@ export const useFinanceStore = defineStore('finance', {
                     if (sub.frequency === 'YEARLY') val = val / 12;
                     else if (sub.frequency === 'QUARTERLY') val = val / 3;
                     else if (sub.frequency === 'BIMONTHLY') val = val / 2;
-                    else if (sub.frequency === 'BIWEEKLY') val = val * 2;
+                    else if (sub.frequency === 'BIWEEKLY' || sub.frequency === 'SEMIMONTHLY') val = val * 2;
                     else if (sub.frequency === 'WEEKLY') val = val * 4.33; // aprox semanas por mes
                     return sum + val;
                 }, 0);
@@ -430,7 +430,7 @@ export const useFinanceStore = defineStore('finance', {
                     if (sub.frequency === 'YEARLY') val = val / 12;
                     else if (sub.frequency === 'QUARTERLY') val = val / 3;
                     else if (sub.frequency === 'BIMONTHLY') val = val / 2;
-                    else if (sub.frequency === 'BIWEEKLY') val = val * 2;
+                    else if (sub.frequency === 'BIWEEKLY' || sub.frequency === 'SEMIMONTHLY') val = val * 2;
                     else if (sub.frequency === 'WEEKLY') val = val * 4.33;
                     return sum + val;
                 }, 0);
