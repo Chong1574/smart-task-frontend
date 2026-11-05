@@ -96,6 +96,36 @@ export const usePedidosStore = defineStore('pedidos', {
             }
         },
 
+        async updatePedido(id: number | string, data: Partial<PedidoImpresion> & { telefono?: string }) {
+            const pedido = this.pedidos.find(p => p.id === id);
+            try {
+                const res = await api.put(`/pedidos/${id}`, data);
+                if (res.data.success) {
+                    if (pedido) {
+                        if (data.phone !== undefined) pedido.phone = data.phone;
+                        if (data.telefono !== undefined) pedido.phone = data.telefono;
+                        if (data.email !== undefined) pedido.email = data.email;
+                        if (data.cliente !== undefined) pedido.cliente = data.cliente;
+                        if (data.direccion !== undefined) pedido.direccion = data.direccion;
+                        if (data.descripcion !== undefined) pedido.descripcion = data.descripcion;
+                        if (data.color !== undefined) pedido.color = data.color;
+                        if (data.piezas !== undefined) pedido.piezas = data.piezas;
+                        if (data.precio !== undefined) pedido.precio = Number(data.precio);
+                        pedido.fechaActualizacion = new Date().toISOString();
+                    }
+                    this.saveToLocalStorage();
+                    return true;
+                } else {
+                    toast.error(res.data.message || 'Error al actualizar pedido');
+                    return false;
+                }
+            } catch (err) {
+                console.error("Error updating pedido details:", err);
+                toast.error('Error de conexión al guardar cambios del pedido');
+                return false;
+            }
+        },
+
         async validatePayment(id: number | string) {
             const pedido = this.pedidos.find(p => p.id === id);
             if (!pedido) return false;

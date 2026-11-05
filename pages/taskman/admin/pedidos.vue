@@ -475,22 +475,46 @@
               </div>
             </div>
 
-            <!-- Teléfono destino -->
-            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-              <input
-                v-model="quickPhone"
-                type="tel"
-                placeholder="Teléfono/WhatsApp del cliente (ej. 4421234567)"
-                class="flex-1 bg-background border border-border rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-emerald-500 focus:outline-none"
-              />
-              <button
-                type="button"
-                @click="sendWhatsApp(selectedPedido, quickPhone)"
-                class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-95 whitespace-nowrap"
-              >
-                <MessageCircle class="w-4 h-4" />
-                <span>Enviar a WhatsApp</span>
-              </button>
+            <!-- Teléfono destino y Guardado en BD -->
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between text-xs font-semibold text-muted-foreground">
+                <label>Número de Celular / WhatsApp</label>
+                <span v-if="quickPhone !== (selectedPedido.phone || '')" class="text-[11px] text-amber-600 dark:text-amber-400 font-bold animate-pulse">
+                  ● Cambios sin guardar
+                </span>
+                <span v-else-if="selectedPedido.phone" class="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                  ✓ Guardado en el pedido
+                </span>
+              </div>
+              <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                <input
+                  v-model="quickPhone"
+                  @keydown.enter.prevent="savePhone(selectedPedido)"
+                  type="tel"
+                  placeholder="Teléfono/WhatsApp del cliente (ej. 4421234567)"
+                  class="flex-1 bg-background border border-border rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+                />
+                <button
+                  type="button"
+                  @click="savePhone(selectedPedido)"
+                  :disabled="isSavingPhone"
+                  class="px-3.5 py-2 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer border active:scale-95 whitespace-nowrap"
+                  :class="quickPhone !== (selectedPedido.phone || '')
+                    ? 'bg-primary text-primary-foreground border-primary hover:bg-primary/90 shadow-xs'
+                    : 'bg-secondary/70 hover:bg-secondary text-foreground border-border/80'"
+                >
+                  <Save class="w-3.5 h-3.5" />
+                  <span>{{ isSavingPhone ? 'Guardando...' : (quickPhone !== (selectedPedido.phone || '') ? 'Guardar Celular' : 'Guardado') }}</span>
+                </button>
+                <button
+                  type="button"
+                  @click="sendWhatsApp(selectedPedido, quickPhone)"
+                  class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-95 whitespace-nowrap"
+                >
+                  <MessageCircle class="w-4 h-4" />
+                  <span>Enviar a WhatsApp</span>
+                </button>
+              </div>
             </div>
 
             <!-- Acciones secundarias: Copiar y Probar enlace -->
@@ -729,7 +753,7 @@ import { toast } from 'vue-sonner';
 import {
   Plus, X, ArrowRight, ArrowLeft, Clock, Printer, CheckCircle2,
   Truck, PackageCheck, Trash2, WifiOff, Package, Palette, Search, ExternalLink,
-  MessageCircle, Copy, Wallet
+  MessageCircle, Copy, Wallet, Save
 } from 'lucide-vue-next';
 
 definePageMeta({
@@ -887,6 +911,30 @@ const activeColorLabel = computed(() => {
 });
 
 const quickPhone = ref<string>('');
+const isSavingPhone = ref(false);
+
+async function savePhone(pedido?: PedidoImpresion | null) {
+  if (!pedido || !pedido.id) return;
+  const cleanPhone = quickPhone.value.trim();
+  isSavingPhone.value = true;
+  try {
+    const ok = await pedidosStore.updatePedido(pedido.id, { phone: cleanPhone });
+    if (ok) {
+      pedido.phone = cleanPhone;
+      if (selectedPedido.value && selectedPedido.value.id === pedido.id) {
+        selectedPedido.value.phone = cleanPhone;
+      }
+      toast.success('¡Celular guardado en el pedido!', {
+        description: cleanPhone ? `Número ${cleanPhone} registrado exitosamente.` : 'Teléfono eliminado del pedido.'
+      });
+    }
+  } catch (err) {
+    console.error('Error saving phone:', err);
+    toast.error('Error al guardar el celular');
+  } finally {
+    isSavingPhone.value = false;
+  }
+}
 
 const form = ref({
   cliente: '',
@@ -1070,8 +1118,17 @@ ${trackingUrl}
 }
 
 function sendWhatsApp(pedido: PedidoImpresion, phoneInput?: string) {
+  if (phoneInput !== undefined && phoneInput.trim() !== (pedido.phone || '').trim() && pedido.id) {
+    const clean = phoneInput.trim();
+    pedido.phone = clean;
+    if (selectedPedido.value && selectedPedido.value.id === pedido.id) {
+      selectedPedido.value.phone = clean;
+    }
+    savePhone(pedido);
+  }
+
   const msg = formatWhatsAppMessage(pedido);
-  const rawPhone = (phoneInput || pedido.phone || '').trim().replace(/[^0-9]/g, '');
+  const rawPhone = (phoneInput !== undefined ? phoneInput : (pedido.phone || '')).trim().replace(/[^0-9]/g, '');
 
   let target = '';
   if (rawPhone) {
