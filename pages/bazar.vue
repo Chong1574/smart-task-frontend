@@ -370,14 +370,28 @@
             </button>
           </div>
 
-          <!-- Contador de resultados -->
-          <div class="flex items-center justify-between mb-4 px-1">
+          <!-- Contador de resultados y Selector de Orden -->
+          <div class="flex items-center justify-between mb-4 px-1 gap-2 flex-wrap">
             <p class="text-xs text-muted-foreground">
               Mostrando <span class="font-semibold text-foreground">{{ filteredProducts.length }}</span> productos
               <span v-if="products.length > 0 && filteredProducts.length !== products.length">
                 (de {{ products.length }})
               </span>
             </p>
+
+            <div class="flex items-center gap-1.5 ml-auto">
+              <label for="sort-select" class="text-xs text-muted-foreground whitespace-nowrap hidden sm:inline">Ordenar:</label>
+              <select
+                id="sort-select"
+                v-model="sortOrder"
+                class="h-8 px-2.5 rounded-lg border border-border/80 bg-card text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer shadow-2xs"
+              >
+                <option value="recent">Más recientes</option>
+                <option value="rating">⭐ Mejor valorados</option>
+                <option value="price_asc">Precio: Menor a mayor</option>
+                <option value="price_desc">Precio: Mayor a menor</option>
+              </select>
+            </div>
           </div>
 
           <div v-if="error" class="text-center text-destructive py-8">{{ error }}</div>
@@ -510,13 +524,21 @@
               </NuxtLink>
             </h3>
 
-            <!-- Indicador sutil de valor (Factor de venta directo) -->
-            <div class="flex items-center gap-1 text-[10px] sm:text-xs text-muted-foreground font-medium mb-1.5 sm:mb-3 truncate">
-              <span v-if="product.variants && product.variants.length > 1" class="flex items-center gap-1 text-primary font-semibold">
-                <span>✨</span> {{ product.variants.length }} tamaños
-              </span>
-              <span v-else class="flex items-center gap-1">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span> Listo para enviar
+            <!-- Indicador sutil de valor (Factor de venta directo) y Estrellas -->
+            <div class="flex items-center justify-between text-[10px] sm:text-xs text-muted-foreground font-medium mb-1.5 sm:mb-3 truncate gap-1">
+              <div class="flex items-center gap-1 truncate">
+                <span v-if="product.variants && product.variants.length > 1" class="flex items-center gap-1 text-primary font-semibold">
+                  <span>✨</span> {{ product.variants.length }} tamaños
+                </span>
+                <span v-else class="flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span> Listo para enviar
+                </span>
+              </div>
+
+              <!-- Puntuación por estrellas de reseñas -->
+              <span v-if="product.reviewCount && product.reviewCount > 0" class="inline-flex items-center gap-0.5 font-bold text-amber-600 dark:text-amber-400 shrink-0">
+                <span>★</span> {{ (product.averageRating || 0).toFixed(1) }}
+                <span class="text-[10px] text-muted-foreground font-normal">({{ product.reviewCount }})</span>
               </span>
             </div>
 
@@ -691,6 +713,53 @@
             </div>
           </div>
 
+          <!-- Ordenamiento en modal móvil -->
+          <div class="pt-4 border-t border-border/60">
+            <h3 class="font-semibold text-sm text-foreground mb-2">Ordenar por</h3>
+            <div class="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                @click="sortOrder = 'recent'"
+                class="text-xs p-2 rounded-xl border text-center transition-all cursor-pointer font-medium"
+                :class="sortOrder === 'recent'
+                  ? 'bg-primary text-primary-foreground border-primary font-bold shadow-xs'
+                  : 'bg-secondary/35 text-foreground border-border/60'"
+              >
+                Más recientes
+              </button>
+              <button
+                type="button"
+                @click="sortOrder = 'rating'"
+                class="text-xs p-2 rounded-xl border text-center transition-all cursor-pointer font-medium flex items-center justify-center gap-1"
+                :class="sortOrder === 'rating'
+                  ? 'bg-primary text-primary-foreground border-primary font-bold shadow-xs'
+                  : 'bg-secondary/35 text-foreground border-border/60'"
+              >
+                <span>⭐</span> Mejor valorados
+              </button>
+              <button
+                type="button"
+                @click="sortOrder = 'price_asc'"
+                class="text-xs p-2 rounded-xl border text-center transition-all cursor-pointer font-medium"
+                :class="sortOrder === 'price_asc'
+                  ? 'bg-primary text-primary-foreground border-primary font-bold shadow-xs'
+                  : 'bg-secondary/35 text-foreground border-border/60'"
+              >
+                Precio: Menor
+              </button>
+              <button
+                type="button"
+                @click="sortOrder = 'price_desc'"
+                class="text-xs p-2 rounded-xl border text-center transition-all cursor-pointer font-medium"
+                :class="sortOrder === 'price_desc'
+                  ? 'bg-primary text-primary-foreground border-primary font-bold shadow-xs'
+                  : 'bg-secondary/35 text-foreground border-border/60'"
+              >
+                Precio: Mayor
+              </button>
+            </div>
+          </div>
+
           <!-- Rango de Precio en modal móvil -->
           <div class="pt-4 border-t border-border/60">
             <div class="flex items-center justify-between mb-2">
@@ -824,10 +893,13 @@ interface Product {
   trendScore?: number | null;
   isCustom?: boolean | null;
   externalId?: string | null;
+  averageRating?: number | null;
+  reviewCount?: number | null;
 }
 
 import { API_URL as apiBase } from '~/utils/apiUrl';
 const products = ref<Product[]>([]);
+const sortOrder = ref<'recent' | 'rating' | 'price_asc' | 'price_desc'>('recent');
 const error = ref<string | null>(null);
 const query = ref('');
 const loading = ref(false);
@@ -1346,6 +1418,31 @@ const filteredProducts = computed(() => {
 
     return true;
   });
+
+  if (sortOrder.value === 'rating') {
+    list.sort((a, b) => {
+      const rA = Number(a.averageRating) || 0;
+      const rB = Number(b.averageRating) || 0;
+      if (rB !== rA) return rB - rA;
+      const cA = Number(a.reviewCount) || 0;
+      const cB = Number(b.reviewCount) || 0;
+      return cB - cA;
+    });
+  } else if (sortOrder.value === 'price_asc') {
+    list.sort((a, b) => {
+      const pA = Number(a.priceFrom ?? a.price) || 0;
+      const pB = Number(b.priceFrom ?? b.price) || 0;
+      return pA - pB;
+    });
+  } else if (sortOrder.value === 'price_desc') {
+    list.sort((a, b) => {
+      const pA = Number(a.priceFrom ?? a.price) || 0;
+      const pB = Number(b.priceFrom ?? b.price) || 0;
+      return pB - pA;
+    });
+  }
+
+  return list;
 });
 
 async function triggerDeepSearch() {

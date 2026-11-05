@@ -100,6 +100,26 @@
               <h1 class="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-foreground leading-snug mb-1.5 break-words">
                 {{ product.title }}
               </h1>
+
+              <!-- Estrellas y resumen de opiniones -->
+              <div class="flex items-center gap-2 mb-2">
+                <div class="flex items-center text-amber-500 text-xs sm:text-sm">
+                  <span v-for="star in 5" :key="star">
+                    {{ star <= Math.round(reviewStats.averageRating || 0) ? '★' : '☆' }}
+                  </span>
+                </div>
+                <span class="text-xs font-bold text-foreground">
+                  {{ reviewStats.total > 0 ? reviewStats.averageRating.toFixed(1) : 'Nuevo' }}
+                </span>
+                <span class="text-xs text-muted-foreground">·</span>
+                <button
+                  type="button"
+                  @click="scrollToReviews"
+                  class="text-xs text-muted-foreground hover:text-primary transition-colors cursor-pointer underline-offset-2 hover:underline"
+                >
+                  {{ reviewStats.total > 0 ? `${reviewStats.total} ${reviewStats.total === 1 ? 'opinión' : 'opiniones'}` : 'Sin opiniones aún (sé el primero)' }}
+                </button>
+              </div>
               <div v-if="descriptionParagraphs.length > 0" class="space-y-1.5 text-xs sm:text-sm text-muted-foreground leading-relaxed break-words">
                 <p v-for="(p, idx) in visibleDescriptionParagraphs" :key="idx">
                   {{ p }}
@@ -455,6 +475,260 @@
             </div>
           </div>
         </div>
+
+        <!-- 7. SECCIÓN DE RESEÑAS Y OPINIONES -->
+        <section id="product-reviews-section" class="mt-8 pt-8 border-t border-border/70 space-y-6">
+          <!-- Cabecera de la sección -->
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-semibold mb-1.5">
+                <span>⭐</span>
+                <span>Experiencia de Clientes</span>
+              </div>
+              <h2 class="text-xl sm:text-2xl font-serif font-bold text-foreground">
+                Opiniones y Calificaciones
+              </h2>
+            </div>
+
+            <button
+              type="button"
+              @click="showReviewForm = !showReviewForm"
+              class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer shadow-xs active:scale-95"
+              :class="showReviewForm
+                ? 'bg-secondary text-foreground hover:bg-secondary/80 border border-border'
+                : 'bg-primary text-primary-foreground hover:bg-primary/90'"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+              <span>{{ showReviewForm ? 'Cancelar reseña' : 'Dejar mi opinión' }}</span>
+            </button>
+          </div>
+
+          <!-- Resumen de Calificación y Barras -->
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-4 p-4 sm:p-6 bg-secondary/25 border border-border/70 rounded-2xl">
+            <!-- Calificación general -->
+            <div class="sm:col-span-5 flex flex-col justify-center items-center text-center border-b sm:border-b-0 sm:border-r border-border/60 pb-4 sm:pb-0 sm:pr-4">
+              <span class="text-4xl sm:text-5xl font-black text-foreground tracking-tight">
+                {{ reviewStats.total > 0 ? reviewStats.averageRating.toFixed(1) : '—' }}
+              </span>
+              <div class="flex items-center text-amber-500 text-lg my-1.5">
+                <span v-for="s in 5" :key="s">
+                  {{ s <= Math.round(reviewStats.averageRating || 0) ? '★' : '☆' }}
+                </span>
+              </div>
+              <p class="text-xs text-muted-foreground">
+                Basado en {{ reviewStats.total }} {{ reviewStats.total === 1 ? 'opinión' : 'opiniones' }}
+                <span v-if="reviewStats.verifiedCount > 0" class="block text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mt-0.5">
+                  ({{ reviewStats.verifiedCount }} con compra verificada)
+                </span>
+              </p>
+            </div>
+
+            <!-- Desglose de estrellas -->
+            <div class="sm:col-span-7 flex flex-col justify-center space-y-1.5 sm:pl-2">
+              <div
+                v-for="starNum in [5, 4, 3, 2, 1]"
+                :key="'star-row-'+starNum"
+                class="flex items-center gap-2 text-xs"
+              >
+                <span class="w-7 text-right font-semibold text-muted-foreground">{{ starNum }} ★</span>
+                <div class="flex-1 h-2 bg-secondary rounded-full overflow-hidden border border-border/40">
+                  <div
+                    class="h-full bg-amber-500 rounded-full transition-all duration-500"
+                    :style="{ width: getStarPercentage(starNum) + '%' }"
+                  ></div>
+                </div>
+                <span class="w-6 text-right text-[11px] text-muted-foreground">
+                  {{ reviewStats.breakdown?.[starNum] || 0 }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- DISCLAIMER DE AUTENTICIDAD Y COMPRA VERIFICADA -->
+          <div class="p-3.5 sm:p-4 bg-emerald-500/5 dark:bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-start gap-3 text-xs leading-relaxed">
+            <span class="text-lg shrink-0 mt-0.5">🛡️</span>
+            <div class="space-y-0.5">
+              <span class="font-bold text-foreground text-xs block">
+                Garantía de transparencia en reseñas:
+              </span>
+              <p class="text-muted-foreground">
+                Las reseñas identificadas con el distintivo <strong class="text-emerald-700 dark:text-emerald-400 font-semibold">✓ Compra verificada</strong> provienen de clientes cuya orden fue confirmada y pagada en <em>shongyi.com</em>. Las opiniones sin dicho distintivo corresponden a valoraciones abiertas de la comunidad para retroalimentación de acabados y uso.
+              </p>
+            </div>
+          </div>
+
+          <!-- FORMULARIO DESPLEGABLE PARA CREAR RESEÑA -->
+          <div
+            v-if="showReviewForm"
+            class="p-4 sm:p-6 bg-card border border-primary/30 rounded-2xl shadow-lg space-y-4 animate-in fade-in slide-in-from-top-3 duration-200"
+          >
+            <h3 class="text-base font-bold text-foreground flex items-center gap-2">
+              <span>✍️</span>
+              <span>Escribe tu reseña para {{ product.title }}</span>
+            </h3>
+
+            <!-- Selector Interactivo de Estrellas -->
+            <div>
+              <label class="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
+                Tu Calificación <span class="text-red-500">*</span>
+              </label>
+              <div class="flex items-center gap-1.5">
+                <button
+                  v-for="s in 5"
+                  :key="'rate-btn-'+s"
+                  type="button"
+                  @click="formRating = s"
+                  @mouseenter="formHoverRating = s"
+                  @mouseleave="formHoverRating = 0"
+                  class="text-2xl sm:text-3xl transition-transform hover:scale-110 cursor-pointer focus:outline-none"
+                  :class="(formHoverRating ? s <= formHoverRating : s <= formRating) ? 'text-amber-500' : 'text-muted-foreground/30'"
+                  :title="`${s} de 5 estrellas`"
+                >
+                  ★
+                </button>
+                <span class="text-xs font-bold text-foreground ml-2">
+                  {{ (formHoverRating || formRating) }} de 5 estrellas
+                </span>
+              </div>
+            </div>
+
+            <!-- Campos: Nombre y Verificación -->
+            <div class="grid sm:grid-cols-2 gap-3.5">
+              <div>
+                <label class="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                  Tu Nombre o Apodo <span class="text-red-500">*</span>
+                </label>
+                <input
+                  v-model="formAuthorName"
+                  type="text"
+                  placeholder="Ej. Roberto Martínez"
+                  maxlength="60"
+                  class="w-full h-10 px-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                  Folio de Pedido o Correo (Opcional)
+                </label>
+                <input
+                  v-model="formOrderIdOrEmail"
+                  type="text"
+                  placeholder="Ej. #PED-42 o correo@ejemplo.com"
+                  maxlength="100"
+                  class="w-full h-10 px-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+                <p class="text-[10px] text-muted-foreground mt-0.5">
+                  Si ya compraste este modelo, activará el distintivo de <strong>Compra Verificada</strong>.
+                </p>
+              </div>
+            </div>
+
+            <!-- Comentario -->
+            <div>
+              <label class="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                Tu Opinión / Experiencia (Opcional)
+              </label>
+              <textarea
+                v-model="formComment"
+                rows="3"
+                placeholder="¿Qué tal quedaron los detalles, la resistencia o los acabados de la pieza?"
+                maxlength="1000"
+                class="w-full p-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-y"
+              ></textarea>
+            </div>
+
+            <!-- Acciones del Formulario -->
+            <div class="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                @click="showReviewForm = false"
+                class="px-4 py-2 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary cursor-pointer transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                @click="submitReview"
+                :disabled="submittingReview || !formAuthorName.trim()"
+                class="h-10 px-5 bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs sm:text-sm rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                <span v-if="submittingReview" class="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin"></span>
+                <span>{{ submittingReview ? 'Publicando...' : 'Publicar reseña' }}</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- LISTA DE RESEÑAS -->
+          <div class="space-y-3">
+            <div v-if="loadingReviews" class="text-center py-8 text-xs text-muted-foreground">
+              Cargando opiniones de este producto...
+            </div>
+
+            <div v-else-if="reviews.length === 0" class="text-center py-10 px-4 bg-card border border-border/60 rounded-2xl">
+              <span class="text-3xl block mb-2">💬</span>
+              <p class="text-sm font-semibold text-foreground mb-1">Aún no hay opiniones para esta pieza</p>
+              <p class="text-xs text-muted-foreground max-w-sm mx-auto mb-4">
+                Si ya tienes este modelo o estás pensando en imprimirlo, sé el primero en dejar tu valoración.
+              </p>
+              <button
+                type="button"
+                @click="showReviewForm = true"
+                class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-xl text-xs font-bold transition-all cursor-pointer"
+              >
+                <span>✍️</span>
+                <span>Escribir primera reseña</span>
+              </button>
+            </div>
+
+            <!-- Tarjetas individuales de reseña -->
+            <div
+              v-else
+              v-for="rev in reviews"
+              :key="rev.id"
+              class="p-4 bg-card border border-border/70 rounded-2xl space-y-2 hover:border-border transition-colors"
+            >
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="text-xs sm:text-sm font-bold text-foreground">
+                    {{ rev.authorName }}
+                  </span>
+
+                  <!-- Badge de Compra Verificada vs Comunidad -->
+                  <span
+                    v-if="rev.isVerifiedPurchase"
+                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30"
+                    title="Esta compra fue verificada y pagada en shongyi.com"
+                  >
+                    <span>✓</span>
+                    <span>🛡️ Compra verificada</span>
+                  </span>
+                  <span
+                    v-else
+                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-secondary/60 text-muted-foreground border border-border/50"
+                  >
+                    <span>Comunidad</span>
+                  </span>
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <div class="flex items-center text-amber-500 text-xs">
+                    <span v-for="st in 5" :key="st">
+                      {{ st <= rev.rating ? '★' : '☆' }}
+                    </span>
+                  </div>
+                  <span class="text-[11px] text-muted-foreground/70">
+                    {{ formatRelativeDate(rev.createdAt) }}
+                  </span>
+                </div>
+              </div>
+
+              <p v-if="rev.comment" class="text-xs sm:text-sm text-foreground/90 leading-relaxed break-words whitespace-pre-line">
+                {{ rev.comment }}
+              </p>
+            </div>
+          </div>
+        </section>
       </main>
 
       <!-- 3. FOOTER MÓVIL (flex-none, anclado al fondo del modal, IMPOSIBLE que se sobreponga) -->
@@ -523,6 +797,27 @@ import { useCartStore } from '~/stores/cart';
 import { toast } from 'vue-sonner';
 import { trackEvent } from '~/utils/analytics';
 import { getProductParagraphs } from '~/utils/formatDescription';
+import { API_URL as apiBase } from '~/utils/apiUrl';
+
+interface Review {
+  id: number;
+  productId: number;
+  userId?: number | null;
+  orderId?: number | null;
+  authorName: string;
+  rating: number;
+  comment?: string | null;
+  isVerifiedPurchase: boolean | number;
+  status: string;
+  createdAt: string;
+}
+
+interface ReviewStats {
+  total: number;
+  averageRating: number;
+  verifiedCount: number;
+  breakdown: Record<number, number>;
+}
 
 interface Variant {
   name: string;
@@ -560,6 +855,8 @@ interface Product {
   externalId?: string | null;
   licenseAttribution?: string | null;
   category?: string | null;
+  averageRating?: number | null;
+  reviewCount?: number | null;
 }
 
 const props = defineProps<{
@@ -1058,4 +1355,145 @@ function addToCartOnly() {
     duration: 3000
   });
 }
+
+// --- LÓGICA DE RESEÑAS Y OPINIONES ---
+const reviews = ref<Review[]>([]);
+const reviewStats = ref<ReviewStats>({
+  total: Number(props.product.reviewCount) || 0,
+  averageRating: Number(props.product.averageRating) || 0,
+  verifiedCount: 0,
+  breakdown: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+});
+const loadingReviews = ref(false);
+const showReviewForm = ref(false);
+const submittingReview = ref(false);
+const formAuthorName = ref('');
+const formRating = ref(5);
+const formHoverRating = ref(0);
+const formComment = ref('');
+const formOrderIdOrEmail = ref('');
+
+function getStarPercentage(star: number): number {
+  if (!reviewStats.value.total) return 0;
+  const count = reviewStats.value.breakdown?.[star] || 0;
+  return Math.round((count / reviewStats.value.total) * 100);
+}
+
+function formatRelativeDate(iso: string): string {
+  if (!iso) return '';
+  try {
+    const d = new Date(iso);
+    const now = new Date();
+    const diffMs = now.getTime() - d.getTime();
+    const diffSec = Math.floor(diffMs / 1000);
+    const diffMin = Math.floor(diffSec / 60);
+    const diffHrs = Math.floor(diffMin / 60);
+    const diffDays = Math.floor(diffHrs / 24);
+
+    if (diffDays === 0) {
+      if (diffHrs === 0) {
+        if (diffMin <= 1) return 'Hace un momento';
+        return `Hace ${diffMin} min`;
+      }
+      return `Hace ${diffHrs} h`;
+    }
+    if (diffDays === 1) return 'Ayer';
+    if (diffDays < 30) return `Hace ${diffDays} días`;
+    const diffMonths = Math.floor(diffDays / 30);
+    if (diffMonths < 12) return `Hace ${diffMonths} ${diffMonths === 1 ? 'mes' : 'meses'}`;
+    return d.toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric' });
+  } catch {
+    return '';
+  }
+}
+
+function scrollToReviews() {
+  const el = document.getElementById('product-reviews-section');
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
+async function fetchReviews() {
+  if (!props.product?.id) return;
+  loadingReviews.value = true;
+  try {
+    const r = await fetch(`${apiBase}/products/${props.product.id}/reviews`);
+    if (r.ok) {
+      const data = await r.json();
+      reviews.value = data.reviews || [];
+      if (data.stats) {
+        reviewStats.value = {
+          total: data.stats.total || 0,
+          averageRating: data.stats.averageRating || 0,
+          verifiedCount: data.stats.verifiedCount || 0,
+          breakdown: data.stats.breakdown || { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+        };
+      }
+    }
+  } catch (e) {
+    console.error('Error fetching reviews:', e);
+  } finally {
+    loadingReviews.value = false;
+  }
+}
+
+async function submitReview() {
+  if (!props.product?.id) return;
+  const name = formAuthorName.value.trim();
+  if (name.length < 2) {
+    toast.error('Nombre requerido', { description: 'Por favor ingresa tu nombre o apodo (mínimo 2 caracteres).' });
+    return;
+  }
+
+  submittingReview.value = true;
+  try {
+    const res = await fetch(`${apiBase}/products/${props.product.id}/reviews`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        authorName: name,
+        rating: formRating.value,
+        comment: formComment.value.trim() || undefined,
+        orderIdOrEmail: formOrderIdOrEmail.value.trim() || undefined,
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || 'Error al enviar reseña');
+    }
+
+    if (data.review?.isVerifiedPurchase) {
+      toast.success('¡Reseña verificada publicada!', {
+        description: 'Se validó tu compra exitosamente. Gracias por tu opinión en El Rincón de Brandy.',
+      });
+    } else {
+      toast.success('¡Reseña publicada!', {
+        description: 'Gracias por compartir tu experiencia con la comunidad.',
+      });
+    }
+
+    // Limpiar formulario y recargar reseñas
+    formAuthorName.value = '';
+    formComment.value = '';
+    formOrderIdOrEmail.value = '';
+    formRating.value = 5;
+    showReviewForm.value = false;
+
+    await fetchReviews();
+  } catch (err: any) {
+    toast.error('No se pudo publicar la reseña', { description: err.message || 'Inténtalo de nuevo más tarde.' });
+  } finally {
+    submittingReview.value = false;
+  }
+}
+
+onMounted(() => {
+  fetchReviews();
+});
+
+watch(() => props.product.id, () => {
+  fetchReviews();
+});
 </script>
