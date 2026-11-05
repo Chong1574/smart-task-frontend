@@ -108,8 +108,8 @@
               </div>
 
               <div v-if="pedido.paymentStatus === 'UNPAID'" class="mt-1">
-                <button @click.stop="pedidosStore.validatePayment(pedido.id!)" class="w-full text-xs bg-amber-500 hover:bg-amber-600 text-white py-1.5 rounded-lg font-semibold transition-colors flex items-center justify-center gap-1">
-                   <CheckCircle2 class="w-3.5 h-3.5" /> Validar Pago SPEI
+                <button @click.stop="openPaymentModal(pedido)" class="w-full text-xs bg-emerald-600 hover:bg-emerald-700 text-white py-1.5 rounded-lg font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-95">
+                   <Wallet class="w-3.5 h-3.5" /> Marcar Pagado & Wallet
                 </button>
               </div>
 
@@ -430,14 +430,35 @@
             <p class="text-foreground mt-1 text-sm">{{ selectedPedido.direccion }}</p>
           </div>
 
-          <div v-if="selectedPedido.precio">
-            <h4 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Precio y Pago</h4>
-            <p class="text-foreground mt-1 font-bold text-lg">
-              ${{ selectedPedido.precio }} - 
-              <span :class="selectedPedido.paymentStatus === 'PAID' ? 'text-blue-500' : 'text-amber-500'">
-                {{ selectedPedido.paymentStatus === 'PAID' ? 'Pagado' : 'Por Pagar' }}
-              </span>
-            </p>
+          <!-- Precio y Estado de Pago con Acción Wallet -->
+          <div class="p-4 bg-secondary/25 border border-border/60 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h4 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Precio y Pago</h4>
+              <div class="flex items-center gap-2 mt-1">
+                <span class="text-xl font-bold text-foreground">${{ selectedPedido.precio || 0 }} MXN</span>
+                <span
+                  class="px-2.5 py-0.5 rounded-full text-xs font-bold border"
+                  :class="selectedPedido.paymentStatus === 'PAID' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'"
+                >
+                  {{ selectedPedido.paymentStatus === 'PAID' ? '✓ Pagado' : '⏳ Por Pagar' }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Botón para marcar como pagado y registrar en Wallet -->
+            <button
+              v-if="selectedPedido.paymentStatus !== 'PAID'"
+              type="button"
+              @click="openPaymentModal(selectedPedido)"
+              class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs active:scale-95 shrink-0"
+            >
+              <Wallet class="w-4 h-4" />
+              <span>Marcar Pagado & Wallet</span>
+            </button>
+            <div v-else class="text-xs text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1.5 shrink-0">
+              <CheckCircle2 class="w-4 h-4" />
+              <span>Pago acreditado</span>
+            </div>
           </div>
 
           <!-- Bloque de Notificación para WhatsApp y Enlace de Rastreo -->
@@ -518,6 +539,179 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal: Marcar como Pagado & Vincular a Wallet -->
+    <div v-if="showPaymentModal && paymentTargetPedido" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+      <div class="bg-card border border-border/80 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto custom-scrollbar">
+        <!-- Header -->
+        <div class="flex items-start justify-between gap-3 border-b border-border/40 pb-4">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-xs font-mono font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-md">
+                Pedido #{{ paymentTargetPedido.id }}
+              </span>
+              <span class="text-xs text-muted-foreground">{{ paymentTargetPedido.cliente }}</span>
+            </div>
+            <h3 class="text-xl font-bold text-foreground">Acreditar Pago en Wallet</h3>
+          </div>
+          <button @click="showPaymentModal = false" class="text-muted-foreground hover:text-foreground p-1 rounded-lg hover:bg-secondary transition-colors cursor-pointer">
+            <X class="w-5 h-5" />
+          </button>
+        </div>
+
+        <!-- Resumen del Monto -->
+        <div class="p-4 bg-emerald-500/10 border border-emerald-500/25 rounded-2xl flex items-center justify-between">
+          <div>
+            <p class="text-xs text-emerald-950 dark:text-emerald-200 uppercase font-semibold tracking-wider">Monto a Acreditar</p>
+            <p class="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5">${{ paymentTargetPedido.precio || 0 }} <span class="text-xs font-semibold">MXN</span></p>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+            <Wallet class="w-6 h-6" />
+          </div>
+        </div>
+
+        <!-- Selector de Modo de Pago / Wallet -->
+        <div class="space-y-3">
+          <label class="text-xs font-bold uppercase tracking-wider text-muted-foreground block">
+            ¿Cómo deseas registrar este pago?
+          </label>
+
+          <!-- Opción 1: Crear nuevo ingreso en Wallet -->
+          <label
+            class="flex items-start gap-3 p-3.5 rounded-2xl border cursor-pointer transition-all"
+            :class="paymentMode === 'new_tx' ? 'bg-primary/10 border-primary text-foreground ring-1 ring-primary' : 'bg-secondary/20 border-border/60 hover:bg-secondary/40 text-muted-foreground'"
+          >
+            <input type="radio" v-model="paymentMode" value="new_tx" class="mt-1 text-primary focus:ring-primary" />
+            <div class="min-w-0 flex-1 text-xs">
+              <p class="font-bold text-sm text-foreground flex items-center gap-1.5">
+                <span>Registrar nuevo ingreso en mi Wallet</span>
+                <span class="text-[10px] font-semibold bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.2 rounded-full">Recomendado</span>
+              </p>
+              <p class="text-muted-foreground mt-0.5">Suma el dinero al saldo de la cuenta que elijas (ej. BBVA, Mercado Pago, Efectivo).</p>
+            </div>
+          </label>
+
+          <!-- Formulario de Opción 1 -->
+          <div v-if="paymentMode === 'new_tx'" class="p-3.5 bg-secondary/30 rounded-2xl border border-border/50 space-y-3">
+            <div>
+              <label class="text-xs font-medium text-foreground block mb-1">Cuenta de destino</label>
+              <select
+                v-model="paymentAccountId"
+                class="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-primary focus:outline-none"
+              >
+                <option value="" disabled>Selecciona una cuenta</option>
+                <option v-for="acc in financeStore.accounts" :key="acc.id" :value="acc.id">
+                  {{ acc.name }} (${{ acc.balance.toLocaleString('es-MX') }} {{ acc.currency }})
+                </option>
+              </select>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="text-xs font-medium text-foreground block mb-1">Categoría</label>
+                <input
+                  v-model="paymentCategory"
+                  type="text"
+                  placeholder="Ventas"
+                  class="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-primary focus:outline-none"
+                />
+              </div>
+              <div>
+                <label class="text-xs font-medium text-foreground block mb-1">Fecha</label>
+                <input
+                  v-model="paymentDate"
+                  type="date"
+                  class="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-primary focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label class="text-xs font-medium text-foreground block mb-1">Descripción / Concepto</label>
+              <input
+                v-model="paymentDescription"
+                type="text"
+                placeholder="Ej. Venta 3D Pedido #12 - Jesus Chong"
+                class="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-primary focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <!-- Opción 2: Vincular a movimiento existente -->
+          <label
+            class="flex items-start gap-3 p-3.5 rounded-2xl border cursor-pointer transition-all"
+            :class="paymentMode === 'existing_tx' ? 'bg-primary/10 border-primary text-foreground ring-1 ring-primary' : 'bg-secondary/20 border-border/60 hover:bg-secondary/40 text-muted-foreground'"
+          >
+            <input type="radio" v-model="paymentMode" value="existing_tx" class="mt-1 text-primary focus:ring-primary" />
+            <div class="min-w-0 flex-1 text-xs">
+              <p class="font-bold text-sm text-foreground">Vincular a un movimiento ya registrado</p>
+              <p class="text-muted-foreground mt-0.5">Si ya registraste la transferencia o depósito en Wallet previamente.</p>
+            </div>
+          </label>
+
+          <!-- Lista de Opción 2 -->
+          <div v-if="paymentMode === 'existing_tx'" class="p-3.5 bg-secondary/30 rounded-2xl border border-border/50 space-y-2">
+            <p class="text-xs text-muted-foreground">Selecciona el movimiento de ingreso de Wallet:</p>
+            <div v-if="matchingIncomeTransactions.length === 0" class="text-xs text-muted-foreground py-3 text-center italic">
+              No hay movimientos de ingreso recientes registrados en tu Wallet.
+            </div>
+            <div v-else class="max-h-40 overflow-y-auto custom-scrollbar space-y-1.5 pr-1">
+              <button
+                v-for="tx in matchingIncomeTransactions"
+                :key="tx.id"
+                type="button"
+                @click="paymentSelectedExistingTxId = tx.id"
+                class="w-full text-left p-2.5 rounded-xl border transition-all flex items-center justify-between gap-2 cursor-pointer"
+                :class="paymentSelectedExistingTxId === tx.id ? 'bg-primary/15 border-primary text-foreground' : 'bg-card border-border/60 hover:bg-secondary/50 text-muted-foreground'"
+              >
+                <div class="min-w-0 flex-1">
+                  <p class="font-bold text-xs text-foreground truncate">{{ tx.description || tx.category || 'Ingreso' }}</p>
+                  <p class="text-[11px] text-muted-foreground">{{ tx.date?.slice(0, 10) }} · {{ tx.category }}</p>
+                </div>
+                <div class="text-right shrink-0">
+                  <span class="font-bold text-xs" :class="tx.isExactMatch ? 'text-emerald-600 dark:text-emerald-400 font-extrabold' : 'text-foreground'">
+                    ${{ tx.amount }}
+                  </span>
+                  <span v-if="tx.isExactMatch" class="block text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase">Coincide</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Opción 3: Solo marcar como pagado -->
+          <label
+            class="flex items-start gap-3 p-3.5 rounded-2xl border cursor-pointer transition-all"
+            :class="paymentMode === 'only_status' ? 'bg-primary/10 border-primary text-foreground ring-1 ring-primary' : 'bg-secondary/20 border-border/60 hover:bg-secondary/40 text-muted-foreground'"
+          >
+            <input type="radio" v-model="paymentMode" value="only_status" class="mt-1 text-primary focus:ring-primary" />
+            <div class="min-w-0 flex-1 text-xs">
+              <p class="font-bold text-sm text-foreground">Solo marcar como pagado</p>
+              <p class="text-muted-foreground mt-0.5">Actualiza el pedido a Pagado sin registrar ni vincular ningún movimiento financiero.</p>
+            </div>
+          </label>
+        </div>
+
+        <!-- Footer Acciones -->
+        <div class="flex items-center justify-end gap-3 pt-3 border-t border-border/40">
+          <button
+            type="button"
+            @click="showPaymentModal = false"
+            class="px-4 py-2 text-xs font-semibold text-muted-foreground hover:bg-secondary rounded-xl transition-colors cursor-pointer"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            @click="confirmPayment"
+            :disabled="isProcessingPayment || (paymentMode === 'new_tx' && !paymentAccountId) || (paymentMode === 'existing_tx' && !paymentSelectedExistingTxId)"
+            class="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white px-5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-md active:scale-95"
+          >
+            <CheckCircle2 class="w-4 h-4" />
+            <span>{{ isProcessingPayment ? 'Registrando...' : 'Confirmar y Guardar Pago' }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -525,6 +719,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { usePedidosStore, type PedidoImpresion } from '~/stores/pedidos';
 import { useAuthStore } from '~/stores/auth';
+import { useFinanceStore } from '~/stores/finance';
 import { useRouter } from 'vue-router';
 import api from '~/utils/api';
 import { imgProxy } from '~/utils/imgProxy';
@@ -534,7 +729,7 @@ import { toast } from 'vue-sonner';
 import {
   Plus, X, ArrowRight, ArrowLeft, Clock, Printer, CheckCircle2,
   Truck, PackageCheck, Trash2, WifiOff, Package, Palette, Search, ExternalLink,
-  MessageCircle, Copy
+  MessageCircle, Copy, Wallet
 } from 'lucide-vue-next';
 
 definePageMeta({
@@ -551,6 +746,7 @@ definePageMeta({
 
 const pedidosStore = usePedidosStore();
 const filamentsStore = useFilamentsStore();
+const financeStore = useFinanceStore();
 const authStore = useAuthStore();
 const router = useRouter();
 
@@ -561,6 +757,114 @@ function getColorStock(colorName?: string) {
 const showAddModal = ref(false);
 const showDetailsModal = ref(false);
 const selectedPedido = ref<PedidoImpresion | null>(null);
+
+// Modal de Pago & Vinculación a Wallet
+const showPaymentModal = ref(false);
+const paymentTargetPedido = ref<PedidoImpresion | null>(null);
+const paymentMode = ref<'new_tx' | 'existing_tx' | 'only_status'>('new_tx');
+const paymentAccountId = ref<number | ''>('');
+const paymentCategory = ref('Ventas');
+const paymentDescription = ref('');
+const paymentAmount = ref<number>(0);
+const paymentDate = ref(new Date().toISOString().slice(0, 10));
+const paymentSelectedExistingTxId = ref<number | null>(null);
+const isProcessingPayment = ref(false);
+
+const matchingIncomeTransactions = computed(() => {
+  if (!paymentTargetPedido.value) return [];
+  const targetAmount = Number(paymentTargetPedido.value.precio) || 0;
+  return financeStore.transactions
+    .filter(t => t.type === 'income')
+    .slice(0, 20)
+    .map(t => ({
+      ...t,
+      isExactMatch: Math.abs(Number(t.amount) - targetAmount) < 0.01
+    }))
+    .sort((a, b) => (b.isExactMatch ? 1 : 0) - (a.isExactMatch ? 1 : 0));
+});
+
+function openPaymentModal(pedido: PedidoImpresion) {
+  paymentTargetPedido.value = pedido;
+  paymentAmount.value = Number(pedido.precio) || 0;
+  paymentDescription.value = `Venta 3D Pedido #${pedido.id} - ${pedido.cliente}${pedido.items?.[0]?.title ? ` (${pedido.items[0].title})` : ''}`;
+  paymentCategory.value = 'Ventas';
+  paymentDate.value = new Date().toISOString().slice(0, 10);
+  paymentMode.value = 'new_tx';
+  paymentSelectedExistingTxId.value = null;
+
+  if (financeStore.accounts.length === 0) {
+    financeStore.fetchAccounts();
+  }
+  const defaultAcc = financeStore.accounts.find(a => a.type !== 'loan' && a.sub_type !== 'credit') || financeStore.accounts[0];
+  if (defaultAcc) {
+    paymentAccountId.value = defaultAcc.id;
+  }
+
+  financeStore.fetchTransactions();
+  showPaymentModal.value = true;
+}
+
+async function confirmPayment() {
+  if (!paymentTargetPedido.value || !paymentTargetPedido.value.id) return;
+  isProcessingPayment.value = true;
+
+  try {
+    // 1. Si eligió registrar nuevo ingreso en Wallet
+    if (paymentMode.value === 'new_tx') {
+      if (!paymentAccountId.value) {
+        toast.error('Por favor selecciona una cuenta de tu Wallet para registrar el ingreso.');
+        isProcessingPayment.value = false;
+        return;
+      }
+
+      const txData: any = {
+        accountId: Number(paymentAccountId.value),
+        type: 'income',
+        amount: Number(paymentAmount.value),
+        category: paymentCategory.value || 'Ventas',
+        description: paymentDescription.value || `Venta 3D Pedido #${paymentTargetPedido.value.id}`,
+        date: new Date(paymentDate.value || Date.now()).toISOString()
+      };
+
+      const txResult = await financeStore.addTransaction(txData);
+      if (!txResult) {
+        toast.warning('No se pudo crear la transacción en Wallet, pero procederemos con el pago.');
+      }
+    }
+
+    // 2. Si eligió vincular a un movimiento existente
+    if (paymentMode.value === 'existing_tx') {
+      if (!paymentSelectedExistingTxId.value) {
+        toast.error('Por favor selecciona el movimiento existente al que deseas vincular.');
+        isProcessingPayment.value = false;
+        return;
+      }
+    }
+
+    // 3. Marcar pedido como PAGADO en el backend
+    const ok = await pedidosStore.validatePayment(paymentTargetPedido.value.id);
+    if (ok) {
+      paymentTargetPedido.value.paymentStatus = 'PAID';
+      if (selectedPedido.value && selectedPedido.value.id === paymentTargetPedido.value.id) {
+        selectedPedido.value.paymentStatus = 'PAID';
+      }
+
+      const accName = financeStore.accounts.find(a => a.id === paymentAccountId.value)?.name;
+      toast.success(`¡Pedido #${paymentTargetPedido.value.id} marcado como PAGADO!`, {
+        description: paymentMode.value === 'new_tx' && accName
+          ? `Ingreso de $${paymentAmount.value} MXN registrado en ${accName}.`
+          : 'Estado actualizado correctamente.'
+      });
+
+      showPaymentModal.value = false;
+    }
+  } catch (err: any) {
+    console.error('Error al registrar pago:', err);
+    toast.error(err.message || 'Error al procesar el pago.');
+  } finally {
+    isProcessingPayment.value = false;
+  }
+}
 
 // Catálogo del Bazar para vincular
 const catalogProducts = ref<any[]>([]);
@@ -718,11 +1022,11 @@ function formatWhatsAppMessage(pedido?: PedidoImpresion | null): string {
   const cliente = pedido.cliente || 'Estimado/a cliente';
 
   const statusLabels: Record<string, string> = {
-    'pendiente': '⏳ Recibido (Pendiente de pago / preparación)',
-    'imprimiendo': '🖨️ En Producción (Imprimiéndose en 3D)',
-    'terminados': '📦 Producción Terminada (En empaque)',
-    'enviados': '🚚 Enviado (En camino a tu destino)',
-    'entregados': '✅ Entregado'
+    'pendiente': 'Pendiente de pago / preparación',
+    'imprimiendo': 'En Producción 3D',
+    'terminados': 'Terminado (En empaque)',
+    'enviados': 'Enviado (En camino)',
+    'entregados': 'Entregado'
   };
   const statusText = statusLabels[pedido.estado] || pedido.estado;
 
@@ -738,23 +1042,31 @@ function formatWhatsAppMessage(pedido?: PedidoImpresion | null): string {
 
   const colorText = pedido.color ? `\n🎨 *Color:* ${pedido.color}` : '';
   const piezasText = pedido.piezas && !pedido.items?.length ? `\n🔢 *Piezas:* ${pedido.piezas}` : '';
-  const pagoText = pedido.paymentStatus === 'PAID' ? '✅ Pagado' : '⏳ Pendiente de pago';
+  const pagoText = pedido.paymentStatus === 'PAID' ? 'Pagado' : 'Pendiente de pago';
   const precioText = pedido.precio ? `\n💰 *Total:* $${pedido.precio} MXN (${pagoText})` : '';
-  const dirText = pedido.direccion ? `\n📍 *Entrega:* ${pedido.direccion}` : '';
+
+  // Limpieza estricta de dirección para evitar ", C.P. ," o cadenas vacías
+  let dirText = '';
+  if (pedido.direccion) {
+    const rawDir = pedido.direccion.replace(/[\s,.-]/g, '').replace(/CP/gi, '');
+    if (rawDir.length > 3) {
+      dirText = `\n📍 *Entrega:* ${pedido.direccion.trim()}`;
+    }
+  }
 
   const trackingUrl = getTrackingLink(pedido);
 
-  return `¡Hola ${cliente}! 👋 Te compartimos los detalles de tu pedido en *El Rincón de Brandy* (shongyi.com):
+  return `¡Hola ${cliente}! 👋 Te compartimos los detalles de tu compra en *El Rincón de Brandy* (shongyi.com):
 
 📦 *Pedido #${numPedido}*
-🏷️ *Estatus:* ${statusText}
-${itemsText ? `\n🛍️ *Piezas:* \n${itemsText}` : ''}${colorText}${piezasText}${precioText}${dirText}
+📋 *Estatus:* ${statusText}
+${itemsText ? `\n🎁 *Piezas:* \n${itemsText}` : ''}${colorText}${piezasText}${precioText}${dirText}
 
-🔎 *Rastreo en vivo:*
-Puedes consultar el avance y estatus de tu pieza aquí:
+🔍 *Rastreo en vivo:*
+Puedes consultar el avance en tiempo real aquí:
 ${trackingUrl}
 
-¡Muchas gracias por tu confianza! Si tienes cualquier duda nos puedes escribir por aquí con gusto. ✨`;
+¡Muchas gracias por tu confianza! Si tienes cualquier duda nos puedes escribir con gusto. ✨`;
 }
 
 function sendWhatsApp(pedido: PedidoImpresion, phoneInput?: string) {
@@ -771,8 +1083,8 @@ function sendWhatsApp(pedido: PedidoImpresion, phoneInput?: string) {
   }
 
   const url = target
-    ? `https://wa.me/${target}?text=${encodeURIComponent(msg)}`
-    : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+    ? `https://api.whatsapp.com/send?phone=${target}&text=${encodeURIComponent(msg)}`
+    : `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
 
   window.open(url, '_blank');
 }
@@ -814,6 +1126,8 @@ const columns: ColumnDef[] = [
 onMounted(() => {
   pedidosStore.fetchPedidos();
   filamentsStore.fetchFilaments();
+  financeStore.fetchAccounts();
+  financeStore.fetchTransactions();
 });
 
 const pedidosByStatus = (status: PedidoStatus) => {
