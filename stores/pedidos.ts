@@ -5,6 +5,8 @@ import { toast } from 'vue-sonner';
 export interface PedidoImpresion {
     id?: number | string;
     cliente: string;
+    email?: string;
+    phone?: string;
     descripcion: string;
     archivos?: string;
     precio?: number;

@@ -44,15 +44,30 @@
             >
               <div class="flex justify-between items-start gap-2">
                 <div class="min-w-0 flex-1">
-                  <h3 class="font-bold text-foreground line-clamp-1" :title="pedido.cliente">{{ pedido.cliente }}</h3>
+                  <div class="flex items-center gap-1.5 mb-0.5">
+                    <span class="text-[11px] font-mono font-bold text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.2 rounded-md shrink-0">
+                      #{{ pedido.id }}
+                    </span>
+                    <h3 class="font-bold text-foreground line-clamp-1" :title="pedido.cliente">{{ pedido.cliente }}</h3>
+                  </div>
                   <p v-if="pedido.items && pedido.items[0]?.title" class="text-xs font-semibold text-primary line-clamp-1 flex items-center gap-1 mt-0.5" :title="pedido.items[0].title">
                     <Package class="w-3.5 h-3.5 shrink-0" />
                     <span>{{ pedido.items[0].title }}</span>
                   </p>
                 </div>
-                <button @click.stop="confirmDelete(pedido)" class="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity p-1 shrink-0">
-                  <Trash2 class="w-4 h-4" />
-                </button>
+                <div class="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    @click.stop="sendWhatsApp(pedido)"
+                    class="p-1.5 rounded-lg text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 transition-colors cursor-pointer"
+                    title="Enviar o compartir por WhatsApp"
+                  >
+                    <MessageCircle class="w-4 h-4" />
+                  </button>
+                  <button @click.stop="confirmDelete(pedido)" class="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity p-1">
+                    <Trash2 class="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
               <!-- Miniatura del modelo linkeado si existe -->
@@ -125,10 +140,20 @@
         </h2>
 
         <form @submit.prevent="submitPedido" class="space-y-4">
-          <!-- 1. Cliente -->
-          <div>
-            <label class="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Cliente *</label>
-            <input v-model="form.cliente" required type="text" class="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-primary/50 focus:outline-none" placeholder="Nombre completo del cliente o empresa" />
+          <!-- 1. Cliente, Teléfono/WhatsApp y Correo -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="sm:col-span-1">
+              <label class="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Cliente *</label>
+              <input v-model="form.cliente" required type="text" class="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-primary/50 focus:outline-none" placeholder="Nombre del cliente" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Teléfono / WhatsApp</label>
+              <input v-model="form.telefono" type="tel" class="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:ring-1 focus:ring-primary focus:outline-none" placeholder="Ej. 4421234567" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Correo (Opcional)</label>
+              <input v-model="form.email" type="email" class="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:ring-1 focus:ring-primary focus:outline-none" placeholder="cliente@correo.com" />
+            </div>
           </div>
 
           <!-- 2. Modelo del Bazar (Linkear) -->
@@ -312,12 +337,31 @@
         <button @click="showDetailsModal = false" class="absolute top-4 right-4 p-2 text-muted-foreground hover:bg-secondary rounded-full transition-colors cursor-pointer">
           <X class="w-5 h-5" />
         </button>
-        <div class="flex items-center gap-2">
+        <div class="pr-8">
+          <div class="flex items-center gap-2 mb-2 flex-wrap">
+            <span class="text-xs font-mono font-bold text-primary bg-primary/10 border border-primary/25 px-2.5 py-1 rounded-lg">
+              Pedido #{{ selectedPedido.id }}
+            </span>
+            <span class="text-xs text-primary font-bold uppercase tracking-wider bg-primary/10 px-2.5 py-0.5 rounded-full border border-primary/20">
+              {{ selectedPedido.estado }}
+            </span>
+            <span
+              class="text-xs font-semibold px-2 py-0.5 rounded-full border"
+              :class="selectedPedido.paymentStatus === 'PAID' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25'"
+            >
+              {{ selectedPedido.paymentStatus === 'PAID' ? '✓ Pagado' : '⏳ Por Pagar' }}
+            </span>
+          </div>
           <h2 class="text-2xl font-bold text-foreground">{{ selectedPedido.cliente }}</h2>
+          <div v-if="selectedPedido.email || selectedPedido.phone" class="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mt-1">
+            <span v-if="selectedPedido.email && !selectedPedido.email.includes('@rincondebrandy.com')" class="flex items-center gap-1">
+              <span>✉️</span> {{ selectedPedido.email }}
+            </span>
+            <span v-if="selectedPedido.phone" class="flex items-center gap-1">
+              <span>📱</span> {{ selectedPedido.phone }}
+            </span>
+          </div>
         </div>
-        <span class="inline-block mt-1 text-xs text-primary font-bold uppercase tracking-wider bg-primary/10 px-2.5 py-0.5 rounded-full border border-primary/20">
-          {{ selectedPedido.estado }}
-        </span>
         
         <div class="mt-6 space-y-4">
           <!-- Modelo Linkeado si existe -->
@@ -392,9 +436,81 @@
               </span>
             </p>
           </div>
+
+          <!-- Bloque de Notificación para WhatsApp y Enlace de Rastreo -->
+          <div class="p-4 bg-emerald-500/10 border border-emerald-500/25 rounded-2xl space-y-3">
+            <div class="flex items-center gap-2.5">
+              <span class="text-xl shrink-0">💬</span>
+              <div>
+                <h4 class="text-xs font-bold uppercase tracking-wider text-emerald-950 dark:text-emerald-200">
+                  Notificación para WhatsApp & Rastreo
+                </h4>
+                <p class="text-[11px] text-muted-foreground">
+                  Envía al cliente su número de pedido y enlace para consultar su avance en vivo.
+                </p>
+              </div>
+            </div>
+
+            <!-- Teléfono destino -->
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <input
+                v-model="quickPhone"
+                type="tel"
+                placeholder="Teléfono/WhatsApp del cliente (ej. 4421234567)"
+                class="flex-1 bg-background border border-border rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+              />
+              <button
+                type="button"
+                @click="sendWhatsApp(selectedPedido, quickPhone)"
+                class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-95 whitespace-nowrap"
+              >
+                <MessageCircle class="w-4 h-4" />
+                <span>Enviar a WhatsApp</span>
+              </button>
+            </div>
+
+            <!-- Acciones secundarias: Copiar y Probar enlace -->
+            <div class="flex flex-wrap items-center gap-2 pt-1 border-t border-emerald-500/20">
+              <button
+                type="button"
+                @click="copyWhatsApp(selectedPedido)"
+                class="bg-background hover:bg-secondary text-foreground border border-border/80 px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+              >
+                <Copy class="w-3.5 h-3.5 text-muted-foreground" />
+                <span>Copiar mensaje</span>
+              </button>
+
+              <a
+                :href="getTrackingLink(selectedPedido)"
+                target="_blank"
+                class="text-xs text-primary hover:underline font-semibold flex items-center gap-1 ml-auto"
+              >
+                <span>Ver página de rastreo (#{{ selectedPedido.id }})</span>
+                <ExternalLink class="w-3.5 h-3.5" />
+              </a>
+            </div>
+
+            <!-- Vista previa del mensaje (colapsable) -->
+            <details class="text-[11px] text-muted-foreground pt-1">
+              <summary class="cursor-pointer hover:text-foreground font-medium select-none">
+                Ver texto que se enviará por WhatsApp
+              </summary>
+              <div class="mt-2 p-3 bg-background/90 rounded-xl border border-border/60 whitespace-pre-wrap font-sans text-xs text-foreground leading-relaxed shadow-2xs">
+                {{ formatWhatsAppMessage(selectedPedido) }}
+              </div>
+            </details>
+          </div>
         </div>
         
-        <div class="mt-8 flex justify-end">
+        <div class="mt-8 flex justify-between items-center gap-2">
+          <a
+            :href="getTrackingLink(selectedPedido)"
+            target="_blank"
+            class="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
+          >
+            <ExternalLink class="w-3.5 h-3.5" />
+            <span>Rastreo público (#{{ selectedPedido.id }})</span>
+          </a>
           <button @click="showDetailsModal = false" class="bg-secondary text-foreground px-6 py-2 rounded-xl font-bold hover:bg-secondary/80 transition-colors cursor-pointer">Cerrar</button>
         </div>
       </div>
@@ -411,9 +527,11 @@ import api from '~/utils/api';
 import { imgProxy } from '~/utils/imgProxy';
 import { SUNLU_BAMBU_COLORS, type FilamentColor } from '~/data/filament-colors';
 import { useFilamentsStore } from '~/stores/filaments';
+import { toast } from 'vue-sonner';
 import {
   Plus, X, ArrowRight, ArrowLeft, Clock, Printer, CheckCircle2,
-  Truck, PackageCheck, Trash2, WifiOff, Package, Palette, Search, ExternalLink
+  Truck, PackageCheck, Trash2, WifiOff, Package, Palette, Search, ExternalLink,
+  MessageCircle, Copy
 } from 'lucide-vue-next';
 
 definePageMeta({
@@ -461,8 +579,12 @@ const activeColorLabel = computed(() => {
   return '';
 });
 
+const quickPhone = ref<string>('');
+
 const form = ref({
   cliente: '',
+  telefono: '',
+  email: '',
   descripcion: '',
   piezas: '',
   direccion: '',
@@ -562,8 +684,97 @@ function getColorHex(colorName?: string): string {
 
 const openDetails = (pedido: PedidoImpresion) => {
   selectedPedido.value = pedido;
+  quickPhone.value = pedido.phone || '';
   showDetailsModal.value = true;
 };
+
+function getTrackingLink(pedido?: PedidoImpresion | null): string {
+  if (!pedido || !pedido.id) return 'https://shongyi.com/rastreo';
+  const emailParam = pedido.email && !pedido.email.includes('@rincondebrandy.com')
+    ? `&email=${encodeURIComponent(pedido.email)}`
+    : '';
+  return `https://shongyi.com/rastreo?id=${pedido.id}${emailParam}`;
+}
+
+function formatWhatsAppMessage(pedido?: PedidoImpresion | null): string {
+  if (!pedido) return '';
+  const numPedido = pedido.id || '';
+  const cliente = pedido.cliente || 'Estimado/a cliente';
+
+  const statusLabels: Record<string, string> = {
+    'pendiente': '⏳ Recibido (Pendiente de pago / preparación)',
+    'imprimiendo': '🖨️ En Producción (Imprimiéndose en 3D)',
+    'terminados': '📦 Producción Terminada (En empaque)',
+    'enviados': '🚚 Enviado (En camino a tu destino)',
+    'entregados': '✅ Entregado'
+  };
+  const statusText = statusLabels[pedido.estado] || pedido.estado;
+
+  let itemsText = '';
+  if (pedido.items && pedido.items.length > 0) {
+    itemsText = pedido.items.map(i => {
+      const v = i.variantName ? ` (${i.variantName})` : '';
+      return `• ${i.title}${v} ×${i.quantity || 1}`;
+    }).join('\n');
+  } else if (pedido.descripcion) {
+    itemsText = `• ${pedido.descripcion}`;
+  }
+
+  const colorText = pedido.color ? `\n🎨 *Color:* ${pedido.color}` : '';
+  const piezasText = pedido.piezas && !pedido.items?.length ? `\n🔢 *Piezas:* ${pedido.piezas}` : '';
+  const pagoText = pedido.paymentStatus === 'PAID' ? '✅ Pagado' : '⏳ Pendiente de pago';
+  const precioText = pedido.precio ? `\n💰 *Total:* $${pedido.precio} MXN (${pagoText})` : '';
+  const dirText = pedido.direccion ? `\n📍 *Entrega:* ${pedido.direccion}` : '';
+
+  const trackingUrl = getTrackingLink(pedido);
+
+  return `¡Hola ${cliente}! 👋 Te compartimos los detalles de tu pedido en *El Rincón de Brandy* (shongyi.com):
+
+📦 *Pedido #${numPedido}*
+🏷️ *Estatus:* ${statusText}
+${itemsText ? `\n🛍️ *Piezas:* \n${itemsText}` : ''}${colorText}${piezasText}${precioText}${dirText}
+
+🔎 *Rastreo en vivo:*
+Puedes consultar el avance y estatus de tu pieza aquí:
+${trackingUrl}
+
+¡Muchas gracias por tu confianza! Si tienes cualquier duda nos puedes escribir por aquí con gusto. ✨`;
+}
+
+function sendWhatsApp(pedido: PedidoImpresion, phoneInput?: string) {
+  const msg = formatWhatsAppMessage(pedido);
+  const rawPhone = (phoneInput || pedido.phone || '').trim().replace(/[^0-9]/g, '');
+
+  let target = '';
+  if (rawPhone) {
+    if (rawPhone.length === 10) {
+      target = `52${rawPhone}`;
+    } else {
+      target = rawPhone;
+    }
+  }
+
+  const url = target
+    ? `https://wa.me/${target}?text=${encodeURIComponent(msg)}`
+    : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+
+  window.open(url, '_blank');
+}
+
+function copyWhatsApp(pedido: PedidoImpresion) {
+  const msg = formatWhatsAppMessage(pedido);
+  if (navigator?.clipboard?.writeText) {
+    navigator.clipboard.writeText(msg).then(() => {
+      toast.success('¡Mensaje de WhatsApp copiado!', {
+        description: `Listo para pegar en el chat de ${pedido.cliente}.`
+      });
+    }).catch(() => {
+      toast.info('Texto generado para WhatsApp', { description: msg });
+    });
+  } else {
+    toast.info('Texto generado para WhatsApp', { description: msg });
+  }
+}
 
 type PedidoStatus = PedidoImpresion['estado'];
 
@@ -595,8 +806,10 @@ const pedidosByStatus = (status: PedidoStatus) => {
 
 const submitPedido = async () => {
   const finalColor = activeColorLabel.value;
-  const newPedido: PedidoImpresion = {
+  const newPedido: any = {
     cliente: form.value.cliente,
+    telefono: form.value.telefono || undefined,
+    email: form.value.email || undefined,
     descripcion: form.value.descripcion,
     piezas: form.value.piezas || undefined,
     direccion: form.value.direccion || undefined,
@@ -610,7 +823,7 @@ const submitPedido = async () => {
   const ok = await pedidosStore.addPedido(newPedido);
   if (ok) {
     showAddModal.value = false;
-    form.value = { cliente: '', descripcion: '', piezas: '', direccion: '', precio: '' };
+    form.value = { cliente: '', telefono: '', email: '', descripcion: '', piezas: '', direccion: '', precio: '' };
     selectedProduct.value = null;
     selectedVariantName.value = '';
     selectedColorId.value = '';
