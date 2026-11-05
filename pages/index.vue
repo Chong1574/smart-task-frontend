@@ -273,6 +273,35 @@
             Agendar Videollamada
           </a>
         </div>
+
+        <!-- Alternativa Social (Prueba social y comunidad para visitantes indecisos) -->
+        <div class="mt-12 pt-8 border-t border-border/60 flex flex-col items-center justify-center gap-3">
+          <p class="text-xs uppercase tracking-wider text-muted-foreground font-medium">
+            ¿Prefieres conocer nuestras piezas y el proceso antes de cotizar?
+          </p>
+          <div class="flex flex-wrap items-center justify-center gap-3">
+            <a
+              href="https://www.instagram.com/elrincondebrandy/"
+              target="_blank"
+              rel="noopener noreferrer"
+              @click="trackSocialClick('instagram', 'home_contacto_section')"
+              class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card/80 hover:bg-primary/10 hover:border-primary/50 text-xs font-semibold text-foreground transition-all group"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary group-hover:scale-110 transition-transform"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+              <span>Instagram @elrincondebrandy</span>
+            </a>
+            <a
+              href="https://www.facebook.com/ElRincondeBrandy"
+              target="_blank"
+              rel="noopener noreferrer"
+              @click="trackSocialClick('facebook', 'home_contacto_section')"
+              class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card/80 hover:bg-primary/10 hover:border-primary/50 text-xs font-semibold text-foreground transition-all group"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary group-hover:scale-110 transition-transform"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+              <span>Facebook El Rincón de Brandy</span>
+            </a>
+          </div>
+        </div>
       </div>
     </section>
   </div>
@@ -325,7 +354,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { trackProjectLead, trackProjectContactIntent } from '~/utils/analytics'
+import { trackProjectLead, trackProjectContactIntent, trackSocialClick } from '~/utils/analytics'
 
 const projectTypes = [
   { id: 'impresion3d', label: 'Impresión 3D', topic: 'una pieza de impresión 3D' },

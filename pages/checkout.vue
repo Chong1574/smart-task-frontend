@@ -271,6 +271,36 @@
         </a>
       </p>
 
+      <!-- Comunidad y UGC Post-compra (Ingeniería Social & Fidelización) -->
+      <div class="mt-6 p-5 rounded-2xl bg-primary/5 border border-primary/20 max-w-md mx-auto text-center space-y-2">
+        <p class="font-medium text-sm text-foreground">📸 ¡Comparte tu nueva pieza!</p>
+        <p class="text-xs text-muted-foreground leading-relaxed">
+          Cuando llegue tu paquete, tómale una foto o video y etiquétanos en Instagram o Facebook. Nos encanta ver cómo lucen en su nuevo hogar.
+        </p>
+        <div class="pt-2 flex items-center justify-center gap-3">
+          <a
+            href="https://www.instagram.com/elrincondebrandy/"
+            target="_blank"
+            rel="noopener noreferrer"
+            @click="trackSocialClick('instagram', 'checkout_success')"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card border border-border text-xs font-semibold hover:text-primary hover:border-primary/50 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+            <span>@elrincondebrandy</span>
+          </a>
+          <a
+            href="https://www.facebook.com/ElRincondeBrandy"
+            target="_blank"
+            rel="noopener noreferrer"
+            @click="trackSocialClick('facebook', 'checkout_success')"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card border border-border text-xs font-semibold hover:text-primary hover:border-primary/50 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+            <span>Facebook</span>
+          </a>
+        </div>
+      </div>
+
       <div class="pt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
         <NuxtLink :to="{ path: '/rastreo', query: createdOrderId ? { id: String(createdOrderId), email: form.email || undefined } : {} }" class="w-full sm:w-auto px-6 py-3 bg-primary text-primary-foreground rounded-xl font-bold hover:bg-primary/90 transition-colors">
           Rastrear mi pedido
@@ -289,7 +319,7 @@ import { useCartStore } from '~/stores/cart';
 import { useRouter } from 'vue-router';
 import { toast } from 'vue-sonner';
 import { useLocalStorage } from '@vueuse/core';
-import { trackEvent, trackProjectLead } from '~/utils/analytics';
+import { trackEvent, trackProjectLead, trackSocialClick } from '~/utils/analytics';
 
 const cart = useCartStore();
 const router = useRouter();

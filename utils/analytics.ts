@@ -155,6 +155,25 @@ export function trackProjectLead(
 }
 
 /**
+ * Evento de clic hacia redes sociales (Instagram, Facebook, etc.)
+ */
+export function trackSocialClick(network: 'instagram' | 'facebook' | 'tiktok' | 'youtube', sourceLocation: string) {
+  trackEvent(
+    'social_follow_click',
+    {
+      social_network: network,
+      location: sourceLocation,
+      event_category: 'engagement',
+      event_label: `social_${network}_${sourceLocation}`
+    },
+    {
+      social_network: network,
+      source_location: sourceLocation
+    }
+  );
+}
+
+/**
  * Evento de intención de cotizar proyecto (clics en CTAs que llevan a la sección #contacto)
  */
 export function trackProjectContactIntent(sourceLocation: string) {

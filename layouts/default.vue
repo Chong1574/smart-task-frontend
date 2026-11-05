@@ -120,8 +120,38 @@
 
     <!-- Footer minimalista -->
     <footer class="border-t border-border/40 py-12 mt-20">
-      <div class="container flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-        <p>© 2026 El Rincón de Brandy. La semilla de tu idea.</p>
+      <div class="container flex flex-col md:flex-row items-center justify-between gap-6 text-sm text-muted-foreground">
+        <div class="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center sm:text-left">
+          <p>© 2026 El Rincón de Brandy. La semilla de tu idea.</p>
+        </div>
+
+        <!-- Redes Sociales Oficiales -->
+        <div class="flex items-center gap-3">
+          <span class="text-xs uppercase tracking-wider font-semibold text-muted-foreground/70 hidden sm:inline-block">Síguenos:</span>
+          <a
+            href="https://www.instagram.com/elrincondebrandy/"
+            target="_blank"
+            rel="noopener noreferrer"
+            @click="trackSocialClick('instagram', 'footer')"
+            class="p-2 rounded-full border border-border/60 bg-card hover:bg-primary/10 hover:border-primary/40 text-muted-foreground hover:text-primary transition-all shadow-xs"
+            aria-label="Instagram de El Rincón de Brandy"
+            title="Instagram @elrincondebrandy"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-instagram"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+          </a>
+          <a
+            href="https://www.facebook.com/ElRincondeBrandy"
+            target="_blank"
+            rel="noopener noreferrer"
+            @click="trackSocialClick('facebook', 'footer')"
+            class="p-2 rounded-full border border-border/60 bg-card hover:bg-primary/10 hover:border-primary/40 text-muted-foreground hover:text-primary transition-all shadow-xs"
+            aria-label="Facebook de El Rincón de Brandy"
+            title="Facebook El Rincón de Brandy"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-facebook"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+          </a>
+        </div>
+
         <div class="flex flex-wrap justify-center gap-6">
           <NuxtLink to="/rastreo" class="hover:text-primary transition-colors">Rastrear Pedido</NuxtLink>
           <NuxtLink to="/privacidad" class="hover:text-primary transition-colors">Aviso de Privacidad</NuxtLink>
@@ -139,7 +169,7 @@ import { computed, ref, watch } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 import { useCartStore } from '~/stores/cart'
 import CartDrawer from '~/components/CartDrawer.vue'
-import { trackProjectContactIntent } from '~/utils/analytics'
+import { trackProjectContactIntent, trackSocialClick } from '~/utils/analytics'
 
 const authStore = useAuthStore()
 const cartStore = useCartStore()
