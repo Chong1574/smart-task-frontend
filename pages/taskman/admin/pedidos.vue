@@ -333,7 +333,7 @@
 
     <!-- Details Modal -->
     <div v-if="showDetailsModal && selectedPedido" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
-      <div class="bg-card border border-border rounded-3xl p-6 w-full max-w-lg shadow-2xl relative max-h-[92vh] overflow-y-auto custom-scrollbar">
+      <div class="bg-card border border-border rounded-3xl p-6 w-full max-w-lg shadow-2xl relative max-h-[92vh] overflow-y-auto overflow-x-hidden custom-scrollbar">
         <button @click="showDetailsModal = false" class="absolute top-4 right-4 p-2 text-muted-foreground hover:bg-secondary rounded-full transition-colors cursor-pointer">
           <X class="w-5 h-5" />
         </button>
@@ -367,46 +367,133 @@
         </div>
         
         <div class="mt-6 space-y-4">
-          <!-- Modelo Linkeado si existe -->
-          <div v-if="selectedPedido.items && selectedPedido.items.length > 0 && selectedPedido.items[0]?.productId" class="p-3.5 bg-secondary/30 border border-border/60 rounded-2xl">
-            <h4 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-1.5">
-              <Package class="w-4 h-4 text-primary" />
-              <span>Modelo del Bazar Vinculado</span>
-            </h4>
-            <div class="flex items-start gap-3">
-              <img
-                v-if="selectedPedido.items[0].imageUrl"
-                :src="imgProxy(selectedPedido.items[0].imageUrl, { width: 140 })"
-                class="w-16 h-16 rounded-xl object-cover border border-border/80 shrink-0"
-              />
-              <div class="min-w-0 flex-1">
-                <p class="font-bold text-sm text-foreground">{{ selectedPedido.items[0].title }}</p>
-                <p v-if="selectedPedido.items[0].variantName" class="text-xs text-muted-foreground mt-0.5">{{ selectedPedido.items[0].variantName }}</p>
-                
-                <div class="flex flex-wrap items-center gap-3 mt-2 text-xs">
-                  <a
-                    :href="`/bazar?p=${selectedPedido.items[0].productId}`"
-                    target="_blank"
-                    class="text-primary hover:underline font-semibold flex items-center gap-1"
+          <!-- 1. Sección de Productos y Piezas (Modelos del Bazar con Cantidad) -->
+          <div class="p-4 bg-secondary/20 border border-border/70 rounded-2xl space-y-3">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+              <h4 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                <Package class="w-4 h-4 text-primary" />
+                <span>Productos del Pedido ({{ modalItems.length }})</span>
+              </h4>
+              <button
+                type="button"
+                @click="isAddingProduct = !isAddingProduct"
+                class="text-xs font-bold text-primary hover:underline flex items-center gap-1 cursor-pointer"
+              >
+                <Plus class="w-3.5 h-3.5" />
+                <span>{{ isAddingProduct ? 'Cerrar buscador' : '+ Agregar Producto del Bazar' }}</span>
+              </button>
+            </div>
+
+            <!-- Buscador inline de productos del catálogo -->
+            <div v-if="isAddingProduct" class="p-3 bg-card border border-primary/40 rounded-xl space-y-2.5 animate-in fade-in duration-150">
+              <div class="flex items-center gap-2">
+                <Search class="w-4 h-4 text-muted-foreground shrink-0" />
+                <input
+                  v-model="modalCatalogSearch"
+                  type="text"
+                  placeholder="Buscar modelo en el Bazar por nombre o ID..."
+                  class="flex-1 bg-background border border-border rounded-xl px-3 py-1.5 text-xs text-foreground focus:ring-1 focus:ring-primary focus:outline-none"
+                />
+              </div>
+
+              <div class="max-h-44 overflow-y-auto space-y-1.5 pr-1 custom-scrollbar">
+                <div
+                  v-for="prod in filteredModalCatalog"
+                  :key="prod.id"
+                  class="flex items-center justify-between gap-2 p-2 rounded-xl bg-secondary/40 border border-border/60 hover:border-primary/50 transition-all text-xs"
+                >
+                  <div class="flex items-center gap-2 min-w-0">
+                    <img
+                      v-if="prod.imageUrl"
+                      :src="imgProxy(prod.imageUrl, { width: 80 })"
+                      class="w-9 h-9 rounded-lg object-cover shrink-0 border border-border"
+                    />
+                    <div class="min-w-0">
+                      <p class="font-bold text-foreground truncate">{{ prod.title }}</p>
+                      <p class="text-[11px] text-primary font-semibold">${{ prod.price || prod.priceFrom || 0 }} MXN</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    @click="addProductToOrder(prod)"
+                    class="bg-primary text-primary-foreground px-2.5 py-1 rounded-lg text-xs font-bold hover:opacity-90 transition-opacity shrink-0 cursor-pointer flex items-center gap-1"
                   >
-                    <span>Ver en Bazar</span>
-                    <ExternalLink class="w-3.5 h-3.5" />
-                  </a>
-                  <a
-                    v-if="selectedPedido.items[0].externalId"
-                    :href="`https://makerworld.com/en/models/${selectedPedido.items[0].externalId}`"
-                    target="_blank"
-                    class="text-muted-foreground hover:text-foreground font-medium flex items-center gap-1"
+                    <Plus class="w-3 h-3" />
+                    <span>Agregar</span>
+                  </button>
+                </div>
+                <p v-if="filteredModalCatalog.length === 0" class="text-xs text-muted-foreground text-center py-2">
+                  No se encontraron productos.
+                </p>
+              </div>
+            </div>
+
+            <!-- Lista de productos añadidos con control de cantidad -->
+            <div v-if="modalItems.length > 0" class="space-y-2">
+              <div
+                v-for="(item, idx) in modalItems"
+                :key="idx"
+                class="p-2.5 bg-card border border-border/80 rounded-xl flex items-center justify-between gap-3 shadow-2xs"
+              >
+                <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                  <img
+                    v-if="item.imageUrl"
+                    :src="imgProxy(item.imageUrl, { width: 100 })"
+                    class="w-11 h-11 rounded-lg object-cover border border-border/80 shrink-0"
+                  />
+                  <div v-else class="w-11 h-11 rounded-lg bg-secondary flex items-center justify-center shrink-0 border border-border text-muted-foreground">
+                    <Package class="w-5 h-5" />
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <p class="font-bold text-xs text-foreground truncate">{{ item.title }}</p>
+                    <div class="flex items-center gap-2 mt-0.5 text-[11px] text-muted-foreground flex-wrap">
+                      <span>${{ item.price || 0 }} c/u</span>
+                      <span>•</span>
+                      <span class="font-bold text-foreground">Subtotal: ${{ ((item.price || 0) * (item.quantity || 1)).toLocaleString() }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Stepper de Cantidad de Piezas -->
+                <div class="flex items-center gap-1 shrink-0">
+                  <div class="flex items-center bg-secondary/80 border border-border rounded-lg p-0.5 shadow-2xs">
+                    <button
+                      type="button"
+                      @click="decrementItemQuantity(idx)"
+                      class="w-6 h-6 rounded-md hover:bg-background flex items-center justify-center text-foreground font-bold text-xs transition-colors cursor-pointer"
+                      title="Disminuir piezas"
+                    >
+                      <Minus class="w-3 h-3" />
+                    </button>
+                    <span class="w-6 text-center font-bold text-xs text-foreground select-none">
+                      {{ item.quantity || 1 }}
+                    </span>
+                    <button
+                      type="button"
+                      @click="incrementItemQuantity(idx)"
+                      class="w-6 h-6 rounded-md hover:bg-background flex items-center justify-center text-foreground font-bold text-xs transition-colors cursor-pointer"
+                      title="Aumentar piezas"
+                    >
+                      <Plus class="w-3 h-3" />
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    @click="removeItem(idx)"
+                    class="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors cursor-pointer"
+                    title="Eliminar producto"
                   >
-                    <span>MakerWorld (#{{ selectedPedido.items[0].externalId }})</span>
-                    <ExternalLink class="w-3.5 h-3.5" />
-                  </a>
+                    <Trash2 class="w-3.5 h-3.5" />
+                  </button>
                 </div>
               </div>
             </div>
+            <div v-else class="p-3 bg-secondary/10 border border-dashed border-border/80 rounded-xl text-xs text-muted-foreground text-center">
+              Sin productos del catálogo vinculados. Puedes usar el botón <strong>+ Agregar Producto</strong> arriba.
+            </div>
           </div>
 
-          <!-- Color Badge -->
+          <!-- Color Badge si existe -->
           <div v-if="selectedPedido.color">
             <h4 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Color de Impresión</h4>
             <div class="inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-secondary text-foreground border border-border/60 shadow-2xs font-semibold text-sm">
@@ -415,29 +502,70 @@
             </div>
           </div>
 
+          <!-- 2. Piezas manuales y notas / descripción -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <h4 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Piezas / Cantidad Manual</h4>
+              <input
+                v-model="modalPiezas"
+                type="text"
+                placeholder="Ej. 1 juego, 2 piezas..."
+                class="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:ring-1 focus:ring-primary focus:outline-none"
+              />
+            </div>
+            <div>
+              <h4 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Descripción / Notas</h4>
+              <input
+                v-model="modalDescripcion"
+                type="text"
+                placeholder="Notas del pedido..."
+                class="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:ring-1 focus:ring-primary focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <!-- 3. Dirección de Envío editable -->
           <div>
-            <h4 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Descripción / Notas</h4>
-            <p class="text-foreground mt-1 text-sm whitespace-pre-wrap bg-secondary/15 p-3 rounded-xl border border-border/40">{{ selectedPedido.descripcion }}</p>
+            <div class="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+              <h4>Dirección de Envío</h4>
+              <span v-if="!modalDireccion.trim()" class="text-[10px] text-muted-foreground font-normal">Entrega en taller / Local</span>
+            </div>
+            <input
+              v-model="modalDireccion"
+              type="text"
+              placeholder="Calle, número, colonia, C.P., ciudad..."
+              class="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:ring-1 focus:ring-primary focus:outline-none"
+            />
           </div>
 
-          <div v-if="selectedPedido.piezas">
-            <h4 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Piezas / Cantidad</h4>
-            <p class="text-foreground mt-1 text-sm font-medium">{{ selectedPedido.piezas }}</p>
-          </div>
-
-          <div v-if="selectedPedido.direccion">
-            <h4 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Dirección de Envío</h4>
-            <p class="text-foreground mt-1 text-sm">{{ selectedPedido.direccion }}</p>
-          </div>
-
-          <!-- Precio y Estado de Pago con Acción Wallet -->
+          <!-- 4. Precio Total y Pago -->
           <div class="p-4 bg-secondary/25 border border-border/60 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h4 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Precio y Pago</h4>
-              <div class="flex items-center gap-2 mt-1">
-                <span class="text-xl font-bold text-foreground">${{ selectedPedido.precio || 0 }} MXN</span>
+              <div class="flex items-center gap-2 mb-1">
+                <h4 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Precio Total</h4>
+                <button
+                  v-if="modalItems.length > 0"
+                  type="button"
+                  @click="recalculateModalTotal"
+                  class="text-[10px] text-primary hover:underline font-semibold cursor-pointer"
+                  title="Sumar total de piezas vinculadas"
+                >
+                  (Sumar piezas: ${{ modalItems.reduce((acc, it) => acc + (Number(it.price || 0) * (Math.max(1, parseInt(it.quantity) || 1))), 0) }})
+                </button>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-bold text-muted-foreground">$</span>
+                <input
+                  v-model="modalPrecio"
+                  type="number"
+                  min="0"
+                  step="1"
+                  placeholder="0"
+                  class="w-24 bg-background border border-border rounded-xl px-2.5 py-1 text-base font-bold text-foreground focus:ring-1 focus:ring-primary focus:outline-none"
+                />
+                <span class="text-xs font-semibold text-muted-foreground">MXN</span>
                 <span
-                  class="px-2.5 py-0.5 rounded-full text-xs font-bold border"
+                  class="px-2.5 py-0.5 rounded-full text-xs font-bold border ml-1"
                   :class="selectedPedido.paymentStatus === 'PAID' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'"
                 >
                   {{ selectedPedido.paymentStatus === 'PAID' ? '✓ Pagado' : '⏳ Por Pagar' }}
@@ -461,7 +589,21 @@
             </div>
           </div>
 
-          <!-- Bloque de Notificación para WhatsApp y Enlace de Rastreo -->
+          <!-- Barra de aviso y guardado de cambios en piezas / precio -->
+          <div v-if="isOrderModified" class="p-3 bg-primary/10 border border-primary/30 rounded-2xl flex items-center justify-between gap-3 animate-in fade-in duration-200">
+            <span class="text-xs text-primary font-bold">● Cambios pendientes en piezas o precio</span>
+            <button
+              type="button"
+              @click="saveOrderDetails(selectedPedido)"
+              :disabled="isSavingOrder"
+              class="bg-primary text-primary-foreground px-4 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 hover:opacity-90 transition-all cursor-pointer shadow-sm active:scale-95 shrink-0"
+            >
+              <Save class="w-3.5 h-3.5" />
+              <span>{{ isSavingOrder ? 'Guardando...' : 'Guardar Cambios' }}</span>
+            </button>
+          </div>
+
+          <!-- 5. Bloque de Notificación para WhatsApp y Enlace de Rastreo (Diseño responsivo sin scroll horizontal) -->
           <div class="p-4 bg-emerald-500/10 border border-emerald-500/25 rounded-2xl space-y-3">
             <div class="flex items-center gap-2.5">
               <span class="text-xl shrink-0">💬</span>
@@ -475,54 +617,54 @@
               </div>
             </div>
 
-            <!-- Teléfono destino y Guardado en BD -->
-            <div class="space-y-1.5">
+            <!-- Teléfono destino y Guardado en BD (Grid 100% responsivo) -->
+            <div class="space-y-2">
               <div class="flex items-center justify-between text-xs font-semibold text-muted-foreground">
                 <label>Número de Celular / WhatsApp</label>
                 <span v-if="quickPhone !== (selectedPedido.phone || '')" class="text-[11px] text-amber-600 dark:text-amber-400 font-bold animate-pulse">
-                  ● Cambios sin guardar
+                  ● Celular modificado
                 </span>
                 <span v-else-if="selectedPedido.phone" class="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
-                  ✓ Guardado en el pedido
+                  ✓ Guardado en BD
                 </span>
               </div>
-              <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                <input
-                  v-model="quickPhone"
-                  @keydown.enter.prevent="savePhone(selectedPedido)"
-                  type="tel"
-                  placeholder="Teléfono/WhatsApp del cliente (ej. 4421234567)"
-                  class="flex-1 bg-background border border-border rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-emerald-500 focus:outline-none"
-                />
+              <input
+                v-model="quickPhone"
+                @keydown.enter.prevent="savePhone(selectedPedido)"
+                type="tel"
+                placeholder="Teléfono/WhatsApp del cliente (ej. 4421234567)"
+                class="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+              />
+              <div class="grid grid-cols-2 gap-2 w-full">
                 <button
                   type="button"
                   @click="savePhone(selectedPedido)"
                   :disabled="isSavingPhone"
-                  class="px-3.5 py-2 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer border active:scale-95 whitespace-nowrap"
+                  class="w-full py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer border active:scale-95"
                   :class="quickPhone !== (selectedPedido.phone || '')
                     ? 'bg-primary text-primary-foreground border-primary hover:bg-primary/90 shadow-xs'
-                    : 'bg-secondary/70 hover:bg-secondary text-foreground border-border/80'"
+                    : 'bg-secondary/80 hover:bg-secondary text-foreground border-border/80'"
                 >
-                  <Save class="w-3.5 h-3.5" />
-                  <span>{{ isSavingPhone ? 'Guardando...' : (quickPhone !== (selectedPedido.phone || '') ? 'Guardar Celular' : 'Guardado') }}</span>
+                  <Save class="w-3.5 h-3.5 shrink-0" />
+                  <span class="truncate">{{ isSavingPhone ? 'Guardando...' : (quickPhone !== (selectedPedido.phone || '') ? 'Guardar Celular' : 'Guardado') }}</span>
                 </button>
                 <button
                   type="button"
                   @click="sendWhatsApp(selectedPedido, quickPhone)"
-                  class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-95 whitespace-nowrap"
+                  class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-95"
                 >
-                  <MessageCircle class="w-4 h-4" />
-                  <span>Enviar a WhatsApp</span>
+                  <MessageCircle class="w-4 h-4 shrink-0" />
+                  <span class="truncate">Enviar a WhatsApp</span>
                 </button>
               </div>
             </div>
 
             <!-- Acciones secundarias: Copiar y Probar enlace -->
-            <div class="flex flex-wrap items-center gap-2 pt-1 border-t border-emerald-500/20">
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-emerald-500/20 text-xs">
               <button
                 type="button"
                 @click="copyWhatsApp(selectedPedido)"
-                class="bg-background hover:bg-secondary text-foreground border border-border/80 px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                class="bg-background hover:bg-secondary text-foreground border border-border/80 px-3 py-1.5 rounded-xl font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
               >
                 <Copy class="w-3.5 h-3.5 text-muted-foreground" />
                 <span>Copiar mensaje</span>
@@ -531,9 +673,9 @@
               <a
                 :href="getTrackingLink(selectedPedido)"
                 target="_blank"
-                class="text-xs text-primary hover:underline font-semibold flex items-center gap-1 ml-auto"
+                class="text-primary hover:underline font-semibold flex items-center gap-1"
               >
-                <span>Ver página de rastreo (#{{ selectedPedido.id }})</span>
+                <span>Rastreo (#{{ selectedPedido.id }})</span>
                 <ExternalLink class="w-3.5 h-3.5" />
               </a>
             </div>
@@ -559,7 +701,18 @@
             <ExternalLink class="w-3.5 h-3.5" />
             <span>Rastreo público (#{{ selectedPedido.id }})</span>
           </a>
-          <button @click="showDetailsModal = false" class="bg-secondary text-foreground px-6 py-2 rounded-xl font-bold hover:bg-secondary/80 transition-colors cursor-pointer">Cerrar</button>
+          <div class="flex items-center gap-2">
+            <button
+              v-if="isOrderModified"
+              type="button"
+              @click="saveOrderDetails(selectedPedido)"
+              :disabled="isSavingOrder"
+              class="bg-primary text-primary-foreground px-4 py-2 rounded-xl text-xs font-bold hover:opacity-90 transition-all cursor-pointer shadow-xs"
+            >
+              {{ isSavingOrder ? 'Guardando...' : 'Guardar Todo' }}
+            </button>
+            <button @click="showDetailsModal = false" class="bg-secondary text-foreground px-6 py-2 rounded-xl font-bold hover:bg-secondary/80 transition-colors cursor-pointer text-xs">Cerrar</button>
+          </div>
         </div>
       </div>
     </div>
@@ -751,7 +904,7 @@ import { SUNLU_BAMBU_COLORS, type FilamentColor } from '~/data/filament-colors';
 import { useFilamentsStore } from '~/stores/filaments';
 import { toast } from 'vue-sonner';
 import {
-  Plus, X, ArrowRight, ArrowLeft, Clock, Printer, CheckCircle2,
+  Plus, Minus, X, ArrowRight, ArrowLeft, Clock, Printer, CheckCircle2,
   Truck, PackageCheck, Trash2, WifiOff, Package, Palette, Search, ExternalLink,
   MessageCircle, Copy, Wallet, Save
 } from 'lucide-vue-next';
@@ -936,6 +1089,134 @@ async function savePhone(pedido?: PedidoImpresion | null) {
   }
 }
 
+// Edición de productos, piezas y detalles en el modal
+const modalItems = ref<any[]>([]);
+const modalPiezas = ref<string>('');
+const modalPrecio = ref<number | ''>('');
+const modalDireccion = ref<string>('');
+const modalDescripcion = ref<string>('');
+const isAddingProduct = ref(false);
+const modalCatalogSearch = ref('');
+const isSavingOrder = ref(false);
+
+const filteredModalCatalog = computed(() => {
+  const q = modalCatalogSearch.value.trim().toLowerCase();
+  if (!q) return catalogProducts.value.slice(0, 8);
+  return catalogProducts.value.filter(p =>
+    (p.title && p.title.toLowerCase().includes(q)) ||
+    (p.category && p.category.toLowerCase().includes(q)) ||
+    (p.externalId && String(p.externalId).includes(q))
+  ).slice(0, 10);
+});
+
+function incrementItemQuantity(index: number) {
+  if (modalItems.value[index]) {
+    modalItems.value[index].quantity = (Number(modalItems.value[index].quantity) || 1) + 1;
+    recalculateModalTotal();
+  }
+}
+
+function decrementItemQuantity(index: number) {
+  if (modalItems.value[index]) {
+    if (Number(modalItems.value[index].quantity) > 1) {
+      modalItems.value[index].quantity = Number(modalItems.value[index].quantity) - 1;
+      recalculateModalTotal();
+    } else {
+      removeItem(index);
+    }
+  }
+}
+
+function removeItem(index: number) {
+  modalItems.value.splice(index, 1);
+  recalculateModalTotal();
+}
+
+function addProductToOrder(prod: any) {
+  const unitPrice = Number(prod.price || prod.priceFrom || 0);
+  modalItems.value.push({
+    productId: prod.id,
+    externalId: prod.externalId,
+    source: prod.source,
+    imageUrl: prod.imageUrl,
+    variantName: '',
+    quantity: 1,
+    title: prod.title,
+    price: unitPrice
+  });
+  recalculateModalTotal();
+  toast.success(`"${prod.title}" agregado al pedido`);
+}
+
+function recalculateModalTotal() {
+  const itemsTotal = modalItems.value.reduce((acc, it) => {
+    return acc + (Number(it.price || 0) * (Math.max(1, parseInt(it.quantity) || 1)));
+  }, 0);
+  if (itemsTotal > 0 || modalItems.value.length === 0) {
+    modalPrecio.value = itemsTotal;
+  }
+}
+
+const isOrderModified = computed(() => {
+  if (!selectedPedido.value) return false;
+  const currentItems = selectedPedido.value.items || [];
+  if (currentItems.length !== modalItems.value.length) return true;
+  for (let i = 0; i < currentItems.length; i++) {
+    if (currentItems[i].productId !== modalItems.value[i].productId ||
+        currentItems[i].quantity !== modalItems.value[i].quantity ||
+        currentItems[i].price !== modalItems.value[i].price) {
+      return true;
+    }
+  }
+  if ((selectedPedido.value.piezas || '') !== modalPiezas.value) return true;
+  if (Number(selectedPedido.value.precio || 0) !== Number(modalPrecio.value || 0)) return true;
+  if ((selectedPedido.value.direccion || '') !== modalDireccion.value) return true;
+  if ((selectedPedido.value.descripcion || '') !== modalDescripcion.value) return true;
+  return false;
+});
+
+async function saveOrderDetails(pedido?: PedidoImpresion | null) {
+  if (!pedido || !pedido.id) return;
+  isSavingOrder.value = true;
+  try {
+    const payload = {
+      items: modalItems.value,
+      piezas: modalPiezas.value,
+      precio: modalPrecio.value !== '' ? Number(modalPrecio.value) : undefined,
+      direccion: modalDireccion.value,
+      descripcion: modalDescripcion.value,
+      phone: quickPhone.value.trim()
+    };
+    const ok = await pedidosStore.updatePedido(pedido.id, payload);
+    if (ok) {
+      pedido.items = JSON.parse(JSON.stringify(modalItems.value));
+      pedido.piezas = modalPiezas.value;
+      if (modalPrecio.value !== '') pedido.precio = Number(modalPrecio.value);
+      pedido.direccion = modalDireccion.value;
+      pedido.descripcion = modalDescripcion.value;
+      pedido.phone = quickPhone.value.trim();
+
+      if (selectedPedido.value && selectedPedido.value.id === pedido.id) {
+        selectedPedido.value.items = pedido.items;
+        selectedPedido.value.piezas = pedido.piezas;
+        selectedPedido.value.precio = pedido.precio;
+        selectedPedido.value.direccion = pedido.direccion;
+        selectedPedido.value.descripcion = pedido.descripcion;
+        selectedPedido.value.phone = pedido.phone;
+      }
+      isAddingProduct.value = false;
+      toast.success('¡Pedido guardado!', {
+        description: 'Cantidades, productos y precio actualizados en la base de datos.'
+      });
+    }
+  } catch (err) {
+    console.error('Error saving order details:', err);
+    toast.error('Error al guardar los cambios del pedido');
+  } finally {
+    isSavingOrder.value = false;
+  }
+}
+
 const form = ref({
   cliente: '',
   telefono: '',
@@ -1040,7 +1321,17 @@ function getColorHex(colorName?: string): string {
 const openDetails = (pedido: PedidoImpresion) => {
   selectedPedido.value = pedido;
   quickPhone.value = pedido.phone || '';
+  modalItems.value = pedido.items ? JSON.parse(JSON.stringify(pedido.items)) : [];
+  modalPiezas.value = pedido.piezas || '';
+  modalPrecio.value = pedido.precio !== undefined ? pedido.precio : '';
+  const rawDir = pedido.direccion || '';
+  const stripped = rawDir.replace(/[\s,.-]/g, '').replace(/CP/gi, '');
+  modalDireccion.value = stripped.length > 3 ? rawDir.trim() : '';
+  modalDescripcion.value = pedido.descripcion || '';
+  isAddingProduct.value = false;
+  modalCatalogSearch.value = '';
   showDetailsModal.value = true;
+  fetchCatalog();
 };
 
 function getTrackingLink(pedido?: PedidoImpresion | null): string {
@@ -1079,8 +1370,12 @@ function formatWhatsAppMessage(pedido?: PedidoImpresion | null): string {
   const statusText = statusLabels[pedido.estado] || pedido.estado;
 
   let itemsText = '';
-  if (pedido.items && pedido.items.length > 0) {
-    itemsText = pedido.items.map(i => {
+  const currentItems = (selectedPedido.value && selectedPedido.value.id === pedido.id && modalItems.value.length > 0)
+    ? modalItems.value
+    : (pedido.items || []);
+
+  if (currentItems.length > 0) {
+    itemsText = currentItems.map((i: any) => {
       const v = i.variantName ? ` (${i.variantName})` : '';
       return `• ${i.title}${v} ×${i.quantity || 1}`;
     }).join('\n');
@@ -1088,17 +1383,27 @@ function formatWhatsAppMessage(pedido?: PedidoImpresion | null): string {
     itemsText = `• ${pedido.descripcion}`;
   }
 
+  const effectivePiezas = (selectedPedido.value && selectedPedido.value.id === pedido.id)
+    ? modalPiezas.value
+    : pedido.piezas;
   const colorText = pedido.color ? `\n🎨 *Color:* ${pedido.color}` : '';
-  const piezasText = pedido.piezas && !pedido.items?.length ? `\n🔢 *Piezas:* ${pedido.piezas}` : '';
+  const piezasText = effectivePiezas && !currentItems.length ? `\n🔢 *Piezas:* ${effectivePiezas}` : '';
   const pagoText = pedido.paymentStatus === 'PAID' ? 'Pagado' : 'Pendiente de pago';
-  const precioText = pedido.precio ? `\n💰 *Total:* $${pedido.precio} MXN (${pagoText})` : '';
+
+  const effectivePrecio = (selectedPedido.value && selectedPedido.value.id === pedido.id && modalPrecio.value !== '')
+    ? modalPrecio.value
+    : pedido.precio;
+  const precioText = effectivePrecio ? `\n💰 *Total:* $${effectivePrecio} MXN (${pagoText})` : '';
 
   // Limpieza estricta de dirección para evitar ", C.P. ," o cadenas vacías
+  const effectiveDir = (selectedPedido.value && selectedPedido.value.id === pedido.id)
+    ? modalDireccion.value
+    : pedido.direccion;
   let dirText = '';
-  if (pedido.direccion) {
-    const rawDir = pedido.direccion.replace(/[\s,.-]/g, '').replace(/CP/gi, '');
+  if (effectiveDir) {
+    const rawDir = effectiveDir.replace(/[\s,.-]/g, '').replace(/CP/gi, '');
     if (rawDir.length > 3) {
-      dirText = `\n📍 *Entrega:* ${pedido.direccion.trim()}`;
+      dirText = `\n📍 *Entrega:* ${effectiveDir.trim()}`;
     }
   }
 
@@ -1125,6 +1430,10 @@ function sendWhatsApp(pedido: PedidoImpresion, phoneInput?: string) {
       selectedPedido.value.phone = clean;
     }
     savePhone(pedido);
+  }
+
+  if (isOrderModified.value && pedido.id) {
+    saveOrderDetails(pedido);
   }
 
   const msg = formatWhatsAppMessage(pedido);

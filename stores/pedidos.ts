@@ -96,12 +96,17 @@ export const usePedidosStore = defineStore('pedidos', {
             }
         },
 
-        async updatePedido(id: number | string, data: Partial<PedidoImpresion> & { telefono?: string }) {
+        async updatePedido(id: number | string, data: Partial<PedidoImpresion> & { telefono?: string; items?: any[] }) {
             const pedido = this.pedidos.find(p => p.id === id);
             try {
                 const res = await api.put(`/pedidos/${id}`, data);
                 if (res.data.success) {
                     if (pedido) {
+                        if (res.data.data?.items) {
+                            pedido.items = res.data.data.items;
+                        } else if (data.items !== undefined) {
+                            pedido.items = data.items;
+                        }
                         if (data.phone !== undefined) pedido.phone = data.phone;
                         if (data.telefono !== undefined) pedido.phone = data.telefono;
                         if (data.email !== undefined) pedido.email = data.email;
@@ -111,6 +116,7 @@ export const usePedidosStore = defineStore('pedidos', {
                         if (data.color !== undefined) pedido.color = data.color;
                         if (data.piezas !== undefined) pedido.piezas = data.piezas;
                         if (data.precio !== undefined) pedido.precio = Number(data.precio);
+                        else if (res.data.data?.precio !== undefined) pedido.precio = Number(res.data.data.precio);
                         pedido.fechaActualizacion = new Date().toISOString();
                     }
                     this.saveToLocalStorage();
