@@ -7,6 +7,7 @@ export interface PedidoImpresion {
     cliente: string;
     email?: string;
     phone?: string;
+    trackingToken?: string;
     descripcion: string;
     archivos?: string;
     precio?: number;

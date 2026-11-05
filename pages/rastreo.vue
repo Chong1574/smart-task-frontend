@@ -4,7 +4,7 @@
 
     <div v-if="!order" class="bg-card border border-border p-8 rounded-3xl shadow-sm">
       <p class="text-muted-foreground text-center mb-8">
-        Ingresa tu número de pedido y el correo electrónico con el que realizaste la compra para ver el estado de tu pedido.
+        Ingresa tu número de pedido y el correo electrónico o teléfono celular registrado para consultar el estado en tiempo real.
       </p>
 
       <form @submit.prevent="trackOrder" class="space-y-4">
@@ -14,8 +14,8 @@
         </div>
         
         <div class="space-y-2">
-          <label class="text-sm font-medium">Correo Electrónico</label>
-          <input v-model="form.email" type="email" required class="w-full h-12 px-4 rounded-xl border border-input bg-background focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. tu@correo.com">
+          <label class="text-sm font-medium">Correo Electrónico o Teléfono / WhatsApp</label>
+          <input v-model="form.contact" type="text" required class="w-full h-12 px-4 rounded-xl border border-input bg-background focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. tu@correo.com o 442 123 4567">
         </div>
 
         <button type="submit" :disabled="isLoading" class="w-full bg-primary text-primary-foreground h-12 rounded-xl font-bold hover:bg-primary/90 transition-colors disabled:opacity-50 mt-4">
@@ -99,7 +99,7 @@
       </div>
 
       <div class="text-center">
-        <button @click="order = null; form.id = '';" class="text-primary font-medium hover:underline">
+        <button @click="order = null; form.id = ''; form.token = ''; form.contact = '';" class="text-primary font-medium hover:underline cursor-pointer">
           &larr; Rastrear otro pedido
         </button>
       </div>
@@ -117,7 +117,8 @@ const route = useRoute();
 
 const form = ref({
   id: '',
-  email: ''
+  contact: '',
+  token: ''
 });
 
 const isLoading = ref(false);
@@ -128,9 +129,19 @@ onMounted(() => {
     form.value.id = route.query.id as string;
   }
   if (route.query.email) {
-    form.value.email = route.query.email as string;
+    form.value.contact = route.query.email as string;
+  } else if (route.query.phone) {
+    form.value.contact = route.query.phone as string;
+  } else if (route.query.contact) {
+    form.value.contact = route.query.contact as string;
   }
-  if (form.value.id && form.value.email) {
+
+  if (route.query.t || route.query.token) {
+    form.value.token = (route.query.t || route.query.token) as string;
+  }
+
+  // Si viene con ID y token firmado o dato de contacto, consultar automáticamente
+  if (form.value.id && (form.value.token || form.value.contact)) {
     trackOrder();
   }
 });
@@ -175,14 +186,23 @@ function formatDate(isoDate: string) {
 }
 
 async function trackOrder() {
-  if (!form.value.id || !form.value.email) return;
+  if (!form.value.id || (!form.value.contact && !form.value.token)) return;
 
   isLoading.value = true;
   const config = useRuntimeConfig();
   const apiUrl = config.public.apiBase || 'https://taskapi.shongyi.com/api';
 
   try {
-    const response = await fetch(`${apiUrl}/orders/track?id=${form.value.id}&email=${encodeURIComponent(form.value.email)}`);
+    const params = new URLSearchParams();
+    params.set('id', form.value.id);
+    if (form.value.token) {
+      params.set('t', form.value.token);
+    }
+    if (form.value.contact) {
+      params.set('contact', form.value.contact);
+    }
+
+    const response = await fetch(`${apiUrl}/orders/track?${params.toString()}`);
     const data = await response.json();
 
     if (!response.ok) {
@@ -193,7 +213,7 @@ async function trackOrder() {
     toast.success('Pedido encontrado');
   } catch (error: any) {
     console.error(error);
-    toast.error(error.message || 'No se encontró el pedido o el correo no coincide.');
+    toast.error(error.message || 'No se encontró el pedido o los datos de contacto no coinciden.');
   } finally {
     isLoading.value = false;
   }

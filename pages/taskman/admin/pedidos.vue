@@ -361,6 +361,9 @@
               <span>📱</span> {{ selectedPedido.phone }}
             </span>
           </div>
+          <div v-else class="text-xs text-muted-foreground mt-1 flex items-center gap-1 text-amber-700/80 dark:text-amber-400">
+            <span>ℹ️ Pedido personal (el enlace de WhatsApp incluye acceso directo seguro).</span>
+          </div>
         </div>
         
         <div class="mt-6 space-y-4">
@@ -690,10 +693,23 @@ const openDetails = (pedido: PedidoImpresion) => {
 
 function getTrackingLink(pedido?: PedidoImpresion | null): string {
   if (!pedido || !pedido.id) return 'https://shongyi.com/rastreo';
-  const emailParam = pedido.email && !pedido.email.includes('@rincondebrandy.com')
-    ? `&email=${encodeURIComponent(pedido.email)}`
-    : '';
-  return `https://shongyi.com/rastreo?id=${pedido.id}${emailParam}`;
+  const params = new URLSearchParams();
+  params.set('id', String(pedido.id));
+
+  if (pedido.trackingToken) {
+    params.set('t', pedido.trackingToken);
+  }
+
+  const validEmail = pedido.email && !pedido.email.includes('@rincondebrandy.com') ? pedido.email : '';
+  const validPhone = pedido.phone ? pedido.phone.replace(/[^0-9]/g, '') : '';
+
+  if (validPhone) {
+    params.set('phone', validPhone);
+  } else if (validEmail) {
+    params.set('email', validEmail);
+  }
+
+  return `https://shongyi.com/rastreo?${params.toString()}`;
 }
 
 function formatWhatsAppMessage(pedido?: PedidoImpresion | null): string {
