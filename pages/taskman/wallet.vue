@@ -195,7 +195,7 @@
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Tabla Transacciones -->
-        <div class="bg-card border border-border/40 rounded-3xl shadow-sm overflow-hidden flex flex-col max-h-[600px]">
+        <div id="recent-transactions-container" class="bg-card border border-border/40 rounded-3xl shadow-sm overflow-hidden flex flex-col max-h-[600px]">
           <div class="p-5 border-b border-border/40 space-y-3">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div class="flex items-center gap-2">
@@ -592,13 +592,13 @@
               <button
                 v-for="day in heatmapData.days"
                 :key="day.dateStr"
-                @click="toggleDateFilter(day.dateStr)"
-                class="h-10 rounded-xl border flex flex-col items-center justify-center transition-all relative group"
+                @click="openDayTransactions(day.dateStr)"
+                class="h-10 rounded-xl border flex flex-col items-center justify-center transition-all relative group cursor-pointer"
                 :class="[
                   day.bgClass,
-                  selectedDateFilter === day.dateStr ? 'ring-2 ring-primary scale-105 z-10' : 'hover:scale-105'
+                  selectedDateFilter === day.dateStr ? 'ring-2 ring-primary scale-105 z-10 shadow-md' : 'hover:scale-105'
                 ]"
-                :title="`${day.dateStr}: ${formatCurrency(day.amount)} (${day.txCount} movs)`"
+                :title="`${day.dateStr}: ${formatCurrency(day.amount)} (${day.txCount} movs) - Clic para ver movimientos`"
               >
                 <span class="text-[11px] font-bold leading-none">{{ day.dayNum }}</span>
                 <span v-if="day.amount > 0" class="text-[9px] font-mono opacity-90 leading-tight mt-0.5 truncate max-w-full px-0.5">
@@ -1125,6 +1125,126 @@
         </div>
       </div>
 
+      <!-- Modal: Movimientos del Día (Heatmap) -->
+      <Teleport to="body">
+        <div v-if="selectedDayData" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div class="bg-card border border-primary/20 rounded-3xl p-6 w-full max-w-xl max-h-[85vh] shadow-2xl flex flex-col">
+            <!-- Header -->
+            <div class="flex justify-between items-start mb-4 pb-3 border-b border-border/30">
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <span class="text-xl">📅</span>
+                  <h2 class="text-xl sm:text-2xl font-bold tracking-tight">{{ selectedDayData.formattedDate }}</h2>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 text-xs">
+                  <span class="px-2.5 py-0.5 rounded-full font-mono font-bold" :class="selectedDayData.totalExpenses > 0 ? 'bg-red-500/10 text-red-500' : 'bg-secondary text-muted-foreground'">
+                    Gastos: -{{ formatCurrency(selectedDayData.totalExpenses) }}
+                  </span>
+                  <span v-if="selectedDayData.totalIncome > 0" class="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 font-mono font-bold">
+                    Ingresos: +{{ formatCurrency(selectedDayData.totalIncome) }}
+                  </span>
+                  <span class="px-2 py-0.5 rounded-full bg-secondary text-muted-foreground text-[11px]">
+                    {{ selectedDayData.transactions.length }} {{ selectedDayData.transactions.length === 1 ? 'movimiento' : 'movimientos' }}
+                  </span>
+                </div>
+              </div>
+              <button 
+                @click="closeDayModal" 
+                class="p-2 text-muted-foreground hover:text-foreground rounded-full hover:bg-secondary transition-colors cursor-pointer"
+                title="Cerrar"
+              >
+                <X class="w-5 h-5" />
+              </button>
+            </div>
+
+            <!-- Listado de movimientos -->
+            <div class="flex-1 overflow-y-auto space-y-2.5 pr-1 custom-scrollbar min-h-[150px]">
+              <div v-if="selectedDayData.transactions.length === 0" class="py-12 text-center text-muted-foreground text-sm space-y-2">
+                <span class="text-3xl block">☀️</span>
+                <p class="font-medium text-foreground">¡Día sin gastos ni movimientos!</p>
+                <p class="text-xs text-muted-foreground">No se registraron transacciones para esta fecha.</p>
+              </div>
+
+              <div 
+                v-for="tx in selectedDayData.transactions" 
+                :key="tx.id"
+                class="p-3.5 bg-secondary/30 hover:bg-secondary/50 rounded-2xl border border-border/30 flex items-center justify-between gap-3 transition-all group"
+              >
+                <!-- Icono & Info -->
+                <div class="flex items-center gap-3 min-w-0 flex-1">
+                  <div 
+                    class="p-2.5 rounded-2xl shrink-0 flex items-center justify-center border border-border/20"
+                    :class="getCategoryVisual(tx.category, tx.type).bg"
+                  >
+                    <component :is="getCategoryVisual(tx.category, tx.type).icon" class="w-4 h-4 shrink-0" />
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <p class="font-medium text-foreground truncate text-sm" :title="formatDescription(tx.description)">
+                      {{ formatDescription(tx.description) }}
+                    </p>
+                    <div class="flex items-center flex-wrap gap-1.5 mt-0.5 text-[11px] text-muted-foreground">
+                      <span v-if="tx.account?.name" class="font-medium text-foreground/80 truncate max-w-[120px]">
+                        {{ tx.account.name }}
+                      </span>
+                      <span v-if="tx.account?.name">•</span>
+                      <span 
+                        class="px-1.5 py-0.2 rounded font-medium text-[10px]"
+                        :class="isNegative(tx) ? 'bg-red-500/10 text-red-500' : 'bg-emerald-500/10 text-emerald-500'"
+                      >
+                        {{ isNegative(tx) ? 'Salida' : 'Entrada' }}
+                      </span>
+                      <span v-if="tx.category" class="bg-secondary px-1.5 py-0.2 rounded border border-border/40 text-[10px] text-muted-foreground truncate max-w-[110px]">
+                        {{ tx.category }}
+                      </span>
+                      <span 
+                        v-if="getLinkedSubscriptionName(tx)" 
+                        class="bg-primary/10 text-primary border border-primary/20 px-1.5 py-0.2 rounded font-medium text-[10px] flex items-center gap-1"
+                      >
+                        <RefreshCw class="w-2.5 h-2.5" />
+                        <span>{{ getLinkedSubscriptionName(tx) }}</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Monto & Botones -->
+                <div class="flex items-center gap-2 shrink-0">
+                  <div class="font-mono font-bold text-sm sm:text-base text-right" :class="isNegative(tx) ? 'text-red-500' : 'text-emerald-500'">
+                    {{ isNegative(tx) ? '-' : '+' }}{{ formatCurrency(tx.amount) }}
+                  </div>
+                  <div class="flex items-center gap-1 opacity-90 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                    <button 
+                      @click="closeDayModal(); openEditTransaction(tx)" 
+                      class="text-muted-foreground hover:text-primary p-1.5 bg-secondary/80 hover:bg-secondary rounded-lg transition-colors border border-border/30 cursor-pointer" 
+                      title="Editar"
+                    >
+                      <Pencil class="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Footer con acciones -->
+            <div class="mt-4 pt-3 border-t border-border/30 flex items-center justify-between gap-2">
+              <button 
+                @click="filterInMainList(selectedDayData.dateStr)" 
+                class="text-xs font-semibold text-primary hover:underline flex items-center gap-1 cursor-pointer"
+              >
+                <span>Filtrar en tabla principal</span>
+                <ArrowUpRight class="w-3.5 h-3.5" />
+              </button>
+              <button 
+                @click="closeDayModal" 
+                class="px-4 py-2 text-sm bg-secondary hover:bg-secondary/80 rounded-xl transition-colors font-medium cursor-pointer"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      </Teleport>
+
       <!-- Modal: Gestionar Categorías -->
       <div v-if="showManageCategoriesModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
         <div class="bg-card border border-primary/20 rounded-3xl p-6 w-full max-w-md shadow-2xl">
@@ -1226,7 +1346,8 @@ import {
   Search,
   ArrowUpRight,
   AlertTriangle,
-  RefreshCw
+  RefreshCw,
+  X
 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import { useFinanceStore } from '~/stores/finance'
@@ -1468,6 +1589,8 @@ const microSpendingInsights = computed(() => {
 })
 
 // --- Algoritmo 4: Calendario Heatmap de Gastos Mensual ---
+const selectedDayDateStr = ref<string | null>(null)
+
 function changeHeatmapMonth(delta: number) {
   heatmapMonthOffset.value += delta
 }
@@ -1479,6 +1602,62 @@ function toggleDateFilter(dateStr: string) {
     selectedDateFilter.value = dateStr
   }
 }
+
+function openDayTransactions(dateStr: string) {
+  selectedDateFilter.value = dateStr
+  selectedDayDateStr.value = dateStr
+}
+
+function closeDayModal() {
+  selectedDayDateStr.value = null
+}
+
+function filterInMainList(dateStr: string) {
+  selectedDateFilter.value = dateStr
+  closeDayModal()
+  if (typeof document !== 'undefined') {
+    const el = document.getElementById('recent-transactions-container')
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' })
+    }
+  }
+}
+
+const selectedDayData = computed(() => {
+  if (!selectedDayDateStr.value) return null
+  const dateStr = selectedDayDateStr.value
+  const dayTx = financeStore.transactions.filter(tx => tx.date && tx.date.startsWith(dateStr))
+
+  const [y, m, d] = dateStr.split('-').map(Number)
+  const dateObj = new Date(y, m - 1, d, 12, 0, 0)
+  const formattedDate = dateObj.toLocaleDateString('es-MX', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  })
+
+  let totalExpenses = 0
+  let totalIncome = 0
+
+  dayTx.forEach(tx => {
+    const amt = Number(tx.amount) || 0
+    if (['expense', 'investment', 'loan_payment'].includes(tx.type)) {
+      totalExpenses += amt
+    } else if (tx.type === 'income') {
+      totalIncome += amt
+    }
+  })
+
+  return {
+    dateStr,
+    formattedDate: formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1),
+    transactions: dayTx,
+    totalExpenses,
+    totalIncome,
+    net: totalIncome - totalExpenses
+  }
+})
 
 const heatmapData = computed(() => {
   const now = new Date()
