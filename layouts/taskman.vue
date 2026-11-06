@@ -2,113 +2,117 @@
   <div class="h-screen h-[100dvh] max-h-screen bg-background text-foreground font-sans flex overflow-hidden selection:bg-primary/30 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
     <!-- Sidebar / Nav Lado izquierdo (Oculto en móvil, visible en md/lg) -->
     <aside
-      class="hidden md:flex border-r border-border/40 bg-card/50 backdrop-blur-xl flex-col h-full max-h-screen shrink-0 transition-all duration-300 select-none overflow-hidden"
+      class="hidden md:flex border-r border-border/40 bg-card/50 backdrop-blur-xl flex-col h-full max-h-screen shrink-0 transition-all duration-300 select-none overflow-x-hidden"
       :class="isSidebarOpen ? 'w-64' : 'w-20'"
     >
       <!-- Header fijo: Logo y Toggle -->
-      <div class="p-4 lg:p-5 shrink-0 flex items-center justify-between gap-2 border-b border-border/20">
-        <NuxtLink to="/taskman" class="flex items-center gap-3 group flex-1 min-w-0">
+      <div
+        class="shrink-0 border-b border-border/20 transition-all duration-300"
+        :class="isSidebarOpen ? 'p-4 lg:p-5 flex items-center justify-between gap-2' : 'p-3 flex flex-col items-center gap-2'"
+      >
+        <!-- Logo -->
+        <NuxtLink
+          to="/taskman"
+          class="flex items-center gap-3 group min-w-0"
+          :class="!isSidebarOpen ? 'justify-center w-full' : 'flex-1'"
+          :title="!isSidebarOpen ? 'TaskMan' : ''"
+        >
           <div class="w-10 h-10 shrink-0 rounded-xl bg-gradient-to-tr from-primary to-orange-400 flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-105 transition-transform">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1-1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
           </div>
-          <span v-show="isSidebarOpen" class="font-serif text-xl font-bold tracking-tight whitespace-nowrap transition-opacity truncate">TaskMan</span>
+          <span v-if="isSidebarOpen" class="font-serif text-xl font-bold tracking-tight whitespace-nowrap transition-opacity truncate">TaskMan</span>
         </NuxtLink>
-        <div v-show="isSidebarOpen" class="flex items-center gap-1 shrink-0">
-          <NotificationBell popoverClass="absolute left-0 mt-2" />
-          <button @click="isSidebarOpen = !isSidebarOpen" class="text-muted-foreground hover:text-primary transition-colors p-1 rounded-lg hover:bg-secondary cursor-pointer" title="Colapsar menú">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+
+        <!-- Acciones en modo expandido: Campana + Botón Colapsar -->
+        <div v-if="isSidebarOpen" class="flex items-center gap-1 shrink-0">
+          <NotificationBell popoverClass="fixed top-14 left-[16.5rem] z-[100] shadow-2xl" />
+          <button
+            @click="isSidebarOpen = false"
+            class="text-muted-foreground hover:text-primary transition-colors p-1.5 rounded-lg hover:bg-secondary cursor-pointer"
+            title="Colapsar menú"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
           </button>
         </div>
-        <div v-show="!isSidebarOpen" class="flex flex-col items-center gap-2 mx-auto">
-          <NotificationBell popoverClass="absolute left-full ml-4 -mt-2" />
-          <button @click="isSidebarOpen = !isSidebarOpen" class="text-muted-foreground hover:text-primary transition-colors p-1 rounded-lg hover:bg-secondary cursor-pointer" title="Expandir menú">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+
+        <!-- Acciones en modo colapsado: Campana y Botón Expandir debajo del logo, ordenados y centrados verticalmente -->
+        <div v-else class="flex flex-col items-center gap-1.5 w-full pt-0.5">
+          <NotificationBell popoverClass="fixed top-14 left-[5.5rem] z-[100] shadow-2xl" />
+          <button
+            @click="isSidebarOpen = true"
+            class="text-muted-foreground hover:text-primary transition-colors p-1.5 rounded-lg hover:bg-secondary cursor-pointer"
+            title="Expandir menú"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
           </button>
         </div>
       </div>
 
       <!-- Navegación Scrollable (Tanto links principales como administración) -->
-      <div class="flex-1 overflow-y-auto custom-scrollbar px-3 lg:px-4 py-3 space-y-4 min-h-0">
+      <div class="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar px-2.5 lg:px-3 py-3 space-y-4 min-h-0">
         <!-- Navegación Desktop Principal -->
         <nav class="flex flex-col gap-1">
           <NuxtLink v-for="item in nav" :key="item.path" :to="item.path"
-            class="flex items-center gap-3 p-2.5 rounded-xl text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all relative group text-sm"
-            :class="!isSidebarOpen ? 'justify-center' : ''"
+            class="flex items-center gap-3 p-2.5 rounded-xl text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all text-sm"
+            :class="!isSidebarOpen ? 'justify-center px-0' : ''"
+            :title="!isSidebarOpen ? item.name : ''"
             active-class="bg-primary/15 text-primary font-medium"
           >
             <component :is="item.icon" class="w-5 h-5 shrink-0" />
-            <span v-show="isSidebarOpen" class="whitespace-nowrap truncate">{{ item.name }}</span>
-            <div v-if="!isSidebarOpen" class="absolute left-14 bg-popover text-popover-foreground px-2 py-1 rounded-md text-xs opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 shadow-md border border-border">
-              {{ item.name }}
-            </div>
+            <span v-if="isSidebarOpen" class="whitespace-nowrap truncate">{{ item.name }}</span>
           </NuxtLink>
         </nav>
 
         <!-- Navegación Admin -->
         <div v-if="isAdmin" class="space-y-1 pt-2 border-t border-border/30">
-          <div v-show="isSidebarOpen" class="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
+          <div v-if="isSidebarOpen" class="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
             Administración
           </div>
-          <div v-show="!isSidebarOpen" class="w-6 mx-auto my-1 border-t border-border/40"></div>
+          <div v-else class="w-6 mx-auto my-1 border-t border-border/40"></div>
 
-          <NuxtLink to="/taskman/admin/bazar" class="w-full flex items-center gap-3 p-2.5 rounded-xl text-primary hover:bg-primary/10 transition-all relative group text-sm" :class="!isSidebarOpen ? 'justify-center' : ''" active-class="bg-primary/15 font-medium">
+          <NuxtLink to="/taskman/admin/bazar" class="w-full flex items-center gap-3 p-2.5 rounded-xl text-primary hover:bg-primary/10 transition-all text-sm" :class="!isSidebarOpen ? 'justify-center px-0' : ''" :title="!isSidebarOpen ? 'Bazar' : ''" active-class="bg-primary/15 font-medium">
             <ShieldAlert class="w-5 h-5 shrink-0" />
-            <span v-show="isSidebarOpen" class="font-medium whitespace-nowrap truncate">Bazar</span>
-            <div v-if="!isSidebarOpen" class="absolute left-14 bg-popover text-popover-foreground px-2 py-1 rounded-md text-xs opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 shadow-md border border-border">
-              Bazar
-            </div>
+            <span v-if="isSidebarOpen" class="font-medium whitespace-nowrap truncate">Bazar</span>
           </NuxtLink>
 
-          <NuxtLink to="/taskman/admin/pedidos" class="w-full flex items-center gap-3 p-2.5 rounded-xl text-primary hover:bg-primary/10 transition-all relative group text-sm" :class="!isSidebarOpen ? 'justify-center' : ''" active-class="bg-primary/15 font-medium">
+          <NuxtLink to="/taskman/admin/pedidos" class="w-full flex items-center gap-3 p-2.5 rounded-xl text-primary hover:bg-primary/10 transition-all text-sm" :class="!isSidebarOpen ? 'justify-center px-0' : ''" :title="!isSidebarOpen ? 'Pedidos Brandy' : ''" active-class="bg-primary/15 font-medium">
             <Package class="w-5 h-5 shrink-0" />
-            <span v-show="isSidebarOpen" class="font-medium whitespace-nowrap truncate">Pedidos Brandy</span>
-            <div v-if="!isSidebarOpen" class="absolute left-14 bg-popover text-popover-foreground px-2 py-1 rounded-md text-xs opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 shadow-md border border-border">
-              Pedidos Brandy
-            </div>
+            <span v-if="isSidebarOpen" class="font-medium whitespace-nowrap truncate">Pedidos Brandy</span>
           </NuxtLink>
 
-          <NuxtLink to="/taskman/admin/filamentos" class="w-full flex items-center gap-3 p-2.5 rounded-xl text-primary hover:bg-primary/10 transition-all relative group text-sm" :class="!isSidebarOpen ? 'justify-center' : ''" active-class="bg-primary/15 font-medium">
+          <NuxtLink to="/taskman/admin/filamentos" class="w-full flex items-center gap-3 p-2.5 rounded-xl text-primary hover:bg-primary/10 transition-all text-sm" :class="!isSidebarOpen ? 'justify-center px-0' : ''" :title="!isSidebarOpen ? 'Filamentos' : ''" active-class="bg-primary/15 font-medium">
             <Palette class="w-5 h-5 shrink-0" />
-            <span v-show="isSidebarOpen" class="font-medium whitespace-nowrap truncate">Filamentos</span>
-            <div v-if="!isSidebarOpen" class="absolute left-14 bg-popover text-popover-foreground px-2 py-1 rounded-md text-xs opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 shadow-md border border-border">
-              Filamentos
-            </div>
+            <span v-if="isSidebarOpen" class="font-medium whitespace-nowrap truncate">Filamentos</span>
           </NuxtLink>
 
-          <NuxtLink to="/taskman/admin/ttlock" class="w-full flex items-center gap-3 p-2.5 rounded-xl text-primary hover:bg-primary/10 transition-all relative group text-sm" :class="!isSidebarOpen ? 'justify-center' : ''" active-class="bg-primary/15 font-medium">
+          <NuxtLink to="/taskman/admin/ttlock" class="w-full flex items-center gap-3 p-2.5 rounded-xl text-primary hover:bg-primary/10 transition-all text-sm" :class="!isSidebarOpen ? 'justify-center px-0' : ''" :title="!isSidebarOpen ? 'Chapa' : ''" active-class="bg-primary/15 font-medium">
             <Lock class="w-5 h-5 shrink-0" />
-            <span v-show="isSidebarOpen" class="font-medium whitespace-nowrap truncate">Chapa</span>
-            <div v-if="!isSidebarOpen" class="absolute left-14 bg-popover text-popover-foreground px-2 py-1 rounded-md text-xs opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 shadow-md border border-border">
-              Chapa
-            </div>
+            <span v-if="isSidebarOpen" class="font-medium whitespace-nowrap truncate">Chapa</span>
           </NuxtLink>
 
-          <NuxtLink to="/taskman/admin/audit" class="w-full flex items-center gap-3 p-2.5 rounded-xl text-primary hover:bg-primary/10 transition-all relative group text-sm" :class="!isSidebarOpen ? 'justify-center' : ''" active-class="bg-primary/15 font-medium">
+          <NuxtLink to="/taskman/admin/audit" class="w-full flex items-center gap-3 p-2.5 rounded-xl text-primary hover:bg-primary/10 transition-all text-sm" :class="!isSidebarOpen ? 'justify-center px-0' : ''" :title="!isSidebarOpen ? 'Auditoría' : ''" active-class="bg-primary/15 font-medium">
             <ShieldAlert class="w-5 h-5 shrink-0" />
-            <span v-show="isSidebarOpen" class="font-medium whitespace-nowrap truncate">Auditoría</span>
-            <div v-if="!isSidebarOpen" class="absolute left-14 bg-popover text-popover-foreground px-2 py-1 rounded-md text-xs opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 shadow-md border border-border">
-              Auditoría
-            </div>
+            <span v-if="isSidebarOpen" class="font-medium whitespace-nowrap truncate">Auditoría</span>
           </NuxtLink>
         </div>
       </div>
 
       <!-- Footer fijo: User / Actions -->
-      <div class="p-3 lg:p-4 shrink-0 border-t border-border/40 bg-card/40 flex flex-col gap-1">
-        <button @click="openProfile" class="w-full flex items-center gap-3 p-2.5 rounded-xl text-muted-foreground hover:bg-secondary transition-all cursor-pointer text-sm" :class="!isSidebarOpen ? 'justify-center' : ''" title="Editar perfil">
+      <div class="p-2.5 lg:p-3 shrink-0 border-t border-border/40 bg-card/40 flex flex-col gap-1">
+        <button @click="openProfile" class="w-full flex items-center gap-3 p-2.5 rounded-xl text-muted-foreground hover:bg-secondary transition-all cursor-pointer text-sm" :class="!isSidebarOpen ? 'justify-center px-0' : ''" :title="!isSidebarOpen ? displayName : 'Editar perfil'">
           <div class="w-6 h-6 shrink-0 rounded-full bg-gradient-to-tr from-primary to-orange-400 text-primary-foreground flex items-center justify-center text-[10px] font-bold uppercase shadow-xs">
             {{ displayName.slice(0,1) }}
           </div>
-          <span v-show="isSidebarOpen" class="font-medium whitespace-nowrap truncate">{{ displayName }}</span>
+          <span v-if="isSidebarOpen" class="font-medium whitespace-nowrap truncate">{{ displayName }}</span>
         </button>
-        <button @click="toggleTheme" class="w-full flex items-center gap-3 p-2.5 rounded-xl text-muted-foreground hover:bg-secondary transition-all cursor-pointer text-sm" :class="!isSidebarOpen ? 'justify-center' : ''">
+        <button @click="toggleTheme" class="w-full flex items-center gap-3 p-2.5 rounded-xl text-muted-foreground hover:bg-secondary transition-all cursor-pointer text-sm" :class="!isSidebarOpen ? 'justify-center px-0' : ''" :title="!isSidebarOpen ? 'Tema' : ''">
           <Moon v-if="colorMode.value === 'dark'" class="w-5 h-5 shrink-0" />
           <Sun v-else class="w-5 h-5 shrink-0" />
-          <span v-show="isSidebarOpen" class="font-medium whitespace-nowrap">Tema</span>
+          <span v-if="isSidebarOpen" class="font-medium whitespace-nowrap">Tema</span>
         </button>
-        <button @click="handleLogout" class="w-full flex items-center gap-3 p-2.5 rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all cursor-pointer text-sm" :class="!isSidebarOpen ? 'justify-center' : ''">
+        <button @click="handleLogout" class="w-full flex items-center gap-3 p-2.5 rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all cursor-pointer text-sm" :class="!isSidebarOpen ? 'justify-center px-0' : ''" :title="!isSidebarOpen ? 'Salir' : ''">
           <svg xmlns="http://www.w3.org/2000/svg" class="shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
-          <span v-show="isSidebarOpen" class="font-medium whitespace-nowrap">Salir</span>
+          <span v-if="isSidebarOpen" class="font-medium whitespace-nowrap">Salir</span>
         </button>
       </div>
     </aside>
@@ -366,10 +370,21 @@ onMounted(() => {
   if (typeof window !== 'undefined') {
     window.addEventListener('auth:logout', handleLogoutEvent)
     
+    const savedSidebar = localStorage.getItem('taskman_sidebar_open')
+    if (savedSidebar !== null) {
+      isSidebarOpen.value = savedSidebar === 'true'
+    }
+
     // Solo registramos si el usuario está autenticado
     if (authStore.isAuthenticated) {
       registerPushNotifications()
     }
+  }
+})
+
+watch(isSidebarOpen, (val) => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('taskman_sidebar_open', String(val))
   }
 })
 
