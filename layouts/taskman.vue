@@ -128,7 +128,7 @@
           <span>TaskMan</span>
         </NuxtLink>
         <div class="flex items-center gap-2">
-          <NotificationBell popoverClass="fixed top-14 right-4" />
+          <NotificationBell popoverClass="fixed top-14 right-4 z-[100] shadow-2xl" />
           <button @click="toggleTheme" class="p-2 text-muted-foreground hover:text-foreground rounded-lg transition-colors" title="Cambiar tema">
             <Moon v-if="colorMode.value === 'dark'" class="w-5 h-5" />
             <Sun v-else class="w-5 h-5" />

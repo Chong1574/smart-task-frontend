@@ -333,6 +333,14 @@
                     <span v-if="tx.category" class="bg-secondary px-1.5 py-0.2 rounded border border-border/40 text-[10px] text-muted-foreground truncate max-w-[120px]">
                       {{ tx.category }}
                     </span>
+                    <span 
+                      v-if="getLinkedSubscriptionName(tx)" 
+                      class="bg-primary/10 text-primary border border-primary/20 px-1.5 py-0.2 rounded font-medium text-[10px] flex items-center gap-1"
+                      :title="`Vinculado a ${getLinkedSubscriptionName(tx)}`"
+                    >
+                      <RefreshCw class="w-2.5 h-2.5" />
+                      <span>{{ getLinkedSubscriptionName(tx) }}</span>
+                    </span>
                   </div>
                 </div>
               </div>
@@ -359,9 +367,20 @@
         <div class="bg-card border border-border/40 rounded-3xl shadow-sm overflow-hidden flex flex-col">
           <div class="p-6 border-b border-border/40 flex justify-between items-center">
             <h3 class="font-bold text-lg">Ingresos y Servicios Recurrentes</h3>
-            <button @click="showSubscriptionModal = true" class="text-primary hover:bg-primary/10 p-2 rounded-lg transition-colors" title="Añadir">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-            </button>
+            <div class="flex items-center gap-2">
+              <button 
+                @click="handleAutoLink" 
+                :disabled="isAutoLinking" 
+                class="text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-all cursor-pointer font-medium disabled:opacity-50"
+                title="Escanear y vincular cobros automáticos de membresías y servicios"
+              >
+                <RefreshCw class="w-3.5 h-3.5" :class="{'animate-spin': isAutoLinking}" />
+                <span class="hidden sm:inline">Vincular Cobros</span>
+              </button>
+              <button @click="showSubscriptionModal = true" class="text-primary hover:bg-primary/10 p-2 rounded-lg transition-colors cursor-pointer" title="Añadir">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+              </button>
+            </div>
           </div>
           <div class="flex-1 p-6 space-y-4 overflow-y-auto">
             <div v-if="financeStore.subscriptions.length === 0" class="text-center text-muted-foreground text-sm">
@@ -371,12 +390,17 @@
             <div v-for="sub in financeStore.subscriptions" :key="sub.id" class="flex justify-between items-center p-4 bg-secondary/30 rounded-2xl border border-border/20 relative group">
               <div>
                 <p class="font-bold">{{ sub.name }}</p>
-                <div class="flex gap-2 text-xs text-muted-foreground mt-1">
+                <div class="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mt-1">
                   <span
-                    class="px-2 py-0.5 rounded"
+                    class="px-2 py-0.5 rounded font-medium"
                     :class="sub.type === 'INCOME' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-primary/10 text-primary'"
                   >{{ sub.type === 'MEMBERSHIP' ? 'Membresía' : sub.type === 'INCOME' ? 'Ingreso' : 'Servicio' }}</span>
-                  <span v-if="sub.accountId">{{ sub.type === 'INCOME' ? 'Depósito a cuenta' : 'Domiciliado' }}</span>
+                  <span v-if="sub.accountId" class="bg-secondary px-2 py-0.5 rounded border border-border/40 text-[10px]">
+                    {{ sub.type === 'INCOME' ? 'Depósito a cuenta' : 'Domiciliado' }}
+                  </span>
+                  <span v-if="sub.lastPaymentDate" class="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
+                    ✓ Cobrado {{ formatDate(sub.lastPaymentDate) }}
+                  </span>
                 </div>
               </div>
               <div class="text-right group-hover:opacity-0 md:opacity-100 transition-opacity">
@@ -1039,6 +1063,15 @@
               <label class="block text-sm font-medium mb-1">Descripción</label>
               <input v-model="txForm.description" required type="text" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none">
             </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">Vincular a Servicio / Membresía (Opcional)</label>
+              <select v-model="txForm.subscriptionId" class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/50 focus:outline-none text-sm">
+                <option :value="null">Ninguno / Detección Automática</option>
+                <option v-for="sub in financeStore.subscriptions" :key="sub.id" :value="sub.id">
+                  {{ sub.name }} ({{ formatCurrency(sub.amount) }})
+                </option>
+              </select>
+            </div>
             <div class="flex justify-end gap-3 mt-8">
               <button type="button" @click="closeTransactionModal" class="px-4 py-2 text-muted-foreground hover:bg-secondary rounded-xl transition-colors">Cancelar</button>
               <button type="submit" :disabled="isSubmittingTx" class="bg-primary text-primary-foreground px-6 py-2 rounded-xl font-bold shadow-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed">
@@ -1192,12 +1225,51 @@ import {
   Tag,
   Search,
   ArrowUpRight,
-  AlertTriangle
+  AlertTriangle,
+  RefreshCw
 } from 'lucide-vue-next'
+import { toast } from 'vue-sonner'
 import { useFinanceStore } from '~/stores/finance'
 import type { Account, AccountType, TransactionType } from '~/stores/finance'
 
 const financeStore = useFinanceStore()
+
+// Estado para sincronización y vinculación automática
+const isAutoLinking = ref(false)
+
+const getLinkedSubscriptionName = (tx: any): string | null => {
+  if (tx.subscription?.name) return tx.subscription.name
+  if (tx.subscriptionId) {
+    const sub = financeStore.subscriptions.find(s => s.id === tx.subscriptionId)
+    if (sub) return sub.name
+  }
+  const desc = (tx.description || '').toLowerCase().trim()
+  if (!desc) return null
+  for (const sub of financeStore.subscriptions) {
+    const subName = sub.name.toLowerCase().trim()
+    if (subName && (desc.includes(subName) || subName.includes(desc))) {
+      return sub.name
+    }
+  }
+  return null
+}
+
+const handleAutoLink = async () => {
+  if (isAutoLinking.value) return
+  isAutoLinking.value = true
+  try {
+    const res = await financeStore.autoLinkSubscriptions()
+    if (res && res.linkedCount > 0) {
+      toast.success(`Se vincularon ${res.linkedCount} transacciones a tus servicios y membresías`)
+    } else {
+      toast.info('Tus suscripciones y cobros ya se encuentran vinculados al corriente')
+    }
+  } catch (err: any) {
+    toast.error('Error al vincular cobros automáticos')
+  } finally {
+    isAutoLinking.value = false
+  }
+}
 
 // Modal States
 const showAccountModal = ref(false)
@@ -2041,7 +2113,8 @@ const submitTransaction = async () => {
         type: txForm.type,
         description: txForm.description,
         date: txForm.date || new Date().toISOString(),
-        installments: installments
+        installments: installments,
+        subscriptionId: txForm.subscriptionId
       } as any)
     } else {
       await financeStore.addTransaction({
@@ -2070,6 +2143,7 @@ const openEditTransaction = (tx: any) => {
   txForm.type = tx.type
   txForm.description = tx.description
   txForm.installments = tx.installments || 1
+  txForm.subscriptionId = tx.subscriptionId ?? null
   // ponytail: ISO completo, no YYYY-MM-DD; updateTransactionSchema.date rechazaba date-only
   txForm.date = tx.date ? new Date(tx.date).toISOString() : new Date().toISOString()
   showTransactionModal.value = true

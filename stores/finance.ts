@@ -41,7 +41,8 @@ export interface Transaction {
     description: string;
     date: string;
     installments?: number;
-    subscriptionId?: number;
+    subscriptionId?: number | null;
+    subscription?: { id: number; name: string; type: string } | null;
     account?: { name: string };
 }
 
@@ -1357,6 +1358,22 @@ export const useFinanceStore = defineStore('finance', {
             } catch (err) {
                 console.error("Error updating subscription:", err);
             }
+        },
+
+        async autoLinkSubscriptions() {
+            try {
+                const res = await api.post('/finance/subscriptions/auto-link');
+                if (res.data?.success) {
+                    await Promise.all([
+                        this.fetchTransactions(),
+                        this.fetchSubscriptions()
+                    ]);
+                    return res.data;
+                }
+            } catch (err) {
+                console.error("Error auto-linking subscriptions:", err);
+            }
+            return null;
         },
 
         async fetchVehicles() {
