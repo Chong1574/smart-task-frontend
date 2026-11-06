@@ -544,6 +544,36 @@
             </div>
           </div>
 
+          <!-- GALERÍA DE FOTOS REALES DE CLIENTES -->
+          <div
+            v-if="reviewStats.customerPhotos && reviewStats.customerPhotos.length > 0"
+            class="p-3.5 bg-secondary/30 border border-border/80 rounded-2xl space-y-2"
+          >
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-foreground flex items-center gap-1.5">
+                <span>📸</span>
+                <span>Fotos reales de compradores ({{ reviewStats.customerPhotos.length }})</span>
+              </span>
+              <span class="text-[10px] text-muted-foreground font-medium">Click para ampliar</span>
+            </div>
+            <div class="flex items-center gap-2.5 overflow-x-auto pb-1 scrollbar-none">
+              <div
+                v-for="(cPhoto, cIdx) in reviewStats.customerPhotos"
+                :key="'cust-gallery-' + cIdx"
+                @click="selectedReviewPhoto = cPhoto"
+                class="relative w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-xl overflow-hidden border border-border/70 hover:border-primary cursor-zoom-in group shadow-xs transition-transform hover:scale-105"
+                title="Ver fotografía en grande"
+              >
+                <img
+                  :src="cPhoto"
+                  loading="lazy"
+                  class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                  alt="Foto real compartida por cliente"
+                />
+              </div>
+            </div>
+          </div>
+
           <!-- DISCLAIMER DE AUTENTICIDAD Y COMPRA VERIFICADA -->
           <div class="p-3.5 sm:p-4 bg-emerald-500/5 dark:bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-start gap-3 text-xs leading-relaxed">
             <span class="text-lg shrink-0 mt-0.5">🛡️</span>
@@ -638,6 +668,88 @@
               ></textarea>
             </div>
 
+            <!-- Subir Fotos de la Pieza (Opcional) -->
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between">
+                <label class="block text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Foto de tu pieza (Opcional)
+                </label>
+                <span v-if="formPhotos.length > 0" class="text-[11px] font-semibold text-primary">
+                  {{ formPhotos.length }} de 3 fotos
+                </span>
+              </div>
+
+              <!-- Vista previa de fotos adjuntadas -->
+              <div v-if="formPhotos.length > 0" class="flex flex-wrap items-center gap-2">
+                <div
+                  v-for="(photoUrl, pIndex) in formPhotos"
+                  :key="'form-photo-' + pIndex"
+                  class="relative w-20 h-20 rounded-xl overflow-hidden border border-border shadow-sm group bg-secondary/30"
+                >
+                  <img :src="photoUrl" class="w-full h-full object-cover" alt="Foto adjuntada" />
+                  <button
+                    type="button"
+                    @click="removeFormPhoto(pIndex)"
+                    class="absolute top-1 right-1 w-5 h-5 bg-black/75 hover:bg-black text-white rounded-full flex items-center justify-center text-xs cursor-pointer transition-colors shadow-sm"
+                    title="Eliminar foto"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <!-- Botón para añadir más si hay espacio -->
+                <label
+                  v-if="formPhotos.length < 3 && !uploadingPhoto"
+                  class="w-20 h-20 rounded-xl border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center gap-1 cursor-pointer transition-colors bg-secondary/20 hover:bg-secondary/40 text-muted-foreground hover:text-foreground"
+                  title="Subir otra foto"
+                >
+                  <span class="text-base font-bold">➕</span>
+                  <span class="text-[10px] font-semibold">Agregar</span>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    class="hidden"
+                    @change="handlePhotoUpload"
+                  />
+                </label>
+
+                <div
+                  v-if="uploadingPhoto"
+                  class="w-20 h-20 rounded-xl border border-primary/30 flex flex-col items-center justify-center gap-1 bg-primary/5"
+                >
+                  <span class="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></span>
+                  <span class="text-[9px] font-bold text-primary">Subiendo...</span>
+                </div>
+              </div>
+
+              <!-- Botón selector cuando aún no hay fotos -->
+              <label
+                v-else
+                class="flex items-center gap-3 p-3 rounded-xl border-2 border-dashed border-border hover:border-primary/50 bg-secondary/20 hover:bg-secondary/35 transition-all cursor-pointer group"
+              >
+                <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center text-xl shrink-0 group-hover:scale-105 transition-transform">
+                  <span v-if="!uploadingPhoto">📷</span>
+                  <span v-else class="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></span>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <p class="text-xs font-bold text-foreground">
+                    {{ uploadingPhoto ? 'Subiendo fotografía a la nube...' : 'Subir foto de tu pieza terminada' }}
+                  </p>
+                  <p class="text-[11px] text-muted-foreground">
+                    Muestra los acabados, color o uso en tu espacio (JPG, PNG o WebP).
+                  </p>
+                </div>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  multiple
+                  class="hidden"
+                  :disabled="uploadingPhoto"
+                  @change="handlePhotoUpload"
+                />
+              </label>
+            </div>
+
             <!-- Acciones del Formulario -->
             <div class="flex items-center justify-end gap-2 pt-2">
               <button
@@ -726,6 +838,27 @@
               <p v-if="rev.comment" class="text-xs sm:text-sm text-foreground/90 leading-relaxed break-words whitespace-pre-line">
                 {{ rev.comment }}
               </p>
+
+              <!-- Fotos subidas por clientes en esta reseña -->
+              <div v-if="rev.photos && rev.photos.length > 0" class="pt-2 flex flex-wrap gap-2">
+                <div
+                  v-for="(photoUrl, pIdx) in rev.photos"
+                  :key="'rev-photo-' + rev.id + '-' + pIdx"
+                  @click="selectedReviewPhoto = photoUrl"
+                  class="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden border border-border/80 hover:border-primary cursor-zoom-in group shadow-xs transition-all hover:scale-[1.02]"
+                  title="Click para ampliar fotografía"
+                >
+                  <img
+                    :src="photoUrl"
+                    loading="lazy"
+                    class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                    alt="Foto de la pieza impresa por el cliente"
+                  />
+                  <div class="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                    <span class="text-white text-xs font-bold drop-shadow-md bg-black/50 px-2 py-0.5 rounded-full">🔍 Ampliar</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -787,6 +920,30 @@
         </div>
       </footer>
     </div>
+
+    <!-- Modal Lightbox de Fotografía de Reseña -->
+    <Teleport to="body">
+      <div
+        v-if="selectedReviewPhoto"
+        class="fixed inset-0 z-[120] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150"
+        @click="selectedReviewPhoto = null"
+      >
+        <button
+          type="button"
+          @click="selectedReviewPhoto = null"
+          class="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 hover:bg-white/35 text-white flex items-center justify-center text-lg font-bold transition-all cursor-pointer z-10 shadow-lg"
+          title="Cerrar vista previa"
+        >
+          ✕
+        </button>
+        <img
+          :src="selectedReviewPhoto"
+          class="max-w-[95vw] max-h-[90vh] rounded-2xl object-contain shadow-2xl animate-in zoom-in-95 duration-150"
+          alt="Fotografía de la reseña en alta resolución"
+          @click.stop
+        />
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -807,6 +964,7 @@ interface Review {
   authorName: string;
   rating: number;
   comment?: string | null;
+  photos?: string[];
   isVerifiedPurchase: boolean | number;
   status: string;
   createdAt: string;
@@ -816,6 +974,8 @@ interface ReviewStats {
   total: number;
   averageRating: number;
   verifiedCount: number;
+  customerPhotosCount?: number;
+  customerPhotos?: string[];
   breakdown: Record<number, number>;
 }
 
@@ -1362,6 +1522,8 @@ const reviewStats = ref<ReviewStats>({
   total: Number(props.product.reviewCount) || 0,
   averageRating: Number(props.product.averageRating) || 0,
   verifiedCount: 0,
+  customerPhotosCount: 0,
+  customerPhotos: [],
   breakdown: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
 });
 const loadingReviews = ref(false);
@@ -1372,6 +1534,97 @@ const formRating = ref(5);
 const formHoverRating = ref(0);
 const formComment = ref('');
 const formOrderIdOrEmail = ref('');
+const formPhotos = ref<string[]>([]);
+const uploadingPhoto = ref(false);
+const selectedReviewPhoto = ref<string | null>(null);
+
+async function compressImageToDataUrl(file: File, maxDimension = 1200, quality = 0.85): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+        if (width > maxDimension || height > maxDimension) {
+          if (width > height) {
+            height = Math.round((height * maxDimension) / width);
+            width = maxDimension;
+          } else {
+            width = Math.round((width * maxDimension) / height);
+            height = maxDimension;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(e.target?.result as string);
+          return;
+        }
+        ctx.drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve(dataUrl);
+      };
+      img.src = e.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function handlePhotoUpload(event: Event) {
+  const input = event.target as HTMLInputElement;
+  if (!input.files || input.files.length === 0) return;
+
+  const files = Array.from(input.files);
+  const remainingSlots = 3 - formPhotos.value.length;
+  if (remainingSlots <= 0) {
+    toast.error('Límite de fotos alcanzado', { description: 'Puedes subir hasta 3 fotografías por reseña.' });
+    input.value = '';
+    return;
+  }
+
+  const selectedFiles = files.slice(0, remainingSlots);
+  uploadingPhoto.value = true;
+
+  try {
+    for (const file of selectedFiles) {
+      if (!file.type.startsWith('image/')) {
+        toast.error('Formato no válido', { description: `${file.name} no es una imagen compatible.` });
+        continue;
+      }
+
+      const base64 = await compressImageToDataUrl(file);
+
+      const res = await fetch(`${apiBase}/products/reviews/upload`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: base64 }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Error al subir la fotografía');
+      }
+
+      if (data.url) {
+        formPhotos.value.push(data.url);
+      }
+    }
+  } catch (err: any) {
+    toast.error('Error al subir foto', { description: err.message || 'Inténtalo de nuevo.' });
+  } finally {
+    uploadingPhoto.value = false;
+    input.value = '';
+  }
+}
+
+function removeFormPhoto(index: number) {
+  formPhotos.value.splice(index, 1);
+}
 
 function getStarPercentage(star: number): number {
   if (!reviewStats.value.total) return 0;
@@ -1427,6 +1680,8 @@ async function fetchReviews() {
           total: data.stats.total || 0,
           averageRating: data.stats.averageRating || 0,
           verifiedCount: data.stats.verifiedCount || 0,
+          customerPhotosCount: data.stats.customerPhotosCount || 0,
+          customerPhotos: data.stats.customerPhotos || [],
           breakdown: data.stats.breakdown || { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
         };
       }
@@ -1456,6 +1711,7 @@ async function submitReview() {
         rating: formRating.value,
         comment: formComment.value.trim() || undefined,
         orderIdOrEmail: formOrderIdOrEmail.value.trim() || undefined,
+        photos: formPhotos.value.length > 0 ? formPhotos.value : undefined,
       }),
     });
 
@@ -1478,6 +1734,7 @@ async function submitReview() {
     formAuthorName.value = '';
     formComment.value = '';
     formOrderIdOrEmail.value = '';
+    formPhotos.value = [];
     formRating.value = 5;
     showReviewForm.value = false;
 
