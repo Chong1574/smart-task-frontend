@@ -121,16 +121,18 @@
                 </button>
               </div>
               <div v-if="descriptionParagraphs.length > 0" class="space-y-1.5 text-xs sm:text-sm text-muted-foreground leading-relaxed break-words">
-                <p v-for="(p, idx) in visibleDescriptionParagraphs" :key="idx">
-                  {{ p }}
-                </p>
+                <div :class="isDescriptionExpanded ? 'max-h-32 overflow-y-auto pr-1 space-y-1.5' : 'line-clamp-3'">
+                  <p v-for="(p, idx) in visibleDescriptionParagraphs" :key="idx">
+                    {{ p }}
+                  </p>
+                </div>
                 <button
-                  v-if="descriptionParagraphs.length > 2"
+                  v-if="descriptionParagraphs.length > 1"
                   type="button"
                   @click="isDescriptionExpanded = !isDescriptionExpanded"
                   class="text-[11px] font-semibold text-primary hover:underline inline-flex items-center gap-1 cursor-pointer pt-0.5"
                 >
-                  <span>{{ isDescriptionExpanded ? '− Ver menos' : '+ Ver descripción completa' }}</span>
+                  <span>{{ isDescriptionExpanded ? '− Ver menos' : '+ Ver más detalles' }}</span>
                 </button>
               </div>
             </div>
@@ -1450,10 +1452,10 @@ onMounted(() => {
 });
 
 const isDescriptionExpanded = ref(false);
-const descriptionParagraphs = computed(() => getProductParagraphs(props.product.description, 10));
+const descriptionParagraphs = computed(() => getProductParagraphs(props.product.description, 2));
 const visibleDescriptionParagraphs = computed(() => {
   if (isDescriptionExpanded.value) return descriptionParagraphs.value;
-  return descriptionParagraphs.value.slice(0, 2);
+  return descriptionParagraphs.value.slice(0, 1);
 });
 
 const cart = useCartStore();

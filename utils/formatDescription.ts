@@ -2,7 +2,7 @@
  * Limpia y resume descripciones de productos para vista comercial en tarjetas y modales.
  * - Elimina spam de descargas/boosts ('Boost Me Please', links externos, etc.).
  * - Elimina especificaciones de impresión técnica inapropiadas para comprador final.
- * - Limita la salida a máximo 1 o 2 párrafos concisos y bien redactados.
+ * - Limita la salida a párrafos concisos y bien redactados (máx 165 chars en vista compacta).
  */
 export function cleanProductDescription(raw: string | null | undefined): string {
   if (!raw || typeof raw !== 'string') return '';
@@ -10,15 +10,25 @@ export function cleanProductDescription(raw: string | null | undefined): string 
   let text = raw
     // Quitar tags HTML si vinieron en el campo de texto
     .replace(/<[^>]+>/g, ' ')
+    // Quitar mensajes de debug si algún webhook falló antes
+    .replace(/DEBUG\s*GEMINI[^.!?
+]*/gi, '')
     // Quitar spam común de plataformas como MakerWorld
-    .replace(/boost\s*me\s*please[^.!?\n]*[.!?]?/gi, '')
-    .replace(/boosts?\s*help\s*me[^.!?\n]*[.!?]?/gi, '')
-    .replace(/hit\s*that\s*boost\s*button[^.!?\n]*[.!?]?/gi, '')
+    .replace(/boost\s*me\s*please[^.!?
+]*[.!?]?/gi, '')
+    .replace(/boosts?\s*help\s*me[^.!?
+]*[.!?]?/gi, '')
+    .replace(/hit\s*that\s*boost\s*button[^.!?
+]*[.!?]?/gi, '')
+    .replace(/free\s*commercial\s*use[^.!?
+]*[.!?]?/gi, '')
+    .replace(/this\s*does\s*not\s*give\s*you\s*permission[^.!?
+]*[.!?]?/gi, '')
     .replace(/https?:\/\/\S+/gi, '')
     // Quitar artefactos de codificación o interrogaciones repetidas
     .replace(/\?{2,}/g, ' ')
     // Quitar bloques de ajustes técnicos de impresión
-    .replace(/(?:suggested\s*print\s*settings|print\s*settings|layer\s*height|infill|gyroid|wall\s*count).*$/is, '')
+    .replace(/(?:suggested\s*print\s*settings|print\s*settings|layer\s*height|infill|gyroid|wall\s*count|used\s*filament).*$/is, '')
     .replace(/\s+/g, ' ')
     .trim();
 
@@ -26,35 +36,46 @@ export function cleanProductDescription(raw: string | null | undefined): string 
 }
 
 /**
- * Divide la descripción limpia en un array de máximo 2 párrafos comerciales.
+ * Divide la descripción limpia en un array de párrafos comerciales concisos.
  */
 export function getProductParagraphs(raw: string | null | undefined, maxParagraphs: number = 2): string[] {
   const cleaned = cleanProductDescription(raw);
   if (!cleaned) return [];
 
-  // Si el texto original tenía saltos de línea deliberados
-  const rawBlocks = cleaned
-    .split(/\r?\n+/)
-    .map(b => b.trim())
-    .filter(b => b.length > 20);
-
-  if (rawBlocks.length >= 2) {
-    return rawBlocks.slice(0, maxParagraphs);
+  // Si el texto es corto (<= 165 caracteres), devolver como un único párrafo compacto
+  if (cleaned.length <= 165) {
+    return [cleaned];
   }
 
-  // Si es un bloque continuo de texto, segmentar por oraciones
+  // Segmentar por oraciones o emojis separadores
   const sentences = cleaned
-    .split(/(?<=[.!?])\s+/)
+    .split(/(?<=[.!?])\s+|(?=\s*[🎄🎅✨🙏🩷☕•▪▸])/)
     .map(s => s.trim())
-    .filter(s => s.length > 10);
+    .filter(s => s.length > 8);
 
-  if (sentences.length === 0) return [cleaned];
-  if (sentences.length <= 2) return [sentences.join(' ')];
+  if (sentences.length <= 1) {
+    const cut = cleaned.slice(0, 160).replace(/\s+\S*$/, '') + '…';
+    const rest = cleaned.slice(cut.length - 1).trim();
+    return rest ? [cut, rest] : [cut];
+  }
 
-  // Distribuir en 2 párrafos equilibrados
-  const mid = Math.ceil(Math.min(sentences.length, 4) / 2);
-  const p1 = sentences.slice(0, mid).join(' ');
-  const p2 = sentences.slice(mid, Math.min(sentences.length, 4)).join(' ');
+  // Primer párrafo siempre <= 165 chars para vista compacta del modal
+  let p1 = sentences[0];
+  let idx = 1;
+  while (idx < sentences.length && (p1 + ' ' + sentences[idx]).length <= 165) {
+    p1 += ' ' + sentences[idx];
+    idx++;
+  }
+  if (p1.length > 170) {
+    p1 = p1.slice(0, 162).replace(/\s+\S*$/, '') + '…';
+  }
+
+  const remaining = sentences.slice(idx).join(' ').trim();
+  if (!remaining) return [p1];
+
+  const p2 = remaining.length > 260
+    ? remaining.slice(0, 255).replace(/\s+\S*$/, '') + '…'
+    : remaining;
 
   return [p1, p2].filter(Boolean).slice(0, maxParagraphs);
 }
