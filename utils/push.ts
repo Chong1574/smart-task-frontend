@@ -123,3 +123,21 @@ export const registerPushNotifications = async () => {
         console.error('Push Notifications setup error:', e);
     }
 };
+
+export const unregisterPushNotifications = async () => {
+    try {
+        if (!Capacitor.isNativePlatform()) {
+            if (typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window) {
+                const registration = await navigator.serviceWorker.ready;
+                const subscription = await registration.pushManager.getSubscription();
+                if (subscription) {
+                    await api.post('/notifications/unregister-device', {
+                        token: JSON.stringify(subscription)
+                    }).catch(() => {});
+                }
+            }
+        }
+    } catch (e) {
+        console.error('Error unregistering push notifications:', e);
+    }
+};

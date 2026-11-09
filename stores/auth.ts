@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { Preferences } from '@capacitor/preferences';
 import api from '../utils/api';
 import { API_URL } from '../utils/apiUrl';
+import { unregisterPushNotifications } from '../utils/push';
 
 // ponytail: SameSite=Lax + Secure — evita que PWAs en iOS descarten cookie en inicio (navegación cross-site de home screen)
 const TOKEN_COOKIE_OPTS = { maxAge: 60 * 60 * 24 * 365, path: '/', sameSite: 'lax' as const, secure: true };
@@ -150,6 +151,10 @@ export const useAuthStore = defineStore('auth', {
         },
 
         async logout() {
+            try {
+                await unregisterPushNotifications();
+            } catch (e) {}
+
             this.token = null;
             this.user = null;
 
