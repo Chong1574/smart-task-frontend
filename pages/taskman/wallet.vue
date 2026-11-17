@@ -330,6 +330,15 @@
                     >
                       {{ isNegative(tx) ? 'Salida' : 'Entrada' }}
                     </span>
+                    <span
+                      v-if="getTransactionRouteLabel(tx)"
+                      class="px-1.5 py-0.2 rounded border font-medium text-[10px] flex items-center gap-1"
+                      :class="getTransactionRouteLabel(tx)?.isRoute
+                        ? 'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20'
+                        : 'bg-secondary/70 text-muted-foreground border-border/40'"
+                    >
+                      {{ getTransactionRouteLabel(tx)?.label }}
+                    </span>
                     <span v-if="tx.category" class="bg-secondary px-1.5 py-0.2 rounded border border-border/40 text-[10px] text-muted-foreground truncate max-w-[120px]">
                       {{ tx.category }}
                     </span>
@@ -2425,8 +2434,48 @@ const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
+const getAccountName = (accountId: number | null | undefined): string => {
+  if (!accountId) return 'Cuenta'
+  return financeStore.accounts.find(a => a.id === Number(accountId))?.name || `Cuenta #${accountId}`
+}
+
+const getTransactionRouteLabel = (tx: any): { label: string; isRoute: boolean } | null => {
+  const desc = tx?.description || ''
+  const match = desc.match(/cuenta #(\d+)/i)
+  if (match) {
+    const otherId = Number(match[1])
+    const thisName = getAccountName(tx.accountId)
+    const otherName = getAccountName(otherId)
+    const isIncomingSide = /^(Pago recibido|Transferencia recibida)/i.test(desc)
+    return {
+      label: isIncomingSide ? `${otherName} → ${thisName}` : `${thisName} → ${otherName}`,
+      isRoute: true
+    }
+  }
+  if (tx?.accountId) {
+    return { label: getAccountName(tx.accountId), isRoute: false }
+  }
+  return null
+}
+
 const formatDescription = (desc: string) => {
   if (!desc) return '';
+  const pairedMatch = desc.match(/^(Pago a|Transferencia a|Pago recibido de|Transferencia recibida de) cuenta #(\d+)\s*-\s*(.*)$/i);
+  if (pairedMatch) {
+    const rawPrefix = pairedMatch[1];
+    const accName = getAccountName(Number(pairedMatch[2]));
+    const rest = (pairedMatch[3] || '').trim();
+    const prefix = rawPrefix.toLowerCase().endsWith(' de')
+      ? rawPrefix.replace(/ de$/i, ' desde')
+      : rawPrefix;
+    if (!rest || rest.toLowerCase() === accName.toLowerCase()) {
+      return `${prefix} ${accName}`;
+    }
+    if (rest.toLowerCase().startsWith(accName.toLowerCase())) {
+      return `${prefix} ${rest}`;
+    }
+    return `${prefix} ${accName} (${rest})`;
+  }
   return desc.replace(/cuenta #(\d+)/g, (match, p1) => {
     const acc = financeStore.accounts.find(a => a.id === Number(p1));
     return acc ? acc.name : match;
