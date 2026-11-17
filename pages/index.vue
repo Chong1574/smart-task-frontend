@@ -56,7 +56,7 @@
           </div>
           <div>
             <div class="text-3xl font-bold text-foreground">Multimaterial</div>
-            <div class="text-xs text-muted-foreground uppercase tracking-wider mt-1">Filamento y Resina</div>
+            <div class="text-xs text-muted-foreground uppercase tracking-wider mt-1">Filamentos Técnicos</div>
           </div>
           <div>
             <div class="text-3xl font-bold text-foreground">Querétaro</div>
@@ -89,7 +89,7 @@
               <div class="flex-1">
                 <h4 class="font-serif text-2xl font-bold mb-3 group-hover:text-primary transition-colors">Manufactura 3D y Prototipado Físico</h4>
                 <p class="text-muted-foreground leading-relaxed">
-                  Convertimos modelos digitales en objetos tangibles con impresión en resina y filamento. Desde refacciones mecánicas funcionales hasta accesorios personalizados.
+                  Convertimos modelos digitales en objetos tangibles con impresión 3D de alta precisión. Desde refacciones mecánicas funcionales hasta accesorios personalizados.
                 </p>
               </div>
             </div>
@@ -447,7 +447,7 @@ useHead({
             name: '¿Dónde puedo mandar a imprimir en 3D en Querétaro?',
             acceptedAnswer: {
               '@type': 'Answer',
-              text: 'El Rincón de Brandy ofrece servicio de manufactura aditiva e impresión 3D en Santiago de Querétaro con impresión multicolor y multimaterial en filamentos técnicos (PLA+, PETG, TPU, ABS) y resina HD, desde piezas únicas hasta producción en serie.'
+              text: 'El Rincón de Brandy ofrece servicio de manufactura aditiva e impresión 3D en Santiago de Querétaro con impresión multicolor y multimaterial en filamentos técnicos (PLA+, PETG, TPU, ABS), desde piezas únicas hasta producción en serie.'
             }
           },
           {

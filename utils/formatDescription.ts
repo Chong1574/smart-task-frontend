@@ -11,19 +11,13 @@ export function cleanProductDescription(raw: string | null | undefined): string 
     // Quitar tags HTML si vinieron en el campo de texto
     .replace(/<[^>]+>/g, ' ')
     // Quitar mensajes de debug si algún webhook falló antes
-    .replace(/DEBUG\s*GEMINI[^.!?
-]*/gi, '')
+    .replace(/DEBUG\s*GEMINI[^.!?\n]*/gi, '')
     // Quitar spam común de plataformas como MakerWorld
-    .replace(/boost\s*me\s*please[^.!?
-]*[.!?]?/gi, '')
-    .replace(/boosts?\s*help\s*me[^.!?
-]*[.!?]?/gi, '')
-    .replace(/hit\s*that\s*boost\s*button[^.!?
-]*[.!?]?/gi, '')
-    .replace(/free\s*commercial\s*use[^.!?
-]*[.!?]?/gi, '')
-    .replace(/this\s*does\s*not\s*give\s*you\s*permission[^.!?
-]*[.!?]?/gi, '')
+    .replace(/boost\s*me\s*please[^.!?\n]*[.!?]?/gi, '')
+    .replace(/boosts?\s*help\s*me[^.!?\n]*[.!?]?/gi, '')
+    .replace(/hit\s*that\s*boost\s*button[^.!?\n]*[.!?]?/gi, '')
+    .replace(/free\s*commercial\s*use[^.!?\n]*[.!?]?/gi, '')
+    .replace(/this\s*does\s*not\s*give\s*you\s*permission[^.!?\n]*[.!?]?/gi, '')
     .replace(/https?:\/\/\S+/gi, '')
     // Quitar artefactos de codificación o interrogaciones repetidas
     .replace(/\?{2,}/g, ' ')
