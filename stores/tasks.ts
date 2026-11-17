@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia';
+import { toast } from 'vue-sonner';
 import api from '../utils/api';
 
 export interface Task {
@@ -6,8 +7,10 @@ export interface Task {
     title: string;
     category?: string;
     duration_minutes: number;
+    durationMinutes?: number;
     deadline?: string;
     auto_distribute?: boolean;
+    autoDistribute?: boolean;
     description?: string;
     status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
     budget?: number;
@@ -16,6 +19,18 @@ export interface Task {
     goalId?: number;
     blocks?: any[];
 }
+
+const normalizeTask = (t: any): Task => {
+    const durationMinutes = Number(t.durationMinutes ?? t.duration_minutes ?? 30);
+    const autoDistribute = Boolean(t.autoDistribute ?? t.auto_distribute ?? false);
+    return {
+        ...t,
+        durationMinutes,
+        duration_minutes: durationMinutes,
+        autoDistribute,
+        auto_distribute: autoDistribute,
+    };
+};
 
 export interface Project {
     id?: number;
@@ -66,11 +81,11 @@ export const useTaskStore = defineStore('tasks', {
             try {
                 const res = await api.get('/tasks');
                 if (res.data.success) {
-                    // ponytail: backend usa camelCase (autoDistribute); alias para que la UI (snake_case) lea el valor real.
-                    this.tasks = res.data.data.map((t: any) => ({ ...t, auto_distribute: t.autoDistribute ?? false }));
+                    this.tasks = res.data.data.map(normalizeTask);
                 }
-            } catch (err) {
+            } catch (err: any) {
                 console.error("Error fetching tasks:", err);
+                toast.error(err.response?.data?.message || "Error al cargar las tareas");
             } finally {
                 this.loading = false;
             }
@@ -79,34 +94,75 @@ export const useTaskStore = defineStore('tasks', {
         async addTask(newTask: Task) {
             // Optimistic update
             const tempId = Date.now();
-            this.tasks.push({ ...newTask, id: tempId });
-            
+            this.tasks.unshift(normalizeTask({ ...newTask, id: tempId }));
+
             try {
-                const res = await api.post('/tasks', newTask);
+                const payload: any = {
+                    ...newTask,
+                    duration_minutes: newTask.duration_minutes ?? newTask.durationMinutes,
+                    auto_distribute: newTask.auto_distribute ?? newTask.autoDistribute,
+                };
+                delete payload.durationMinutes;
+                delete payload.autoDistribute;
+
+                const res = await api.post('/tasks', payload);
                 if (res.data.success) {
-                    await this.fetchTasks();
+                    const created = res.data.data;
+                    const idx = this.tasks.findIndex(t => t.id === tempId);
+                    if (created && created.id) {
+                        const normalized = normalizeTask(created);
+                        if (idx !== -1) this.tasks[idx] = normalized;
+                        else this.tasks.unshift(normalized);
+                    } else {
+                        await this.fetchTasks();
+                    }
                     return true;
                 } else {
                     this.tasks = this.tasks.filter(t => t.id !== tempId);
+                    toast.error(res.data.message || "Error al crear la tarea");
                     return false;
                 }
-            } catch (err) {
+            } catch (err: any) {
                 console.error("Error adding task:", err);
                 this.tasks = this.tasks.filter(t => t.id !== tempId);
+                toast.error(err.response?.data?.message || "No se pudo crear la tarea");
                 return false;
             }
         },
 
         async updateTask(id: number, updates: Partial<Task>) {
             try {
-                const res = await api.put(`/tasks/${id}`, updates);
+                const payload: any = { ...updates };
+                if (payload.durationMinutes !== undefined && payload.duration_minutes === undefined) {
+                    payload.duration_minutes = payload.durationMinutes;
+                }
+                if (payload.autoDistribute !== undefined && payload.auto_distribute === undefined) {
+                    payload.auto_distribute = payload.autoDistribute;
+                }
+                delete payload.durationMinutes;
+                delete payload.autoDistribute;
+
+                const res = await api.put(`/tasks/${id}`, payload);
                 if (res.data.success) {
-                    await this.fetchTasks();
+                    const updated = res.data.data;
+                    const idx = this.tasks.findIndex(t => t.id === id);
+                    if (updated && idx !== -1) {
+                        const existing = this.tasks[idx];
+                        this.tasks[idx] = normalizeTask({
+                            ...existing,
+                            ...updated,
+                            blocks: updated.blocks ?? existing.blocks,
+                        });
+                    } else {
+                        await this.fetchTasks();
+                    }
                     return true;
                 }
+                toast.error(res.data.message || "Error al actualizar la tarea");
                 return false;
-            } catch (err) {
+            } catch (err: any) {
                 console.error("Error updating task:", err);
+                toast.error(err.response?.data?.message || "No se pudo actualizar la tarea");
                 return false;
             }
         },
@@ -117,8 +173,9 @@ export const useTaskStore = defineStore('tasks', {
                 if (res.data.success) {
                     this.tasks = this.tasks.filter(t => t.id !== id);
                 }
-            } catch (err) {
+            } catch (err: any) {
                 console.error("Error deleting task:", err);
+                toast.error(err.response?.data?.message || "Error al eliminar la tarea");
             }
         },
 

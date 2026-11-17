@@ -213,7 +213,7 @@
           </div>
           <div class="relative">
             <div class="aspect-square rounded-3xl bg-secondary/50 border border-border flex items-center justify-center p-8 overflow-hidden relative">
-              <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+              <div class="absolute inset-0 bg-[radial-gradient(hsl(var(--primary))_1px,transparent_1px)] [background-size:16px_16px] opacity-15"></div>
               <div class="relative z-10 grid grid-cols-2 gap-4 w-full h-full">
                 <!-- Box 1 -->
                 <div class="bg-card rounded-2xl p-6 shadow-sm flex flex-col items-center justify-center text-center gap-2 border border-border/50">

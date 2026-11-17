@@ -2355,7 +2355,7 @@ const markAsPaid = (payment: any, amountOverride?: number) => {
     // ponytail: fuente debe ser cuenta con dinero real (débito, nómina, ahorro o cash). Sin fallback a accounts[0]
     const source = financeStore.accounts.find(a => a.type !== 'loan' && !(a.type === 'card' && a.sub_type === 'credit'))
     if (!source) {
-      alert('Necesitas una cuenta de efectivo, débito, nómina o ahorro para registrar el pago.')
+      toast.error('Necesitas una cuenta de efectivo, débito, nómina o ahorro para registrar el pago.')
       return
     }
     txForm.accountId = source.id

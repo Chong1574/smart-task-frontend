@@ -7,24 +7,45 @@ const api = axios.create({
     baseURL: API_URL,
 });
 
+let memoryToken: string | null = null;
+
+export const setMemoryToken = (token: string | null) => {
+    memoryToken = token;
+};
+
+export const getMemoryToken = () => memoryToken;
+
 const readTokenAsync = async (): Promise<string | null> => {
+    if (memoryToken) return memoryToken;
+
     try {
         const { value } = await Preferences.get({ key: 'token' });
-        if (value) return value;
+        if (value) {
+            memoryToken = value;
+            return value;
+        }
     } catch (e) {}
 
     if (typeof window !== 'undefined') {
         const ls = localStorage.getItem('token');
-        if (ls) return ls;
+        if (ls) {
+            memoryToken = ls;
+            return ls;
+        }
     }
     if (typeof document !== 'undefined') {
         const match = document.cookie.match(/(?:^|;\s*)token=([^;]+)/);
-        if (match) return decodeURIComponent(match[1]);
+        if (match) {
+            const val = decodeURIComponent(match[1]);
+            memoryToken = val;
+            return val;
+        }
     }
     return null;
 };
 
 const clearAuthArtifactsAsync = async () => {
+    memoryToken = null;
     try {
         await Preferences.remove({ key: 'token' });
         await Preferences.remove({ key: 'user' });

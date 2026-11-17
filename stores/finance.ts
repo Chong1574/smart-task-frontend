@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia';
+import { toast } from 'vue-sonner';
 import api from '../utils/api';
 import { computeUpcomingPaymentDate } from '../utils/date';
 
@@ -12,14 +13,22 @@ export interface Account {
     name: string;
     type: AccountType;
     sub_type: AccountSubType;
+    subType?: AccountSubType;
     balance: number;
     credit_limit: number;
+    creditLimit?: number;
     interest_rate: number;
+    interestRate?: number;
     monthly_payment: number;
+    monthlyPayment?: number;
     payment_frequency: 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY' | 'ONCE';
+    paymentFrequency?: 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY' | 'ONCE';
     cutoff_day: number;
+    cutoffDay?: number;
     payment_day: number;
+    paymentDay?: number;
     minimum_payment_percentage: number;
+    minimumPaymentPercentage?: number;
     currency: string;
     color: string; // Front-end decoration
     statement?: {
@@ -160,7 +169,8 @@ export const useFinanceStore = defineStore('finance', {
             tasks: [] as any[],
             wishlistItems: [] as any[],
             loading: false,
-            error: null as string | null
+            error: null as string | null,
+            lastInitializedAt: 0
         };
     },
 
@@ -1065,23 +1075,42 @@ export const useFinanceStore = defineStore('finance', {
             try {
                 const res = await api.get(`/finance/accounts?t=${new Date().getTime()}`);
                 if (res.data.success) {
-                    this.accounts = res.data.data.map((acc: any, index: number) => ({
-                        id: acc.id,
-                        name: acc.name,
-                        type: acc.type,
-                        sub_type: acc.subType,
-                        balance: Number(acc.balance),
-                        credit_limit: Number(acc.creditLimit),
-                        interest_rate: Number(acc.interestRate || 0),
-                        monthly_payment: Number(acc.monthlyPayment || 0),
-                        payment_frequency: acc.paymentFrequency || 'MONTHLY',
-                        cutoff_day: Number(acc.cutoffDay || 0),
-                        payment_day: Number(acc.paymentDay || 0),
-                        minimum_payment_percentage: Number(acc.minimumPaymentPercentage || 5.0),
-                        currency: acc.currency,
-                        color: COLORS[index % COLORS.length],
-                        statement: acc.statement
-                    }));
+                    this.accounts = res.data.data.map((acc: any, index: number) => {
+                        const subType = acc.subType ?? acc.sub_type;
+                        const creditLimit = Number(acc.creditLimit ?? acc.credit_limit ?? 0);
+                        const interestRate = Number(acc.interestRate ?? acc.interest_rate ?? 0);
+                        const monthlyPayment = Number(acc.monthlyPayment ?? acc.monthly_payment ?? 0);
+                        const paymentFrequency = acc.paymentFrequency ?? acc.payment_frequency ?? 'MONTHLY';
+                        const cutoffDay = Number(acc.cutoffDay ?? acc.cutoff_day ?? 0);
+                        const paymentDay = Number(acc.paymentDay ?? acc.payment_day ?? 0);
+                        const minimumPaymentPercentage = Number(acc.minimumPaymentPercentage ?? acc.minimum_payment_percentage ?? 5.0);
+
+                        return {
+                            id: acc.id,
+                            name: acc.name,
+                            type: acc.type,
+                            sub_type: subType,
+                            subType,
+                            balance: Number(acc.balance),
+                            credit_limit: creditLimit,
+                            creditLimit,
+                            interest_rate: interestRate,
+                            interestRate,
+                            monthly_payment: monthlyPayment,
+                            monthlyPayment,
+                            payment_frequency: paymentFrequency,
+                            paymentFrequency,
+                            cutoff_day: cutoffDay,
+                            cutoffDay,
+                            payment_day: paymentDay,
+                            paymentDay,
+                            minimum_payment_percentage: minimumPaymentPercentage,
+                            minimumPaymentPercentage,
+                            currency: acc.currency,
+                            color: COLORS[index % COLORS.length],
+                            statement: acc.statement
+                        };
+                    });
                 }
             } catch (err) {
                 console.error("Error fetching accounts:", err);
@@ -1134,11 +1163,11 @@ export const useFinanceStore = defineStore('finance', {
                         this.fetchSubscriptions(),
                     ]);
                 } else {
-                    alert("Error al registrar transacción: " + (res.data.message || "Error desconocido"));
+                    toast.error("Error al registrar transacción: " + (res.data.message || "Error desconocido"));
                 }
             } catch (err: any) {
                 console.error("Error creating transaction:", err);
-                alert("Error de conexión al registrar transacción: " + (err.response?.data?.message || err.message || "Error desconocido"));
+                toast.error("Error de conexión al registrar transacción: " + (err.response?.data?.message || err.message || "Error desconocido"));
             }
         },
 
@@ -1149,11 +1178,11 @@ export const useFinanceStore = defineStore('finance', {
                     await this.fetchTransactions();
                     await this.fetchAccounts();
                 } else {
-                    alert("Error al eliminar transacción: " + (res.data.message || "Error desconocido"));
+                    toast.error("Error al eliminar transacción: " + (res.data.message || "Error desconocido"));
                 }
             } catch (err: any) {
                 console.error("Error deleting transaction:", err);
-                alert("Error de conexión al eliminar transacción: " + (err.response?.data?.message || err.message || "Error desconocido"));
+                toast.error("Error de conexión al eliminar transacción: " + (err.response?.data?.message || err.message || "Error desconocido"));
             }
         },
 
@@ -1164,36 +1193,39 @@ export const useFinanceStore = defineStore('finance', {
                     await this.fetchTransactions();
                     await this.fetchAccounts();
                 } else {
-                    alert("Error al actualizar transacción: " + (res.data.message || "Error desconocido"));
+                    toast.error("Error al actualizar transacción: " + (res.data.message || "Error desconocido"));
                 }
             } catch (err: any) {
                 console.error("Error updating transaction:", err);
-                alert("Error de conexión al actualizar transacción: " + (err.response?.data?.message || err.message || "Error desconocido"));
+                toast.error("Error de conexión al actualizar transacción: " + (err.response?.data?.message || err.message || "Error desconocido"));
             }
         },
 
         async addAccount(account: Omit<Account, 'id' | 'color'>) {
             try {
                 const payload = {
-                    ...account,
-                    subType: account.sub_type,
-                    creditLimit: account.credit_limit,
-                    cutoffDay: account.cutoff_day,
-                    paymentDay: account.payment_day,
-                    interestRate: account.interest_rate,
-                    monthlyPayment: account.monthly_payment,
-                    paymentFrequency: account.payment_frequency,
-                    minimumPaymentPercentage: account.minimum_payment_percentage
+                    name: account.name,
+                    type: account.type,
+                    subType: account.subType ?? account.sub_type,
+                    balance: account.balance,
+                    creditLimit: account.creditLimit ?? account.credit_limit,
+                    cutoffDay: account.cutoffDay ?? account.cutoff_day,
+                    paymentDay: account.paymentDay ?? account.payment_day,
+                    interestRate: account.interestRate ?? account.interest_rate,
+                    monthlyPayment: account.monthlyPayment ?? account.monthly_payment,
+                    paymentFrequency: account.paymentFrequency ?? account.payment_frequency,
+                    minimumPaymentPercentage: account.minimumPaymentPercentage ?? account.minimum_payment_percentage,
+                    currency: account.currency
                 };
                 const res = await api.post('/finance/accounts', payload);
                 if (res.data.success) {
                     await this.fetchAccounts();
                 } else {
-                    alert("Error al agregar cuenta: " + (res.data.message || "Error desconocido"));
+                    toast.error("Error al agregar cuenta: " + (res.data.message || "Error desconocido"));
                 }
             } catch (err: any) {
                 console.error("Error creating account:", err);
-                alert("Error de conexión al agregar cuenta: " + (err.response?.data?.message || err.message || "Error desconocido"));
+                toast.error("Error de conexión al agregar cuenta: " + (err.response?.data?.message || err.message || "Error desconocido"));
             }
         },
 
@@ -1221,7 +1253,7 @@ export const useFinanceStore = defineStore('finance', {
                 }
             } catch (err: any) {
                 console.error("Error updating account:", err);
-                alert("Error al actualizar cuenta: " + (err.response?.data?.message || err.message || "Error desconocido"));
+                toast.error("Error al actualizar cuenta: " + (err.response?.data?.message || err.message || "Error desconocido"));
             }
         },
 
@@ -1290,7 +1322,12 @@ export const useFinanceStore = defineStore('finance', {
             }
         },
 
-        async initialize() {
+        async initialize(force = false) {
+            const now = Date.now();
+            if (!force && this.lastInitializedAt && (now - this.lastInitializedAt) < 15_000 && this.accounts.length > 0) {
+                return;
+            }
+
             if (typeof window !== 'undefined' && window.localStorage) {
                 const stored = window.localStorage.getItem('taskman_categories');
                 if (stored) {
@@ -1311,6 +1348,7 @@ export const useFinanceStore = defineStore('finance', {
             ]);
 
             this.syncCategories();
+            this.lastInitializedAt = Date.now();
         },
 
         async fetchSubscriptions() {
@@ -1334,11 +1372,11 @@ export const useFinanceStore = defineStore('finance', {
                 if (res.data.success) {
                     await this.fetchSubscriptions();
                 } else {
-                    alert("Error al agregar suscripción: " + (res.data.message || "Error desconocido"));
+                    toast.error("Error al agregar suscripción: " + (res.data.message || "Error desconocido"));
                 }
             } catch (err: any) {
                 console.error("Error adding subscription:", err);
-                alert("Error de conexión al agregar suscripción: " + (err.response?.data?.message || err.message || "Error desconocido"));
+                toast.error("Error de conexión al agregar suscripción: " + (err.response?.data?.message || err.message || "Error desconocido"));
             }
         },
 
@@ -1423,12 +1461,12 @@ export const useFinanceStore = defineStore('finance', {
                     await this.fetchTransactions();
                     return true;
                 } else {
-                    alert("Error al eliminar: " + (res.data.message || "Desconocido"));
+                    toast.error("Error al eliminar: " + (res.data.message || "Desconocido"));
                     return false;
                 }
             } catch (err: any) {
                 console.error(err);
-                alert("Error de red o servidor: " + (err.response?.data?.message || err.message));
+                toast.error("Error de red o servidor: " + (err.response?.data?.message || err.message));
                 return false;
             }
         },
@@ -1442,12 +1480,12 @@ export const useFinanceStore = defineStore('finance', {
                     await this.fetchTransactions();
                     return true;
                 } else {
-                    alert("Error al guardar: " + (res.data.message || "Desconocido"));
+                    toast.error("Error al guardar: " + (res.data.message || "Desconocido"));
                     return false;
                 }
             } catch (err: any) { 
                 console.error(err); 
-                alert("Error de red o servidor: " + (err.response?.data?.message || err.message));
+                toast.error("Error de red o servidor: " + (err.response?.data?.message || err.message));
                 return false;
             }
         },

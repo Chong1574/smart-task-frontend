@@ -5,6 +5,11 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   ssr: true,
   devtools: { enabled: true },
+  runtimeConfig: {
+    public: {
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || process.env.VITE_API_BASE_URL || ''
+    }
+  },
   modules: [
     '@nuxtjs/tailwindcss',
     'shadcn-nuxt',
@@ -77,7 +82,7 @@ export default defineNuxtConfig({
   app: {
     head: {
       htmlAttrs: { lang: 'es' },
-      viewport: 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover',
+      viewport: 'width=device-width, initial-scale=1.0, viewport-fit=cover',
       link: [
         { rel: 'icon', type: 'image/png', href: '/logo.png' },
         { rel: 'help', href: '/llms.txt', type: 'text/plain', title: 'LLM Knowledge Base' }

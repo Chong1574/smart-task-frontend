@@ -850,7 +850,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive } from 'vue';
+import { reactive, onUnmounted } from 'vue';
 import BazarProductDetail from '~/components/BazarProductDetail.vue';
 import CartDrawer from '~/components/CartDrawer.vue';
 import { imgProxy, imgProxySrcSet } from '~/utils/imgProxy';
@@ -908,6 +908,7 @@ const isDeepSearching = ref(false);
 const deepSearchPhrases = ['Buscando en la web...', 'Filtrando opciones...', 'Escogiendo los mejores modelos para ti...', 'Traduciendo y optimizando detalles...', 'Casi listo...'];
 const deepSearchStatusIndex = ref(0);
 let deepSearchStatusInterval: any = null;
+let deepSearchPollInterval: any = null;
 const searchedLive = ref(false);
 const rateLimited = ref(false);
 const selected = ref<Product | null>(null);
@@ -1468,12 +1469,13 @@ async function triggerDeepSearch() {
     }
     toast.success('Búsqueda profunda iniciada', { description: 'Llegaron los primeros resultados. El resto seguirá cargando en el fondo en los próximos minutos.' });
     
-    // Auto refresh local db without deep trigger every 15s for 1 min
+    // Auto refresh local db without deep trigger every 3s for 1 min
     let ticks = 0;
-    const interval = setInterval(async () => {
+    clearInterval(deepSearchPollInterval);
+    deepSearchPollInterval = setInterval(async () => {
       ticks++;
       if (ticks > 20) {
-        clearInterval(interval);
+        clearInterval(deepSearchPollInterval);
         isDeepSearching.value = false;
         clearInterval(deepSearchStatusInterval);
         return;
@@ -1552,6 +1554,22 @@ function priceLabel(p: Product): string {
 
 const route = useRoute();
 const router = useRouter();
+
+// Precarga SSR del catálogo inicial para mejorar SEO (HTML indexable) y primer pintado
+const { data: initialCatalog } = await useAsyncData('bazar-initial-products', async () => {
+  try {
+    return await $fetch(`${apiBase}/products`);
+  } catch {
+    return null;
+  }
+});
+if (initialCatalog.value) {
+  if (Array.isArray(initialCatalog.value)) {
+    products.value = initialCatalog.value as Product[];
+  } else if (Array.isArray((initialCatalog.value as any).items)) {
+    products.value = (initialCatalog.value as any).items;
+  }
+}
 
 // Precargar producto en SSR para que los rastreadores (Googlebot, WhatsApp, Facebook) vean la foto, título y precio del producto
 if (route.query.p) {
@@ -1699,7 +1717,9 @@ watch(selected, (newVal) => {
 });
 
 onMounted(async () => {
-  await load('');
+  if (products.value.length === 0) {
+    await load('');
+  }
   if (route.query.cat && typeof route.query.cat === 'string') {
     const targetCat = route.query.cat.toLowerCase();
     const found = CATEGORY_DEFS.find(c => c.id === targetCat || normalizeText(c.label) === targetCat);
@@ -1728,6 +1748,13 @@ onMounted(async () => {
       } catch (e) {}
     }
   }
+});
+
+onUnmounted(() => {
+  clearInterval(deepSearchPollInterval);
+  clearInterval(deepSearchStatusInterval);
+  clearTimeout(debounceTimer);
+  clearTimeout(justAddedTimer);
 });
 </script>
 

@@ -4,7 +4,6 @@ const config: CapacitorConfig = {
   appId: 'com.shongyi.taskman',
   appName: 'TaskMan',
   webDir: 'dist',
-  bundledWebRuntime: false,
   server: {
     androidScheme: 'https'
   }

@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { Preferences } from '@capacitor/preferences';
-import api from '../utils/api';
+import api, { setMemoryToken } from '../utils/api';
 import { API_URL } from '../utils/apiUrl';
 import { unregisterPushNotifications } from '../utils/push';
 
@@ -54,6 +54,7 @@ export const useAuthStore = defineStore('auth', {
                 }
 
                 this.token = token;
+                setMemoryToken(token);
                 this.isInitialized = true;
             }
         },
@@ -132,6 +133,7 @@ export const useAuthStore = defineStore('auth', {
 
         async setSession(token: string, user: any) {
             this.token = token;
+            setMemoryToken(token);
             this.user = user;
             const userStr = JSON.stringify(user);
             
@@ -156,6 +158,7 @@ export const useAuthStore = defineStore('auth', {
             } catch (e) {}
 
             this.token = null;
+            setMemoryToken(null);
             this.user = null;
 
             try {
@@ -191,6 +194,7 @@ export const useAuthStore = defineStore('auth', {
 
         async handleAuthCallback(token: string) {
             this.token = token;
+            setMemoryToken(token);
 
             try {
                 await Preferences.set({ key: 'token', value: token });
@@ -227,6 +231,7 @@ export const useAuthStore = defineStore('auth', {
             } catch (err) {
                 console.error('handleAuthCallback: /auth/me falló', err);
                 // Re-guardar token — pudo haber sido borrado por el interceptor 401 durante este await
+                setMemoryToken(token);
                 if (typeof window !== 'undefined') {
                     if (!localStorage.getItem('token')) localStorage.setItem('token', token);
                     if (this.user) localStorage.setItem('user', JSON.stringify(this.user));
