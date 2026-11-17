@@ -8,25 +8,25 @@
           <p class="text-muted-foreground">Gestiona tus tareas o deja que la Ruleta decida por ti.</p>
         </div>
         <div class="flex gap-2 flex-wrap">
-          <button v-if="!authStore.hasCalendarConnected" @click="connectGoogleCalendar" class="bg-blue-500 text-white px-4 py-2 rounded-xl font-medium shadow-lg shadow-blue-500/20 hover:scale-105 transition-transform flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+          <button v-if="!authStore.hasCalendarConnected" @click="connectGoogleCalendar" class="bg-card hover:bg-secondary/70 text-foreground border border-border/60 px-3.5 py-2 rounded-xl font-medium transition-colors flex items-center gap-2 text-sm shadow-xs">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
             Conectar Calendario
           </button>
           <div v-else class="flex gap-1">
-            <button @click="showCalendarPanel = !showCalendarPanel" :class="['px-4 py-2 rounded-xl font-medium shadow-lg hover:scale-105 transition-transform flex items-center gap-2', showCalendarPanel ? 'bg-blue-600 text-white shadow-blue-600/20' : 'bg-blue-500/10 text-blue-500 shadow-blue-500/10 border border-blue-500/30']">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+            <button @click="showCalendarPanel = !showCalendarPanel" :class="['px-3.5 py-2 rounded-xl font-medium transition-colors flex items-center gap-2 text-sm border shadow-xs', showCalendarPanel ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30' : 'bg-card hover:bg-secondary/70 text-foreground border-border/60']">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
               Calendario
             </button>
-            <button @click="connectGoogleCalendar" class="px-2 py-2 rounded-xl text-blue-500 hover:bg-blue-500/10 transition-colors focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none" title="Reconectar Google Calendar" aria-label="Reconectar Google Calendar">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+            <button @click="connectGoogleCalendar" class="px-2 py-2 rounded-xl text-muted-foreground hover:text-blue-500 hover:bg-secondary/70 border border-border/40 transition-colors focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none" title="Reconectar Google Calendar" aria-label="Reconectar Google Calendar">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
             </button>
           </div>
-          <button @click="showRoulette = true" class="bg-orange-500/10 border border-orange-500/30 text-orange-600 hover:bg-orange-500/20 px-4 py-2 rounded-xl font-medium transition-all flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:outline-none" aria-label="Jugar ruleta de tareas">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+          <button @click="showRoulette = true" class="bg-card hover:bg-secondary/70 text-foreground border border-border/60 px-3.5 py-2 rounded-xl font-medium transition-colors flex items-center gap-2 text-sm shadow-xs focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none" aria-label="Jugar ruleta de tareas">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
             Jugar Ruleta
           </button>
-          <button @click="openNewTask" class="bg-primary text-primary-foreground px-4 py-2 rounded-xl font-medium shadow-lg shadow-primary/20 hover:scale-105 transition-transform flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+          <button @click="openNewTask" class="bg-primary text-primary-foreground px-4 py-2 rounded-xl font-medium shadow-sm hover:opacity-95 transition-all flex items-center gap-2 text-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
             Añadir Tarea
           </button>
         </div>
@@ -122,7 +122,7 @@
           </div>
         </div>
 
-        <div class="p-4 bg-secondary/30 border-b border-border/40 font-medium grid grid-cols-12 gap-4 text-sm text-muted-foreground">
+        <div class="hidden md:grid md:grid-cols-12 gap-4 p-4 bg-secondary/30 border-b border-border/40 font-medium text-sm text-muted-foreground">
           <div class="col-span-1 text-center">Auto</div>
           <div class="col-span-5">Tarea</div>
           <div class="col-span-3">Proyecto / Cat</div>
@@ -139,19 +139,27 @@
         </div>
 
         <!-- Tareas dinámicas -->
-        <div v-for="task in displayedTasks" :key="task.id" class="p-4 border-b border-border/40 grid grid-cols-12 gap-4 items-center hover:bg-secondary/10 transition-colors group">
-          <div class="col-span-1 flex justify-center">
-             <div v-if="task.auto_distribute" class="w-6 h-6 rounded bg-primary/20 text-primary flex items-center justify-center cursor-help" title="Smart Scheduled">
+        <div v-for="task in displayedTasks" :key="task.id" class="p-4 border-b border-border/40 flex flex-col md:grid md:grid-cols-12 gap-2.5 md:gap-4 md:items-center hover:bg-secondary/10 transition-colors group">
+          <div class="md:col-span-1 flex items-center justify-between md:justify-center">
+            <div class="flex items-center gap-2">
+              <div v-if="task.auto_distribute" class="w-6 h-6 rounded bg-primary/20 text-primary flex items-center justify-center cursor-help" title="Smart Scheduled">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
-             </div>
-             <div v-else class="w-6 h-6 rounded bg-muted/20 text-muted-foreground flex items-center justify-center cursor-help" title="Pendiente Rápida">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-             </div>
+              </div>
+              <div v-else class="w-6 h-6 rounded bg-muted/40 text-muted-foreground flex items-center justify-center cursor-help" title="Pendiente Rápida">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              </div>
+              <span class="md:hidden text-[11px] font-medium text-muted-foreground">
+                {{ task.auto_distribute ? 'Smart Schedule' : 'Pendiente Rápida' }}
+              </span>
+            </div>
+            <span class="md:hidden text-xs text-muted-foreground bg-secondary/60 px-2 py-0.5 rounded-md border border-border/40 truncate max-w-[160px]">
+              {{ getProjectName(task.projectId) || task.category || 'Sin categoría' }}
+            </span>
           </div>
-          <div class="col-span-5">
+          <div class="md:col-span-5 min-w-0">
             <div class="font-medium text-foreground flex items-center gap-2 flex-wrap">
               <span>{{ task.title }}</span>
-              <span v-if="task.duration_minutes" class="text-[10px] font-normal text-muted-foreground bg-secondary px-1.5 py-0.5 rounded border border-border/40">
+              <span v-if="task.duration_minutes" class="text-[10px] font-normal text-muted-foreground bg-secondary px-1.5 py-0.5 rounded border border-border/40 tabular-nums">
                 {{ task.duration_minutes }}m
               </span>
             </div>
@@ -184,19 +192,21 @@
               </span>
             </div>
           </div>
-          <div class="col-span-3 text-sm text-muted-foreground">{{ getProjectName(task.projectId) || task.category || '-' }}</div>
-          <div class="col-span-2">
-            <span :class="['px-2 py-1 rounded-full text-xs font-bold', getPriorityClass(task.priority)]">
-              {{ task.priority === 'high' ? 'Alta' : task.priority === 'medium' ? 'Media' : 'Baja' }}
-            </span>
-          </div>
-          <div class="col-span-1 text-right flex justify-end gap-1 items-center">
-            <button v-if="task.status === 'pending'" @click="markComplete(task)" class="bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white p-2 rounded-full transition-colors flex-shrink-0 focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:outline-none" title="Completar Tarea" aria-label="Completar Tarea">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            </button>
-            <div class="opacity-100 md:opacity-0 md:group-hover:opacity-100 group-focus-within:opacity-100 focus-within:opacity-100 transition-opacity flex gap-1">
-              <button @click="openEditTask(task)" class="text-muted-foreground hover:text-primary p-2 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded-lg" title="Editar" aria-label="Editar tarea"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>
-              <button @click="deleteTask(task)" class="text-muted-foreground hover:text-destructive p-2 focus-visible:ring-2 focus-visible:ring-destructive focus-visible:outline-none rounded-lg" title="Eliminar" aria-label="Eliminar tarea"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></button>
+          <div class="hidden md:block md:col-span-3 text-sm text-muted-foreground truncate">{{ getProjectName(task.projectId) || task.category || '-' }}</div>
+          <div class="flex items-center justify-between pt-1 md:pt-0 md:contents">
+            <div class="md:col-span-2">
+              <span :class="['px-2.5 py-1 rounded-full text-xs font-bold', getPriorityClass(task.priority)]">
+                {{ task.priority === 'high' ? 'Alta' : task.priority === 'medium' ? 'Media' : 'Baja' }}
+              </span>
+            </div>
+            <div class="md:col-span-1 text-right flex justify-end gap-1 items-center">
+              <button v-if="task.status === 'pending'" @click="markComplete(task)" class="bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white p-2 rounded-full transition-colors flex-shrink-0 focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:outline-none" title="Completar Tarea" aria-label="Completar Tarea">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </button>
+              <div class="opacity-100 md:opacity-0 md:group-hover:opacity-100 group-focus-within:opacity-100 focus-within:opacity-100 transition-opacity flex gap-1">
+                <button @click="openEditTask(task)" class="text-muted-foreground hover:text-primary p-2 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded-lg" title="Editar" aria-label="Editar tarea"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>
+                <button @click="deleteTask(task)" class="text-muted-foreground hover:text-destructive p-2 focus-visible:ring-2 focus-visible:ring-destructive focus-visible:outline-none rounded-lg" title="Eliminar" aria-label="Eliminar tarea"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></button>
+              </div>
             </div>
           </div>
         </div>

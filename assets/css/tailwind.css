@@ -72,8 +72,14 @@
   body {
     @apply bg-background text-foreground font-sans;
   }
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-serif;
+  h1 {
+    @apply font-serif tracking-tight;
+  }
+  h2, h3, h4, h5, h6 {
+    @apply font-sans tracking-tight;
+  }
+  .font-mono {
+    font-variant-numeric: tabular-nums;
   }
 }
 

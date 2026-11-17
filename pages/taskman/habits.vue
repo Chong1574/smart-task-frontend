@@ -8,7 +8,7 @@
           <h1 class="text-3xl font-serif font-bold">Mis Hábitos Diarios</h1>
           <p class="text-muted-foreground">Construye la mejor versión de ti, un día a la vez.</p>
         </div>
-        <button @click="showHabitModal = true" class="bg-primary text-primary-foreground px-5 py-2.5 rounded-full font-bold shadow-lg shadow-primary/30 hover:scale-105 transition-transform flex items-center gap-2">
+        <button @click="showHabitModal = true" class="bg-primary text-primary-foreground px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-primary/30 hover:scale-105 transition-transform flex items-center gap-2">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
           Añadir Hábito
         </button>
@@ -22,7 +22,9 @@
         </h2>
         
         <div v-if="taskStore.habits.length === 0" class="text-center text-muted-foreground py-12">
-          <div class="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4 text-4xl">🌱</div>
+          <div class="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
+            <Sprout class="w-9 h-9 text-emerald-500" />
+          </div>
           <h3 class="font-bold text-lg text-foreground mb-1">Aún no tienes hábitos</h3>
           <p>Empieza plantando la primera semilla de tu rutina.</p>
         </div>
@@ -36,9 +38,10 @@
               <!-- Ícono Izquierdo con Ring de progreso visual -->
               <div class="relative flex-shrink-0">
                 <div :class="['absolute inset-0 rounded-full transition-all duration-700', isHabitCompletedToday(habit) ? 'border-4 border-emerald-500 scale-100 opacity-100' : 'border-2 border-dashed border-muted-foreground/30 scale-90 opacity-50']"></div>
-                <div :class="['w-14 h-14 rounded-full flex items-center justify-center text-2xl z-10 relative transition-transform duration-500', 
+                <div :class="['w-14 h-14 rounded-full flex items-center justify-center z-10 relative transition-transform duration-500', 
                               isHabitCompletedToday(habit) ? 'bg-emerald-500 text-white scale-90 shadow-lg shadow-emerald-500/40' : 'bg-secondary text-foreground group-hover:scale-105']">
-                  {{ isHabitCompletedToday(habit) ? '🌟' : '⏳' }}
+                  <CheckCircle2 v-if="isHabitCompletedToday(habit)" class="w-7 h-7" />
+                  <Clock v-else class="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
                 </div>
               </div>
 
@@ -49,8 +52,9 @@
                     {{ habit.name }}
                   </h3>
                   <!-- Racha (Streak) Badge -->
-                  <span v-if="getStreak(habit) > 0" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-orange-500/10 text-orange-600 border border-orange-500/20">
-                    🔥 {{ getStreak(habit) }} {{ getStreak(habit) === 1 ? 'día' : 'días' }}
+                  <span v-if="getStreak(habit) > 0" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-orange-500/10 text-orange-600 border border-orange-500/20 tabular-nums">
+                    <Flame class="w-3.5 h-3.5 text-orange-500 fill-orange-500/20" />
+                    {{ getStreak(habit) }} {{ getStreak(habit) === 1 ? 'día' : 'días' }}
                   </span>
                 </div>
                 <p class="text-sm text-muted-foreground max-w-lg">
@@ -140,6 +144,7 @@
 definePageMeta({ layout: 'taskman' })
 
 import { ref, onMounted } from 'vue'
+import { Flame, CheckCircle2, Clock, Sprout, Sparkles } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import { useTaskStore, type Habit } from '~/stores/tasks'
 import confetti from 'canvas-confetti'

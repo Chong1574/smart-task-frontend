@@ -12,7 +12,7 @@
         
         <!-- Header Ejecutivo: Reloj Compacto, Saludo y Pulso del Día -->
         <header class="text-center mb-2.5 lg:mb-3.5 w-full max-w-4xl shrink-0">
-          <h1 class="text-5xl md:text-6xl lg:text-7xl font-serif font-bold bg-clip-text text-transparent bg-gradient-to-br from-primary via-orange-500 to-amber-500 tracking-tight leading-none mb-1">
+          <h1 class="text-5xl md:text-6xl lg:text-7xl font-sans tabular-nums font-bold bg-clip-text text-transparent bg-gradient-to-br from-primary via-orange-500 to-amber-500 tracking-tight leading-none mb-1">
             {{ currentTime || '--:--' }}
           </h1>
           <h2 class="text-xl md:text-2xl font-medium text-foreground tracking-tight">

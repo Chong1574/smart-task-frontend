@@ -14,18 +14,42 @@
       </div>
 
       <!-- Acciones Rápidas -->
-      <div class="grid grid-cols-2 gap-4 max-w-md">
-        <button @click="$router.push('/taskman/wallet?action=new_transaction')" class="bg-card hover:bg-secondary/50 border border-border/40 p-4 rounded-2xl flex flex-col items-center justify-center gap-2 transition-colors shadow-sm">
-          <div class="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-1">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <button @click="$router.push('/taskman/activities')" class="bg-card hover:bg-secondary/50 border border-border/40 px-4 py-3 rounded-2xl flex items-center gap-3 transition-all shadow-sm hover:shadow-md cursor-pointer text-left group">
+          <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
           </div>
-          <span class="font-medium text-sm text-center">Nueva Transacción</span>
+          <div class="min-w-0">
+            <span class="font-semibold text-sm block truncate">Nueva Tarea</span>
+            <span class="text-[11px] text-muted-foreground block truncate">Actividades</span>
+          </div>
         </button>
-        <button @click="$router.push('/taskman/garage?action=new_fuel')" class="bg-card hover:bg-secondary/50 border border-border/40 p-4 rounded-2xl flex flex-col items-center justify-center gap-2 transition-colors shadow-sm">
-          <div class="w-12 h-12 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center mb-1">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z"/><path d="m3 9 2.45-4.9A2 2 0 0 1 7.24 3h9.52a2 2 0 0 1 1.8 1.1L21 9"/><path d="M12 3v6"/></svg>
+        <button @click="$router.push('/taskman/wallet?action=new_transaction')" class="bg-card hover:bg-secondary/50 border border-border/40 px-4 py-3 rounded-2xl flex items-center gap-3 transition-all shadow-sm hover:shadow-md cursor-pointer text-left group">
+          <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
           </div>
-          <span class="font-medium text-sm text-center">Cargar Gasolina</span>
+          <div class="min-w-0">
+            <span class="font-semibold text-sm block truncate">Nueva Transacción</span>
+            <span class="text-[11px] text-muted-foreground block truncate">Wallet</span>
+          </div>
+        </button>
+        <button @click="$router.push('/taskman/garage?action=new_fuel')" class="bg-card hover:bg-secondary/50 border border-border/40 px-4 py-3 rounded-2xl flex items-center gap-3 transition-all shadow-sm hover:shadow-md cursor-pointer text-left group">
+          <div class="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" x2="15" y1="22" y2="22"/><line x1="4" x2="14" y1="9" y2="9"/><path d="M14 22V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v18"/><path d="M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 2 2a2 2 0 0 0 2-2V9.83a2 2 0 0 0-.59-1.42L18 5"/></svg>
+          </div>
+          <div class="min-w-0">
+            <span class="font-semibold text-sm block truncate">Cargar Gasolina</span>
+            <span class="text-[11px] text-muted-foreground block truncate">Garage</span>
+          </div>
+        </button>
+        <button @click="$router.push('/taskman/briefing')" class="bg-card hover:bg-secondary/50 border border-border/40 px-4 py-3 rounded-2xl flex items-center gap-3 transition-all shadow-sm hover:shadow-md cursor-pointer text-left group">
+          <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v8"/><path d="m4.93 10.93 1.41 1.41"/><path d="M2 18h2"/><path d="M20 18h2"/><path d="m19.07 10.93-1.41 1.41"/><path d="M22 22H2"/><path d="m8 6 4-4 4 4"/><path d="M16 18a4 4 0 0 0-8 0"/></svg>
+          </div>
+          <div class="min-w-0">
+            <span class="font-semibold text-sm block truncate">Briefing Matutino</span>
+            <span class="text-[11px] text-muted-foreground block truncate">Resumen diario</span>
+          </div>
         </button>
       </div>
 
@@ -36,10 +60,10 @@
           <div class="flex items-center justify-between mb-4">
             <h3 class="font-medium text-muted-foreground">Proyectos</h3>
             <div class="w-10 h-10 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
             </div>
           </div>
-          <p class="text-3xl font-bold">{{ activeProjectsCount }}</p>
+          <p class="text-3xl font-bold tabular-nums">{{ activeProjectsCount }}</p>
           <div class="mt-2 text-sm text-green-500 flex items-center gap-1">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
             <span>{{ completedProjectsCount }} completados</span>
@@ -54,7 +78,7 @@
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c-2.28 0-3-2.12-3-4a1 1 0 0 1 .5-1.1c1-.6 2.3-1.6 3.5-3.9 1 2 2.5 3.3 4 3.9a1 1 0 0 1 .5 1.1c0 1.9-.72 4-3 4a2.5 2.5 0 0 0 2.5 2.5c2 0 3-1.5 3-3a1 1 0 0 1 2 0c0 3.3-2.7 6-6 6a6 6 0 0 1-6-6c0-1.5 1-3 3-3Z"/></svg>
             </div>
           </div>
-          <p class="text-3xl font-bold">{{ habitsCompletedToday }} / {{ activeHabitsCount }}</p>
+          <p class="text-3xl font-bold tabular-nums">{{ habitsCompletedToday }} / {{ activeHabitsCount }}</p>
           <div class="mt-2 text-sm text-green-500 flex items-center gap-1">
             <span>{{ habitsRemaining === 0 && activeHabitsCount > 0 ? '¡Día perfecto!' : '¡Aún puedes lograrlo!' }}</span>
           </div>
@@ -68,7 +92,7 @@
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
             </div>
           </div>
-          <p class="text-3xl font-bold">{{ pendingTasksCount }}</p>
+          <p class="text-3xl font-bold tabular-nums">{{ pendingTasksCount }}</p>
           <div class="mt-2 text-sm text-green-500 flex items-center gap-1">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
             <span>{{ completedTasksCount }} completadas</span>
@@ -83,7 +107,7 @@
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
             </div>
           </div>
-          <p class="text-3xl font-bold font-mono" :class="financeStore.totalBalance >= 0 ? 'text-emerald-500' : 'text-red-500'">{{ formatCurrency(financeStore.totalBalance) }}</p>
+          <p class="text-3xl font-bold font-mono tabular-nums" :class="financeStore.totalBalance >= 0 ? 'text-emerald-500' : 'text-red-500'">{{ formatCurrency(financeStore.totalBalance) }}</p>
           <div class="mt-2 text-sm text-muted-foreground flex items-center gap-1">
             <span>{{ financeStore.accounts.length }} cuentas activas</span>
           </div>

@@ -70,27 +70,27 @@
           </div>
           <div v-else class="w-6 mx-auto my-1 border-t border-border/40"></div>
 
-          <NuxtLink to="/taskman/admin/bazar" class="w-full flex items-center gap-3 p-2.5 rounded-xl text-primary hover:bg-primary/10 transition-all text-sm" :class="!isSidebarOpen ? 'justify-center px-0' : ''" :title="!isSidebarOpen ? 'Bazar' : ''" active-class="bg-primary/15 font-medium">
-            <ShieldAlert class="w-5 h-5 shrink-0" />
+          <NuxtLink to="/taskman/admin/bazar" class="w-full flex items-center gap-3 p-2.5 rounded-xl text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all text-sm" :class="!isSidebarOpen ? 'justify-center px-0' : ''" :title="!isSidebarOpen ? 'Bazar' : ''" active-class="bg-primary/15 text-primary font-medium">
+            <Store class="w-5 h-5 shrink-0" />
             <span v-if="isSidebarOpen" class="font-medium whitespace-nowrap truncate">Bazar</span>
           </NuxtLink>
 
-          <NuxtLink to="/taskman/admin/pedidos" class="w-full flex items-center gap-3 p-2.5 rounded-xl text-primary hover:bg-primary/10 transition-all text-sm" :class="!isSidebarOpen ? 'justify-center px-0' : ''" :title="!isSidebarOpen ? 'Pedidos Brandy' : ''" active-class="bg-primary/15 font-medium">
+          <NuxtLink to="/taskman/admin/pedidos" class="w-full flex items-center gap-3 p-2.5 rounded-xl text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all text-sm" :class="!isSidebarOpen ? 'justify-center px-0' : ''" :title="!isSidebarOpen ? 'Pedidos Brandy' : ''" active-class="bg-primary/15 text-primary font-medium">
             <Package class="w-5 h-5 shrink-0" />
             <span v-if="isSidebarOpen" class="font-medium whitespace-nowrap truncate">Pedidos Brandy</span>
           </NuxtLink>
 
-          <NuxtLink to="/taskman/admin/filamentos" class="w-full flex items-center gap-3 p-2.5 rounded-xl text-primary hover:bg-primary/10 transition-all text-sm" :class="!isSidebarOpen ? 'justify-center px-0' : ''" :title="!isSidebarOpen ? 'Filamentos' : ''" active-class="bg-primary/15 font-medium">
+          <NuxtLink to="/taskman/admin/filamentos" class="w-full flex items-center gap-3 p-2.5 rounded-xl text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all text-sm" :class="!isSidebarOpen ? 'justify-center px-0' : ''" :title="!isSidebarOpen ? 'Filamentos' : ''" active-class="bg-primary/15 text-primary font-medium">
             <Palette class="w-5 h-5 shrink-0" />
             <span v-if="isSidebarOpen" class="font-medium whitespace-nowrap truncate">Filamentos</span>
           </NuxtLink>
 
-          <NuxtLink to="/taskman/admin/ttlock" class="w-full flex items-center gap-3 p-2.5 rounded-xl text-primary hover:bg-primary/10 transition-all text-sm" :class="!isSidebarOpen ? 'justify-center px-0' : ''" :title="!isSidebarOpen ? 'Chapa' : ''" active-class="bg-primary/15 font-medium">
+          <NuxtLink to="/taskman/admin/ttlock" class="w-full flex items-center gap-3 p-2.5 rounded-xl text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all text-sm" :class="!isSidebarOpen ? 'justify-center px-0' : ''" :title="!isSidebarOpen ? 'Chapa' : ''" active-class="bg-primary/15 text-primary font-medium">
             <Lock class="w-5 h-5 shrink-0" />
             <span v-if="isSidebarOpen" class="font-medium whitespace-nowrap truncate">Chapa</span>
           </NuxtLink>
 
-          <NuxtLink to="/taskman/admin/audit" class="w-full flex items-center gap-3 p-2.5 rounded-xl text-primary hover:bg-primary/10 transition-all text-sm" :class="!isSidebarOpen ? 'justify-center px-0' : ''" :title="!isSidebarOpen ? 'Auditoría' : ''" active-class="bg-primary/15 font-medium">
+          <NuxtLink to="/taskman/admin/audit" class="w-full flex items-center gap-3 p-2.5 rounded-xl text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all text-sm" :class="!isSidebarOpen ? 'justify-center px-0' : ''" :title="!isSidebarOpen ? 'Auditoría' : ''" active-class="bg-primary/15 text-primary font-medium">
             <ShieldAlert class="w-5 h-5 shrink-0" />
             <span v-if="isSidebarOpen" class="font-medium whitespace-nowrap truncate">Auditoría</span>
           </NuxtLink>
@@ -247,7 +247,7 @@
             <span>Filamentos</span>
           </NuxtLink>
           <NuxtLink @click="showMobileMenu = false" to="/taskman/admin/bazar" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-secondary text-foreground text-sm font-medium transition-colors" active-class="bg-primary/10 text-primary font-bold">
-            <ShieldAlert class="w-5 h-5 text-primary" />
+            <Store class="w-5 h-5 text-primary" />
             <span>Bazar</span>
           </NuxtLink>
           <NuxtLink @click="showMobileMenu = false" to="/taskman/admin/ttlock" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-secondary text-foreground text-sm font-medium transition-colors" active-class="bg-primary/10 text-primary font-bold">
@@ -306,7 +306,8 @@ import {
   Package,
   Palette,
   MoreHorizontal,
-  User
+  User,
+  Store
 } from 'lucide-vue-next'
 import { useAuthStore } from '~/stores/auth'
 import { useConfirmStore } from '~/stores/confirm'

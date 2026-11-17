@@ -23,22 +23,30 @@
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- Tarjeta Balance + Presupuesto Diario Seguro (Safe-to-Spend) -->
-        <div :class="['p-6 rounded-3xl text-white shadow-xl relative overflow-hidden md:col-span-1 transition-all flex flex-col justify-between', financeStore.totalBalance < 0 ? 'bg-gradient-to-br from-red-500 to-rose-700 shadow-red-500/20' : 'bg-gradient-to-br from-green-500 to-emerald-700 shadow-green-500/20']">
-          <div class="relative z-10">
-            <div class="flex items-center justify-between mb-1">
-              <h3 class="font-medium opacity-90 text-sm">Balance Total Neto</h3>
-              <span class="text-[10px] bg-white/15 backdrop-blur-md px-2 py-0.5 rounded-full font-mono">
+        <div class="p-6 rounded-3xl bg-gradient-to-br from-stone-900 via-[#261D18] to-stone-950 text-stone-100 border border-stone-800/80 shadow-xl relative overflow-hidden md:col-span-1 transition-all flex flex-col justify-between">
+          <div class="relative z-10 space-y-2">
+            <div class="flex items-center justify-between gap-2">
+              <h3 class="font-medium text-stone-300 text-sm">Balance Total Neto</h3>
+              <span class="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 backdrop-blur-md px-2.5 py-0.5 rounded-full font-mono">
                 Líquido: {{ formatCurrency(liquidCashBalance) }}
               </span>
             </div>
-            <p class="text-3xl sm:text-4xl font-bold font-mono tracking-tight">{{ formatCurrency(financeStore.totalBalance) }}</p>
+            <div class="flex items-center justify-between gap-2 flex-wrap">
+              <p class="text-3xl sm:text-4xl font-bold font-mono tracking-tight text-white">{{ formatCurrency(financeStore.totalBalance) }}</p>
+              <span
+                class="text-[10px] px-2 py-0.5 rounded-full font-semibold border"
+                :class="financeStore.totalBalance >= 0 ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' : 'bg-rose-500/15 text-rose-300 border-rose-500/30'"
+              >
+                {{ financeStore.totalBalance >= 0 ? 'Patrimonio positivo' : 'Pasivos > Activos' }}
+              </span>
+            </div>
           </div>
 
           <!-- Widget Algoritmo 1: Safe-to-Spend (Presupuesto Diario Seguro) -->
-          <div class="relative z-10 mt-5 pt-4 border-t border-white/20 space-y-2.5">
+          <div class="relative z-10 mt-5 pt-4 border-t border-white/10 space-y-2.5">
             <div class="flex items-center justify-between">
-              <span class="text-xs font-semibold uppercase tracking-wider opacity-90 flex items-center gap-1.5">
-                <Sparkles class="w-3.5 h-3.5" />
+              <span class="text-xs font-semibold uppercase tracking-wider text-stone-300 flex items-center gap-1.5">
+                <Sparkles class="w-3.5 h-3.5 text-primary" />
                 Gasto Diario Seguro
               </span>
               <span class="text-[10px] px-2 py-0.5 rounded-full font-bold" :class="safeToSpendMetrics.badgeClass">
@@ -48,40 +56,56 @@
 
             <div class="flex items-baseline justify-between">
               <div>
-                <span class="text-2xl font-bold font-mono">{{ formatCurrency(safeToSpendMetrics.dailyAllowance) }}</span>
-                <span class="text-xs opacity-80"> / día</span>
+                <span class="text-2xl font-bold font-mono text-white">{{ formatCurrency(safeToSpendMetrics.dailyAllowance) }}</span>
+                <span class="text-xs text-stone-400"> / día</span>
               </div>
-              <div class="text-right text-[11px] opacity-90 font-mono">
+              <div class="text-right text-[11px] text-stone-300 font-mono">
                 Hoy: {{ formatCurrency(safeToSpendMetrics.spentToday) }}
               </div>
             </div>
 
             <!-- Velocímetro / Pacing Bar de cuota de hoy -->
             <div class="space-y-1">
-              <div class="h-2 w-full bg-black/25 rounded-full overflow-hidden p-0.5">
+              <div class="h-2 w-full bg-black/40 rounded-full overflow-hidden p-0.5 border border-white/5">
                 <div 
                   class="h-full rounded-full transition-all duration-500"
                   :class="safeToSpendMetrics.barClass"
                   :style="{ width: `${safeToSpendMetrics.todayUsedPct}%` }"
                 ></div>
               </div>
-              <div class="flex justify-between text-[10px] opacity-85">
-                <span>Libre quincena: {{ formatCurrency(safeToSpendMetrics.freePool) }} <span v-if="safeToSpendMetrics.gasolineReserved > 0" class="opacity-75 font-mono text-[9px]">(Gas: {{ formatCurrency(safeToSpendMetrics.gasolineReserved) }})</span></span>
+              <div class="flex justify-between text-[10px] text-stone-400">
+                <span>Libre quincena: {{ formatCurrency(safeToSpendMetrics.freePool) }} <span v-if="safeToSpendMetrics.gasolineReserved > 0" class="opacity-80 font-mono text-[9px]">(Gas: {{ formatCurrency(safeToSpendMetrics.gasolineReserved) }})</span></span>
                 <span>Próximo ingreso en {{ safeToSpendMetrics.daysToPayday }}d</span>
               </div>
             </div>
           </div>
 
-          <div class="absolute -right-4 -top-4 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+          <div class="absolute -right-6 -top-6 w-36 h-36 bg-primary/15 rounded-full blur-2xl pointer-events-none"></div>
         </div>
 
         <!-- Tarjeta Cuentas -->
-        <div class="bg-card border border-border/40 p-6 rounded-3xl shadow-sm md:col-span-2">
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="font-bold text-lg">Mis Cuentas</h3>
-            <button @click="showAccountModal = true" class="text-primary hover:bg-primary/10 p-2 rounded-lg transition-colors" title="Añadir Cuenta">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-            </button>
+        <div class="bg-card border border-border/40 p-6 rounded-3xl shadow-sm md:col-span-2 flex flex-col justify-between">
+          <div class="flex flex-col gap-3 mb-4">
+            <div class="flex justify-between items-center">
+              <h3 class="font-bold text-lg">Mis Cuentas</h3>
+              <button @click="showAccountModal = true" class="text-primary hover:bg-primary/10 p-2 rounded-lg transition-colors" title="Añadir Cuenta">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+              </button>
+            </div>
+            <div v-if="financeStore.accounts.length > 0" class="flex flex-wrap items-center gap-1.5">
+              <button
+                v-for="tab in accountFilterTabs"
+                :key="tab.value"
+                type="button"
+                @click="accountCategoryFilter = tab.value"
+                class="px-2.5 py-1 rounded-full text-[11px] font-medium transition-colors border cursor-pointer"
+                :class="accountCategoryFilter === tab.value
+                  ? 'bg-primary text-primary-foreground border-primary shadow-xs'
+                  : 'bg-secondary/50 text-muted-foreground border-border/40 hover:text-foreground hover:bg-secondary'"
+              >
+                {{ tab.label }}
+              </button>
+            </div>
           </div>
           <div v-if="financeStore.loading && financeStore.accounts.length === 0" class="flex gap-4 overflow-x-auto pb-2">
             <Skeleton v-for="i in 3" :key="i" class="h-20 min-w-[200px]" />
@@ -89,12 +113,18 @@
           <div v-else-if="financeStore.accounts.length === 0" class="text-sm text-muted-foreground">
              No hay cuentas registradas.
           </div>
+          <div v-else-if="filteredAccountsList.length === 0" class="text-sm text-muted-foreground py-6 text-center bg-secondary/20 rounded-2xl border border-border/30">
+             No hay cuentas en esta categoría.
+          </div>
           <div v-else class="flex gap-4 overflow-x-auto pb-3 pt-1">
             <div 
-              v-for="account in financeStore.accounts" 
+              v-for="account in filteredAccountsList" 
               :key="account.id" 
               @click="openHistory(account)" 
-              class="bg-secondary/40 hover:bg-secondary/60 border border-border/40 hover:border-border/80 p-4 rounded-2xl min-w-[270px] sm:min-w-[290px] relative group flex flex-col justify-between cursor-pointer transition-all shadow-sm hover:shadow-md"
+              :class="[
+                'bg-secondary/40 hover:bg-secondary/60 border border-border/40 hover:border-border/80 p-4 rounded-2xl min-w-[260px] sm:min-w-[280px] relative group flex flex-col justify-between cursor-pointer transition-all shadow-sm hover:shadow-md',
+                getBankAccentClass(account)
+              ]"
             >
               <div>
                 <!-- Header con Icono, Tipo y Acciones -->
@@ -1418,6 +1448,27 @@ const calibrateForm = reactive({
   error: ''
 })
 
+const accountCategoryFilter = ref<'all' | 'credit' | 'debit' | 'savings' | 'loan'>('all')
+
+const accountFilterTabs = computed(() => [
+  { value: 'all' as const, label: `Todas (${financeStore.accounts.length})` },
+  { value: 'credit' as const, label: 'Crédito' },
+  { value: 'debit' as const, label: 'Débito & Efectivo' },
+  { value: 'savings' as const, label: 'Ahorro & Inversión' },
+  { value: 'loan' as const, label: 'Préstamos' }
+])
+
+const filteredAccountsList = computed(() => {
+  return financeStore.accounts.filter((acc) => {
+    if (accountCategoryFilter.value === 'all') return true
+    if (accountCategoryFilter.value === 'credit') return acc.type === 'card' && acc.sub_type === 'credit'
+    if (accountCategoryFilter.value === 'debit') return (acc.type === 'card' && acc.sub_type !== 'credit') || acc.type === 'cash'
+    if (accountCategoryFilter.value === 'savings') return acc.type === 'savings' || acc.type === 'investment'
+    if (accountCategoryFilter.value === 'loan') return acc.type === 'loan'
+    return true
+  })
+})
+
 const selectedMonth = ref<string>('all')
 const searchQuery = ref<string>('')
 const filterOnlyAntExpenses = ref<boolean>(false)
@@ -2500,6 +2551,19 @@ function getAccountIcon(acc: Account) {
   if (acc.type === 'loan') return Landmark
   if (acc.type === 'cash') return Coins
   return Wallet
+}
+
+function getBankAccentClass(acc: Account): string {
+  const name = (acc.name || '').toLowerCase()
+  if (name.includes('bbva')) return 'border-l-4 border-l-blue-500'
+  if (name.includes('nu')) return 'border-l-4 border-l-purple-500'
+  if (name.includes('plata')) return 'border-l-4 border-l-orange-500'
+  if (name.includes('klar')) return 'border-l-4 border-l-emerald-500'
+  if (name.includes('mercado')) return 'border-l-4 border-l-sky-500'
+  if (name.includes('didi')) return 'border-l-4 border-l-amber-500'
+  if (name.includes('azteca')) return 'border-l-4 border-l-green-600'
+  if (name.includes('binance') || name.includes('eth') || name.includes('btc')) return 'border-l-4 border-l-yellow-500'
+  return 'border-l-4 border-l-primary/60'
 }
 
 function getAccountBadge(acc: Account) {
