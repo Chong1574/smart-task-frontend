@@ -47,16 +47,16 @@
         <!-- Indicadores de Taller & Manufactura Real -->
         <div class="mt-16 pt-8 border-t border-border/40 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
           <div>
-            <div class="text-3xl font-bold font-mono text-primary">0.12 mm</div>
-            <div class="text-xs text-muted-foreground uppercase tracking-wider mt-1">Precisión de Capa</div>
+            <div class="text-3xl font-bold text-primary">A Medida</div>
+            <div class="text-xs text-muted-foreground uppercase tracking-wider mt-1">Diseño y Prototipado</div>
           </div>
           <div>
-            <div class="text-3xl font-bold font-mono text-foreground">4 Colores</div>
-            <div class="text-xs text-muted-foreground uppercase tracking-wider mt-1">Multimaterial AMS</div>
+            <div class="text-3xl font-bold text-foreground">Multicolor</div>
+            <div class="text-xs text-muted-foreground uppercase tracking-wider mt-1">Acabado Profesional</div>
           </div>
           <div>
-            <div class="text-3xl font-bold text-foreground">PLA+ / PETG</div>
-            <div class="text-xs text-muted-foreground uppercase tracking-wider mt-1">Grado Técnico</div>
+            <div class="text-3xl font-bold text-foreground">Multimaterial</div>
+            <div class="text-xs text-muted-foreground uppercase tracking-wider mt-1">Filamento y Resina</div>
           </div>
           <div>
             <div class="text-3xl font-bold text-foreground">Querétaro</div>
@@ -447,7 +447,7 @@ useHead({
             name: '¿Dónde puedo mandar a imprimir en 3D en Querétaro?',
             acceptedAnswer: {
               '@type': 'Answer',
-              text: 'El Rincón de Brandy ofrece servicio de manufactura aditiva e impresión 3D en Santiago de Querétaro con tecnología Bambu Lab P1S y soporte multicromático de hasta 4 colores continuos por pieza en filamentos PLA+, PETG técnico, TPU y resina HD.'
+              text: 'El Rincón de Brandy ofrece servicio de manufactura aditiva e impresión 3D en Santiago de Querétaro con impresión multicolor y multimaterial en filamentos técnicos (PLA+, PETG, TPU, ABS) y resina HD, desde piezas únicas hasta producción en serie.'
             }
           },
           {
