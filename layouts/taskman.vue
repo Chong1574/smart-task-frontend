@@ -90,6 +90,16 @@
             <span v-if="isSidebarOpen" class="font-medium whitespace-nowrap truncate">Chapa</span>
           </NuxtLink>
 
+          <NuxtLink to="/taskman/admin/armario" class="w-full flex items-center gap-3 p-2.5 rounded-xl text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all text-sm" :class="!isSidebarOpen ? 'justify-center px-0' : ''" :title="!isSidebarOpen ? 'Armario' : ''" active-class="bg-primary/15 text-primary font-medium">
+            <Shirt class="w-5 h-5 shrink-0" />
+            <span v-if="isSidebarOpen" class="font-medium whitespace-nowrap truncate">Armario</span>
+          </NuxtLink>
+
+          <NuxtLink to="/taskman/impresion-3d" class="w-full flex items-center gap-3 p-2.5 rounded-xl text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all text-sm" :class="!isSidebarOpen ? 'justify-center px-0' : ''" :title="!isSidebarOpen ? 'Calculadora 3D' : ''" active-class="bg-primary/15 text-primary font-medium">
+            <Printer class="w-5 h-5 shrink-0" />
+            <span v-if="isSidebarOpen" class="font-medium whitespace-nowrap truncate">Calculadora 3D</span>
+          </NuxtLink>
+
           <NuxtLink to="/taskman/admin/audit" class="w-full flex items-center gap-3 p-2.5 rounded-xl text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all text-sm" :class="!isSidebarOpen ? 'justify-center px-0' : ''" :title="!isSidebarOpen ? 'Auditoría' : ''" active-class="bg-primary/15 text-primary font-medium">
             <ShieldAlert class="w-5 h-5 shrink-0" />
             <span v-if="isSidebarOpen" class="font-medium whitespace-nowrap truncate">Auditoría</span>
@@ -230,14 +240,18 @@
             <Sunrise class="w-5 h-5 text-amber-500" />
             <span>Briefing Matutino</span>
           </NuxtLink>
-          <NuxtLink v-if="isAdmin" @click="showMobileMenu = false" to="/taskman/impresion-3d" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-secondary text-foreground text-sm font-medium transition-colors" active-class="bg-primary/10 text-primary font-bold">
-            <Printer class="w-5 h-5 text-purple-500" />
-            <span>Impresión 3D</span>
-          </NuxtLink>
         </div>
 
         <div v-if="isAdmin" class="space-y-1 pt-2 border-t border-border/40">
           <p class="text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-3 mb-1">Administración</p>
+          <NuxtLink @click="showMobileMenu = false" to="/taskman/admin/armario" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-secondary text-foreground text-sm font-medium transition-colors" active-class="bg-primary/10 text-primary font-bold">
+            <Shirt class="w-5 h-5 text-primary" />
+            <span>Armario</span>
+          </NuxtLink>
+          <NuxtLink @click="showMobileMenu = false" to="/taskman/impresion-3d" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-secondary text-foreground text-sm font-medium transition-colors" active-class="bg-primary/10 text-primary font-bold">
+            <Printer class="w-5 h-5 text-primary" />
+            <span>Calculadora 3D</span>
+          </NuxtLink>
           <NuxtLink @click="showMobileMenu = false" to="/taskman/admin/pedidos" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-secondary text-foreground text-sm font-medium transition-colors" active-class="bg-primary/10 text-primary font-bold">
             <Package class="w-5 h-5 text-primary" />
             <span>Pedidos Brandy</span>
@@ -307,7 +321,8 @@ import {
   Palette,
   MoreHorizontal,
   User,
-  Store
+  Store,
+  Shirt
 } from 'lucide-vue-next'
 import { useAuthStore } from '~/stores/auth'
 import { useConfirmStore } from '~/stores/confirm'
@@ -336,9 +351,6 @@ const nav = computed(() => {
     { name: 'Wallet', path: '/taskman/wallet', icon: TrendingUp },
     { name: 'Garage', path: '/taskman/garage', icon: Car },
   ]
-  if (isAdmin.value) {
-    items.push({ name: '3D', path: '/taskman/impresion-3d', icon: Printer })
-  }
   return items
 })
 

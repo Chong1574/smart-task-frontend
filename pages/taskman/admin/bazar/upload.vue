@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-2xl mx-auto space-y-6">
+  <div v-if="isAdmin" class="max-w-2xl mx-auto space-y-6">
     <div class="flex items-center justify-between">
       <NuxtLink
         to="/taskman/admin/bazar"
@@ -89,6 +89,7 @@ definePageMeta({ layout: 'taskman' });
 
 const authStore = useAuthStore();
 const router = useRouter();
+const isAdmin = computed(() => authStore.user?.role === 'admin');
 
 // Guard client-side con soporte para inicialización
 onMounted(async () => {
@@ -97,6 +98,10 @@ onMounted(async () => {
   }
   if (!authStore.user?.email) {
     router.replace('/login');
+    return;
+  }
+  if (authStore.user.role !== 'admin') {
+    router.replace('/taskman');
   }
 });
 

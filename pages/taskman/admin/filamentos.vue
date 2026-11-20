@@ -1,5 +1,5 @@
 <template>
-  <div class="h-full flex flex-col gap-6 max-w-7xl mx-auto pb-12">
+  <div v-if="isAdmin" class="h-full flex flex-col gap-6 max-w-7xl mx-auto pb-12">
     <!-- Header -->
     <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
@@ -305,6 +305,8 @@ definePageMeta({
   ]
 });
 
+const authStore = useAuthStore();
+const isAdmin = computed(() => authStore.user?.role === 'admin');
 const filamentsStore = useFilamentsStore();
 const saving = ref(false);
 const selectedTab = ref('TODOS');

@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-6xl mx-auto">
+  <div v-if="isAdmin" class="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-6xl mx-auto">
     <div class="flex items-baseline justify-between">
       <div>
         <h1 class="text-3xl font-serif font-bold">Auditoría</h1>
@@ -51,7 +51,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '~/stores/auth'
 import api from '~/utils/api'
 
 definePageMeta({ layout: 'taskman' })
@@ -102,5 +104,16 @@ const load = async () => {
 const next = () => { offset.value += limit.value; load() }
 const prev = () => { offset.value = Math.max(0, offset.value - limit.value); load() }
 
-onMounted(load)
+const authStore = useAuthStore()
+const router = useRouter()
+const isAdmin = computed(() => authStore.user?.role === 'admin')
+
+onMounted(async () => {
+  if (!authStore.isInitialized) await authStore.init()
+  if (authStore.user?.role !== 'admin') {
+    router.replace('/taskman')
+    return
+  }
+  load()
+})
 </script>

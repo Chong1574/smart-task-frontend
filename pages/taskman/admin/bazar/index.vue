@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-5xl mx-auto space-y-6">
+  <div v-if="isAdmin" class="max-w-5xl mx-auto space-y-6">
     <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
       <div>
         <h1 class="text-3xl font-serif font-bold">Backoffice del Bazar</h1>
@@ -517,6 +517,7 @@ const DEFAULT_MAKERWORLD_JSON = {
 
 const authStore = useAuthStore();
 const router = useRouter();
+const isAdmin = computed(() => authStore.user?.role === 'admin');
 
 const activeTab = ref<'direct' | 'batch' | 'custom'>('direct');
 
@@ -721,8 +722,13 @@ const saving = ref(false);
 const deletingId = ref<number | null>(null);
 
 onMounted(async () => {
+  if (!authStore.isInitialized) await authStore.init();
   if (!authStore.user?.email) {
     router.replace('/login');
+    return;
+  }
+  if (authStore.user.role !== 'admin') {
+    router.replace('/taskman');
     return;
   }
   await Promise.all([refresh(), fetchMeliStatus()]);

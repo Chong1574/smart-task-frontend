@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-2xl mx-auto space-y-6">
+  <div v-if="isAdmin" class="max-w-2xl mx-auto space-y-6">
     <div>
       <h1 class="text-3xl font-serif font-bold">Chapa TTLock</h1>
       <p class="text-muted-foreground">Genera y administra códigos de acceso para la chapa de Tequis.</p>
@@ -99,7 +99,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '~/stores/auth'
 import api from '~/utils/api'
@@ -108,6 +108,7 @@ definePageMeta({ layout: 'taskman' })
 
 const authStore = useAuthStore()
 const router = useRouter()
+const isAdmin = computed(() => authStore.user?.role === 'admin')
 
 const form = ref({
   name: '',
@@ -123,9 +124,14 @@ const passcodes = ref<any[]>([])
 const loadingList = ref(false)
 const deletingId = ref<number | null>(null)
 
-onMounted(() => {
+onMounted(async () => {
+  if (!authStore.isInitialized) await authStore.init()
   if (!authStore.user) {
     router.push('/login')
+    return
+  }
+  if (authStore.user.role !== 'admin') {
+    router.replace('/taskman')
     return
   }
   fetchPasscodes()

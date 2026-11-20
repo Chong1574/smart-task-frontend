@@ -1,5 +1,5 @@
 <template>
-  <div class="h-full flex flex-col gap-6">
+  <div v-if="isAdmin" class="h-full flex flex-col gap-6">
     <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
         <h1 class="text-3xl font-serif font-bold text-foreground">Pedidos de Impresión</h1>
@@ -926,6 +926,7 @@ const filamentsStore = useFilamentsStore();
 const financeStore = useFinanceStore();
 const authStore = useAuthStore();
 const router = useRouter();
+const isAdmin = computed(() => authStore.user?.role === 'admin');
 
 function getColorStock(colorName?: string) {
   return filamentsStore.getColorStatus(colorName || '');
