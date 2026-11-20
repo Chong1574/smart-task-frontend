@@ -165,7 +165,7 @@
                   <img
                     v-if="slotItem(slot.category) && getItemThumb(slotItem(slot.category)!)"
                     :src="getItemThumb(slotItem(slot.category)!)!"
-                    class="w-full h-full object-cover"
+                    class="w-full h-full object-contain p-0.5 bg-neutral-950/30"
                     alt=""
                   />
                   <Shirt v-else class="w-5 h-5 text-muted-foreground/50" />
@@ -224,7 +224,7 @@
                   :class="slotItem(slot.category)?.id === cand.id ? 'border-primary bg-primary/10' : 'border-border/50 hover:border-primary/40 bg-card'"
                 >
                   <div class="w-10 h-10 rounded bg-secondary overflow-hidden shrink-0 flex items-center justify-center">
-                    <img v-if="getItemThumb(cand)" :src="getItemThumb(cand)!" class="w-full h-full object-cover" alt="" />
+                    <img v-if="getItemThumb(cand)" :src="getItemThumb(cand)!" class="w-full h-full object-contain p-0.5 bg-neutral-950/30" alt="" />
                     <Shirt v-else class="w-4 h-4 text-muted-foreground/50" />
                   </div>
                   <div class="min-w-0 flex-1">
@@ -260,7 +260,7 @@
               :class="activeOutfit?.id === o.id ? 'border-primary bg-primary/10' : 'border-border/50 hover:border-primary/40 bg-background/50'"
             >
               <div class="w-12 h-14 rounded-lg bg-secondary overflow-hidden shrink-0 flex items-center justify-center">
-                <img v-if="getOutfitCardThumb(o)" :src="getOutfitCardThumb(o)!" class="w-full h-full object-cover" alt="" />
+                <img v-if="getOutfitCardThumb(o)" :src="getOutfitCardThumb(o)!" class="w-full h-full object-contain p-0.5 bg-neutral-950/30" alt="" />
                 <Sparkles v-else class="w-4 h-4 text-muted-foreground/50" />
               </div>
               <div class="min-w-0 flex-1">
@@ -298,7 +298,7 @@
               <img
                 v-if="settings.baseBodyPhotoFile && getPhotoUrl('base', settings.baseBodyPhotoFile)"
                 :src="getPhotoUrl('base', settings.baseBodyPhotoFile)!"
-                class="w-full h-full object-cover"
+                class="w-full h-full object-contain p-0.5 bg-neutral-950/30"
                 alt="Foto base"
               />
               <User v-else class="w-6 h-6 text-muted-foreground/50" />

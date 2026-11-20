@@ -56,17 +56,9 @@
         :key="item.id"
         class="rounded-2xl border border-border/60 bg-card overflow-hidden flex flex-col shadow-xs hover:border-primary/40 transition-colors"
       >
-        <div class="relative h-48 bg-secondary/40 flex items-center justify-center overflow-hidden border-b border-border/40">
-          <img
-            v-if="itemPhoto(item)"
-            :src="itemPhoto(item)!"
-            :alt="item.nickname || item.name"
-            class="w-full h-full object-contain"
-          />
-          <Shirt v-else class="w-10 h-10 text-muted-foreground/40" />
-
-          <div class="absolute top-2.5 left-2.5 flex flex-wrap gap-1">
-            <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-background/85 backdrop-blur-xs border border-border/60">
+        <div class="px-3 py-2 bg-card/80 border-b border-border/40 flex items-center justify-between gap-2">
+          <div class="flex flex-wrap items-center gap-1 min-w-0">
+            <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground border border-border/60 truncate">
               {{ CATEGORY_LABELS[item.category] || item.category }}
             </span>
             <span
@@ -76,14 +68,30 @@
               🏠 Casa/Pijama
             </span>
           </div>
-
           <span
             v-if="item.referencePhotoFile"
-            class="absolute top-2.5 right-2.5 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+            class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 border border-emerald-500/30 shrink-0"
           >
             Foto ref ✓
           </span>
         </div>
+
+        <button
+          type="button"
+          :disabled="!itemPhoto(item)"
+          @click="itemPhoto(item) && (zoomedItem = item)"
+          class="relative h-56 p-2.5 bg-neutral-950/30 flex items-center justify-center overflow-hidden border-b border-border/40 group focus:outline-none"
+          :class="itemPhoto(item) ? 'cursor-zoom-in' : 'cursor-default'"
+          :title="itemPhoto(item) ? 'Ver foto completa' : ''"
+        >
+          <img
+            v-if="itemPhoto(item)"
+            :src="itemPhoto(item)!"
+            :alt="item.nickname || item.name"
+            class="max-w-full max-h-full w-auto h-auto object-contain rounded-lg transition-transform duration-200 group-hover:scale-[1.03]"
+          />
+          <Shirt v-else class="w-10 h-10 text-muted-foreground/40" />
+        </button>
 
         <div class="p-3.5 flex-1 flex flex-col gap-2.5">
           <div>
@@ -174,7 +182,7 @@
         <!-- Reference photo uploader -->
         <div class="rounded-xl border border-border/60 bg-background/50 p-3 flex flex-col sm:flex-row items-center gap-3">
           <div class="w-20 h-20 rounded-lg bg-secondary overflow-hidden shrink-0 flex items-center justify-center">
-            <img v-if="itemPhoto(editingItem)" :src="itemPhoto(editingItem)!" class="w-full h-full object-cover" alt="" />
+            <img v-if="itemPhoto(editingItem)" :src="itemPhoto(editingItem)!" class="w-full h-full object-contain p-1 bg-neutral-950/30" alt="" />
             <Camera v-else class="w-6 h-6 text-muted-foreground/50" />
           </div>
           <div class="flex-1 space-y-2 text-xs">
@@ -284,6 +292,35 @@
         </div>
       </div>
     </div>
+
+    <!-- Lightbox Modal -->
+    <div
+      v-if="zoomedItem"
+      @click="zoomedItem = null"
+      class="fixed inset-0 z-50 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4 cursor-zoom-out"
+    >
+      <div @click.stop class="relative max-w-2xl w-full rounded-2xl border border-border/60 bg-card overflow-hidden shadow-2xl">
+        <div class="px-4 py-3 border-b border-border/50 flex items-center justify-between gap-3">
+          <div class="min-w-0">
+            <p class="font-semibold text-sm truncate">{{ zoomedItem.nickname || zoomedItem.name }}</p>
+            <p class="text-xs text-muted-foreground truncate">
+              {{ CATEGORY_LABELS[zoomedItem.category] || zoomedItem.category }} · {{ zoomedItem.color }}
+            </p>
+          </div>
+          <button type="button" @click="zoomedItem = null" class="p-1.5 rounded-lg hover:bg-secondary cursor-pointer">
+            <X class="w-4 h-4" />
+          </button>
+        </div>
+        <div class="bg-neutral-950/90 p-4 flex items-center justify-center max-h-[75vh]">
+          <img
+            v-if="itemPhoto(zoomedItem)"
+            :src="itemPhoto(zoomedItem)!"
+            :alt="zoomedItem.nickname || zoomedItem.name"
+            class="max-w-full max-h-[68vh] w-auto h-auto object-contain rounded-lg"
+          />
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -312,6 +349,7 @@ const searchQuery = ref('');
 const categoryFilter = ref('all');
 const editingItem = ref<WardrobeItem | null>(null);
 const analyzeTraitsOnPhoto = ref(true);
+const zoomedItem = ref<WardrobeItem | null>(null);
 const mergingItem = ref<WardrobeItem | null>(null);
 const mergeTargetId = ref('');
 

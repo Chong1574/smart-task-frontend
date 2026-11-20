@@ -299,7 +299,7 @@ onUnmounted(() => {
   }
 });
 
-function compressImage(file: File, maxDim = 1024, quality = 0.86): Promise<string> {
+function compressImage(file: File, maxDim = 1440, quality = 0.92): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
