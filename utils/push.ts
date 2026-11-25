@@ -61,14 +61,9 @@ const registerWebPush = async () => {
     }
 
     try {
-        // Si ya tiene permiso concedido, renovamos la suscripción silenciosamente
+        // Solo renovamos automáticamente si el usuario ya concedió permiso previamente.
+        // Cuando es 'default', la UI muestra un botón con gesto de usuario explícito.
         if (Notification.permission === 'granted') {
-            await subscribeAndRegisterWebPush();
-            return;
-        }
-        // Intentar solicitar si el navegador lo permite en carga, de lo contrario el botón en NotificationBell lo activará con gesto de usuario
-        const permission = await Notification.requestPermission();
-        if (permission === 'granted') {
             await subscribeAndRegisterWebPush();
         }
     } catch (e) {

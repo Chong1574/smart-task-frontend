@@ -228,6 +228,7 @@ import { useRouter } from 'vue-router'
 import { useTaskStore } from '~/stores/tasks'
 import { useAuthStore } from '~/stores/auth'
 import { useFinanceStore } from '~/stores/finance'
+import { getLocalTodayStr } from '~/utils/date'
 import { onMounted, computed } from 'vue'
 
 const router = useRouter()
@@ -290,10 +291,6 @@ const getProjectName = (id?: number | null) => {
 
 // Hábitos
 const activeHabitsCount = computed(() => taskStore.habits.length)
-const getLocalTodayStr = () => {
-  const today = new Date();
-  return new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().split('T')[0];
-}
 
 const habitsCompletedToday = computed(() => {
   const today = getLocalTodayStr()

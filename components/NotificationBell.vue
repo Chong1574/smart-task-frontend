@@ -74,11 +74,12 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Bell } from 'lucide-vue-next'
+import { onKeyStroke } from '@vueuse/core'
 import { useNotificationStore, type Notification } from '~/stores/notifications'
 import { requestWebPushPermission } from '~/utils/push'
 import { toast } from 'vue-sonner'
 
-const props = defineProps({
+defineProps({
   popoverClass: {
     type: String,
     default: 'absolute right-0 mt-2'
@@ -89,6 +90,10 @@ const notificationStore = useNotificationStore()
 const router = useRouter()
 const isOpen = ref(false)
 const pushStatus = ref<string>('granted')
+
+onKeyStroke('Escape', () => {
+  if (isOpen.value) isOpen.value = false
+})
 
 const checkPushPermission = () => {
   if (typeof window !== 'undefined' && 'Notification' in window) {
@@ -112,7 +117,7 @@ const togglePopover = () => {
   isOpen.value = !isOpen.value
   if (isOpen.value) {
     checkPushPermission()
-    notificationStore.fetchNotifications()
+    notificationStore.fetchNotifications(true)
   }
 }
 
@@ -135,19 +140,13 @@ const formatDate = (dateStr: string) => {
   return d.toLocaleDateString('es-MX', { month: 'short', day: 'numeric' })
 }
 
-// Opcional: Fetch inicial si queremos el badge al cargar
 onMounted(() => {
   checkPushPermission()
-  notificationStore.fetchNotifications()
-  
-  // Refresh cada 5 minutos
-  const interval = setInterval(() => {
-    notificationStore.fetchNotifications()
-  }, 5 * 60 * 1000)
-  
-  onUnmounted(() => {
-    clearInterval(interval)
-  })
+  notificationStore.startPolling()
+})
+
+onUnmounted(() => {
+  notificationStore.stopPolling()
 })
 </script>
 

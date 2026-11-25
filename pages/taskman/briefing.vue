@@ -430,6 +430,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useTaskStore, type Habit, type Task } from '~/stores/tasks'
 import { useAuthStore } from '~/stores/auth'
 import { useFinanceStore } from '~/stores/finance'
+import { calculateHabitStreak, getLocalTodayStr } from '~/utils/date'
 import api from '~/utils/api'
 import confetti from 'canvas-confetti'
 
@@ -753,7 +754,7 @@ const allPriorityTasks = computed(() => {
     .filter(t => (t.status === 'pending' || t.status === 'in_progress') && t.priority === 'high')
     .sort((a, b) => {
       // Priorizar las que tienen deadline hoy
-      const now = new Date().toISOString().split('T')[0];
+      const now = getLocalTodayStr();
       const aToday = a.deadline && a.deadline.startsWith(now) ? 1 : 0;
       const bToday = b.deadline && b.deadline.startsWith(now) ? 1 : 0;
       return bToday - aToday;
@@ -795,11 +796,6 @@ const getLogDateStr = (log: any) => {
   return '';
 }
 
-const getLocalTodayStr = () => {
-  const today = new Date();
-  return new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().split('T')[0];
-}
-
 const isHabitDoneToday = (habit: Habit) => {
   if (!habit.logs || habit.logs.length === 0) return false;
   const todayStr = getLocalTodayStr();
@@ -815,34 +811,7 @@ const habitsProgressPercentage = computed(() => {
   return Math.round((completedHabitsCount.value / activeHabits.value.length) * 100);
 })
 
-const getHabitStreak = (habit: Habit) => {
-  if (!habit.logs || habit.logs.length === 0) return 0;
-  const dates = habit.logs.map(log => getLogDateStr(log)).filter(Boolean).sort((a, b) => b.localeCompare(a));
-  const uniqueDates = [...new Set(dates)];
-  if (uniqueDates.length === 0) return 0;
-  
-  let streak = 0;
-  const todayStr = getLocalTodayStr();
-  let checkDate = new Date(todayStr + 'T00:00:00');
-  
-  if (uniqueDates[0] === todayStr) {
-    streak++;
-    checkDate.setDate(checkDate.getDate() - 1);
-    uniqueDates.shift();
-  }
-  
-  while (uniqueDates.length > 0) {
-    const prevDateStr = new Date(checkDate.getTime() - checkDate.getTimezoneOffset() * 60000).toISOString().split('T')[0];
-    if (uniqueDates[0] === prevDateStr) {
-      streak++;
-      checkDate.setDate(checkDate.getDate() - 1);
-      uniqueDates.shift();
-    } else {
-      break;
-    }
-  }
-  return streak;
-}
+const getHabitStreak = (habit: Habit) => calculateHabitStreak(habit.logs)
 
 async function handleToggleHabit(habit: Habit, event: MouseEvent) {
   if (!habit.id) return;

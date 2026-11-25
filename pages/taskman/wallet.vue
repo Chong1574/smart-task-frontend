@@ -335,7 +335,7 @@
             </div>
 
             <div 
-              v-for="tx in filteredTransactions" 
+              v-for="tx in visibleTransactions" 
               :key="tx.id" 
               class="p-4 flex items-center justify-between gap-3 text-sm hover:bg-secondary/20 transition-colors group"
             >
@@ -398,6 +398,16 @@
                   </button>
                 </div>
               </div>
+            </div>
+
+            <div v-if="filteredTransactions.length > visibleTxCount" class="p-3 text-center">
+              <button
+                type="button"
+                @click="visibleTxCount += 100"
+                class="w-full py-2 px-4 rounded-xl bg-secondary/60 hover:bg-secondary text-xs font-semibold text-foreground transition-colors cursor-pointer"
+              >
+                Mostrar 100 más (restan {{ filteredTransactions.length - visibleTxCount }})
+              </button>
             </div>
           </div>
         </div>
@@ -1389,10 +1399,21 @@ import {
   X
 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
+import { onKeyStroke } from '@vueuse/core'
+import { isIncomingPairedTransaction } from '~/utils/date'
 import { useFinanceStore } from '~/stores/finance'
 import type { Account, AccountType, TransactionType } from '~/stores/finance'
 
 const financeStore = useFinanceStore()
+
+// Búsquedas O(1) por ID para evitar Array.find() por cada fila de transacción
+const accountByIdMap = computed(() => new Map(financeStore.accounts.map(a => [a.id, a])))
+const subscriptionByIdMap = computed(() => new Map(financeStore.subscriptions.map(s => [s.id, s])))
+const normalizedSubscriptions = computed(() =>
+  financeStore.subscriptions
+    .map(s => ({ id: s.id, name: s.name, lower: s.name.toLowerCase().trim() }))
+    .filter(s => Boolean(s.lower))
+)
 
 // Estado para sincronización y vinculación automática
 const isAutoLinking = ref(false)
@@ -1400,14 +1421,13 @@ const isAutoLinking = ref(false)
 const getLinkedSubscriptionName = (tx: any): string | null => {
   if (tx.subscription?.name) return tx.subscription.name
   if (tx.subscriptionId) {
-    const sub = financeStore.subscriptions.find(s => s.id === tx.subscriptionId)
+    const sub = subscriptionByIdMap.value.get(tx.subscriptionId)
     if (sub) return sub.name
   }
   const desc = (tx.description || '').toLowerCase().trim()
   if (!desc) return null
-  for (const sub of financeStore.subscriptions) {
-    const subName = sub.name.toLowerCase().trim()
-    if (subName && (desc.includes(subName) || subName.includes(desc))) {
+  for (const sub of normalizedSubscriptions.value) {
+    if (desc.includes(sub.lower) || sub.lower.includes(desc)) {
       return sub.name
     }
   }
@@ -1440,6 +1460,15 @@ const editingTransactionId = ref<number | null>(null)
 const showManageCategoriesModal = ref(false)
 const showCalibrateModal = ref(false)
 const isSubmittingCalibration = ref(false)
+
+onKeyStroke('Escape', () => {
+  if (showCalibrateModal.value && !isSubmittingCalibration.value) showCalibrateModal.value = false
+  else if (showManageCategoriesModal.value) showManageCategoriesModal.value = false
+  else if (showTransactionModal.value) showTransactionModal.value = false
+  else if (showSubscriptionModal.value) showSubscriptionModal.value = false
+  else if (showEditAccountModal.value) showEditAccountModal.value = false
+  else if (showAccountModal.value) showAccountModal.value = false
+})
 
 const calibrateAccount = ref<Account | null>(null)
 const calibrateForm = reactive({
@@ -1525,6 +1554,13 @@ const filteredTransactions = computed(() => {
     })
   }
   return list
+})
+
+const visibleTxCount = ref(100)
+const visibleTransactions = computed(() => filteredTransactions.value.slice(0, visibleTxCount.value))
+
+watch([selectedMonth, searchQuery, filterOnlyAntExpenses, selectedDateFilter], () => {
+  visibleTxCount.value = 100
 })
 
 // --- Algoritmo 1: Presupuesto Diario Seguro (Safe-to-Spend) ---
@@ -2500,7 +2536,7 @@ const formatDate = (dateString: string) => {
 
 const getAccountName = (accountId: number | null | undefined): string => {
   if (!accountId) return 'Cuenta'
-  return financeStore.accounts.find(a => a.id === Number(accountId))?.name || `Cuenta #${accountId}`
+  return accountByIdMap.value.get(Number(accountId))?.name || `Cuenta #${accountId}`
 }
 
 const getTransactionRouteLabel = (tx: any): { label: string; isRoute: boolean } | null => {
@@ -2510,7 +2546,7 @@ const getTransactionRouteLabel = (tx: any): { label: string; isRoute: boolean } 
     const otherId = Number(match[1])
     const thisName = getAccountName(tx.accountId)
     const otherName = getAccountName(otherId)
-    const isIncomingSide = /^(Pago recibido|Transferencia recibida)/i.test(desc)
+    const isIncomingSide = isIncomingPairedTransaction(tx)
     return {
       label: isIncomingSide ? `${otherName} → ${thisName}` : `${thisName} → ${otherName}`,
       isRoute: true
@@ -2541,7 +2577,7 @@ const formatDescription = (desc: string) => {
     return `${prefix} ${accName} (${rest})`;
   }
   return desc.replace(/cuenta #(\d+)/g, (match, p1) => {
-    const acc = financeStore.accounts.find(a => a.id === Number(p1));
+    const acc = accountByIdMap.value.get(Number(p1));
     return acc ? acc.name : match;
   });
 }
@@ -2550,8 +2586,8 @@ const formatDescription = (desc: string) => {
 const isNegative = (tx: any) => {
   if (['expense', 'investment'].includes(tx.type)) return true;
   if (['transfer', 'credit_payment', 'loan_payment'].includes(tx.type)) {
-    // Si es un ingreso por transferencia/pago (generado por el backend con este texto exacto)
-    if (tx.description && (tx.description.startsWith('Pago recibido') || tx.description.startsWith('Transferencia recibida'))) return false;
+    // Si es la parte entrante de una transferencia/pago emparejado
+    if (isIncomingPairedTransaction(tx)) return false;
     // Cualquier otra transferencia, pago de tarjeta o retiro
     return true;
   }

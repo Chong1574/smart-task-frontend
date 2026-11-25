@@ -4,10 +4,15 @@ const SITE_URL = 'https://shongyi.com'
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   ssr: true,
+  routeRules: {
+    '/taskman': { ssr: false },
+    '/taskman/**': { ssr: false }
+  },
   devtools: { enabled: true },
   runtimeConfig: {
     public: {
-      apiBase: process.env.NUXT_PUBLIC_API_BASE || process.env.VITE_API_BASE_URL || ''
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || process.env.VITE_API_BASE_URL || '',
+      turnstileSiteKey: process.env.NUXT_PUBLIC_TURNSTILE_SITE_KEY || process.env.VITE_TURNSTILE_SITE_KEY || ''
     }
   },
   modules: [
@@ -85,6 +90,7 @@ export default defineNuxtConfig({
       viewport: 'width=device-width, initial-scale=1.0, viewport-fit=cover',
       link: [
         { rel: 'icon', type: 'image/png', href: '/logo.png' },
+        { rel: 'manifest', href: '/manifest.webmanifest' },
         { rel: 'help', href: '/llms.txt', type: 'text/plain', title: 'LLM Knowledge Base' }
       ],
       meta: [

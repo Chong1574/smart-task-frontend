@@ -20,6 +20,11 @@ export const useConfirmStore = defineStore('confirm', {
     }),
     actions: {
         ask(opts: ConfirmOptions): Promise<boolean> {
+            // Resolver cualquier diálogo pendiente previo como cancelado para evitar promesas huérfanas
+            if (this.resolver) {
+                this.resolver(false)
+                this.resolver = null
+            }
             this.title = opts.title
             this.message = opts.message || ''
             this.confirmLabel = opts.confirmLabel || 'Confirmar'

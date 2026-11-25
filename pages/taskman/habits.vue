@@ -147,6 +147,7 @@ import { ref, onMounted } from 'vue'
 import { Flame, CheckCircle2, Clock, Sprout, Sparkles } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import { useTaskStore, type Habit } from '~/stores/tasks'
+import { calculateHabitStreak, getLocalTodayStr } from '~/utils/date'
 import confetti from 'canvas-confetti'
 
 const taskStore = useTaskStore()
@@ -196,56 +197,13 @@ const getLogDateStr = (log: any) => {
   return '';
 }
 
-const getLocalTodayStr = () => {
-  const today = new Date();
-  return new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().split('T')[0];
-}
-
 const isHabitCompletedToday = (habit: Habit) => {
   if (!habit.logs || habit.logs.length === 0) return false;
   const todayStr = getLocalTodayStr();
   return habit.logs.some(log => getLogDateStr(log) === todayStr);
 }
 
-const getStreak = (habit: Habit) => {
-  if (!habit.logs || habit.logs.length === 0) return 0;
-  
-  const dates = habit.logs.map(log => getLogDateStr(log)).filter(d => d).sort((a, b) => b.localeCompare(a));
-  const uniqueDates = [...new Set(dates)];
-  if (uniqueDates.length === 0) return 0;
-  
-  let streak = 0;
-  const todayStr = getLocalTodayStr();
-  
-  let currentDate = new Date(todayStr + 'T00:00:00');
-  
-  if (uniqueDates[0] === todayStr) {
-    streak++;
-    currentDate.setDate(currentDate.getDate() - 1);
-    uniqueDates.shift();
-  } else {
-    const yesterday = new Date(currentDate);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = new Date(yesterday.getTime() - yesterday.getTimezoneOffset() * 60000).toISOString().split('T')[0];
-    if (uniqueDates[0] === yesterdayStr) {
-      // alive
-    } else {
-      return 0;
-    }
-  }
-
-  for (const d of uniqueDates) {
-    const logDate = new Date(d + 'T00:00:00');
-    if (logDate.getTime() === currentDate.getTime()) {
-      streak++;
-      currentDate.setDate(currentDate.getDate() - 1);
-    } else {
-      break;
-    }
-  }
-  
-  return streak;
-}
+const getStreak = (habit: Habit) => calculateHabitStreak(habit.logs)
 
 const handleComplete = async (habit: Habit, event: MouseEvent) => {
   const rect = (event.target as HTMLElement).getBoundingClientRect();

@@ -3,7 +3,7 @@
     <div class="w-full max-w-md bg-card p-8 rounded-3xl border border-border/50 shadow-xl">
       <div class="text-center mb-8">
         <h1 class="text-3xl font-serif font-bold mb-2">Acceso a Task-man</h1>
-        <p class="text-muted-foreground text-sm">Ingresa a tu panel de control y seguimiento botánico.</p>
+        <p class="text-muted-foreground text-sm">Ingresa a tu centro de productividad, finanzas y operaciones.</p>
       </div>
 
       <form @submit.prevent="handleLogin" class="space-y-6">
@@ -78,7 +78,12 @@
             @click="handleMicrosoftLogin"
             class="w-full py-3.5 bg-background border border-border text-foreground rounded-xl font-medium hover:bg-secondary/50 transition-colors flex justify-center items-center gap-3 shadow-sm"
           >
-            <img src="https://www.svgrepo.com/show/475662/microsoft-color.svg" class="w-5 h-5" alt="Microsoft">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 21 21" width="20" height="20" aria-hidden="true">
+              <rect x="1" y="1" width="9" height="9" fill="#F25022"/>
+              <rect x="11" y="1" width="9" height="9" fill="#7FBA00"/>
+              <rect x="1" y="11" width="9" height="9" fill="#00A4EF"/>
+              <rect x="11" y="11" width="9" height="9" fill="#FFB900"/>
+            </svg>
             Microsoft
           </button>
         </div>
@@ -87,7 +92,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '~/stores/auth'
@@ -100,8 +105,8 @@ const email = ref('')
 const password = ref('')
 const acceptedTerms = ref(false)
 
-onMounted(() => {
-  authStore.init()
+onMounted(async () => {
+  await authStore.init()
   if (authStore.isAuthenticated) {
     router.replace('/taskman')
   }

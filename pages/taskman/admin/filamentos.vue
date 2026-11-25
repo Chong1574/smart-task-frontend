@@ -288,29 +288,26 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { useFilamentsStore } from '~/stores/filaments';
+import { onKeyStroke } from '@vueuse/core';
 import { useAuthStore } from '~/stores/auth';
+import { useFilamentsStore } from '~/stores/filaments';
+import { useConfirmStore } from '~/stores/confirm';
 import { Save, Plus, Trash2, X } from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
 
-definePageMeta({
-  layout: 'taskman',
-  middleware: [
-    function (to, from) {
-      const auth = useAuthStore();
-      if (auth.user?.role !== 'admin') {
-        return navigateTo('/taskman');
-      }
-    }
-  ]
-});
+definePageMeta({ layout: 'taskman' });
 
 const authStore = useAuthStore();
 const isAdmin = computed(() => authStore.user?.role === 'admin');
 const filamentsStore = useFilamentsStore();
+const confirmStore = useConfirmStore();
 const saving = ref(false);
 const selectedTab = ref('TODOS');
 const showAddModal = ref(false);
+
+onKeyStroke('Escape', () => {
+  if (showAddModal.value) showAddModal.value = false;
+});
 
 const newForm = ref({
   colorName: '',
@@ -357,8 +354,13 @@ async function submitNewFilament() {
 }
 
 async function confirmDelete(item: any) {
-  if (confirm(`¿Eliminar filamento "${item.label}"?`)) {
-    await filamentsStore.removeFilament(item.id);
+  if (await confirmStore.ask({
+    title: 'Eliminar filamento',
+    message: `¿Eliminar el filamento "${item.label}" del catálogo?`,
+    confirmLabel: 'Eliminar',
+    destructive: true
+  })) {
+    await filamentsStore.removeFilament(item.dbId ?? item.id);
   }
 }
 
@@ -400,9 +402,6 @@ async function saveChanges() {
   saving.value = true;
   try {
     await filamentsStore.bulkSave(filamentsStore.filaments);
-    toast.success('Inventario y costos actualizados correctamente');
-  } catch (e: any) {
-    toast.error('Error al guardar filamentos', { description: e.message });
   } finally {
     saving.value = false;
   }

@@ -23,27 +23,16 @@
           <span v-if="isSidebarOpen" class="font-serif text-xl font-bold tracking-tight whitespace-nowrap transition-opacity truncate">TaskMan</span>
         </NuxtLink>
 
-        <!-- Acciones en modo expandido: Campana + Botón Colapsar -->
-        <div v-if="isSidebarOpen" class="flex items-center gap-1 shrink-0">
-          <NotificationBell popoverClass="fixed top-14 left-[16.5rem] z-[100] shadow-2xl" />
+        <!-- Acciones (única instancia de NotificationBell para evitar desmontajes al colapsar) -->
+        <div :class="isSidebarOpen ? 'flex items-center gap-1 shrink-0' : 'flex flex-col items-center gap-1.5 w-full pt-0.5'">
+          <NotificationBell :popoverClass="isSidebarOpen ? 'fixed top-14 left-[16.5rem] z-[100] shadow-2xl' : 'fixed top-14 left-[5.5rem] z-[100] shadow-2xl'" />
           <button
-            @click="isSidebarOpen = false"
+            @click="isSidebarOpen = !isSidebarOpen"
             class="text-muted-foreground hover:text-primary transition-colors p-1.5 rounded-lg hover:bg-secondary cursor-pointer"
-            title="Colapsar menú"
+            :title="isSidebarOpen ? 'Colapsar menú' : 'Expandir menú'"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-          </button>
-        </div>
-
-        <!-- Acciones en modo colapsado: Campana y Botón Expandir debajo del logo, ordenados y centrados verticalmente -->
-        <div v-else class="flex flex-col items-center gap-1.5 w-full pt-0.5">
-          <NotificationBell popoverClass="fixed top-14 left-[5.5rem] z-[100] shadow-2xl" />
-          <button
-            @click="isSidebarOpen = true"
-            class="text-muted-foreground hover:text-primary transition-colors p-1.5 rounded-lg hover:bg-secondary cursor-pointer"
-            title="Expandir menú"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            <svg v-if="isSidebarOpen" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            <svg v-else xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
           </button>
         </div>
       </div>

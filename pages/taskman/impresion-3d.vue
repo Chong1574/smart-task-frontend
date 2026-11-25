@@ -10,19 +10,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 
 definePageMeta({ layout: 'taskman' })
 
 const authStore = useAuthStore()
-const router = useRouter()
 const isAdmin = computed(() => authStore.user?.role === 'admin')
-
-onMounted(() => {
-  if (authStore.user?.role !== 'admin') {
-    router.replace('/taskman')
-  }
-})
 </script>

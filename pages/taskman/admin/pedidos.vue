@@ -20,7 +20,15 @@
     <!-- Board -->
     <div class="flex-1 overflow-x-auto pb-4 snap-x">
       <div class="flex gap-4 h-full min-w-max">
-        <div v-for="col in columns" :key="col.id" class="w-80 flex flex-col gap-3 bg-secondary/30 rounded-2xl p-4 snap-center border border-border/50">
+        <div
+          v-for="col in columns"
+          :key="col.id"
+          @dragover.prevent="dragOverCol = col.id"
+          @dragleave="onColumnDragLeave(col.id, $event)"
+          @drop.prevent="onDropPedido(col.id)"
+          class="w-80 flex flex-col gap-3 bg-secondary/30 rounded-2xl p-4 snap-center border transition-colors"
+          :class="dragOverCol === col.id ? 'border-primary ring-2 ring-primary/30 bg-primary/5' : 'border-border/50'"
+        >
           <div class="flex items-center justify-between mb-2">
             <h2 class="font-bold text-foreground flex items-center gap-2">
               <component :is="col.icon" class="w-5 h-5" :class="col.color" />
@@ -39,8 +47,12 @@
             <div
               v-for="pedido in pedidosByStatus(col.id)"
               :key="pedido.id"
+              draggable="true"
+              @dragstart="onDragStartPedido(pedido, $event)"
+              @dragend="onDragEndPedido"
               @click="openDetails(pedido)"
-              class="bg-card border border-border/50 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow group cursor-pointer flex flex-col gap-2.5"
+              class="bg-card border border-border/50 rounded-xl p-4 shadow-sm hover:shadow-md transition-all group cursor-pointer flex flex-col gap-2.5"
+              :class="draggedPedidoId === pedido.id ? 'opacity-50 scale-[0.98]' : ''"
             >
               <div class="flex justify-between items-start gap-2">
                 <div class="min-w-0 flex-1">
@@ -894,10 +906,12 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { onKeyStroke } from '@vueuse/core';
 import { usePedidosStore, type PedidoImpresion } from '~/stores/pedidos';
 import { useAuthStore } from '~/stores/auth';
 import { useFinanceStore } from '~/stores/finance';
-import { useRouter } from 'vue-router';
+import { useConfirmStore } from '~/stores/confirm';
+import { getLocalTodayStr, parseLocalDateToIso } from '~/utils/date';
 import api from '~/utils/api';
 import { imgProxy } from '~/utils/imgProxy';
 import { SUNLU_BAMBU_COLORS, type FilamentColor } from '~/data/filament-colors';
@@ -909,23 +923,13 @@ import {
   MessageCircle, Copy, Wallet, Save
 } from 'lucide-vue-next';
 
-definePageMeta({
-  layout: 'taskman',
-  middleware: [
-    function (to, from) {
-      const auth = useAuthStore();
-      if (auth.user?.role !== 'admin') {
-        return navigateTo('/taskman');
-      }
-    }
-  ]
-});
+definePageMeta({ layout: 'taskman' });
 
 const pedidosStore = usePedidosStore();
 const filamentsStore = useFilamentsStore();
 const financeStore = useFinanceStore();
 const authStore = useAuthStore();
-const router = useRouter();
+const confirmStore = useConfirmStore();
 const isAdmin = computed(() => authStore.user?.role === 'admin');
 
 function getColorStock(colorName?: string) {
@@ -944,9 +948,15 @@ const paymentAccountId = ref<number | ''>('');
 const paymentCategory = ref('Ventas');
 const paymentDescription = ref('');
 const paymentAmount = ref<number>(0);
-const paymentDate = ref(new Date().toISOString().slice(0, 10));
+const paymentDate = ref(getLocalTodayStr());
 const paymentSelectedExistingTxId = ref<number | null>(null);
 const isProcessingPayment = ref(false);
+
+onKeyStroke('Escape', () => {
+  if (showPaymentModal.value) showPaymentModal.value = false;
+  else if (showDetailsModal.value) showDetailsModal.value = false;
+  else if (showAddModal.value) showAddModal.value = false;
+});
 
 const matchingIncomeTransactions = computed(() => {
   if (!paymentTargetPedido.value) return [];
@@ -966,7 +976,7 @@ function openPaymentModal(pedido: PedidoImpresion) {
   paymentAmount.value = Number(pedido.precio) || 0;
   paymentDescription.value = `Venta 3D Pedido #${pedido.id} - ${pedido.cliente}${pedido.items?.[0]?.title ? ` (${pedido.items[0].title})` : ''}`;
   paymentCategory.value = 'Ventas';
-  paymentDate.value = new Date().toISOString().slice(0, 10);
+  paymentDate.value = getLocalTodayStr();
   paymentMode.value = 'new_tx';
   paymentSelectedExistingTxId.value = null;
 
@@ -1001,7 +1011,7 @@ async function confirmPayment() {
         amount: Number(paymentAmount.value),
         category: paymentCategory.value || 'Ventas',
         description: paymentDescription.value || `Venta 3D Pedido #${paymentTargetPedido.value.id}`,
-        date: new Date(paymentDate.value || Date.now()).toISOString()
+        date: parseLocalDateToIso(paymentDate.value)
       };
 
       const txResult = await financeStore.addTransaction(txData);
@@ -1342,6 +1352,7 @@ function getTrackingLink(pedido?: PedidoImpresion | null): string {
 
   if (pedido.trackingToken) {
     params.set('t', pedido.trackingToken);
+    return `https://shongyi.com/rastreo?${params.toString()}`;
   }
 
   const validEmail = pedido.email && !pedido.email.includes('@rincondebrandy.com') ? pedido.email : '';
@@ -1528,9 +1539,49 @@ const submitPedido = async () => {
   }
 };
 
-const confirmDelete = (pedido: PedidoImpresion) => {
-  if (confirm(`¿Eliminar el pedido de ${pedido.cliente}?`)) {
-    pedidosStore.deletePedido(pedido.id!);
+const draggedPedidoId = ref<number | string | null>(null);
+const dragOverCol = ref<PedidoStatus | null>(null);
+
+function onDragStartPedido(pedido: PedidoImpresion, event: DragEvent) {
+  if (!pedido.id) return;
+  draggedPedidoId.value = pedido.id;
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', String(pedido.id));
+  }
+}
+
+function onDragEndPedido() {
+  draggedPedidoId.value = null;
+  dragOverCol.value = null;
+}
+
+function onColumnDragLeave(colId: PedidoStatus, event: DragEvent) {
+  const currentTarget = event.currentTarget as HTMLElement | null;
+  const related = event.relatedTarget as Node | null;
+  if (currentTarget && related && currentTarget.contains(related)) return;
+  if (dragOverCol.value === colId) dragOverCol.value = null;
+}
+
+async function onDropPedido(targetStatus: PedidoStatus) {
+  const rawId = draggedPedidoId.value;
+  dragOverCol.value = null;
+  draggedPedidoId.value = null;
+  if (rawId === null || rawId === undefined) return;
+  const pedido = pedidosStore.pedidos.find(p => String(p.id) === String(rawId));
+  if (pedido && pedido.estado !== targetStatus) {
+    await pedidosStore.updatePedidoStatus(pedido.id!, targetStatus);
+  }
+}
+
+const confirmDelete = async (pedido: PedidoImpresion) => {
+  if (await confirmStore.ask({
+    title: 'Eliminar pedido',
+    message: `¿Estás seguro de eliminar el pedido #${pedido.id} de ${pedido.cliente}?`,
+    confirmLabel: 'Eliminar',
+    destructive: true
+  })) {
+    await pedidosStore.deletePedido(pedido.id!);
   }
 };
 </script>

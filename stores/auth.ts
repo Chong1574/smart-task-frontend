@@ -7,6 +7,8 @@ import { unregisterPushNotifications } from '../utils/push';
 // ponytail: SameSite=Lax + Secure — evita que PWAs en iOS descarten cookie en inicio (navegación cross-site de home screen)
 const TOKEN_COOKIE_OPTS = { maxAge: 60 * 60 * 24 * 365, path: '/', sameSite: 'lax' as const, secure: true };
 
+let initPromise: Promise<void> | null = null;
+
 export const useAuthStore = defineStore('auth', {
     state: () => ({
         token: null as string | null,
@@ -23,7 +25,10 @@ export const useAuthStore = defineStore('auth', {
 
     actions: {
         async init() {
-            if (!this.isInitialized) {
+            if (this.isInitialized) return;
+            if (initPromise) return initPromise;
+
+            initPromise = (async () => {
                 let token: string | null = null;
                 let userStr: string | null = null;
 
@@ -32,7 +37,7 @@ export const useAuthStore = defineStore('auth', {
                     token = resToken.value;
                     const resUser = await Preferences.get({ key: 'user' });
                     userStr = resUser.value;
-                } catch (e) {}
+                } catch {}
 
                 // localStorage es la fuente de verdad fallback (confiable en SPA)
                 if (!token && typeof window !== 'undefined') {
@@ -43,7 +48,7 @@ export const useAuthStore = defineStore('auth', {
                 if (userStr && userStr !== 'undefined') {
                     try {
                         this.user = JSON.parse(userStr);
-                    } catch (e) {
+                    } catch {
                         this.user = null;
                     }
                 }
@@ -55,8 +60,28 @@ export const useAuthStore = defineStore('auth', {
 
                 this.token = token;
                 setMemoryToken(token);
+
+                // Hidratar role/plan desde /auth/me una sola vez si falta el rol en caché
+                if (this.token && !this.user?.role && typeof window !== 'undefined') {
+                    try {
+                        const res = await api.get('/auth/me');
+                        if (res.data?.success && res.data.data) {
+                            this.user = { ...(this.user || {}), ...res.data.data };
+                            const hydrated = JSON.stringify(this.user);
+                            try { await Preferences.set({ key: 'user', value: hydrated }); } catch {}
+                            localStorage.setItem('user', hydrated);
+                        }
+                    } catch (err) {
+                        console.warn('auth.init(): /auth/me hydration failed', err);
+                    }
+                }
+
                 this.isInitialized = true;
-            }
+            })().finally(() => {
+                initPromise = null;
+            });
+
+            return initPromise;
         },
 
         async login(email: string, password: string) {
@@ -135,6 +160,7 @@ export const useAuthStore = defineStore('auth', {
             this.token = token;
             setMemoryToken(token);
             this.user = user;
+            this.isInitialized = true;
             const userStr = JSON.stringify(user);
             
             try {
@@ -153,6 +179,7 @@ export const useAuthStore = defineStore('auth', {
         },
 
         async logout() {
+            initPromise = null;
             try {
                 await unregisterPushNotifications();
             } catch (e) {}

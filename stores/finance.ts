@@ -1,7 +1,16 @@
 import { defineStore } from 'pinia';
 import { toast } from 'vue-sonner';
 import api from '../utils/api';
-import { computeUpcomingPaymentDate } from '../utils/date';
+import { computeUpcomingPaymentDate, isIncomingPairedTransaction } from '../utils/date';
+import { useTaskStore } from './tasks';
+
+let activeRequests = 0;
+let initPromise: Promise<void> | null = null;
+
+function setLoadingCount(store: { loading: boolean }, delta: number) {
+    activeRequests = Math.max(0, activeRequests + delta);
+    store.loading = activeRequests > 0;
+}
 
 // --- Tipos alineados con tu Lógica de Negocio ---
 export type AccountType = 'card' | 'loan' | 'investment' | 'cash' | 'savings';
@@ -45,6 +54,8 @@ export interface Transaction {
     id: number;
     accountId: number;
     type: TransactionType;
+    direction?: 'in' | 'out' | null;
+    pairedTransactionId?: number | null;
     amount: number;
     category: string;
     description: string;
@@ -166,7 +177,6 @@ export const useFinanceStore = defineStore('finance', {
             transactions: [] as Transaction[],
             subscriptions: [] as Subscription[],
             vehicles: [] as Vehicle[],
-            tasks: [] as any[],
             wishlistItems: [] as any[],
             loading: false,
             error: null as string | null,
@@ -188,10 +198,7 @@ export const useFinanceStore = defineStore('finance', {
             const expenses = state.transactions.filter(t => {
                 if (t.type === 'expense') return true;
                 if (['loan_payment', 'credit_payment'].includes(t.type)) {
-                    if (t.description && (t.description.startsWith('Pago recibido') || t.description.startsWith('Transferencia recibida'))) {
-                        return false;
-                    }
-                    return true;
+                    return !isIncomingPairedTransaction(t);
                 }
                 return false;
             }).reduce((sum, t) => sum + Number(t.amount), 0);
@@ -545,7 +552,7 @@ export const useFinanceStore = defineStore('finance', {
                     result[monthKey].expense += Number(t.amount);
                 } else if (['loan_payment', 'credit_payment'].includes(t.type)) {
                     // Solo contar la parte "saliente" del pago, no el recibo en la otra cuenta
-                    if (!t.description || !(t.description.startsWith('Pago recibido') || t.description.startsWith('Transferencia recibida'))) {
+                    if (!isIncomingPairedTransaction(t)) {
                         result[monthKey].expense += Number(t.amount);
                     }
                 }
@@ -1072,9 +1079,9 @@ export const useFinanceStore = defineStore('finance', {
 
     actions: {
         async fetchAccounts() {
-            this.loading = true;
+            setLoadingCount(this, 1);
             try {
-                const res = await api.get(`/finance/accounts?t=${new Date().getTime()}`);
+                const res = await api.get('/finance/accounts');
                 if (res.data.success) {
                     this.accounts = res.data.data.map((acc: any, index: number) => {
                         const subType = acc.subType ?? acc.sub_type;
@@ -1117,14 +1124,14 @@ export const useFinanceStore = defineStore('finance', {
                 console.error("Error fetching accounts:", err);
                 this.error = "Error al cargar cuentas";
             } finally {
-                this.loading = false;
+                setLoadingCount(this, -1);
             }
         },
 
         async fetchTransactions() {
-            this.loading = true;
+            setLoadingCount(this, 1);
             try {
-                const res = await api.get(`/finance/transactions?t=${new Date().getTime()}`);
+                const res = await api.get('/finance/transactions');
                 if (res.data.success) {
                     this.transactions = res.data.data.map((tx: any) => ({
                         ...tx,
@@ -1137,21 +1144,11 @@ export const useFinanceStore = defineStore('finance', {
                 console.error("Error fetching transactions:", err);
                 this.error = "Error al cargar transacciones";
             } finally {
-                this.loading = false;
+                setLoadingCount(this, -1);
             }
         },
 
-        async fetchTasks() {
-            try {
-                const res = await api.get('/tasks');
-                if (res.data.success) {
-                    this.tasks = res.data.data;
-                    this.syncCategories();
-                }
-            } catch (err) { console.error(err); }
-        },
-
-        async addTransaction(tx: Omit<Transaction, 'id'>) {
+        async addTransaction(tx: Omit<Transaction, 'id'>): Promise<boolean> {
             try {
                 const res = await api.post('/finance/transactions', tx);
                 if (res.data.success) {
@@ -1163,12 +1160,15 @@ export const useFinanceStore = defineStore('finance', {
                         this.fetchAccounts(),
                         this.fetchSubscriptions(),
                     ]);
+                    return true;
                 } else {
                     toast.error("Error al registrar transacción: " + (res.data.message || "Error desconocido"));
+                    return false;
                 }
             } catch (err: any) {
                 console.error("Error creating transaction:", err);
                 toast.error("Error de conexión al registrar transacción: " + (err.response?.data?.message || err.message || "Error desconocido"));
+                return false;
             }
         },
 
@@ -1320,7 +1320,8 @@ export const useFinanceStore = defineStore('finance', {
                 }
             });
 
-            this.tasks.forEach(t => {
+            const taskStore = useTaskStore();
+            taskStore.tasks.forEach(t => {
                 if (t.category && typeof t.category === 'string') {
                     const cat = normalizeCat(t.category);
                     if (!allCats.has(cat)) {
@@ -1343,28 +1344,36 @@ export const useFinanceStore = defineStore('finance', {
             if (!force && this.lastInitializedAt && (now - this.lastInitializedAt) < 15_000 && this.accounts.length > 0) {
                 return;
             }
+            if (initPromise) return initPromise;
 
-            if (typeof window !== 'undefined' && window.localStorage) {
-                const stored = window.localStorage.getItem('taskman_categories');
-                if (stored) {
-                    try {
-                        this.categories = JSON.parse(stored);
-                    } catch (e) {
-                        console.error("Error parsing stored categories", e);
+            initPromise = (async () => {
+                if (typeof window !== 'undefined' && window.localStorage) {
+                    const stored = window.localStorage.getItem('taskman_categories');
+                    if (stored) {
+                        try {
+                            this.categories = JSON.parse(stored);
+                        } catch (e) {
+                            console.error("Error parsing stored categories", e);
+                        }
                     }
                 }
-            }
-            await Promise.all([
-                this.fetchAccounts(),
-                this.fetchTransactions(),
-                this.fetchSubscriptions(),
-                this.fetchTasks(),
-                this.fetchVehicles(),
-                this.fetchWishlistItems()
-            ]);
+                const taskStore = useTaskStore();
+                await Promise.all([
+                    this.fetchAccounts(),
+                    this.fetchTransactions(),
+                    this.fetchSubscriptions(),
+                    taskStore.tasks.length === 0 ? taskStore.fetchTasks() : Promise.resolve(),
+                    this.fetchVehicles(),
+                    this.fetchWishlistItems()
+                ]);
 
-            this.syncCategories();
-            this.lastInitializedAt = Date.now();
+                this.syncCategories();
+                this.lastInitializedAt = Date.now();
+            })().finally(() => {
+                initPromise = null;
+            });
+
+            return initPromise;
         },
 
         async fetchSubscriptions() {

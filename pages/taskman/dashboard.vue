@@ -305,6 +305,7 @@ definePageMeta({ layout: 'taskman' })
 import { computed, onMounted } from 'vue'
 import { Activity, PieChart, CreditCard, PiggyBank } from 'lucide-vue-next'
 import { useFinanceStore } from '~/stores/finance'
+import { isIncomingPairedTransaction } from '~/utils/date'
 import { Doughnut, Bar, Line as LineChart } from 'vue-chartjs'
 import {
   Chart as ChartJS,
@@ -617,7 +618,7 @@ const fixedVsVariableChartData = computed(() => {
       }
     }
     if (['loan_payment', 'credit_payment'].includes(t.type) && d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
-      if (!t.description || !(t.description.startsWith('Pago recibido') || t.description.startsWith('Transferencia recibida'))) {
+      if (!isIncomingPairedTransaction(t)) {
           fixed += Number(t.amount);
       }
     }
@@ -651,7 +652,7 @@ const monthlyFlowChartData = computed(() => {
       if (t.type === 'expense') {
         dailyExpenses[d.getDate() - 1] += Number(t.amount);
       } else if (['loan_payment', 'credit_payment'].includes(t.type)) {
-        if (!t.description || !(t.description.startsWith('Pago recibido') || t.description.startsWith('Transferencia recibida'))) {
+        if (!isIncomingPairedTransaction(t)) {
           dailyExpenses[d.getDate() - 1] += Number(t.amount);
         }
       }

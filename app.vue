@@ -16,19 +16,33 @@ useHead({
   }
 })
 
+const isTaskmanRoute = computed(() => route.path.startsWith('/taskman'))
+
 useSeoMeta({
-  title: 'Ingeniería, Automatización y Manufactura 3D | El Rincón de Brandy',
-  description: 'Estudio de diseño, manufactura física en impresión 3D, ingeniería de software y automatización.',
-  ogTitle: 'Ingeniería, Automatización y Manufactura 3D | El Rincón de Brandy',
-  ogDescription: 'Transformamos ideas abstractas en realidades tangibles. Prototipado 3D de alta precisión y desarrollo tecnológico.',
+  title: () => isTaskmanRoute.value
+    ? 'TaskMan | Productividad, Finanzas y Operaciones'
+    : 'Ingeniería, Automatización y Manufactura 3D | El Rincón de Brandy',
+  description: () => isTaskmanRoute.value
+    ? 'Centro personal de productividad, finanzas, hábitos y operaciones de El Rincón de Brandy.'
+    : 'Estudio de diseño, manufactura física en impresión 3D, ingeniería de software y automatización.',
+  ogTitle: () => isTaskmanRoute.value
+    ? 'TaskMan | El Rincón de Brandy'
+    : 'Ingeniería, Automatización y Manufactura 3D | El Rincón de Brandy',
+  ogDescription: () => isTaskmanRoute.value
+    ? 'Productividad inteligente, agenda automática y control financiero.'
+    : 'Transformamos ideas abstractas en realidades tangibles. Prototipado 3D de alta precisión y desarrollo tecnológico.',
   ogImage: 'https://shongyi.com/og-cover.jpg',
   ogImageSecureUrl: 'https://shongyi.com/og-cover.jpg',
   ogImageType: 'image/jpeg',
   ogImageWidth: 1200,
   ogImageHeight: 805,
   twitterCard: 'summary_large_image',
-  twitterTitle: 'Ingeniería, Automatización y Manufactura 3D | El Rincón de Brandy',
-  twitterDescription: 'Transformamos ideas abstractas en realidades tangibles.',
+  twitterTitle: () => isTaskmanRoute.value
+    ? 'TaskMan | El Rincón de Brandy'
+    : 'Ingeniería, Automatización y Manufactura 3D | El Rincón de Brandy',
+  twitterDescription: () => isTaskmanRoute.value
+    ? 'Productividad inteligente, agenda automática y control financiero.'
+    : 'Transformamos ideas abstractas en realidades tangibles.',
   twitterImage: 'https://shongyi.com/og-cover.jpg'
 })
 </script>

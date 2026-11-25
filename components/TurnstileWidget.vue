@@ -1,16 +1,19 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 const emit = defineEmits<{ verified: [token: string] }>()
-const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY
+const runtimeConfig = useRuntimeConfig()
+const siteKey = computed(() =>
+  String(runtimeConfig.public?.turnstileSiteKey || import.meta.env.VITE_TURNSTILE_SITE_KEY || '')
+)
 const container = ref<HTMLDivElement | null>(null)
 let widgetId: string | null = null
 
 function render() {
   const ts = (window as any).turnstile
-  if (!ts || !container.value || !siteKey) return
+  if (!ts || !container.value || !siteKey.value) return
   widgetId = ts.render(container.value, {
-    sitekey: siteKey,
+    sitekey: siteKey.value,
     callback: (token: string) => emit('verified', token),
     'error-callback': () => emit('verified', ''),
     'expired-callback': () => emit('verified', '')
@@ -18,10 +21,15 @@ function render() {
 }
 
 onMounted(() => {
-  if (!siteKey) return
+  if (!siteKey.value) return
   if ((window as any).turnstile) {
     render()
   } else {
+    const existing = document.querySelector('script[src^="https://challenges.cloudflare.com/turnstile/v0/api.js"]') as HTMLScriptElement | null
+    if (existing) {
+      existing.addEventListener('load', render, { once: true })
+      return
+    }
     const s = document.createElement('script')
     s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js'
     s.async = true

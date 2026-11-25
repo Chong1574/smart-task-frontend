@@ -32,7 +32,7 @@
 
         <p v-if="authStore.error" class="text-sm text-destructive">{{ authStore.error }}</p>
 
-        <button type="submit" :disabled="authStore.loading || !acceptedTerms"
+        <button type="submit" :disabled="authStore.loading || !acceptedTerms || (requiresTurnstile && !turnstileToken)"
           class="w-full py-4 bg-primary text-primary-foreground rounded-xl font-medium hover:opacity-90 transition disabled:opacity-60 disabled:cursor-not-allowed">
           {{ authStore.loading ? 'Creando cuenta...' : 'Registrarme' }}
         </button>
@@ -68,7 +68,12 @@
             @click="handleMicrosoftLogin"
             class="w-full py-3.5 bg-background border border-border text-foreground rounded-xl font-medium hover:bg-secondary/50 transition-colors flex justify-center items-center gap-3 shadow-sm"
           >
-            <img src="https://www.svgrepo.com/show/475662/microsoft-color.svg" class="w-5 h-5" alt="Microsoft">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 21 21" width="20" height="20" aria-hidden="true">
+              <rect x="1" y="1" width="9" height="9" fill="#F25022"/>
+              <rect x="11" y="1" width="9" height="9" fill="#7FBA00"/>
+              <rect x="1" y="11" width="9" height="9" fill="#00A4EF"/>
+              <rect x="11" y="11" width="9" height="9" fill="#FFB900"/>
+            </svg>
             Microsoft
           </button>
         </div>
@@ -87,11 +92,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 import { API_URL } from '~/utils/apiUrl'
 
 const authStore = useAuthStore()
+const runtimeConfig = useRuntimeConfig()
+const requiresTurnstile = computed(() =>
+  Boolean(runtimeConfig.public?.turnstileSiteKey || import.meta.env.VITE_TURNSTILE_SITE_KEY)
+)
 const email = ref('')
 const password = ref('')
 const turnstileToken = ref('')

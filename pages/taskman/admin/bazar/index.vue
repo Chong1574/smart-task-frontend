@@ -448,11 +448,16 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { toast } from 'vue-sonner';
 import { useAuthStore } from '~/stores/auth';
+import { useConfirmStore } from '~/stores/confirm';
 import api from '~/utils/api';
 
 definePageMeta({ layout: 'taskman' });
+
+const authStore = useAuthStore();
+const confirmStore = useConfirmStore();
+const isAdmin = computed(() => authStore.user?.role === 'admin');
 
 interface Product {
   id: number;
@@ -514,10 +519,6 @@ const DEFAULT_MAKERWORLD_JSON = {
     },
   ],
 };
-
-const authStore = useAuthStore();
-const router = useRouter();
-const isAdmin = computed(() => authStore.user?.role === 'admin');
 
 const activeTab = ref<'direct' | 'batch' | 'custom'>('direct');
 
@@ -722,15 +723,6 @@ const saving = ref(false);
 const deletingId = ref<number | null>(null);
 
 onMounted(async () => {
-  if (!authStore.isInitialized) await authStore.init();
-  if (!authStore.user?.email) {
-    router.replace('/login');
-    return;
-  }
-  if (authStore.user.role !== 'admin') {
-    router.replace('/taskman');
-    return;
-  }
   await Promise.all([refresh(), fetchMeliStatus()]);
 });
 
@@ -783,13 +775,19 @@ async function saveEdit(p: Product) {
 }
 
 async function onDelete(p: Product) {
-  if (!confirm(`¿Borrar "${p.title}"? Los archivos en R2 quedan huérfanos.`)) return;
+  if (!(await confirmStore.ask({
+    title: 'Eliminar producto',
+    message: `¿Borrar "${p.title}"? Los archivos en R2 quedan huérfanos.`,
+    confirmLabel: 'Eliminar',
+    destructive: true
+  }))) return;
   deletingId.value = p.id;
   try {
     await api.delete(`/products/${p.id}`);
+    toast.success('Producto eliminado');
     await refresh();
   } catch (e: any) {
-    alert(e.response?.data?.error || 'Error al borrar');
+    toast.error(e.response?.data?.error || 'Error al borrar');
   } finally {
     deletingId.value = null;
   }

@@ -66,6 +66,9 @@ export const useFilamentsStore = defineStore('filaments', {
 
         if (resFilaments.status === 'fulfilled' && Array.isArray(resFilaments.value.data)) {
           this.filaments = resFilaments.value.data.map((item: any) => ({
+            dbId: typeof item.id === 'number' ? item.id : undefined,
+            colorId: item.colorId,
+            colorName: item.colorName,
             id: item.colorId || String(item.id),
             label: item.colorName,
             brand: item.brand,
@@ -95,67 +98,87 @@ export const useFilamentsStore = defineStore('filaments', {
     },
 
     async updateFilament(id: number | string, data: Partial<FilamentColor>) {
+      const match = this.filaments.find(f => f.dbId === id || f.id === id || f.colorId === id);
+      const targetId = match?.dbId ?? match?.colorId ?? id;
+      const payload: Record<string, any> = { ...data };
+      if (data.label && !payload.colorName) payload.colorName = data.label;
+
       try {
-        await api.put(`/filaments/${id}`, data);
+        await api.put(`/filaments/${targetId}`, payload);
         toast.success('Filamento actualizado');
         await this.fetchFilaments();
+        return true;
       } catch (err: any) {
-        // Fallback local
-        const idx = this.filaments.findIndex(f => f.id === id);
-        if (idx !== -1) {
-          this.filaments[idx] = { ...this.filaments[idx], ...data };
-          toast.success('Filamento actualizado (local)');
-        }
+        console.error('Error updating filament:', err);
+        toast.error(err?.response?.data?.error || err?.message || 'Error al actualizar filamento');
+        return false;
       }
     },
 
     async bulkSave(list: FilamentColor[]) {
+      const payload = list.map((f) => ({
+        id: f.dbId,
+        colorId: f.colorId || f.id,
+        colorName: f.colorName || f.label || f.id,
+        material: f.material || 'PLA',
+        brand: f.brand,
+        hex: f.hex,
+        costPerKg: Number(f.costPerKg || 300),
+        inStock: Boolean(f.inStock),
+        stockGrams: f.stockGrams,
+        supplierDeliveryDays: Number(f.supplierDeliveryDays || 2),
+        supplierUrl: f.supplierUrl || undefined
+      }));
+
       try {
-        await api.post('/filaments/bulk', { filaments: list });
-        toast.success('Inventario guardado con éxito');
+        await api.post('/filaments/bulk', { filaments: payload });
+        toast.success('Inventario de filamentos guardado con éxito');
         await this.fetchFilaments();
+        return true;
       } catch (err: any) {
-        this.filaments = [...list];
-        toast.success('Cambios aplicados localmente');
+        console.error('Error in bulkSave filaments:', err);
+        toast.error(err?.response?.data?.error || err?.message || 'No se pudo guardar el inventario en el servidor');
+        return false;
       }
     },
 
     async createFilament(filamentData: Partial<FilamentColor>) {
+      const resolvedName = (filamentData.colorName || filamentData.label || '').trim();
+      const payload = {
+        ...filamentData,
+        colorName: resolvedName,
+        colorId: filamentData.colorId || filamentData.id,
+      };
+
       try {
-        const res = await api.post('/filaments', filamentData);
+        const res = await api.post('/filaments', payload);
         if (res.data?.success) {
           toast.success('Nuevo filamento agregado');
           await this.fetchFilaments();
           return res.data.filament;
         }
+        toast.error(res.data?.error || 'No se pudo agregar el filamento');
+        return null;
       } catch (err: any) {
-        // Fallback local
-        const newFilament: FilamentColor = {
-          id: filamentData.id || filamentData.label?.toLowerCase().replace(/[^a-z0-9]+/g, '_') || `custom_${Date.now()}`,
-          label: filamentData.label || 'Color Personalizado',
-          brand: filamentData.brand || 'Personalizado',
-          hex: filamentData.hex || '#18181B',
-          textColor: filamentData.hex === '#FFFFFF' ? '#18181B' : '#FFFFFF',
-          material: filamentData.material || 'PLA',
-          costPerKg: filamentData.costPerKg || 300,
-          inStock: Boolean(filamentData.inStock),
-          supplierDeliveryDays: filamentData.supplierDeliveryDays || 2,
-          supplierUrl: filamentData.supplierUrl
-        };
-        this.filaments.push(newFilament);
-        toast.success('Filamento añadido');
-        return newFilament;
+        console.error('Error creating filament:', err);
+        toast.error(err?.response?.data?.error || err?.message || 'Error al registrar nuevo filamento');
+        return null;
       }
     },
 
     async removeFilament(id: string | number) {
+      const match = this.filaments.find(f => f.dbId === id || f.id === id || f.colorId === id);
+      const targetId = match?.dbId ?? match?.colorId ?? id;
+
       try {
-        await api.delete(`/filaments/${id}`);
+        await api.delete(`/filaments/${targetId}`);
         toast.success('Filamento eliminado');
         await this.fetchFilaments();
+        return true;
       } catch (err: any) {
-        this.filaments = this.filaments.filter(f => f.id !== id);
-        toast.success('Filamento eliminado');
+        console.error('Error removing filament:', err);
+        toast.error(err?.response?.data?.error || err?.message || 'Error al eliminar filamento');
+        return false;
       }
     }
   }

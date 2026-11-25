@@ -23,7 +23,6 @@
     "@sentry/nuxt": "^10.62.0",
     "@types/canvas-confetti": "^1.9.0",
     "@vueuse/core": "^11.3.0",
-    "axios": "^1.7.9",
     "canvas-confetti": "^1.9.4",
     "chart.js": "^4.4.1",
     "class-variance-authority": "^0.7.1",

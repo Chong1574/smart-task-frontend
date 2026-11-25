@@ -1,0 +1,26 @@
+{
+  "name": "TaskMan — El Rincón de Brandy",
+  "short_name": "TaskMan",
+  "description": "Centro de productividad, finanzas personales, hábitos y operaciones de manufactura 3D.",
+  "start_url": "/taskman",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#09090b",
+  "theme_color": "#f97316",
+  "lang": "es-MX",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

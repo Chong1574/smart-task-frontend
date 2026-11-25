@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { toast } from 'vue-sonner';
 import api from '../utils/api';
+import { getLocalTodayStr } from '../utils/date';
 
 export interface Task {
     id?: number;
@@ -43,12 +44,12 @@ export interface Project {
 
 export interface Goal {
     id?: number;
-    title: string;
-    description?: string;
-    targetDate?: string;
-    status: 'active' | 'completed' | 'abandoned';
-    projects?: Project[];
+    name: string;
+    description?: string | null;
+    deadline?: string | null;
+    status: 'active' | 'achieved' | 'abandoned';
     tasks?: Task[];
+    habits?: Habit[];
 }
 
 export interface Habit {
@@ -57,6 +58,7 @@ export interface Habit {
     description?: string;
     frequency: 'daily' | 'weekly' | 'custom';
     status: 'active' | 'archived';
+    goalId?: number | null;
     logs?: HabitLog[];
 }
 
@@ -64,6 +66,13 @@ export interface HabitLog {
     id?: number;
     habitId: number;
     completedAt: string;
+}
+
+let pendingOps = 0;
+
+function trackLoading(store: { loading: boolean }, delta: number) {
+    pendingOps = Math.max(0, pendingOps + delta);
+    store.loading = pendingOps > 0;
 }
 
 export const useTaskStore = defineStore('tasks', {
@@ -77,7 +86,7 @@ export const useTaskStore = defineStore('tasks', {
     }),
     actions: {
         async fetchTasks() {
-            this.loading = true;
+            trackLoading(this, 1);
             try {
                 const res = await api.get('/tasks');
                 if (res.data.success) {
@@ -87,7 +96,7 @@ export const useTaskStore = defineStore('tasks', {
                 console.error("Error fetching tasks:", err);
                 toast.error(err.response?.data?.message || "Error al cargar las tareas");
             } finally {
-                this.loading = false;
+                trackLoading(this, -1);
             }
         },
 
@@ -181,7 +190,7 @@ export const useTaskStore = defineStore('tasks', {
 
         // --- Projects ---
         async fetchProjects() {
-            this.loading = true;
+            trackLoading(this, 1);
             try {
                 const res = await api.get('/projects');
                 if (res.data.success) {
@@ -190,12 +199,11 @@ export const useTaskStore = defineStore('tasks', {
             } catch (err) {
                 console.error("Error fetching projects:", err);
             } finally {
-                this.loading = false;
+                trackLoading(this, -1);
             }
         },
 
         async addProject(newProject: Project) {
-            // Optimistic update
             const tempId = Date.now();
             this.projects.push({ ...newProject, id: tempId, tasks: [] });
 
@@ -240,17 +248,84 @@ export const useTaskStore = defineStore('tasks', {
         async reorderProjects(projectIds: number[]) {
             try {
                 const res = await api.post('/projects/reorder', { projectIds });
-                if (res.data.success) {
-                    // Update successfully
+                if (!res.data.success) {
+                    toast.error(res.data.message || "Error al reordenar proyectos");
                 }
             } catch (err) {
                 console.error("Error reordering projects:", err);
             }
         },
 
+        // --- Goals ---
+        async fetchGoals() {
+            trackLoading(this, 1);
+            try {
+                const res = await api.get('/goals');
+                if (res.data.success) {
+                    this.goals = res.data.data;
+                }
+            } catch (err: any) {
+                console.error("Error fetching goals:", err);
+                toast.error(err.response?.data?.message || "Error al cargar las metas");
+            } finally {
+                trackLoading(this, -1);
+            }
+        },
+
+        async addGoal(newGoal: Pick<Goal, 'name' | 'description' | 'deadline' | 'status'>) {
+            try {
+                const res = await api.post('/goals', newGoal);
+                if (res.data.success) {
+                    toast.success('Meta creada correctamente');
+                    await this.fetchGoals();
+                    return true;
+                }
+                toast.error(res.data.message || "No se pudo crear la meta");
+                return false;
+            } catch (err: any) {
+                console.error("Error adding goal:", err);
+                toast.error(err.response?.data?.message || "No se pudo crear la meta");
+                return false;
+            }
+        },
+
+        async updateGoal(id: number, updates: Partial<Pick<Goal, 'name' | 'description' | 'deadline' | 'status'>>) {
+            try {
+                const res = await api.put(`/goals/${id}`, updates);
+                if (res.data.success) {
+                    toast.success('Meta actualizada');
+                    await this.fetchGoals();
+                    return true;
+                }
+                toast.error(res.data.message || "No se pudo actualizar la meta");
+                return false;
+            } catch (err: any) {
+                console.error("Error updating goal:", err);
+                toast.error(err.response?.data?.message || "No se pudo actualizar la meta");
+                return false;
+            }
+        },
+
+        async deleteGoal(id: number) {
+            try {
+                const res = await api.delete(`/goals/${id}`);
+                if (res.data.success) {
+                    this.goals = this.goals.filter(g => g.id !== id);
+                    toast.success('Meta eliminada');
+                    return true;
+                }
+                toast.error(res.data.message || "Error al eliminar la meta");
+                return false;
+            } catch (err: any) {
+                console.error("Error deleting goal:", err);
+                toast.error(err.response?.data?.message || "Error al eliminar la meta");
+                return false;
+            }
+        },
+
         // --- Habits ---
         async fetchHabits() {
-            this.loading = true;
+            trackLoading(this, 1);
             try {
                 const res = await api.get('/habits');
                 if (res.data.success) {
@@ -259,7 +334,7 @@ export const useTaskStore = defineStore('tasks', {
             } catch (err) {
                 console.error("Error fetching habits:", err);
             } finally {
-                this.loading = false;
+                trackLoading(this, -1);
             }
         },
 
@@ -278,16 +353,14 @@ export const useTaskStore = defineStore('tasks', {
         },
 
         async logHabit(habitId: number) {
-            const today = new Date();
-            const localDateStr = new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+            const localDateStr = getLocalTodayStr();
 
             // Optimistic update
             const habit = this.habits.find(h => h.id === habitId);
             let tempLog: HabitLog | null = null;
             if (habit) {
                 if (!habit.logs) habit.logs = [];
-                // Use localDateStr for optimistic update to match exactly what we expect from backend
-                tempLog = { id: Date.now(), habitId, completedAt: localDateStr + 'T00:00:00.000Z' };
+                tempLog = { id: Date.now(), habitId, completedAt: localDateStr + 'T12:00:00.000Z' };
                 habit.logs.push(tempLog);
             }
             try {
@@ -299,19 +372,18 @@ export const useTaskStore = defineStore('tasks', {
                     await this.fetchHabits();
                     return true;
                 } else {
-                    if (habit && tempLog) habit.logs = habit.logs.filter(l => l.id !== tempLog!.id);
+                    if (habit?.logs && tempLog) habit.logs = habit.logs.filter(l => l.id !== tempLog!.id);
                     return false;
                 }
             } catch (err) {
                 console.error("Error logging habit:", err);
-                if (habit && tempLog) habit.logs = habit.logs.filter(l => l.id !== tempLog!.id);
+                if (habit?.logs && tempLog) habit.logs = habit.logs.filter(l => l.id !== tempLog!.id);
                 return false;
             }
         },
 
         async unlogHabit(habitId: number) {
-            const today = new Date();
-            const localDateStr = new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+            const localDateStr = getLocalTodayStr();
 
             const habit = this.habits.find(h => h.id === habitId);
             const originalLogs = habit?.logs ? [...habit.logs] : [];
@@ -362,7 +434,7 @@ export const useTaskStore = defineStore('tasks', {
 
         // --- Roulette ---
         async spinRoulette(projectIds?: number[]) {
-            this.loading = true;
+            trackLoading(this, 1);
             try {
                 const res = await api.post('/roulette/spin', { projectIds });
                 if (res.data.success && res.data.data) {
@@ -373,7 +445,7 @@ export const useTaskStore = defineStore('tasks', {
                 console.error("Error spinning roulette:", err);
                 return null;
             } finally {
-                this.loading = false;
+                trackLoading(this, -1);
             }
         }
     }

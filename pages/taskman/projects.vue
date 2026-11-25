@@ -5,12 +5,85 @@
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 class="text-3xl font-serif font-bold">Proyectos & Metas</h1>
-          <p class="text-muted-foreground">Agrupa tus tareas y visualiza tu progreso general.</p>
+          <p class="text-muted-foreground">Agrupa tus tareas, define objetivos estratégicos y visualiza tu progreso general.</p>
         </div>
-        <button @click="openNewProject" class="bg-primary text-primary-foreground px-4 py-2 rounded-xl font-medium shadow-lg shadow-primary/20 hover:scale-105 transition-transform flex items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-          Nuevo Proyecto
-        </button>
+        <div class="flex flex-wrap items-center gap-2.5">
+          <button @click="openNewGoal" class="bg-secondary hover:bg-secondary/80 text-foreground border border-border/60 px-4 py-2 rounded-xl font-medium transition-all flex items-center gap-2 cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+            Nueva Meta
+          </button>
+          <button @click="openNewProject" class="bg-primary text-primary-foreground px-4 py-2 rounded-xl font-medium shadow-lg shadow-primary/20 hover:scale-105 transition-transform flex items-center gap-2 cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+            Nuevo Proyecto
+          </button>
+        </div>
+      </div>
+
+      <!-- Sección: Metas Estratégicas -->
+      <section class="space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xl font-serif font-bold flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-primary"></span>
+            Metas Estratégicas
+            <span class="text-xs font-sans font-normal text-muted-foreground">({{ taskStore.goals.length }})</span>
+          </h2>
+        </div>
+
+        <div v-if="taskStore.goals.length === 0" class="bg-card/50 border border-dashed border-border/60 rounded-2xl p-6 text-center text-sm text-muted-foreground">
+          Aún no tienes metas registradas. Crea una para dar seguimiento a tus objetivos de largo plazo.
+        </div>
+
+        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div
+            v-for="goal in taskStore.goals"
+            :key="goal.id"
+            class="bg-card border border-border/40 rounded-2xl p-5 shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between gap-3"
+          >
+            <div>
+              <div class="flex items-start justify-between gap-2 mb-2">
+                <h3 class="font-bold text-base leading-snug">{{ goal.name }}</h3>
+                <div class="flex items-center gap-1.5 shrink-0">
+                  <span
+                    class="px-2 py-0.5 text-[11px] font-bold rounded-full"
+                    :class="goal.status === 'achieved' ? 'bg-emerald-500/15 text-emerald-500' : goal.status === 'abandoned' ? 'bg-muted text-muted-foreground' : 'bg-primary/10 text-primary'"
+                  >
+                    {{ goal.status === 'achieved' ? 'Lograda' : goal.status === 'abandoned' ? 'Pausada' : 'Activa' }}
+                  </span>
+                  <button
+                    @click="openEditGoal(goal)"
+                    class="text-muted-foreground hover:text-primary p-1 rounded-lg hover:bg-secondary transition-colors cursor-pointer"
+                    title="Editar meta"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                  </button>
+                </div>
+              </div>
+              <p v-if="goal.description" class="text-xs text-muted-foreground line-clamp-2 mb-2">{{ goal.description }}</p>
+            </div>
+
+            <div class="space-y-2 pt-2 border-t border-border/30">
+              <div class="flex justify-between items-center text-xs text-muted-foreground">
+                <span>{{ getGoalLinkedCounts(goal) }}</span>
+                <span class="font-bold text-foreground">{{ getGoalProgress(goal) }}%</span>
+              </div>
+              <div class="w-full h-1.5 bg-secondary rounded-full overflow-hidden">
+                <div class="h-full bg-primary rounded-full transition-all duration-300" :style="{ width: `${getGoalProgress(goal)}%` }"></div>
+              </div>
+              <div v-if="goal.deadline" class="text-[11px] text-muted-foreground flex items-center gap-1">
+                <span>📅 Fecha objetivo: {{ new Date(goal.deadline).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' }) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sección: Proyectos -->
+      <div class="flex items-center justify-between pt-2">
+        <h2 class="text-xl font-serif font-bold flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+          Proyectos
+          <span class="text-xs font-sans font-normal text-muted-foreground">({{ taskStore.projects.length }})</span>
+        </h2>
       </div>
 
       <div v-if="taskStore.projects.length === 0" class="p-8 text-center text-muted-foreground">
@@ -79,8 +152,52 @@
 
     </div>
 
+    <!-- Modal Nueva / Editar Meta -->
+    <div v-if="showGoalModal" @click.self="showGoalModal = false" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-300">
+      <div class="bg-card w-full max-w-md rounded-3xl p-6 md:p-8 border border-border/50 shadow-2xl relative shadow-primary/10">
+        <button @click="showGoalModal = false" class="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+        <h2 class="text-2xl font-serif font-bold mb-6">{{ isEditingGoal ? 'Editar Meta' : 'Nueva Meta Estratégica' }}</h2>
+
+        <form @submit.prevent="submitGoal" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium mb-1">Nombre de la Meta</label>
+            <input v-model="goalForm.name" required maxlength="100" type="text" class="w-full rounded-xl border border-border bg-background px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none transition-shadow" placeholder="Ej. Ahorrar fondo de emergencia..." />
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Descripción (Opcional)</label>
+            <textarea v-model="goalForm.description" maxlength="500" rows="3" class="w-full rounded-xl border border-border bg-background px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none transition-shadow" placeholder="Por qué es importante y cómo medirás el éxito..."></textarea>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium mb-1">Estado</label>
+              <select v-model="goalForm.status" class="w-full rounded-xl border border-border bg-background px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none transition-shadow">
+                <option value="active">Activa</option>
+                <option value="achieved">Lograda</option>
+                <option value="abandoned">Pausada / Abandonada</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">Fecha Límite (Opcional)</label>
+              <input v-model="goalForm.deadline" type="date" class="w-full rounded-xl border border-border bg-background px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none transition-shadow" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4 mt-6">
+            <button v-if="isEditingGoal && editingGoalId" @click.prevent="deleteGoal(editingGoalId)" type="button" class="w-full bg-destructive/10 text-destructive rounded-xl py-3 font-bold hover:bg-destructive hover:text-destructive-foreground transition-colors shadow-sm">
+              Eliminar
+            </button>
+            <button type="submit" :class="[isEditingGoal ? 'col-span-1' : 'col-span-2', 'w-full bg-primary text-primary-foreground rounded-xl py-3 font-bold transition-colors shadow-lg shadow-primary/20 hover:bg-primary/90']">
+              {{ isEditingGoal ? 'Guardar Meta' : 'Crear Meta' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <!-- Modal Nuevo Proyecto -->
-    <div v-if="showProjectModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-300">
+    <div v-if="showProjectModal" @click.self="showProjectModal = false" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-300">
       <div class="bg-card w-full max-w-md rounded-3xl p-6 md:p-8 border border-border/50 shadow-2xl relative shadow-primary/10">
         <button @click="showProjectModal = false" class="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
@@ -134,8 +251,10 @@
           </div>
         </form>
       </div>
-    </div>    <!-- Modal Añadir Tarea Rápida -->
-    <div v-if="showTaskModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-300">
+    </div>
+
+    <!-- Modal Añadir Tarea Rápida -->
+    <div v-if="showTaskModal" @click.self="showTaskModal = false" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-300">
       <div class="bg-card w-full max-w-lg rounded-3xl p-6 md:p-8 border border-border/50 shadow-2xl relative shadow-primary/10">
         <button @click="showTaskModal = false" class="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
@@ -201,10 +320,14 @@
 definePageMeta({ layout: 'taskman' })
 
 import { ref, onMounted } from 'vue'
+import { onKeyStroke } from '@vueuse/core'
 import { toast } from 'vue-sonner'
-import { useTaskStore, type Task } from '~/stores/tasks'
+import { useTaskStore, type Goal, type Task } from '~/stores/tasks'
+import { useConfirmStore } from '~/stores/confirm'
+import { getLocalTodayStr, parseLocalDateToIso } from '~/utils/date'
 
 const taskStore = useTaskStore()
+const confirmStore = useConfirmStore()
 
 interface ProjectColorDef {
   id: string;
@@ -223,9 +346,95 @@ const PROJECT_COLORS: ProjectColorDef[] = [
   { id: 'indigo', name: 'Índigo', bgClass: 'bg-indigo-500' }
 ]
 
+const showGoalModal = ref(false)
+const isEditingGoal = ref(false)
+const editingGoalId = ref<number | null>(null)
+const goalForm = ref<{
+  name: string;
+  description: string;
+  deadline: string;
+  status: 'active' | 'achieved' | 'abandoned';
+}>({
+  name: '',
+  description: '',
+  deadline: '',
+  status: 'active'
+})
+
+const openNewGoal = () => {
+  isEditingGoal.value = false
+  editingGoalId.value = null
+  goalForm.value = { name: '', description: '', deadline: '', status: 'active' }
+  showGoalModal.value = true
+}
+
+const openEditGoal = (goal: Goal) => {
+  isEditingGoal.value = true
+  editingGoalId.value = goal.id ?? null
+  goalForm.value = {
+    name: goal.name,
+    description: goal.description || '',
+    deadline: goal.deadline ? getLocalTodayStr(new Date(goal.deadline)) : '',
+    status: goal.status || 'active'
+  }
+  showGoalModal.value = true
+}
+
+const submitGoal = async () => {
+  const payload = {
+    name: goalForm.value.name.trim(),
+    description: goalForm.value.description.trim() || null,
+    deadline: goalForm.value.deadline ? parseLocalDateToIso(goalForm.value.deadline) : null,
+    status: goalForm.value.status
+  }
+  const ok = isEditingGoal.value && editingGoalId.value
+    ? await taskStore.updateGoal(editingGoalId.value, payload)
+    : await taskStore.addGoal(payload)
+  if (ok) {
+    showGoalModal.value = false
+  }
+}
+
+const deleteGoal = async (id: number) => {
+  if (await confirmStore.ask({
+    title: 'Eliminar meta',
+    message: 'Las tareas y hábitos vinculados permanecerán intactos, solo perderán el vínculo con esta meta.',
+    confirmLabel: 'Eliminar',
+    destructive: true
+  })) {
+    const ok = await taskStore.deleteGoal(id)
+    if (ok) showGoalModal.value = false
+  }
+}
+
+const getGoalLinkedTasks = (goal: Goal) => {
+  if (!goal.id) return goal.tasks || []
+  const storeTasks = taskStore.tasks.filter(t => t.goalId === goal.id)
+  return storeTasks.length > 0 ? storeTasks : (goal.tasks || [])
+}
+
+const getGoalLinkedCounts = (goal: Goal) => {
+  const tasksCount = getGoalLinkedTasks(goal).length
+  const habitsCount = goal.habits?.length || 0
+  return `${tasksCount} tareas · ${habitsCount} hábitos`
+}
+
+const getGoalProgress = (goal: Goal) => {
+  const linked = getGoalLinkedTasks(goal)
+  if (linked.length === 0) return goal.status === 'achieved' ? 100 : 0
+  const completed = linked.filter(t => t.status === 'completed').length
+  return Math.round((completed / linked.length) * 100)
+}
+
 const showProjectModal = ref(false)
 const isEditingProject = ref(false)
 const editingProjectId = ref<number | null>(null)
+
+onKeyStroke('Escape', () => {
+  if (showGoalModal.value) showGoalModal.value = false
+  else if (showTaskModal.value) showTaskModal.value = false
+  else if (showProjectModal.value) showProjectModal.value = false
+})
 
 const newProject = ref({
   name: '',
@@ -264,7 +473,6 @@ const submitProject = async () => {
 }
 
 const deleteProject = async (id: number) => {
-  const confirmStore = useConfirmStore()
   if (await confirmStore.ask({
     title: 'Eliminar proyecto',
     message: 'Las tareas asociadas no se borrarán, solo quedarán sueltas.',
@@ -312,12 +520,12 @@ const submitTask = async () => {
   if (newTask.value.duration_minutes === 0) newTask.value.duration_minutes = 15;
 
   const payload = { ...newTask.value } as any;
-  // Normalizar deadline: '' → null, 'YYYY-MM-DD' → ISO 8601 fin-de-día local
+  // Normalizar deadline: '' → null, 'YYYY-MM-DD' → ISO 8601 mediodía local
   if (!payload.deadline) {
     payload.deadline = null;
     payload.auto_distribute = false;
   } else if (!payload.deadline.includes('T')) {
-    payload.deadline = new Date(`${payload.deadline}T23:59:59`).toISOString();
+    payload.deadline = parseLocalDateToIso(payload.deadline);
   }
 
   const ok = await taskStore.addTask(payload as Task);
@@ -329,6 +537,7 @@ const submitTask = async () => {
 }
 
 onMounted(() => {
+  taskStore.fetchGoals()
   taskStore.fetchProjects()
   taskStore.fetchTasks() // Para calcular el progreso
 })
@@ -375,4 +584,3 @@ const moveProject = async (index: number, direction: number) => {
   await taskStore.reorderProjects(ids)
 }
 </script>
-

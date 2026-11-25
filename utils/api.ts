@@ -1,21 +1,41 @@
-import axios from 'axios';
+import { ofetch, type FetchOptions } from 'ofetch';
 import { toast } from 'vue-sonner';
 import { Preferences } from '@capacitor/preferences';
 import { API_URL } from './apiUrl';
 
-const api = axios.create({
+export interface ApiRequestConfig {
+    params?: Record<string, any>;
+    query?: Record<string, any>;
+    headers?: Record<string, string>;
+    timeout?: number;
+    signal?: AbortSignal;
+    responseType?: 'json' | 'text' | 'blob' | 'arrayBuffer' | 'stream';
+    data?: any;
+    url?: string;
+    method?: string;
+}
+
+export interface ApiResponse<T = any> {
+    data: T;
+    status: number;
+    headers: Headers;
+}
+
+const fetcher = ofetch.create({
     baseURL: API_URL,
 });
 
 let memoryToken: string | null = null;
 
 export const setMemoryToken = (token: string | null) => {
+    if (typeof window === 'undefined') return;
     memoryToken = token;
 };
 
-export const getMemoryToken = () => memoryToken;
+export const getMemoryToken = () => (typeof window === 'undefined' ? null : memoryToken);
 
 const readTokenAsync = async (): Promise<string | null> => {
+    if (typeof window === 'undefined') return null;
     if (memoryToken) return memoryToken;
 
     try {
@@ -24,15 +44,14 @@ const readTokenAsync = async (): Promise<string | null> => {
             memoryToken = value;
             return value;
         }
-    } catch (e) {}
+    } catch {}
 
-    if (typeof window !== 'undefined') {
-        const ls = localStorage.getItem('token');
-        if (ls) {
-            memoryToken = ls;
-            return ls;
-        }
+    const ls = localStorage.getItem('token');
+    if (ls) {
+        memoryToken = ls;
+        return ls;
     }
+
     if (typeof document !== 'undefined') {
         const match = document.cookie.match(/(?:^|;\s*)token=([^;]+)/);
         if (match) {
@@ -45,13 +64,13 @@ const readTokenAsync = async (): Promise<string | null> => {
 };
 
 const clearAuthArtifactsAsync = async () => {
+    if (typeof window === 'undefined') return;
     memoryToken = null;
     try {
         await Preferences.remove({ key: 'token' });
         await Preferences.remove({ key: 'user' });
-    } catch (e) {}
+    } catch {}
 
-    if (typeof window === 'undefined') return;
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     localStorage.removeItem('oauth_login');
@@ -59,55 +78,111 @@ const clearAuthArtifactsAsync = async () => {
     document.cookie = 'token=; Path=/; Max-Age=0; SameSite=Lax; Secure';
 };
 
-api.interceptors.request.use(async (config) => {
+async function execute<T = any>(
+    method: string,
+    url: string,
+    body?: any,
+    config: ApiRequestConfig = {}
+): Promise<ApiResponse<T>> {
     const token = await readTokenAsync();
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+    const headers: Record<string, string> = { ...(config.headers || {}) };
+    if (token && !headers.Authorization) {
+        headers.Authorization = `Bearer ${token}`;
     }
-    return config;
-}, (error) => Promise.reject(error));
 
-api.interceptors.response.use((response) => response, (error) => {
-    const status = error.response?.status;
-    const data = error.response?.data;
+    const fetchOptions: FetchOptions = {
+        method,
+        headers,
+        query: config.query || config.params,
+        timeout: config.timeout,
+        signal: config.signal,
+    };
 
-    if (status === 401) {
-        const url = error.config?.url || '';
-        const isOAuthEndpoint = url.includes('/oauth/');
-        
-        // As readToken is now async, we don't have it synchronously here, but we can assume if authorization header was present, it had a token.
-        const hasToken = !!error.config?.headers?.Authorization;
-        const msg = data?.message || '';
+    if (body !== undefined) {
+        fetchOptions.body = body;
+    }
+    if (config.responseType === 'blob') {
+        fetchOptions.responseType = 'blob';
+    } else if (config.responseType === 'arrayBuffer') {
+        fetchOptions.responseType = 'arrayBuffer';
+    } else if (config.responseType === 'text') {
+        fetchOptions.responseType = 'text';
+    } else if (config.responseType === 'stream') {
+        fetchOptions.responseType = 'stream';
+    }
 
-        console.error(`[API 401] URL: "${url}" | isOAuth: ${isOAuthEndpoint} | hasToken: ${hasToken}`);
+    try {
+        const response = await fetcher.raw<T>(url, fetchOptions as any);
+        return {
+            data: response._data as T,
+            status: response.status,
+            headers: response.headers,
+        };
+    } catch (err: any) {
+        const status: number | undefined = err?.response?.status ?? err?.statusCode ?? err?.status;
+        const data: any = err?.data ?? err?.response?._data;
 
-        // Solo limpiar sesión si el backend confirma que el token de SESIÓN es inválido.
-        const code = data?.code || '';
-        const msgLower = msg.toLowerCase();
-        const isTokenRejected = code === 'TOKEN_INVALID'
-            || msgLower.includes('invalid') || msgLower.includes('expired') || msgLower.includes('no token');
-        const isCalendarScope = code === 'CALENDAR_NOT_CONNECTED';
-        
-        if (hasToken && !isOAuthEndpoint && isTokenRejected && !isCalendarScope) {
-            console.warn('[API] Token rechazado por el backend, cerrando sesión...');
-            clearAuthArtifactsAsync(); // Trigger async clear
-            if (typeof window !== 'undefined') {
-                window.dispatchEvent(new CustomEvent('auth:logout'));
+        if (status === 401) {
+            const isOAuthEndpoint = url.includes('/oauth/');
+            const hasToken = Boolean(headers.Authorization);
+            const msg = String(data?.message || '');
+
+            console.error(`[API 401] URL: "${url}" | isOAuth: ${isOAuthEndpoint} | hasToken: ${hasToken}`);
+
+            const code = String(data?.code || '');
+            const msgLower = msg.toLowerCase();
+            const isTokenRejected =
+                code === 'TOKEN_INVALID' ||
+                msgLower.includes('invalid') ||
+                msgLower.includes('expired') ||
+                msgLower.includes('no token');
+            const isCalendarScope = code === 'CALENDAR_NOT_CONNECTED';
+
+            if (hasToken && !isOAuthEndpoint && isTokenRejected && !isCalendarScope) {
+                console.warn('[API] Token rechazado por el backend, cerrando sesión...');
+                clearAuthArtifactsAsync();
+                if (typeof window !== 'undefined') {
+                    window.dispatchEvent(new CustomEvent('auth:logout'));
+                }
             }
         }
-    }
 
-    // Plan-limit del backend (planlimits.middleware): 403 con code=PLAN_LIMIT_REACHED.
-    // Mostrar toast explicando qué recurso y cuál es el tope, para que el usuario no
-    // vea un fail silencioso del formulario.
-    if (status === 403 && data?.code === 'PLAN_LIMIT_REACHED') {
-        toast.error(data.message || `Límite del plan free alcanzado (${data.resource})`, {
-            description: `Máx ${data.limit} ${data.resource}. Cambia a premium para más.`,
-            duration: 6000
-        });
-    }
+        if (status === 403 && data?.code === 'PLAN_LIMIT_REACHED' && typeof window !== 'undefined') {
+            toast.error(data.message || `Límite del plan free alcanzado (${data.resource})`, {
+                description: `Máx ${data.limit} ${data.resource}. Cambia a premium para más.`,
+                duration: 6000,
+            });
+        }
 
-    return Promise.reject(error);
-});
+        const normalized: any = err instanceof Error ? err : new Error(String(err));
+        normalized.response = status !== undefined || data !== undefined ? { status, data } : undefined;
+        normalized.config = { url, headers };
+        throw normalized;
+    }
+}
+
+const api = {
+    defaults: {
+        baseURL: API_URL,
+    },
+    get<T = any>(url: string, config?: ApiRequestConfig) {
+        return execute<T>('GET', url, undefined, config);
+    },
+    delete<T = any>(url: string, config?: ApiRequestConfig) {
+        return execute<T>('DELETE', url, config?.data, config);
+    },
+    post<T = any>(url: string, data?: any, config?: ApiRequestConfig) {
+        return execute<T>('POST', url, data, config);
+    },
+    put<T = any>(url: string, data?: any, config?: ApiRequestConfig) {
+        return execute<T>('PUT', url, data, config);
+    },
+    patch<T = any>(url: string, data?: any, config?: ApiRequestConfig) {
+        return execute<T>('PATCH', url, data, config);
+    },
+    request<T = any>(config: ApiRequestConfig & { url: string }) {
+        return execute<T>(config.method || 'GET', config.url, config.data, config);
+    },
+};
 
 export default api;

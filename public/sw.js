@@ -1,5 +1,5 @@
 self.addEventListener('push', function (event) {
-  let data = { title: 'Notificación', body: '', url: '/' };
+  let data = { title: 'Notificación', body: '', url: '' };
   if (event.data) {
     try {
       data = Object.assign(data, event.data.json());
@@ -8,8 +8,9 @@ self.addEventListener('push', function (event) {
     }
   }
 
-  const isFinance = data.data?.type === 'finance' || (data.url && data.url.includes('wallet'));
-  const targetUrl = data.url || (isFinance ? '/taskman/wallet' : '/taskman');
+  const rawUrl = data.url || data.data?.url || '';
+  const isFinance = data.data?.type === 'finance' || (typeof rawUrl === 'string' && rawUrl.includes('wallet'));
+  const targetUrl = rawUrl || (isFinance ? '/taskman/wallet' : '/taskman');
 
   const options = {
     body: data.body,
@@ -32,7 +33,9 @@ self.addEventListener('push', function (event) {
 
 self.addEventListener('notificationclick', function (event) {
   event.notification.close();
-  const urlToOpen = event.notification.data?.url || '/taskman';
+  const urlToOpen = event.action === 'open_wallet'
+    ? '/taskman/wallet'
+    : (event.notification.data?.url || '/taskman');
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (clientList) {

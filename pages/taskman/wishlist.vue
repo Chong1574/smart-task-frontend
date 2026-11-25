@@ -40,7 +40,7 @@
                 Ahorro requerido: {{ formatCurrency(item.rule) }}
               </div>
               <div v-if="item.targetDate" class="text-xs text-muted-foreground mt-2">
-                📅 Fecha: {{ new Date(item.targetDate).toLocaleDateString() }}
+                📅 Fecha: {{ new Date(item.targetDate).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' }) }}
               </div>
 
               <div class="absolute top-2 right-2 flex gap-1 md:opacity-0 opacity-100 md:group-hover:opacity-100 transition-opacity">
@@ -62,7 +62,7 @@
       </div>
 
       <!-- Modal -->
-      <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+      <div v-if="showModal" @click.self="showModal = false" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
         <div class="bg-card border border-primary/20 rounded-3xl p-6 w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
           <h2 class="text-2xl font-bold mb-6">{{ isEditing ? 'Editar Deseo' : 'Nuevo Deseo' }}</h2>
           <form @submit.prevent="submitForm" class="space-y-4">
@@ -124,10 +124,12 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'taskman' })
 
-import { ref, computed, onMounted, reactive } from 'vue'
+import { ref, onMounted, reactive } from 'vue'
 import { CheckCircle2, Pencil, Trash2 } from 'lucide-vue-next'
+import { onKeyStroke } from '@vueuse/core'
 import { useFinanceStore } from '~/stores/finance'
 import { useConfirmStore } from '~/stores/confirm'
+import { formatCurrencyMXN, getLocalTodayStr, parseLocalDateToIso } from '~/utils/date'
 
 const financeStore = useFinanceStore()
 const confirmStore = useConfirmStore()
@@ -153,10 +155,7 @@ const getItems = (priorityId: string) => {
     }) || []
 }
 
-const formatCurrency = (value: number | string) => {
-  if (value === null || value === undefined || value === '') return ''
-  return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(value))
-}
+const formatCurrency = formatCurrencyMXN
 
 const isAccountEnough = (item: any) => {
   if (!item.accountBalance) return false
@@ -203,17 +202,21 @@ const openEdit = (item: any) => {
 
   form.accountId = item.accountId
   form.rule = item.rule ? Number(item.rule) : null
-  form.targetDate = item.targetDate ? new Date(item.targetDate).toISOString().split('T')[0] : ''
+  form.targetDate = item.targetDate ? getLocalTodayStr(new Date(item.targetDate)) : ''
   form.description = item.description || ''
   showModal.value = true
 }
 
+onKeyStroke('Escape', () => {
+  if (showModal.value) showModal.value = false
+})
+
 const submitForm = async () => {
   const payload = {
     ...form,
-    targetDate: form.targetDate ? new Date(form.targetDate).toISOString() : null,
+    targetDate: form.targetDate ? parseLocalDateToIso(form.targetDate) : null,
     accountId: form.accountId || null,
-    rule: form.rule !== null && form.rule !== '' ? Number(form.rule) : null
+    rule: form.rule !== null && form.rule !== ('' as any) ? Number(form.rule) : null
   }
   
   if (isEditing.value && editingId.value) {

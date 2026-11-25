@@ -1,5 +1,8 @@
 export interface FilamentColor {
   id: string;
+  dbId?: number;
+  colorId?: string;
+  colorName?: string;
   label: string;
   brand: string;
   hex: string;

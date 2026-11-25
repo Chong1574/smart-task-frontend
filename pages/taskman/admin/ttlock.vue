@@ -100,14 +100,12 @@
 
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import { useAuthStore } from '~/stores/auth'
 import api from '~/utils/api'
 
 definePageMeta({ layout: 'taskman' })
 
 const authStore = useAuthStore()
-const router = useRouter()
 const isAdmin = computed(() => authStore.user?.role === 'admin')
 
 const form = ref({
@@ -124,16 +122,7 @@ const passcodes = ref<any[]>([])
 const loadingList = ref(false)
 const deletingId = ref<number | null>(null)
 
-onMounted(async () => {
-  if (!authStore.isInitialized) await authStore.init()
-  if (!authStore.user) {
-    router.push('/login')
-    return
-  }
-  if (authStore.user.role !== 'admin') {
-    router.replace('/taskman')
-    return
-  }
+onMounted(() => {
   fetchPasscodes()
 })
 
