@@ -1492,6 +1492,19 @@ const availableMonths = computed(() => {
   })
 })
 
+const NON_OPERATIONAL_EXPENSE_CATS = new Set([
+  'Ajuste de Estado de Cuenta',
+  'Interés Automático',
+  'Pago de Tarjeta',
+  'Pagos de Tarjeta',
+  'Transferencia',
+  'Transferencias',
+])
+const ANT_EXCLUDED_CATS = new Set([
+  ...NON_OPERATIONAL_EXPENSE_CATS,
+  'Comisiones e Intereses',
+])
+
 const filteredTransactions = computed(() => {
   let list = financeStore.transactions
   if (selectedDateFilter.value) {
@@ -1500,7 +1513,7 @@ const filteredTransactions = computed(() => {
     list = list.filter(tx => tx.date && tx.date.startsWith(selectedMonth.value))
   }
   if (filterOnlyAntExpenses.value) {
-    list = list.filter(tx => tx.type === 'expense' && Number(tx.amount) > 0 && Number(tx.amount) <= 180 && !tx.subscriptionId)
+    list = list.filter(tx => tx.type === 'expense' && Number(tx.amount) > 0 && Number(tx.amount) <= 180 && !tx.subscriptionId && !ANT_EXCLUDED_CATS.has(tx.category || ''))
   }
   if (searchQuery.value.trim()) {
     const q = searchQuery.value.toLowerCase().trim()
@@ -1543,7 +1556,7 @@ const safeToSpendMetrics = computed(() => {
 
   // Gasto variable de hoy
   const spentToday = financeStore.transactions
-    .filter(tx => tx.type === 'expense' && tx.date && tx.date.startsWith(todayStr) && !tx.subscriptionId)
+    .filter(tx => tx.type === 'expense' && tx.date && tx.date.startsWith(todayStr) && !tx.subscriptionId && !NON_OPERATIONAL_EXPENSE_CATS.has(tx.category || ''))
     .reduce((sum, tx) => sum + Number(tx.amount), 0)
 
   const todayUsedPct = dailyAllowance > 0 ? Math.min(100, Math.round((spentToday / dailyAllowance) * 100)) : (spentToday > 0 ? 100 : 0)
@@ -1586,13 +1599,13 @@ const microSpendingInsights = computed(() => {
   const targetPeriod = selectedMonth.value === 'all' ? currentMonthKey : selectedMonth.value
 
   const periodExpenses = financeStore.transactions.filter(tx => 
-    tx.type === 'expense' && tx.date && tx.date.startsWith(targetPeriod)
+    tx.type === 'expense' && tx.date && tx.date.startsWith(targetPeriod) && !NON_OPERATIONAL_EXPENSE_CATS.has(tx.category || '')
   )
 
   const totalExpenses = periodExpenses.reduce((sum, tx) => sum + Number(tx.amount), 0)
 
-  // Gastos Hormiga (<= $180 MXN, sin suscripción fija)
-  const antTxs = periodExpenses.filter(tx => Number(tx.amount) > 0 && Number(tx.amount) <= 180 && !tx.subscriptionId)
+  // Gastos Hormiga (<= $180 MXN, sin suscripción fija ni cargos no operativos/comisiones)
+  const antTxs = periodExpenses.filter(tx => Number(tx.amount) > 0 && Number(tx.amount) <= 180 && !tx.subscriptionId && !ANT_EXCLUDED_CATS.has(tx.category || ''))
   const antTotal = antTxs.reduce((sum, tx) => sum + Number(tx.amount), 0)
   const antPct = totalExpenses > 0 ? Math.round((antTotal / totalExpenses) * 100) : 0
 
@@ -1621,7 +1634,7 @@ const microSpendingInsights = computed(() => {
 
   const prevMonthSameDayTotal = financeStore.transactions
     .filter(tx => {
-      if (tx.type !== 'expense' || !tx.date || !tx.date.startsWith(prevMonthKey)) return false
+      if (tx.type !== 'expense' || !tx.date || !tx.date.startsWith(prevMonthKey) || NON_OPERATIONAL_EXPENSE_CATS.has(tx.category || '')) return false
       const txDay = Number(tx.date.substring(8, 10))
       return txDay <= dom
     })
@@ -2656,13 +2669,13 @@ function getCategoryVisual(cat: string, type: TransactionType) {
   if (c.includes('comida') || c.includes('alimento') || c.includes('restaurante') || c.includes('super') || c.includes('despensa')) {
     return { icon: Utensils, bg: 'bg-orange-500/15 text-orange-500' }
   }
-  if (c.includes('transporte') || c.includes('gasolina') || c.includes('uber') || c.includes('auto') || c.includes('coche') || c.includes('peaje')) {
+  if (c.includes('transporte') || c.includes('gasolina') || c.includes('uber') || c.includes('auto') || c.includes('coche') || c.includes('peaje') || c.includes('moto') || c.includes('refacc') || c.includes('llan')) {
     return { icon: Car, bg: 'bg-blue-500/15 text-blue-500' }
   }
   if (c.includes('compra') || c.includes('ropa') || c.includes('tienda') || c.includes('amazon') || c.includes('mercado')) {
     return { icon: ShoppingBag, bg: 'bg-pink-500/15 text-pink-500' }
   }
-  if (c.includes('tec') || c.includes('software') || c.includes('suscrip') || c.includes('internet') || c.includes('streaming')) {
+  if (c.includes('tec') || c.includes('software') || c.includes('suscrip') || c.includes('membres') || c.includes('internet') || c.includes('streaming')) {
     return { icon: Laptop, bg: 'bg-purple-500/15 text-purple-500' }
   }
   if (c.includes('salud') || c.includes('med') || c.includes('farmacia') || c.includes('doctor') || c.includes('hospital')) {
@@ -2676,6 +2689,9 @@ function getCategoryVisual(cat: string, type: TransactionType) {
   }
   if (c.includes('ocio') || c.includes('viaje') || c.includes('fiesta') || c.includes('cine') || c.includes('entretenimiento')) {
     return { icon: Sparkles, bg: 'bg-amber-500/15 text-amber-500' }
+  }
+  if (c.includes('comisi') || c.includes('interés') || c.includes('interes')) {
+    return { icon: Landmark, bg: 'bg-amber-500/15 text-amber-500' }
   }
   if (['transfer', 'credit_payment', 'loan_payment'].includes(type)) {
     return { icon: Landmark, bg: 'bg-violet-500/15 text-violet-500' }

@@ -149,7 +149,7 @@ const COLORS = [
 
 export const useFinanceStore = defineStore('finance', {
     state: () => {
-        let savedCategories = ['Comida', 'Transporte', 'Servicios', 'Ocio', 'Salario', 'Renta', 'Inversión'];
+        let savedCategories = ['Comida', 'Super y Despensa', 'Gasolina', 'Transporte', 'Servicios', 'Membresías', 'Salud', 'Compras', 'Ropa y Accesorios', 'Ocio', 'Comisiones e Intereses', 'Varios', 'Salario', 'Ingresos', 'Inversión', 'Reembolso'];
         if (typeof window !== 'undefined' && window.localStorage) {
             const stored = window.localStorage.getItem('taskman_categories');
             if (stored) {
@@ -490,9 +490,10 @@ export const useFinanceStore = defineStore('finance', {
             const currentMonth = now.getMonth();
             const currentYear = now.getFullYear();
             
+            const excludedCats = new Set(['Ajuste de Estado de Cuenta', 'Pago de Tarjeta', 'Pagos de Tarjeta', 'Transferencia', 'Transferencias']);
             const expenses = state.transactions.filter(t => {
                 const d = new Date(t.date);
-                return t.type === 'expense' && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+                return t.type === 'expense' && d.getMonth() === currentMonth && d.getFullYear() === currentYear && !excludedCats.has(t.category || '');
             });
 
             const byCategory: Record<string, number> = {};
@@ -1297,24 +1298,39 @@ export const useFinanceStore = defineStore('finance', {
         },
 
         syncCategories() {
-            const allCats = new Set<string>(this.categories);
-            let added = false;
-            
+            const legacyHiddenCats = new Set(['Membres?as', 'Pagos de Tarjeta', 'Transferencias']);
+            const cleanedInitial = this.categories.filter(c => !legacyHiddenCats.has(c));
+            let changed = cleanedInitial.length !== this.categories.length;
+            const allCats = new Set<string>(cleanedInitial);
+
+            const normalizeCat = (c: string) => {
+                if (c === 'Membres?as' || c === 'Suscripciones') return 'Membresías';
+                if (c === 'Pagos de Tarjeta') return 'Pago de Tarjeta';
+                if (c === 'Transferencias') return 'Transferencia';
+                return c;
+            };
+
             this.transactions.forEach(tx => {
-                if (tx.category && typeof tx.category === 'string' && !allCats.has(tx.category)) {
-                    allCats.add(tx.category);
-                    added = true;
+                if (tx.category && typeof tx.category === 'string') {
+                    const cat = normalizeCat(tx.category);
+                    if (!allCats.has(cat)) {
+                        allCats.add(cat);
+                        changed = true;
+                    }
                 }
             });
-            
+
             this.tasks.forEach(t => {
-                if (t.category && typeof t.category === 'string' && !allCats.has(t.category)) {
-                    allCats.add(t.category);
-                    added = true;
+                if (t.category && typeof t.category === 'string') {
+                    const cat = normalizeCat(t.category);
+                    if (!allCats.has(cat)) {
+                        allCats.add(cat);
+                        changed = true;
+                    }
                 }
             });
-            
-            if (added) {
+
+            if (changed) {
                 this.categories = Array.from(allCats);
                 if (typeof window !== 'undefined' && window.localStorage) {
                     window.localStorage.setItem('taskman_categories', JSON.stringify(this.categories));
